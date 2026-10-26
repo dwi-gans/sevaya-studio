@@ -1,0 +1,24 @@
+<svg width="480" height="120" viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .brand-title {
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 50px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        fill: #1B1718;
+        text-transform: uppercase;
+      }
+      .brand-sub {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.38em;
+        fill: #6b1d2f;
+        text-transform: uppercase;
+      }
+    </style>
+  </defs>
+  <text x="50%" y="54" class="brand-title" dominant-baseline="middle" text-anchor="middle">SEVAYA</text>
+  <text x="50%" y="92" class="brand-sub" dominant-baseline="middle" text-anchor="middle">ATELIER</text>
+</svg>

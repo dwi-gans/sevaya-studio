@@ -1,0 +1,4596 @@
+'use client';
+
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
+import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Logo } from '@/components/ui/Logo';
+import { Icon, IconName } from '@/components/ui/Icon';
+import { useToast } from '@/context/ToastContext';
+import {
+  getDbProducts,
+  createDbProduct,
+  updateDbProduct,
+  deleteDbProduct,
+  DbProduct,
+  ProductSwatch,
+  getSiteSections,
+  getCachedSiteSections,
+  saveSiteSections,
+  SiteSectionsConfig,
+  DEFAULT_SITE_SECTIONS,
+  uploadFileToStorage,
+  listUploadedFiles,
+  StorageFile,
+} from '@/integrations/supabase';
+import { Article, ARTICLE_CATEGORIES, loadArticles, saveArticles } from '@/data/newsArticles';
+
+// Available built-in high-resolution catalog photos for quick picking
+const AVAILABLE_CATALOG_IMAGES = Array.from({ length: 18 }, (_, i) => {
+  const num = String(i + 1).padStart(2, '0');
+  return `/images/catalog/catalog-${num}.jpg`;
+});
+
+export interface MasterAsset {
+  filename: string;
+  collection: string;
+  size: string;
+  res: string;
+  format: string;
+  date: string;
+  cdnUrl: string;
+  src: string;
+  badge: 'LIVE PDP' | 'LOOKBOOK' | 'DETAIL PDP' | 'COLLECTION' | 'DRAFT';
+  isMaster?: boolean;
+  category: 'all' | 'plum' | 'cuff' | 'outdoor';
+}
+
+const MASTER_CATALOG_ASSETS: MasterAsset[] = [
+  {
+    filename: 'catalog-01.jpg',
+    collection: 'Abaya Plum Riverside Silk',
+    size: '3.8 MB',
+    res: '3840 × 5120',
+    format: '4K RAW Master',
+    date: '14 Feb 2025 • 16:42 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-01.jpg',
+    src: '/images/catalog/catalog-01.jpg',
+    badge: 'LIVE PDP',
+    isMaster: true,
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-02.jpg',
+    collection: 'Siluet Plum Full Frontal',
+    size: '4.1 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 16:38 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-02.jpg',
+    src: '/images/catalog/catalog-02.jpg',
+    badge: 'LIVE PDP',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-03.jpg',
+    collection: 'Koleksi Linen Plum & Taupe',
+    size: '3.4 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 16:35 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-03.jpg',
+    src: '/images/catalog/catalog-03.jpg',
+    badge: 'LIVE PDP',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-04.jpg',
+    collection: 'Pose Dinamis Hijab Angin',
+    size: '2.9 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 16:30 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-04.jpg',
+    src: '/images/catalog/catalog-04.jpg',
+    badge: 'LOOKBOOK',
+    category: 'outdoor',
+  },
+  {
+    filename: 'catalog-05.jpg',
+    collection: 'Siluet Punggung & Draping',
+    size: '3.1 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 16:22 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-05.jpg',
+    src: '/images/catalog/catalog-05.jpg',
+    badge: 'LIVE PDP',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-06.jpg',
+    collection: 'Detail Manset & Pin Sevaya Emas',
+    size: '2.6 MB',
+    res: '3840 × 5120',
+    format: 'RAW Master',
+    date: '14 Feb 2025 • 16:15 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-06.jpg',
+    src: '/images/catalog/catalog-06.jpg',
+    badge: 'DETAIL PDP',
+    category: 'cuff',
+  },
+  {
+    filename: 'catalog-07.jpg',
+    collection: 'Tekstur Kain & Draping Dada',
+    size: '3.3 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 16:10 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-07.jpg',
+    src: '/images/catalog/catalog-07.jpg',
+    badge: 'LIVE PDP',
+    category: 'cuff',
+  },
+  {
+    filename: 'catalog-08.jpg',
+    collection: 'Perspektif Belakang Tepi Sungai',
+    size: '3.7 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 16:04 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-08.jpg',
+    src: '/images/catalog/catalog-08.jpg',
+    badge: 'LIVE PDP',
+    category: 'outdoor',
+  },
+  {
+    filename: 'catalog-09.jpg',
+    collection: 'Editorial Naratif Jurnal',
+    size: '2.8 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 15:58 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-09.jpg',
+    src: '/images/catalog/catalog-09.jpg',
+    badge: 'LOOKBOOK',
+    category: 'outdoor',
+  },
+  {
+    filename: 'catalog-10.jpg',
+    collection: 'Potret Wajah & French Khimar',
+    size: '3.0 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 15:45 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-10.jpg',
+    src: '/images/catalog/catalog-10.jpg',
+    badge: 'LIVE PDP',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-11.jpg',
+    collection: 'Editorial Padang Ilalang',
+    size: '4.3 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 15:30 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-11.jpg',
+    src: '/images/catalog/catalog-11.jpg',
+    badge: 'DRAFT',
+    category: 'outdoor',
+  },
+  {
+    filename: 'catalog-12.jpg',
+    collection: 'Duo Palet Cream & Sage',
+    size: '3.6 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 15:10 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-12.jpg',
+    src: '/images/catalog/catalog-12.jpg',
+    badge: 'COLLECTION',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-13.jpg',
+    collection: 'Detail Kancing & Kerah Shanghai',
+    size: '2.7 MB',
+    res: '3840 × 5120',
+    format: 'RAW Master',
+    date: '14 Feb 2025 • 14:55 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-13.jpg',
+    src: '/images/catalog/catalog-13.jpg',
+    badge: 'DETAIL PDP',
+    category: 'cuff',
+  },
+  {
+    filename: 'catalog-14.jpg',
+    collection: 'Siluet Ombak Sutra Bemberg',
+    size: '3.9 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 14:40 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-14.jpg',
+    src: '/images/catalog/catalog-14.jpg',
+    badge: 'COLLECTION',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-15.jpg',
+    collection: 'Tekstur Anyaman Khimar',
+    size: '3.1 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 14:25 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-15.jpg',
+    src: '/images/catalog/catalog-15.jpg',
+    badge: 'DETAIL PDP',
+    category: 'cuff',
+  },
+  {
+    filename: 'catalog-16.jpg',
+    collection: 'Pencahayaan Twilight Studio',
+    size: '3.5 MB',
+    res: '3840 × 5120',
+    format: 'JPG High-Res',
+    date: '14 Feb 2025 • 14:10 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-16.jpg',
+    src: '/images/catalog/catalog-16.jpg',
+    badge: 'LOOKBOOK',
+    category: 'outdoor',
+  },
+  {
+    filename: 'catalog-17.jpg',
+    collection: 'Draping Lebar Siluet Kaftan',
+    size: '4.0 MB',
+    res: '3840 × 5120',
+    format: 'WebP 4K',
+    date: '14 Feb 2025 • 13:50 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-17.jpg',
+    src: '/images/catalog/catalog-17.jpg',
+    badge: 'COLLECTION',
+    category: 'plum',
+  },
+  {
+    filename: 'catalog-18.jpg',
+    collection: 'Potret Close-up Pasmina',
+    size: '2.9 MB',
+    res: '3840 × 5120',
+    format: 'RAW Master',
+    date: '14 Feb 2025 • 13:30 WIB',
+    cdnUrl: 'https://cdn.sevaya.id/storage/v1/object/public/katalog/catalog-18.jpg',
+    src: '/images/catalog/catalog-18.jpg',
+    badge: 'DRAFT',
+    category: 'cuff',
+  },
+];
+
+type AdminTab =
+  | 'orders'
+  | 'catalog'
+  | 'section-home'
+  | 'section-news'
+  | 'section-lookbook'
+  | 'section-conscious'
+  | 'media'
+  | 'settings';
+
+type ImagePickerTarget =
+  | 'product'
+  | `swatch-${number}`
+  | 'hero'
+  | 'spotlight-0'
+  | 'spotlight-1'
+  | 'textiles'
+  | 'journal-0'
+  | 'journal-1'
+  | `lookbook-${number}`
+  | `lbpage-${string}`
+  | 'conscious-hero'
+  | 'conscious-bemberg'
+  | 'conscious-tencel'
+  | 'conscious-linen'
+  | 'conscious-modal'
+  | 'article'
+  | null;
+
+interface AdminNavItem {
+  id: AdminTab;
+  label: string;
+  icon: IconName;
+  countBadge?: string | number;
+}
+
+interface AdminNavGroup {
+  groupTitle: string;
+  items: AdminNavItem[];
+}
+
+const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
+  {
+    groupTitle: 'Transaksi & Logistik',
+    items: [
+      { id: 'orders', label: 'Pesanan & Resi', icon: 'receipt_long', countBadge: 12 },
+      { id: 'catalog', label: 'Katalog Koleksi Abaya', icon: 'checkroom', countBadge: 4 },
+    ],
+  },
+  {
+    groupTitle: 'Editorial & Storefront',
+    items: [
+      { id: 'section-home', label: 'Beranda (Homepage)', icon: 'view_quilt' },
+      { id: 'section-news', label: 'News & Editorial (Jurnal)', icon: 'newspaper', countBadge: 6 },
+      { id: 'section-lookbook', label: 'Lookbook Studio', icon: 'photo_library' },
+      { id: 'section-conscious', label: 'Tentang Toko (About)', icon: 'auto_stories' },
+    ],
+  },
+  {
+    groupTitle: 'Aset Digital & Sistem',
+    items: [
+      { id: 'media', label: 'Galeri Cloud Media', icon: 'perm_media', countBadge: '1.4k' },
+      { id: 'settings', label: 'Pengaturan Studio & CDN', icon: 'tune' },
+    ],
+  },
+];
+
+const ADMIN_NAV_ITEMS: { id: AdminTab; label: string; icon: IconName }[] = ADMIN_NAV_GROUPS.flatMap((g) =>
+  g.items.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))
+);
+
+export default function AdminPage() {
+  const { showToast } = useToast();
+
+  // ── Authentication State (Direct persistent storage, prevents loading loop) ──
+  const [isMounted, setIsMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  // Hydration-safe mount & session recovery
+  useEffect(() => {
+    setIsMounted(true);
+    try {
+      const isAuth =
+        localStorage.getItem('sevaya_admin_session') === 'true' ||
+        sessionStorage.getItem('sevaya_admin_session') === 'true';
+      if (isAuth) {
+        setIsAuthenticated(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // ── Admin Active Tab & Mobile Drawer (Persisted across refreshes) ──
+  const [activeTab, setActiveTabState] = useState<AdminTab>('orders');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Restore persisted sidebar state on client mount
+  useEffect(() => {
+    try {
+      const savedSidebar = localStorage.getItem('sevaya_admin_sidebar_open');
+      if (savedSidebar !== null) {
+        setIsSidebarOpen(savedSidebar === 'true');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sevaya_admin_sidebar_open', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  // Restore persisted tab on client mount
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      const validTabs: AdminTab[] = [
+        'orders',
+        'catalog',
+        'section-home',
+        'section-news',
+        'section-lookbook',
+        'section-conscious',
+        'media',
+        'settings',
+      ];
+      setArticles(loadArticles());
+      if (tabParam === 'storage') {
+        setActiveTabState('settings');
+        return;
+      }
+      if (tabParam && (validTabs as string[]).includes(tabParam)) {
+        setActiveTabState(tabParam as AdminTab);
+        return;
+      }
+      const saved = localStorage.getItem('sevaya_admin_tab');
+      if (saved === 'storage') {
+        setActiveTabState('settings');
+        return;
+      }
+      if (saved && (validTabs as string[]).includes(saved)) {
+        setActiveTabState(saved as AdminTab);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const setActiveTab = (tab: AdminTab) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('sevaya_admin_tab', tab);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // ignore
+    }
+  };
+
+  // ── Data State ──
+  const [products, setProducts] = useState<DbProduct[]>([]);
+  const [sections, setSections] = useState<SiteSectionsConfig>(getCachedSiteSections);
+  const [mediaFiles, setMediaFiles] = useState<StorageFile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ── News & Articles State ──
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [newsFilterCategory, setNewsFilterCategory] = useState('All Stories');
+  const [newsSearchQuery, setNewsSearchQuery] = useState('');
+  const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [articleForm, setArticleForm] = useState<{
+    title: string;
+    slug: string;
+    category: string;
+    date: string;
+    readTime: string;
+    excerpt: string;
+    content: string;
+    image: string;
+    featured: boolean;
+  }>({
+    title: '',
+    slug: '',
+    category: 'Philosophy & Lifestyle',
+    date: '',
+    readTime: '4 min read',
+    excerpt: '',
+    content: '',
+    image: '/images/catalog/catalog-11.jpg',
+    featured: false,
+  });
+
+  // ── Media Gallery Interactive State ──
+  const [selectedAsset, setSelectedAsset] = useState<MasterAsset>(MASTER_CATALOG_ASSETS[0]!);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [mediaViewMode, setMediaViewMode] = useState<'grid' | 'table'>('grid');
+  const [mediaCategory, setMediaCategory] = useState<'all' | 'plum' | 'cuff' | 'outdoor'>('all');
+  const [mediaSearchQuery, setMediaSearchQuery] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadCollection, setUploadCollection] = useState('Abaya Plum Riverside Silk (Spring 2025)');
+
+  // ── Product Modal (Create / Edit) ──
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<DbProduct | null>(null);
+  const [productForm, setProductForm] = useState<{
+    title: string;
+    slug: string;
+    edition: string;
+    price: number;
+    original_price: number;
+    badge: string;
+    image: string;
+    inStock: boolean;
+    hidden: boolean;
+    swatches: ProductSwatch[];
+  }>({
+    title: '',
+    slug: '',
+    edition: '',
+    price: 1339000,
+    original_price: 1489000,
+    badge: '',
+    image: '/images/catalog/catalog-01.jpg',
+    inStock: true,
+    hidden: false,
+    swatches: [
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
+      { name: 'Garnet', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
+    ],
+  });
+
+  // ── Image Picker Modal State ──
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [imagePickerTarget, setImagePickerTarget] = useState<ImagePickerTarget>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let isMounted = true;
+
+    // Immediately load cached sections so there is 0ms delay / zero flash of old default images
+    setSections(getCachedSiteSections());
+
+    Promise.all([getDbProducts(), getSiteSections(), listUploadedFiles()])
+      .then(([dbProds, siteSections, storageFiles]) => {
+        if (!isMounted) return;
+        setProducts(dbProds);
+        setSections(siteSections);
+        setMediaFiles(storageFiles);
+      })
+      .catch(() => {
+        showToast('Gagal memuat data dari Supabase');
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, showToast]);
+
+  // ── Admin Login Handler ──
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+
+    if (adminUsername === 'admin' && adminPassword === 'sevayaStudio1!') {
+      try {
+        localStorage.setItem('sevaya_admin_session', 'true');
+        sessionStorage.setItem('sevaya_admin_session', 'true');
+      } catch {
+        // ignore
+      }
+      setIsAuthenticated(true);
+      showToast('Login Admin Berhasil. Selamat datang di Sevaya Studio.');
+    } else {
+      setAuthError('Username atau password admin salah.');
+      showToast('Kredensial admin tidak valid.');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    try {
+      localStorage.removeItem('sevaya_admin_session');
+      sessionStorage.removeItem('sevaya_admin_session');
+    } catch {
+      // ignore
+    }
+    setIsAuthenticated(false);
+    setAdminUsername('');
+    setAdminPassword('');
+    showToast('Admin logged out.');
+  };
+
+  // ── Product CRUD Handlers ──
+  const handleOpenCreateModal = () => {
+    setEditingProduct(null);
+    setProductForm({
+      title: '',
+      slug: '',
+      edition: '',
+      price: 1350000,
+      original_price: 1500000,
+      badge: 'Baru',
+      image: '/images/catalog/catalog-01.jpg',
+      inStock: true,
+      hidden: false,
+      swatches: [
+        { name: 'Obsidian Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
+        { name: 'Garnet Maroon', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
+        { name: 'Caramel Dune', color: '#C68B59', image: '/images/catalog/catalog-08.jpg' },
+        { name: 'Peach Bloom', color: '#E5A894', image: '/images/catalog/catalog-10.jpg' },
+      ],
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleOpenEditModal = (product: DbProduct) => {
+    setEditingProduct(product);
+    setProductForm({
+      title: product.title,
+      slug: product.slug,
+      edition: product.edition || '',
+      price: product.price,
+      original_price: product.original_price || product.price,
+      badge: product.badge || '',
+      image: product.image,
+      inStock: product.inStock !== false,
+      hidden: product.hidden === true,
+      swatches:
+        product.swatches && product.swatches.length > 0
+          ? product.swatches.map((s) => ({
+              name: s.name,
+              color: s.color,
+              image: s.image || product.image,
+            }))
+          : [
+              { name: 'Black', color: '#1B1718', image: product.image },
+              { name: 'Garnet', color: '#6B2D2B', image: product.image },
+            ],
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.title || !productForm.price) {
+      showToast('Harap isi judul dan harga produk');
+      return;
+    }
+
+    const slug =
+      productForm.slug.trim() ||
+      productForm.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+
+    setIsLoading(true);
+    try {
+      if (editingProduct) {
+        // Update
+        const updated = await updateDbProduct(editingProduct.id, {
+          ...productForm,
+          slug,
+        });
+        if (updated) {
+          setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
+          showToast(`Produk "${updated.title}" berhasil diperbarui!`);
+        }
+      } else {
+        // Create
+        const created = await createDbProduct({
+          ...productForm,
+          slug,
+        });
+        setProducts((prev) => [created, ...prev]);
+        showToast(`Produk "${created.title}" berhasil ditambahkan!`);
+      }
+      setIsProductModalOpen(false);
+    } catch {
+      showToast('Gagal menyimpan produk ke Supabase');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id: string | number, title: string) => {
+    if (!window.confirm(`Yakin ingin menghapus produk "${title}"?`)) return;
+
+    setIsLoading(true);
+    try {
+      await deleteDbProduct(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      showToast(`Produk "${title}" telah dihapus.`);
+    } catch {
+      showToast('Gagal menghapus produk');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Swatch Builder Handlers ──
+  const handleAddSwatch = () => {
+    setProductForm((prev) => ({
+      ...prev,
+      swatches: [
+        ...prev.swatches,
+        {
+          name: `Warna #${prev.swatches.length + 1}`,
+          color: '#685E5A',
+          image: prev.image || '/images/catalog/catalog-01.jpg',
+        },
+      ],
+    }));
+  };
+
+  const handleRemoveSwatch = (index: number) => {
+    setProductForm((prev) => ({
+      ...prev,
+      swatches: prev.swatches.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUpdateSwatch = (index: number, field: 'name' | 'color' | 'image', val: string) => {
+    setProductForm((prev) => {
+      const next = [...prev.swatches];
+      if (next[index]) {
+        next[index] = { ...next[index]!, [field]: val };
+      }
+      return { ...prev, swatches: next };
+    });
+  };
+
+  // ── Apply selected or uploaded image to target ──
+  const applyImageToTarget = (target: ImagePickerTarget, urlOrPath: string) => {
+    if (!target) return;
+
+    if (target === 'product') {
+      setProductForm((prev) => ({ ...prev, image: urlOrPath }));
+    } else if (target.startsWith('swatch-')) {
+      const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
+      handleUpdateSwatch(swatchIdx, 'image', urlOrPath);
+    } else if (target === 'hero') {
+      setSections((prev) => {
+        const next = { ...prev, hero: { ...prev.hero, image: urlOrPath } };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'spotlight-0') {
+      setSections((prev) => {
+        const nextSpotlight = [...prev.spotlight];
+        if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
+        const next = { ...prev, spotlight: nextSpotlight };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'spotlight-1') {
+      setSections((prev) => {
+        const nextSpotlight = [...prev.spotlight];
+        if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
+        const next = { ...prev, spotlight: nextSpotlight };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'textiles') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          missionTextiles: { ...prev.missionTextiles, image: urlOrPath },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'journal-0') {
+      setSections((prev) => {
+        const nextJournal = [...prev.journal];
+        if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
+        const next = { ...prev, journal: nextJournal };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'journal-1') {
+      setSections((prev) => {
+        const nextJournal = [...prev.journal];
+        if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
+        const next = { ...prev, journal: nextJournal };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target.startsWith('lookbook-')) {
+      const idx = parseInt(target.replace('lookbook-', ''), 10);
+      setSections((prev) => {
+        const nextLb = [...prev.lookbook];
+        if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
+        const next = { ...prev, lookbook: nextLb };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target.startsWith('lbpage-')) {
+      const key = target.replace('lbpage-', '');
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          lookbookPage: {
+            ...(prev.lookbookPage || DEFAULT_SITE_SECTIONS.lookbookPage!),
+            [key]: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'conscious-hero') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            heroImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'conscious-bemberg') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            bembergImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'conscious-tencel') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            tencelImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'conscious-linen') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            linenImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'conscious-modal') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            modalImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+    } else if (target === 'article') {
+      setArticleForm((prev) => ({ ...prev, image: urlOrPath }));
+    }
+  };
+
+  // ── News & Articles Handlers ──
+  const handleOpenCreateArticleModal = () => {
+    setEditingArticle(null);
+    const today = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    setArticleForm({
+      title: '',
+      slug: '',
+      category: 'Philosophy & Lifestyle',
+      date: today,
+      readTime: '4 min read',
+      excerpt: '',
+      content: '',
+      image: '/images/catalog/catalog-11.jpg',
+      featured: false,
+    });
+    setIsArticleModalOpen(true);
+  };
+
+  const handleOpenEditArticleModal = (art: Article) => {
+    setEditingArticle(art);
+    setArticleForm({
+      title: art.title,
+      slug: art.slug,
+      category: art.category,
+      date: art.date,
+      readTime: art.readTime,
+      excerpt: art.excerpt,
+      content: Array.isArray(art.content) ? art.content.join('\n\n') : ((art.content as unknown as string) || ''),
+      image: art.image || '/images/catalog/catalog-11.jpg',
+      featured: Boolean(art.featured),
+    });
+    setIsArticleModalOpen(true);
+  };
+
+  const handleSaveArticle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!articleForm.title.trim()) {
+      showToast('Judul artikel wajib diisi!');
+      return;
+    }
+
+    const slug =
+      articleForm.slug.trim() ||
+      articleForm.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    const paragraphs = articleForm.content
+      .split('\n\n')
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    let updatedArticles: Article[];
+    if (editingArticle) {
+      updatedArticles = articles.map((art) => {
+        if (art.id === editingArticle.id) {
+          return {
+            ...art,
+            title: articleForm.title.trim(),
+            slug,
+            category: articleForm.category,
+            date: articleForm.date || art.date,
+            readTime: articleForm.readTime || '3 min read',
+            excerpt: articleForm.excerpt.trim(),
+            content: paragraphs.length > 0 ? paragraphs : art.content,
+            image: articleForm.image,
+            featured: articleForm.featured,
+          };
+        }
+        if (articleForm.featured && art.id !== editingArticle.id) {
+          return { ...art, featured: false };
+        }
+        return art;
+      });
+      showToast(`Artikel "${articleForm.title}" berhasil diperbarui!`);
+    } else {
+      const newArticle: Article = {
+        id: crypto.randomUUID(),
+        title: articleForm.title.trim(),
+        slug,
+        category: articleForm.category,
+        date:
+          articleForm.date ||
+          new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        readTime: articleForm.readTime || '4 min read',
+        excerpt: articleForm.excerpt.trim(),
+        content: paragraphs.length > 0 ? paragraphs : [articleForm.excerpt.trim()],
+        image: articleForm.image,
+        featured: articleForm.featured,
+      };
+
+      updatedArticles = articleForm.featured
+        ? [newArticle, ...articles.map((a) => ({ ...a, featured: false }))]
+        : [newArticle, ...articles];
+
+      showToast(`Artikel baru "${newArticle.title}" berhasil ditambahkan!`);
+    }
+
+    setArticles(updatedArticles);
+    saveArticles(updatedArticles);
+    setIsArticleModalOpen(false);
+  };
+
+  const handleDeleteArticle = (id: string, title: string) => {
+    if (!window.confirm(`Yakin ingin menghapus artikel "${title}"?`)) return;
+    const remaining = articles.filter((a) => a.id !== id);
+    setArticles(remaining);
+    saveArticles(remaining);
+    showToast(`Artikel "${title}" telah dihapus.`);
+  };
+
+  const handleToggleFeaturedArticle = (id: string) => {
+    const updated = articles.map((a) => ({
+      ...a,
+      featured: a.id === id ? !a.featured : false,
+    }));
+    setArticles(updated);
+    saveArticles(updated);
+    showToast('Status Featured artikel diperbarui!');
+  };
+
+  // ── Direct Image Upload Handler ──
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const publicUrl = await uploadFileToStorage(file);
+      showToast('Gambar berhasil diunggah ke Supabase Cloud!');
+
+      applyImageToTarget(imagePickerTarget, publicUrl);
+
+      // Refresh media files
+      const updatedFiles = await listUploadedFiles();
+      setMediaFiles(updatedFiles);
+      setIsImagePickerOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah file';
+      showToast(msg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSelectPredefinedImage = (imagePath: string) => {
+    applyImageToTarget(imagePickerTarget, imagePath);
+    setIsImagePickerOpen(false);
+    showToast('Gambar berhasil dipilih!');
+  };
+
+  // ── Save Sections Handler ──
+  const handleSaveSections = async (sectionName = 'Section') => {
+    setIsLoading(true);
+    try {
+      const success = await saveSiteSections(sections);
+      if (success) {
+        showToast(`Konfigurasi & gambar ${sectionName} berhasil disimpan ke Supabase Cloud!`);
+      } else {
+        showToast('Gagal menyimpan section ke Supabase');
+      }
+    } catch {
+      showToast('Terjadi kesalahan saat menyimpan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filtered products list
+  const filteredProducts = products.filter(
+    (p) =>
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.edition && p.edition.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
+
+  // ──────────────────────────────────────────────────────────
+  // 0. AUTH HYDRATION CHECK
+  // ──────────────────────────────────────────────────────────
+  if (!isMounted) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#FAF8F5]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // 1. ADMIN LOGIN GATE (HIDDEN ACCESS)
+  // ──────────────────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#FAF8F5] px-4 py-12">
+        <div className="w-full max-w-md rounded-2xl border border-[#E5DDD5] bg-white p-8 sm:p-10 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase mb-2">
+              SISTEM OTORISASI INTERNAL
+            </span>
+            <Logo className="mb-2 h-7 w-auto" />
+            <h1 className="font-headline font-bold text-xl tracking-tight text-[#141312] uppercase mt-1">
+              Admin Control Console
+            </h1>
+            <p className="text-xs text-[#685E5A] mt-1.5 leading-relaxed">
+              Area khusus pengelolaan operasional pesanan, katalog koleksi abaya, dan editorial konten.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="flex flex-col gap-4">
+            {authError && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-center text-xs font-medium text-red-700">
+                {authError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                className="text-xs font-semibold tracking-wider text-[#141312] uppercase"
+                htmlFor="admin-user"
+              >
+                ID Operator / Username
+              </label>
+              <div className="relative flex items-center border border-[#D0C5BD] bg-white focus-within:border-[#141312] transition-colors">
+                <input
+                  id="admin-user"
+                  type="text"
+                  required
+                  autoFocus
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  placeholder="admin"
+                  className="h-11 w-full bg-transparent px-3.5 pr-10 text-base sm:text-xs tracking-wide text-[#141312] placeholder:text-[#8E8380] focus:outline-none"
+                />
+                <Icon
+                  name="person"
+                  size={16}
+                  className="pointer-events-none absolute right-3 text-[#685E5A]"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                className="text-xs font-semibold tracking-wider text-[#141312] uppercase"
+                htmlFor="admin-pass"
+              >
+                Kata Sandi Keamanan
+              </label>
+              <div className="relative flex items-center border border-[#D0C5BD] bg-white focus-within:border-[#141312] transition-colors">
+                <input
+                  id="admin-pass"
+                  type="password"
+                  required
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="h-11 w-full bg-transparent px-3.5 pr-10 text-base sm:text-xs tracking-wide text-[#141312] placeholder:text-[#8E8380] focus:outline-none"
+                />
+                <Icon
+                  name="lock"
+                  size={16}
+                  className="pointer-events-none absolute right-3 text-[#685E5A]"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#141312] bg-[#141312] text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-xs transition-all hover:bg-[#2b2826] active:scale-[0.99]"
+            >
+              <Icon name="lock" size={14} />
+              <span>Buka Konsol Studio</span>
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-[#E5DDD5] flex flex-col items-center gap-3 text-center">
+            <span className="text-[10px] text-[#8E8380] tracking-widest uppercase font-mono">
+              SEVAYA &bull; SESI TERENKRIPSI
+            </span>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition"
+            >
+              &larr; Kembali ke Beranda Publik
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const activeTabMeta =
+    ADMIN_NAV_ITEMS.find((item) => item.id === activeTab) ?? {
+      id: 'orders' as AdminTab,
+      label: 'Pesanan & Resi',
+      icon: 'receipt_long',
+    };
+
+  // ──────────────────────────────────────────────────────────
+  // 2. ADMIN STUDIO DASHBOARD (EXECUTIVE BACK-OFFICE CONSOLE)
+  // ──────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen w-full bg-[#f9f9f8] text-[#1a1c1c] antialiased">
+      {/* ──────────────────────────────────────────────────────────
+          A. DESKTOP SIDEBAR (Collapsible Luxury Drawer)
+      ────────────────────────────────────────────────────────── */}
+      <aside
+        className={`hidden md:flex fixed left-0 top-0 h-full w-[260px] bg-white border-r border-[#d5c2c5]/30 z-50 flex-col justify-between transition-transform duration-300 ease-in-out shadow-sm ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+        }`}
+      >
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Header Brand */}
+          <div className="p-4 border-b border-[#E5DDD5]/70 flex items-center">
+            <Link href="/admin" className="flex items-center" aria-label="Admin Home">
+              <Logo className="h-5 w-auto text-[#141312]" />
+            </Link>
+          </div>
+
+          {/* Navigation Groups */}
+          <div className="flex-1 overflow-y-auto px-2 py-3 space-y-5 no-scrollbar">
+            {ADMIN_NAV_GROUPS.map((group) => (
+              <div key={group.groupTitle} className="space-y-1">
+                <p className="px-2 pb-1 font-sans text-[10.5px] font-bold text-[#514346] uppercase tracking-wider">
+                  {group.groupTitle}
+                </p>
+                <nav className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = activeTab === item.id;
+                    const badge =
+                      item.id === 'orders'
+                        ? 12
+                        : item.id === 'catalog'
+                        ? products.length || 4
+                        : item.id === 'section-news'
+                        ? articles.length || 6
+                        : item.id === 'media'
+                        ? '18'
+                        : null;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 text-left transition-colors font-sans text-[13px] ${
+                          isActive
+                            ? 'bg-[#1a1c1c] text-white font-semibold shadow-xs'
+                            : 'text-[#514346] hover:bg-[#eeeeed] hover:text-[#1a1c1c]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon name={item.icon} size={18} className="shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {badge !== null && (
+                          <span
+                            className={`px-1.5 py-0.5 font-mono text-[11px] shrink-0 ${
+                              isActive
+                                ? 'bg-white/20 text-white'
+                                : 'bg-[#e8e8e7] text-[#1a1c1c]'
+                            }`}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Sidebar: User Profile & Actions */}
+        <div className="p-3 border-t border-[#d5c2c5]/20 bg-[#f3f4f3]/40 flex flex-col gap-2">
+          <Link
+            href="/"
+            target="_blank"
+            className="flex items-center justify-between px-2.5 py-1.5 border border-[#d5c2c5]/40 bg-white text-[#1a1c1c] hover:bg-[#eeeeed] transition-colors text-[11px] font-sans font-bold uppercase tracking-wider"
+          >
+            <span className="flex items-center gap-1.5">
+              <Icon name="storefront" size={14} />
+              <span>Lihat Toko Publik</span>
+            </span>
+            <Icon name="north_east" size={14} />
+          </Link>
+
+          <div className="flex items-center gap-2 pt-1">
+            <div className="w-8 h-8 bg-[#1a1c1c] text-white flex items-center justify-center shrink-0">
+              <Icon name="person" size={18} />
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-sans text-[12px] font-semibold text-[#1a1c1c] truncate">
+                Sevaya Admin
+              </span>
+              <span className="font-sans text-[11px] text-[#514346] truncate">
+                admin@sevaya.id
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAdminLogout}
+              title="Keluar Sesi Admin"
+              className="text-[#514346] hover:text-red-700 transition-colors p-1"
+            >
+              <Icon name="logout" size={18} />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ──────────────────────────────────────────────────────────
+          B. MOBILE OFF-CANVAS DRAWER
+      ────────────────────────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="fixed inset-0 bg-[#1a1c1c]/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          <aside className="fixed inset-y-0 left-0 flex w-[85vw] max-w-xs flex-col justify-between border-r border-[#d5c2c5]/30 bg-white p-5 shadow-2xl transition-transform duration-300 ease-out z-10 overflow-y-auto">
+            <div>
+              <div className="flex items-center justify-between border-b border-[#d5c2c5]/20 pb-4">
+                <div className="flex flex-col gap-0.5">
+                  <Logo className="h-5 w-auto text-[#1a1c1c]" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#d5c2c5]/40 text-[#1a1c1c] hover:bg-[#eeeeed] active:scale-95 transition"
+                  aria-label="Tutup Menu"
+                >
+                  <Icon name="close" size={20} />
+                </button>
+              </div>
+
+              {/* Drawer Nav Groups */}
+              <nav className="mt-5 space-y-5">
+                {ADMIN_NAV_GROUPS.map((group) => (
+                  <div key={group.groupTitle} className="space-y-1">
+                    <p className="px-2 text-[10px] font-bold tracking-wider text-[#514346] uppercase">
+                      {group.groupTitle}
+                    </p>
+                    {group.items.map((item) => {
+                      const isActive = activeTab === item.id;
+                      const badge =
+                        item.id === 'orders'
+                          ? 12
+                          : item.id === 'catalog'
+                          ? products.length || 4
+                          : item.id === 'section-news'
+                          ? articles.length || 6
+                          : item.id === 'media'
+                          ? '18'
+                          : null;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full min-h-[44px] flex items-center justify-between px-3.5 py-3 text-left text-[13px] font-sans transition-all rounded-lg ${
+                            isActive
+                              ? 'bg-[#1a1c1c] text-white font-semibold shadow-xs'
+                              : 'text-[#514346] hover:bg-[#eeeeed] hover:text-[#1a1c1c]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Icon name={item.icon} size={18} />
+                            <span>{item.label}</span>
+                          </div>
+                          {badge !== null && (
+                            <span
+                              className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                                isActive
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-[#eeeeed] text-[#1a1c1c]'
+                              }`}
+                            >
+                              {badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-[#d5c2c5]/20 pt-4 mt-6">
+              <Link
+                href="/"
+                target="_blank"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#d5c2c5]/40 bg-[#f9f9f8] py-2.5 text-xs font-semibold tracking-wider text-[#1a1c1c] uppercase hover:bg-white active:bg-stone-200 transition"
+              >
+                <Icon name="storefront" size={15} />
+                <span>Lihat Toko Publik</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  handleAdminLogout();
+                }}
+                className="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent bg-[#f3f4f3] py-2.5 text-xs font-semibold tracking-wider text-[#514346] uppercase hover:bg-red-50 hover:text-red-700 active:bg-red-100 transition"
+              >
+                <Icon name="logout" size={16} />
+                <span>Keluar Sesi Admin</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          C. FIXED TOP BAR HEADER (Matching Mockup)
+      ────────────────────────────────────────────────────────── */}
+      <header
+        className={`fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3.5 md:px-6 flex items-center justify-between gap-3 transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'left-0 md:left-[260px]' : 'left-0'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0 max-w-xl">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                setIsMobileMenuOpen(true);
+              } else {
+                toggleSidebar();
+              }
+            }}
+            className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#685E5A] hover:text-[#141312] border border-[#D0C5BD] hover:bg-[#F4EFEB] active:scale-95 transition-colors shrink-0"
+            aria-label="Toggle Menu Sidebar"
+            title={isSidebarOpen ? 'Sembunyikan Sidebar' : 'Buka Sidebar'}
+          >
+            <Icon name={isSidebarOpen ? 'menu_open' : 'menu'} size={18} />
+          </button>
+
+          {!isSidebarOpen && (
+            <div className="hidden md:flex items-center gap-2.5 pl-1 shrink-0">
+              <Link href="/admin" className="flex items-center" aria-label="Admin Home">
+                <Logo className="h-5 w-auto text-[#141312]" />
+              </Link>
+              <span className="text-[#d5c2c5] font-light">|</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 text-[#514346] text-[12px] font-sans min-w-0">
+            <span className="hover:text-[#1a1c1c] cursor-pointer hidden xs:inline shrink-0">Studio</span>
+            <Icon name="chevron_right" size={14} className="text-[#837376] hidden xs:inline shrink-0" />
+            <span className="font-semibold text-[#1a1c1c] truncate">{activeTabMeta.label}</span>
+          </div>
+
+          {(activeTab === 'orders' || activeTab === 'catalog' || activeTab === 'media') && (
+            <div className="relative flex-1 max-w-xs hidden sm:block">
+              <Icon
+                name="search"
+                size={16}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#514346]"
+              />
+              <input
+                className="w-full h-9 pl-8 pr-12 border border-[#d5c2c5]/50 bg-[#f9f9f8] text-[#1a1c1c] text-[12px] focus:outline-none focus:border-[#1a1c1c] transition-colors"
+                placeholder="Cari pesanan, SKU, atau aset..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-[#eeeeed] border border-[#d5c2c5]/40 text-[10px] font-mono text-[#514346]">
+                ⌘K
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {activeTab === 'settings' && (
+            <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-emerald-50 border border-emerald-200/60 text-[11px] font-medium text-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span className="hidden xs:inline">Supabase CDN Active</span>
+              <span className="xs:hidden">CDN</span>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ──────────────────────────────────────────────────────────
+          D. MAIN TAB CONTENT CONTAINER
+      ────────────────────────────────────────────────────────── */}
+      <main
+        className={`relative min-h-screen bg-[#f9f9f8] px-3.5 pb-12 pt-20 sm:px-6 sm:pt-24 lg:px-8 transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
+        }`}
+      >
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 0: DASHBOARD PESANAN & PENGIRIMAN (REAL SUPABASE + BITESHIP)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'orders' && <BiteshipSimulatorDashboard />}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 1: KATALOG PRODUK (MULTI-FOTO PER WARNA)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'catalog' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            {/* Top Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Koleksi &amp; Inventori
+                </span>
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  Manajemen Katalog Produk
+                </h2>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleOpenCreateModal}
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                >
+                  <Icon name="add" size={16} />
+                  <span>Tambah Produk Baru</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Search & Stats Card */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari berdasarkan nama abaya, edisi, atau warna..."
+                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pr-4 pl-9 py-2 text-base sm:text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:bg-white focus:outline-none"
+                />
+                <Icon
+                  name="search"
+                  size={16}
+                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-[#685E5A]"
+                />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-[#685E5A] shrink-0">
+                <span className="rounded-full bg-[#F4EFEB] px-3 py-1.5 border border-[#E5DDD5]">
+                  Total: <strong className="text-[#141312]">{products.length}</strong> produk
+                </span>
+                <span className="rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200/60 text-emerald-800">
+                  Tersedia: <strong className="font-bold">{products.filter((p) => p.inStock !== false).length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Product Grid */}
+            {isLoading && products.length === 0 ? (
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E5DDD5] bg-white">
+                <span className="text-xs tracking-wider text-[#685E5A] uppercase">
+                  Memuat data produk...
+                </span>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-6 text-center">
+                <Icon name="shopping_bag" size={28} className="text-[#685E5A]" />
+                <p className="text-xs text-[#685E5A]">
+                  Tidak ada produk yang cocok dengan pencarian.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateModal}
+                  className="rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] uppercase"
+                >
+                  Tambah Produk Pertama
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5DDD5] bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-[#D0C5BD]"
+                  >
+                    {/* Thumbnail Image */}
+                    <div className="relative aspect-[3/4] w-full bg-[#F4EFEB]">
+                      <Image
+                        src={product.image || '/images/catalog/catalog-01.jpg'}
+                        alt={product.title}
+                        fill
+                        className={`object-cover transition-opacity ${product.hidden ? 'opacity-40' : 'opacity-100'}`}
+                      />
+                      {product.hidden && (
+                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                          <span className="rounded-full bg-[#141312]/80 px-2 py-0.5 text-center text-[9px] font-bold tracking-wider text-[#FAF8F5] uppercase backdrop-blur-xs sm:text-[10px]">
+                            Disembunyikan
+                          </span>
+                        </div>
+                      )}
+                      {product.badge && (
+                        <span className="absolute top-2 left-2 rounded-full bg-[#141312] px-2 py-0.5 text-[9px] font-semibold tracking-wider text-[#FAF8F5] uppercase sm:text-[10px]">
+                          {product.badge}
+                        </span>
+                      )}
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-[#141312] shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false ? 'bg-emerald-500' : 'bg-red-500'}`}
+                        />
+                        <span className="xs:inline hidden">
+                          {product.inStock !== false ? 'In Stock' : 'Habis'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex flex-1 flex-col p-3 sm:p-4">
+                      {product.edition && (
+                        <span className="font-headline truncate text-[10px] tracking-widest text-[#8E8380] uppercase">
+                          {product.edition}
+                        </span>
+                      )}
+                      <h3 className="font-headline line-clamp-1 text-xs font-semibold text-[#141312] sm:text-sm">
+                        {product.title}
+                      </h3>
+                      <span className="truncate text-[10px] font-mono text-[#8E8380] sm:text-xs">
+                        /{product.slug}
+                      </span>
+
+                      {/* Pricing */}
+                      <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
+                        <span className="text-xs font-bold text-[#141312] sm:text-sm">
+                          Rp {product.price.toLocaleString('id-ID')}
+                        </span>
+                        {product.original_price && product.original_price > product.price && (
+                          <span className="text-[10px] text-[#8E8380] line-through sm:text-[11px]">
+                            Rp {product.original_price.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Swatches preview with photo indicator */}
+                      {product.swatches && product.swatches.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1 rounded-xl bg-[#F4EFEB] p-2 text-xs">
+                          <span className="text-[9px] font-semibold tracking-wider text-[#685E5A] uppercase">
+                            {product.swatches.length} Varian:
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {product.swatches.map((sw, idx) => (
+                              <div
+                                key={idx}
+                                title={`${sw.name} - ${sw.image ? 'Ada Foto' : 'Foto Utama'}`}
+                                className="flex items-center gap-1 rounded-full border border-[#E5DDD5] bg-white px-1.5 py-0.5 shadow-2xs"
+                              >
+                                <span
+                                  style={{ backgroundColor: sw.color }}
+                                  className="h-2.5 w-2.5 rounded-full border border-black/15"
+                                />
+                                <span className="hidden text-[9px] font-medium text-[#141312] sm:inline">
+                                  {sw.name.split(' ')[0]}
+                                </span>
+                                {sw.image && (
+                                  <Icon name="image" size={9} className="text-emerald-700" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="mt-3 flex items-center gap-1.5 border-t border-[#E5DDD5]/60 pt-2.5 sm:gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(product)}
+                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:bg-[#F4EFEB] active:scale-95"
+                        >
+                          <Icon name="edit" size={13} />
+                          <span className="truncate">Edit</span>
+                        </button>
+                        {/* Hide / Show quick toggle */}
+                        <button
+                          type="button"
+                          title={product.hidden ? 'Tampilkan di Toko' : 'Sembunyikan dari Toko'}
+                          onClick={async () => {
+                            const updated = await updateDbProduct(product.id, {
+                              hidden: !product.hidden,
+                            });
+                            if (updated) {
+                              setProducts((prev) =>
+                                prev.map((p) => (p.id === product.id ? updated : p)),
+                              );
+                              showToast(
+                                updated.hidden
+                                  ? `"${updated.title}" disembunyikan dari toko.`
+                                  : `"${updated.title}" ditampilkan kembali di toko.`,
+                              );
+                            }
+                          }}
+                          className={`flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95 ${
+                            product.hidden
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                              : 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100'
+                          }`}
+                        >
+                          <Icon name={product.hidden ? 'visibility' : 'visibility_off'} size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(product.id, product.title)}
+                          className="flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 active:scale-95"
+                          title="Hapus Produk"
+                        >
+                          <Icon name="delete" size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 2: BERANDA (HOMEPAGE SECTIONS)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'section-home' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Editorial &amp; Storefront
+                </span>
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  Kelola Section Beranda (Homepage)
+                </h2>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveSections('Beranda')}
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+              >
+                <Icon name="check" size={16} />
+                <span>Simpan Section Beranda</span>
+              </button>
+            </div>
+
+            {/* 1. HERO SECTION */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                    1. Hero Section (Homepage Banner Utama)
+                  </h3>
+                  <p className="text-xs text-[#685E5A] mt-0.5">
+                    Banner utama dengan foto latar penuh dan teks tajuk toko.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#F4EFEB] px-2.5 py-0.5 text-[10px] font-semibold text-[#685E5A] border border-[#E5DDD5]">
+                  Desktop &amp; Mobile
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="flex flex-col gap-2.5">
+                  <span className="text-xs font-medium text-[#685E5A]">
+                    Gambar Latar Hero
+                  </span>
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <Image
+                      src={sections.hero.image}
+                      alt="Hero preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('hero');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-2 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                  >
+                    <Icon name="image" size={14} />
+                    <span>Ganti Gambar Hero</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3.5 lg:col-span-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#685E5A]">
+                      Badge Label
+                    </label>
+                    <input
+                      type="text"
+                      value={sections.hero.badge}
+                      onChange={(e) =>
+                        setSections((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, badge: e.target.value },
+                        }))
+                      }
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#685E5A]">
+                      Judul Utama (Title)
+                    </label>
+                    <input
+                      type="text"
+                      value={sections.hero.title}
+                      onChange={(e) =>
+                        setSections((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, title: e.target.value },
+                        }))
+                      }
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#685E5A]">
+                      Deskripsi Hero
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={sections.hero.desc}
+                      onChange={(e) =>
+                        setSections((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, desc: e.target.value },
+                        }))
+                      }
+                      className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. CATEGORY SPOTLIGHT */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  2. Category Spotlight (2 Kartu Sorotan)
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Dua kartu kategori utama yang ditampilkan berdampingan di beranda.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {sections.spotlight.map((card, idx) => (
+                  <div
+                    key={card.id}
+                    className="flex flex-col gap-3 rounded-xl bg-[#F4EFEB] p-4 border border-[#E5DDD5]/60"
+                  >
+                    <span className="text-xs font-semibold text-[#685E5A] uppercase tracking-wider">
+                      Kartu Spotlight #{idx + 1}
+                    </span>
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                      <Image src={card.image} alt={card.title} fill className="object-cover" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget(`spotlight-${idx}` as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Gambar #{idx + 1}</span>
+                    </button>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSections((prev) => {
+                            const next = [...prev.spotlight];
+                            if (next[idx]) next[idx] = { ...next[idx]!, title: val };
+                            return { ...prev, spotlight: next };
+                          });
+                        }}
+                        placeholder="Judul"
+                        className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={card.subtitle}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSections((prev) => {
+                            const next = [...prev.spotlight];
+                            if (next[idx]) next[idx] = { ...next[idx]!, subtitle: val };
+                            return { ...prev, spotlight: next };
+                          });
+                        }}
+                        placeholder="Subjudul"
+                        className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. SIGNATURE TEXTILES */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  3. Showcase Tekstil Berkelanjutan
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Banner narasi komitmen material premium ramah lingkungan Sevaya.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                  <Image
+                    src={sections.missionTextiles.image}
+                    alt="Textiles background"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col justify-center gap-3 sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('textiles');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                  >
+                    <Icon name="image" size={14} />
+                    <span>Ganti Gambar Showcase Tekstil</span>
+                  </button>
+                  <input
+                    type="text"
+                    value={sections.missionTextiles.title}
+                    onChange={(e) =>
+                      setSections((prev) => ({
+                        ...prev,
+                        missionTextiles: { ...prev.missionTextiles, title: e.target.value },
+                      }))
+                    }
+                    className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. JOURNAL SECTION */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  4. Artikel Journal (2 Artikel)
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Artikel editorial gaya hidup dan wawasan abaya di beranda toko.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {sections.journal.map((art, idx) => (
+                  <div
+                    key={art.id}
+                    className="flex flex-col gap-3 rounded-xl bg-[#F4EFEB] p-4 border border-[#E5DDD5]/60"
+                  >
+                    <span className="text-xs font-semibold text-[#685E5A] uppercase tracking-wider">
+                      Artikel #{idx + 1}
+                    </span>
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                      <Image src={art.image} alt={art.title} fill className="object-cover" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget(`journal-${idx}` as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Gambar Artikel #{idx + 1}</span>
+                    </button>
+                    <input
+                      type="text"
+                      value={art.title}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSections((prev) => {
+                          const next = [...prev.journal];
+                          if (next[idx]) next[idx] = { ...next[idx]!, title: val };
+                          return { ...prev, journal: next };
+                        });
+                      }}
+                      placeholder="Judul Artikel"
+                      className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    />
+                    <textarea
+                      rows={2}
+                      value={art.excerpt}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSections((prev) => {
+                          const next = [...prev.journal];
+                          if (next[idx]) next[idx] = { ...next[idx]!, excerpt: val };
+                          return { ...prev, journal: next };
+                        });
+                      }}
+                      placeholder="Kutipan ringkasan"
+                      className="w-full rounded-none border border-[#D0C5BD] bg-white p-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION: NEWS & EDITORIAL (JURNAL PUBLIK /NEWS)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'section-news' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            {/* Top Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Editorial &amp; Storefront
+                </span>
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  Manajemen News &amp; Editorial (Jurnal)
+                </h2>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-[#141312] bg-[#F4EFEB] px-1 py-0.5 rounded">/news</code>.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Link
+                  href="/news"
+                  target="_blank"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-semibold text-[#141312] hover:bg-[#F4EFEB] transition active:scale-95"
+                >
+                  <Icon name="storefront" size={14} />
+                  <span>Lihat Halaman /news</span>
+                  <Icon name="north_east" size={13} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateArticleModal}
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                >
+                  <Icon name="add" size={16} />
+                  <span>Tulis Artikel Baru</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Telemetry Summary Card */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E5DDD5]/70 gap-4 sm:gap-6">
+                <div className="flex flex-col justify-between space-y-1 sm:pr-4">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    Total Artikel Terbit
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-[#141312]">{articles.length}</span>
+                    <span className="text-xs text-[#685E5A]">artikel aktif</span>
+                  </div>
+                  <span className="text-[11px] text-[#685E5A]">
+                    Tersinkronisasi otomatis dengan /news
+                  </span>
+                </div>
+
+                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    Artikel Utama (Featured)
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-amber-600">
+                      {articles.filter((a) => a.featured).length}
+                    </span>
+                    <span className="text-xs text-[#685E5A]">sorotan beranda</span>
+                  </div>
+                  <span className="text-[11px] text-[#685E5A]">
+                    Tampil sebagai banner hero editorial
+                  </span>
+                </div>
+
+                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    Kategori Topik
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-[#141312]">
+                      {ARTICLE_CATEGORIES.filter((c) => c !== 'All Stories').length}
+                    </span>
+                    <span className="text-xs text-[#685E5A]">kategori aktif</span>
+                  </div>
+                  <span className="text-[11px] text-[#685E5A]">
+                    Philosophy, Textile, Heritage, Care
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3.5 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 touch-pan-x">
+                {ARTICLE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setNewsFilterCategory(cat)}
+                    className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
+                      newsFilterCategory === cat
+                        ? 'bg-[#141312] text-[#FAF8F5]'
+                        : 'border border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312]'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative flex-1 sm:max-w-xs shrink-0">
+                <input
+                  type="text"
+                  value={newsSearchQuery}
+                  onChange={(e) => setNewsSearchQuery(e.target.value)}
+                  placeholder="Cari judul atau topik artikel..."
+                  className="w-full min-h-[40px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pl-8 pr-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                />
+                <Icon
+                  name="search"
+                  size={15}
+                  className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-[#685E5A]"
+                />
+              </div>
+            </div>
+
+            {/* Articles Grid */}
+            {(() => {
+              const filtered = articles.filter((a) => {
+                const matchesCat =
+                  newsFilterCategory === 'All Stories' || a.category === newsFilterCategory;
+                const q = newsSearchQuery.toLowerCase().trim();
+                const matchesSearch =
+                  !q ||
+                  a.title.toLowerCase().includes(q) ||
+                  a.category.toLowerCase().includes(q) ||
+                  a.excerpt.toLowerCase().includes(q);
+                return matchesCat && matchesSearch;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="rounded-2xl border border-[#E5DDD5] bg-white p-12 text-center text-[#685E5A]">
+                    <Icon name="search_off" size={36} className="mb-2 text-[#8E8380] mx-auto block" />
+                    <p className="font-semibold text-sm text-[#141312]">Tidak ada artikel yang cocok</p>
+                    <p className="text-xs text-[#685E5A] mt-1">
+                      Coba ganti kata kunci pencarian atau pilih kategori lain.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleOpenCreateArticleModal}
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826]"
+                    >
+                      <Icon name="add" size={15} />
+                      <span>Tulis Artikel Baru</span>
+                    </button>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {filtered.map((art) => (
+                    <div
+                      key={art.id}
+                      className="flex flex-col rounded-2xl border border-[#E5DDD5] bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden transition hover:border-[#D0C5BD]"
+                    >
+                      {/* Cover Photo */}
+                      <div className="relative aspect-[16/10] w-full bg-[#F4EFEB] overflow-hidden">
+                        <Image
+                          src={art.image || '/images/catalog/catalog-11.jpg'}
+                          alt={art.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover"
+                        />
+                        {art.featured && (
+                          <div className="absolute top-2.5 left-2.5 rounded-full bg-[#141312]/90 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 border border-amber-300/30">
+                            ⭐ Featured Story
+                          </div>
+                        )}
+                        <div className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-mono text-white backdrop-blur-xs">
+                          {art.readTime}
+                        </div>
+                      </div>
+
+                      {/* Content Info */}
+                      <div className="flex flex-1 flex-col p-4 sm:p-5">
+                        <div className="flex items-center justify-between text-[11px] text-[#8E8380]">
+                          <span className="font-semibold text-[#685E5A]">{art.category}</span>
+                          <span>{art.date}</span>
+                        </div>
+
+                        <h3 className="font-headline mt-2 text-sm sm:text-base font-bold text-[#141312] line-clamp-2">
+                          {art.title}
+                        </h3>
+
+                        <p className="mt-1.5 text-xs text-[#685E5A] line-clamp-2 leading-relaxed flex-1">
+                          {art.excerpt}
+                        </p>
+
+                        <div className="mt-2 text-[10px] font-mono text-[#8E8380]">
+                          /{art.slug}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-4 pt-3 border-t border-[#E5DDD5]/60 flex items-center gap-1.5 sm:gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditArticleModal(art)}
+                            className="flex-1 min-h-[38px] flex items-center justify-center gap-1 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:bg-[#F4EFEB] active:scale-95"
+                          >
+                            <Icon name="edit" size={13} />
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFeaturedArticle(art.id)}
+                            title={art.featured ? 'Batalkan Status Featured' : 'Jadikan Featured Story'}
+                            className={`min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border transition-colors active:scale-95 ${
+                              art.featured
+                                ? 'border-amber-300 bg-amber-50 text-amber-700'
+                                : 'border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB]'
+                            }`}
+                          >
+                            <Icon name="star" size={14} filled={art.featured} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteArticle(art.id, art.title)}
+                            title="Hapus Artikel"
+                            className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 active:scale-95"
+                          >
+                            <Icon name="delete" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 3: LOOKBOOK STUDIO
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'section-lookbook' && (
+          <div className="mx-auto w-full max-w-5xl space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Editorial &amp; Storefront
+                </span>
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  Manajemen Lookbook &amp; Galeri Editorial
+                </h2>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Sesuaikan seluruh foto yang tampil di halaman Lookbook publik (/lookbook) dan bab koleksi aktif.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveSections('Lookbook')}
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+              >
+                <Icon name="check" size={16} />
+                <span>Simpan Perubahan Lookbook</span>
+              </button>
+            </div>
+
+            {/* ══ BAGIAN A: SEMUA FOTO HALAMAN LOOKBOOK PUBLIK (/lookbook) ══ */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
+              <div className="border-b border-[#E5DDD5]/70 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                    1. Foto Editorial Halaman Lookbook (/lookbook)
+                  </h3>
+                  <p className="text-xs text-[#685E5A] mt-0.5">
+                    Klik &quot;Ganti Foto&quot; pada slot foto mana saja untuk memilih foto dari galeri/unggah baru.
+                  </p>
+                </div>
+                <span className="self-start sm:self-auto rounded-full bg-[#F4EFEB] px-2.5 py-0.5 text-[10px] font-semibold text-[#685E5A] border border-[#E5DDD5]">
+                  Live di /lookbook
+                </span>
+              </div>
+
+              {/* Grid Slot Foto Lookbook */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+                {/* 1. Hero Poster / Foto Utama */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        1. Foto Utama (The First Chapter)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 4:3
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: sevaya_first_chapter.jpg
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.heroImage || '/images/sevaya_first_chapter.jpg'}
+                        alt="Hero Lookbook"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-heroImage' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Hero</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Kolase Kiri (Portrait) */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        2. Kolase Kiri (Portrait Besar)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 4:5
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: lookbook_figma_0.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.collagePortrait || '/images/lookbook_figma_0.png'}
+                        alt="Kolase Portrait"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-collagePortrait' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Kolase 1</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Kolase Kanan Atas */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        3. Kolase Kanan Atas (Detail)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 16:10
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: figma_about_1.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.collageDetail1 || '/images/figma_about_1.png'}
+                        alt="Kolase Detail 1"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-collageDetail1' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Detail 1</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Kolase Kanan Bawah */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        4. Kolase Kanan Bawah (Buku)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 16:10
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: figma_about_2.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.collageDetail2 || '/images/figma_about_2.png'}
+                        alt="Kolase Detail 2"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-collageDetail2' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Detail 2</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Panorama Lebar 1 */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        5. Panorama Lebar 1 (Duo Abaya)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 16:9
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: figma_hero.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.panorama1 || '/images/figma_hero.png'}
+                        alt="Panorama 1"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-panorama1' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Panorama 1</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 6. Panorama Lebar 2 */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        6. Panorama Lebar 2 (Tepi Sungai)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 16:9
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: lookbook_figma_1.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.panorama2 || '/images/lookbook_figma_1.png'}
+                        alt="Panorama 2"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-panorama2' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Panorama 2</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 7. Triptych Foto 1 */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        7. Triptych Bawah 1 (Atelier)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 3:4
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: lookbook_figma_2.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.triptych1 || '/images/lookbook_figma_2.png'}
+                        alt="Triptych 1"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-triptych1' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Triptych 1</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 8. Triptych Foto 2 */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        8. Triptych Bawah 2 (Duo Model)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 3:4
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: lookbook_figma_3.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.triptych2 || '/images/lookbook_figma_3.png'}
+                        alt="Triptych 2"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-triptych2' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Triptych 2</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 9. Triptych Foto 3 */}
+                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        9. Triptych Bawah 3 (Detail Cuff)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 3:4
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-semibold text-[#141312] truncate">
+                      Default: lookbook_figma_4.png
+                    </p>
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.triptych3 || '/images/lookbook_figma_4.png'}
+                        alt="Triptych 3"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-triptych3' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Triptych 3</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 10. Panorama Penutup (Flowing Dress) */}
+                <div className="flex flex-col justify-between rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs sm:col-span-2 lg:col-span-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                        10. Foto Panorama Penutup (Flowing Dress Shot)
+                      </span>
+                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                        Tampil: 21:10
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8380] truncate">
+                      Default: lookbook_figma_5.png
+                    </p>
+                    <div className="relative aspect-[21/9] sm:aspect-[21/10] w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={sections.lookbookPage?.fullDress || '/images/lookbook_figma_5.png'}
+                        alt="Full Flowing Dress"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('lbpage-fullDress' as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-5 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Penutup</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ BAGIAN B: BAB LOOKBOOK (Koleksi / Chapter) ══ */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                    2. Bab / Chapter Lookbook Aktif
+                  </h3>
+                  <p className="text-xs text-[#685E5A] mt-0.5">
+                    Hanya bab aktif yang ditampilkan (saat ini Chapter 1 / Season 1). Tambah bab baru jika merilis season berikutnya.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#141312] px-2.5 py-0.5 text-[10px] font-bold text-[#FAF8F5]">
+                  {sections.lookbook.length} Bab Aktif
+                </span>
+              </div>
+
+              {/* Lookbook Chapters Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sections.lookbook.map((ch, idx) => (
+                  <div
+                    key={ch.id || idx}
+                    className="flex flex-col rounded-2xl border border-[#E5DDD5] bg-[#FAF8F5] p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
+                  >
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/60">
+                      <span className="rounded-full bg-[#141312] px-2.5 py-0.5 text-[10px] font-bold text-[#FAF8F5] uppercase">
+                        {ch.num || `BAB ${idx + 1}`}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-[#685E5A]">
+                          Look {String(idx + 1).padStart(2, '0')}
+                        </span>
+                        {sections.lookbook.length > 1 && (
+                          <button
+                            type="button"
+                            title="Hapus Bab Ini"
+                            onClick={() => {
+                              if (!window.confirm(`Yakin hapus "${ch.num || `Bab ${idx + 1}`}"?`))
+                                return;
+                              setSections((prev) => ({
+                                ...prev,
+                                lookbook: prev.lookbook.filter((_, i) => i !== idx),
+                              }));
+                            }}
+                            className="flex h-7 w-7 min-h-[28px] min-w-[28px] items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 transition-colors hover:bg-red-100 active:scale-95"
+                          >
+                            <Icon name="close" size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Chapter Image Preview */}
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <Image
+                        src={ch.image || '/images/sevaya_first_chapter.jpg'}
+                        alt={ch.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    {/* Upload / Pick Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget(`lookbook-${idx}` as ImagePickerTarget);
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex w-full min-h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    >
+                      <Icon name="image" size={14} />
+                      <span>Ganti Foto Bab</span>
+                    </button>
+
+                    {/* Form fields */}
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-medium text-[#685E5A] uppercase">
+                          Label Bab
+                        </label>
+                        <input
+                          type="text"
+                          value={ch.num}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSections((prev) => {
+                              const next = [...prev.lookbook];
+                              if (next[idx]) next[idx] = { ...next[idx]!, num: val };
+                              return { ...prev, lookbook: next };
+                            });
+                          }}
+                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-white px-2.5 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-medium text-[#685E5A] uppercase">
+                          Judul Look / Chapter
+                        </label>
+                        <input
+                          type="text"
+                          value={ch.title}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSections((prev) => {
+                              const next = [...prev.lookbook];
+                              if (next[idx]) next[idx] = { ...next[idx]!, title: val };
+                              return { ...prev, lookbook: next };
+                            });
+                          }}
+                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-white px-2.5 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Chapter Button */}
+              <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-[#D0C5BD] bg-[#FAF8F5] py-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIdx = sections.lookbook.length + 1;
+                    setSections((prev) => ({
+                      ...prev,
+                      lookbook: [
+                        ...prev.lookbook,
+                        {
+                          id: crypto.randomUUID(),
+                          num: `BAB ${newIdx}`,
+                          title: `Season ${newIdx} // Look ${String(newIdx).padStart(2, '0')}`,
+                          image: '/images/catalog/catalog-01.jpg',
+                        },
+                      ],
+                    }));
+                  }}
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full border border-[#D0C5BD] bg-white px-6 py-2.5 text-xs font-semibold text-[#141312] shadow-xs transition-all hover:bg-[#FAF8F5] hover:border-[#141312] active:scale-[0.98]"
+                >
+                  <Icon name="add" size={16} />
+                  <span>Tambah Bab Baru (Season Berikutnya)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 4: TENTANG TOKO (ABOUT & MANIFESTO)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'section-conscious' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Editorial &amp; Storefront
+                </span>
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  Halaman Tentang Toko (About)
+                </h2>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveSections('Tentang Toko')}
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+              >
+                <Icon name="check" size={16} />
+                <span>Simpan Perubahan</span>
+              </button>
+            </div>
+
+            {/* Manifesto Hero Banner */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  1. Banner Utama Halaman About
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                  <Image
+                    src={sections.conscious?.heroImage || '/images/catalog/catalog-11.jpg'}
+                    alt="Conscious hero"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col justify-center gap-3 sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('conscious-hero');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                  >
+                    <Icon name="image" size={14} />
+                    <span>Ganti Gambar Hero Filosofi</span>
+                  </button>
+                  <p className="text-xs text-[#685E5A]">
+                    Tampilan editorial manifesto untuk mengedukasi pelanggan mengenai etika pembuatan pakaian Sevaya.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Textile Archives */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  2. Foto 4 Arsip Tekstil Berkelanjutan
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                {/* 1. Bemberg */}
+                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
+                  <span className="truncate text-xs font-semibold text-[#141312]">
+                    Bemberg™ Cupro
+                  </span>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={sections.conscious?.bembergImage || '/images/catalog/catalog-06.jpg'}
+                      alt="Bemberg Cupro"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('conscious-bemberg');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                  >
+                    Ganti Foto
+                  </button>
+                </div>
+
+                {/* 2. Tencel */}
+                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
+                  <span className="truncate text-xs font-semibold text-[#141312]">
+                    TENCEL™ Lyocell
+                  </span>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={sections.conscious?.tencelImage || '/images/catalog/catalog-16.jpg'}
+                      alt="Tencel Lyocell"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('conscious-tencel');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                  >
+                    Ganti Foto
+                  </button>
+                </div>
+
+                {/* 3. Linen */}
+                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
+                  <span className="truncate text-xs font-semibold text-[#141312]">
+                    Pure Flax Linen
+                  </span>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={sections.conscious?.linenImage || '/images/catalog/catalog-15.jpg'}
+                      alt="Pure Flax Linen"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('conscious-linen');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                  >
+                    Ganti Foto
+                  </button>
+                </div>
+
+                {/* 4. Modal */}
+                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
+                  <span className="truncate text-xs font-semibold text-[#141312]">
+                    Eco Modal
+                  </span>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={sections.conscious?.modalImage || '/images/catalog/catalog-04.jpg'}
+                      alt="Eco Modal"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('conscious-modal');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                  >
+                    Ganti Foto
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 5: GALERI CLOUD MEDIA & MASTER STORAGE
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'media' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            {/* Top Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Aset Digital &amp; Master Storage
+                </span>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                    Galeri Cloud Media
+                  </h2>
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-800 border border-emerald-200/60">
+                    CDN ACTIVE
+                  </span>
+                </div>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Pusat aset master fotografi editorial resolusi tinggi dan integrasi CDN Supabase Storage.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                >
+                  <Icon name="add_photo_alternate" size={16} />
+                  <span>Unggah Master Foto</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Telemetry Summary Card */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E5DDD5]/70 gap-4 sm:gap-6">
+                {/* Metric 1: Kapasitas Bucket */}
+                <div className="flex flex-col justify-between space-y-2 sm:pr-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                      Kapasitas Bucket
+                    </span>
+                    <span className="font-mono text-xs font-semibold text-[#141312]">
+                      18.4 GB / 50 GB
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#F4EFEB] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-[#141312] h-full rounded-full" style={{ width: '36.8%' }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-[#685E5A]">
+                    <span>{MASTER_CATALOG_ASSETS.length} Foto Abaya Aktif</span>
+                    <span className="text-emerald-700 font-medium">36.8% terpakai</span>
+                  </div>
+                </div>
+
+                {/* Metric 2: CDN Edge Caching */}
+                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                      Status Edge CDN
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px] font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      Optimal (99.98%)
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold text-[#141312]">12 ms</span>
+                    <span className="text-[11px] text-[#685E5A]">TTFB P95 Jakarta (CGK-1)</span>
+                  </div>
+                  <div className="text-[11px] text-[#685E5A]">
+                    Kompresi Brotli 4K otomatis
+                  </div>
+                </div>
+
+                {/* Metric 3: Sinkronisasi Katalog */}
+                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                      Koneksi Storefront
+                    </span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200/60">
+                      100% SYNCED
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold text-[#141312]">18 / 18</span>
+                    <span className="text-[11px] text-[#685E5A]">PDP Terkoneksi</span>
+                  </div>
+                  <div className="text-[11px] text-[#685E5A]">
+                    Bucket: <code className="font-mono text-[10px] text-[#141312]">production-katalog</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 touch-pan-x">
+                {[
+                  { id: 'all', label: `Semua (${MASTER_CATALOG_ASSETS.length})` },
+                  { id: 'plum', label: 'Siluet Plum (8)' },
+                  { id: 'cuff', label: 'Manset & Hijab (5)' },
+                  { id: 'outdoor', label: 'Editorial Outdoor (5)' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setMediaCategory(tab.id as any)}
+                    className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
+                      mediaCategory === tab.id
+                        ? 'bg-[#141312] text-[#FAF8F5]'
+                        : 'border border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="relative flex-1 sm:w-56">
+                  <input
+                    type="text"
+                    value={mediaSearchQuery}
+                    onChange={(e) => setMediaSearchQuery(e.target.value)}
+                    placeholder="Filter berkas..."
+                    className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pl-8 pr-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                  <Icon
+                    name="filter_alt"
+                    size={15}
+                    className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-[#685E5A]"
+                  />
+                </div>
+
+                <div className="flex items-center rounded-full border border-[#D0C5BD] p-0.5 bg-[#F4EFEB]">
+                  <button
+                    type="button"
+                    onClick={() => setMediaViewMode('grid')}
+                    className={`min-h-[34px] min-w-[34px] flex items-center justify-center rounded-full transition-colors ${
+                      mediaViewMode === 'grid'
+                        ? 'bg-white text-[#141312] shadow-2xs'
+                        : 'text-[#685E5A] hover:text-[#141312]'
+                    }`}
+                    title="Tampilan Kisi"
+                  >
+                    <Icon name="grid_view" size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMediaViewMode('table')}
+                    className={`min-h-[34px] min-w-[34px] flex items-center justify-center rounded-full transition-colors ${
+                      mediaViewMode === 'table'
+                        ? 'bg-white text-[#141312] shadow-2xs'
+                        : 'text-[#685E5A] hover:text-[#141312]'
+                    }`}
+                    title="Tampilan Tabel"
+                  >
+                    <Icon name="table_rows" size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Split Layout: Asset Display (Left) + Persistent Asset Inspector (Right) */}
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* Left Column: Asset Grid or Table */}
+              <div className="flex-1 min-w-0 w-full">
+                {(() => {
+                  const filteredAssets = MASTER_CATALOG_ASSETS.filter((asset) => {
+                    const matchesCategory =
+                      mediaCategory === 'all' || asset.category === mediaCategory;
+                    const matchesSearch =
+                      mediaSearchQuery.trim() === '' ||
+                      asset.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase()) ||
+                      asset.collection.toLowerCase().includes(mediaSearchQuery.toLowerCase()) ||
+                      asset.badge.toLowerCase().includes(mediaSearchQuery.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  });
+
+                  if (filteredAssets.length === 0) {
+                    return (
+                      <div className="rounded-2xl border border-[#E5DDD5] bg-white p-12 text-center text-[#685E5A]">
+                        <Icon name="search_off" size={36} className="mb-2 text-[#8E8380] mx-auto block" />
+                        <p className="font-semibold text-sm text-[#141312]">Tidak ada foto yang cocok</p>
+                        <p className="text-xs text-[#685E5A] mt-1">
+                          Coba ganti kata kunci pencarian atau ubah filter kategori di atas.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  if (mediaViewMode === 'grid') {
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                        {filteredAssets.map((asset) => {
+                          const isSelected = selectedAsset.filename === asset.filename;
+                          return (
+                            <div
+                              key={asset.filename}
+                              onClick={() => { setSelectedAsset(asset); setInspectorOpen(true); }}
+                              className={`group relative rounded-2xl border bg-white overflow-hidden cursor-pointer transition-all shadow-[0_1px_4px_rgba(27,23,24,0.03)] ${
+                                isSelected && inspectorOpen
+                                  ? 'border-[#141312] ring-1 ring-[#141312]'
+                                  : 'border-[#E5DDD5] hover:border-[#141312]'
+                              }`}
+                            >
+                              <div className="relative aspect-[3/4] w-full bg-[#F4EFEB] overflow-hidden">
+                                <Image
+                                  src={asset.src}
+                                  alt={asset.collection}
+                                  fill
+                                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="absolute top-2 left-2">
+                                  <span
+                                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase ${
+                                      asset.badge === 'LIVE PDP'
+                                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
+                                        : asset.badge === 'LOOKBOOK'
+                                        ? 'bg-purple-50 text-purple-800 border border-purple-200/60'
+                                        : asset.badge === 'DETAIL PDP'
+                                        ? 'bg-blue-50 text-blue-800 border border-blue-200/60'
+                                        : 'bg-[#F4EFEB] text-[#685E5A]'
+                                    }`}
+                                  >
+                                    {asset.badge}
+                                  </span>
+                                </div>
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(asset.cdnUrl);
+                                      showToast(`Path CDN ${asset.filename} disalin!`);
+                                    }}
+                                    className="w-7 h-7 rounded-full bg-[#141312]/80 backdrop-blur-xs text-white flex items-center justify-center hover:bg-[#141312] transition-colors"
+                                    title="Salin Path CDN"
+                                  >
+                                    <Icon name="content_copy" size={13} />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="p-3 flex flex-col gap-0.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-xs text-[#141312] truncate max-w-[130px]">
+                                    {asset.filename}
+                                  </span>
+                                  <span className="font-mono text-[10px] text-[#8E8380]">
+                                    {asset.size}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] text-[#685E5A] truncate">
+                                  {asset.collection}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+
+                  // Table View
+                  return (
+                    <div className="rounded-2xl border border-[#E5DDD5] bg-white overflow-hidden shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-[#E5DDD5] bg-[#FAF8F5] text-[11px] font-semibold text-[#685E5A] uppercase tracking-wider">
+                              <th className="py-2.5 px-3">Pratinjau</th>
+                              <th className="py-2.5 px-3">Nama Berkas Master</th>
+                              <th className="py-2.5 px-3">Dimensi</th>
+                              <th className="py-2.5 px-3">Ukuran File</th>
+                              <th className="py-2.5 px-3">Penempatan</th>
+                              <th className="py-2.5 px-3">Status CDN</th>
+                              <th className="py-2.5 px-3 text-right">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#E5DDD5]/60 text-xs">
+                            {filteredAssets.map((asset) => {
+                              const isSelected = selectedAsset.filename === asset.filename;
+                              return (
+                                <tr
+                                  key={asset.filename}
+                                  onClick={() => { setSelectedAsset(asset); setInspectorOpen(true); }}
+                                  className={`cursor-pointer transition-colors ${
+                                    isSelected && inspectorOpen
+                                      ? 'bg-[#F4EFEB] font-medium'
+                                      : 'hover:bg-[#FAF8F5]'
+                                  }`}
+                                >
+                                  <td className="py-2 px-3">
+                                    <div className="relative w-8 h-10 overflow-hidden rounded-md bg-[#F4EFEB]">
+                                      <Image
+                                        src={asset.src}
+                                        alt={asset.filename}
+                                        fill
+                                        sizes="32px"
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className="font-semibold text-[#141312] block">
+                                      {asset.filename}
+                                    </span>
+                                    <span className="text-[11px] text-[#685E5A] truncate block max-w-xs">
+                                      {asset.collection}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 font-mono text-[11px] text-[#141312]">
+                                    {asset.res}
+                                  </td>
+                                  <td className="py-2 px-3 font-mono text-[11px] text-[#685E5A]">
+                                    {asset.size}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span
+                                      className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                        asset.badge === 'LIVE PDP'
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
+                                          : 'bg-[#F4EFEB] text-[#685E5A]'
+                                      }`}
+                                    >
+                                      {asset.badge}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <div className="flex items-center gap-1 text-emerald-700 text-[11px]">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                                      <span>Cached 4K</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-3 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigator.clipboard.writeText(asset.cdnUrl);
+                                          showToast(`Path CDN ${asset.filename} disalin!`);
+                                        }}
+                                        className="rounded-full p-1 text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition-colors"
+                                        title="Salin Path CDN"
+                                      >
+                                        <Icon name="content_copy" size={15} />
+                                      </button>
+                                      <a
+                                        href={asset.src}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="rounded-full p-1 text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition-colors"
+                                        title="Buka Resolusi Penuh"
+                                      >
+                                        <Icon name="open_in_new" size={15} />
+                                      </a>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Right Column: Asset Inspector */}
+              {inspectorOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 bg-[#141312]/40 backdrop-blur-xs z-40 lg:hidden"
+                    onClick={() => setInspectorOpen(false)}
+                  />
+                  <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-sm sm:max-w-md bg-white border-l border-[#E5DDD5] p-5 shadow-2xl overflow-y-auto lg:static lg:z-auto lg:w-[320px] xl:w-[350px] lg:max-w-none lg:rounded-2xl lg:border lg:p-5 lg:shadow-[0_1px_4px_rgba(27,23,24,0.03)] lg:sticky lg:top-24 lg:overflow-visible animate-in slide-in-from-right duration-200">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD5]/70">
+                      <div className="flex items-center gap-1.5">
+                        <Icon name="info" size={16} className="text-[#141312]" />
+                        <span className="text-xs uppercase font-bold tracking-wider text-[#141312]">
+                          Inspektur Berkas
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                            selectedAsset.badge === 'LIVE PDP'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
+                              : 'bg-[#F4EFEB] text-[#685E5A]'
+                          }`}
+                        >
+                          {selectedAsset.badge}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setInspectorOpen(false)}
+                          className="flex min-h-[36px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] border border-[#D0C5BD] transition-colors active:scale-95"
+                          title="Tutup Inspektur"
+                        >
+                          <Icon name="close" size={14} />
+                          <span>Tutup</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview Box */}
+                    <div className="my-3 overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] relative aspect-[3/4]">
+                      <Image
+                        src={selectedAsset.src}
+                        alt={selectedAsset.collection}
+                        fill
+                        sizes="350px"
+                        className="object-cover"
+                      />
+                      <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-[#141312]/80 backdrop-blur-md px-2.5 py-1 text-white text-[10px] font-mono flex items-center justify-between">
+                        <span>{selectedAsset.res} px</span>
+                        <span>{selectedAsset.format}</span>
+                      </div>
+                    </div>
+
+                    {/* Metadata Attributes */}
+                    <div className="space-y-2 text-xs pt-1">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                          Nama Berkas Master
+                        </span>
+                        <span className="font-semibold text-[#141312] text-xs break-all">
+                          {selectedAsset.filename}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                          Deskripsi Siluet &amp; Koleksi
+                        </span>
+                        <span className="text-[#141312] text-xs">
+                          {selectedAsset.collection}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                          Supabase Storage CDN Path
+                        </span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <input
+                            className="flex-1 bg-[#FAF8F5] text-[#141312] font-mono text-[10.5px] px-2 py-1 border border-[#D0C5BD] select-all truncate rounded-none focus:outline-none"
+                            readOnly
+                            type="text"
+                            value={selectedAsset.cdnUrl}
+                          />
+                          <button
+                            type="button"
+                            className="rounded-full p-1.5 bg-[#F4EFEB] hover:bg-[#EAE4DD] text-[#141312] transition-colors shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedAsset.cdnUrl);
+                              showToast('Path Supabase CDN berhasil disalin!');
+                            }}
+                            title="Salin Path"
+                          >
+                            <Icon name="content_copy" size={13} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E5DDD5]/60 text-[11px]">
+                        <div>
+                          <span className="text-[#8E8380] text-[10px] block font-bold uppercase tracking-wider">
+                            Ukuran File
+                          </span>
+                          <span className="font-mono font-semibold text-[#141312]">
+                            {selectedAsset.size}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#8E8380] text-[10px] block font-bold uppercase tracking-wider">
+                            Waktu Unggah
+                          </span>
+                          <span className="font-mono text-[#141312] text-[10.5px]">
+                            {selectedAsset.date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Action Cluster */}
+                    <div className="mt-4 pt-3 border-t border-[#E5DDD5]/60 flex flex-col gap-2">
+                      <a
+                        className="w-full py-1.5 rounded-full border border-[#D0C5BD] bg-white hover:bg-[#F4EFEB] text-[#141312] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                        href={selectedAsset.src}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Icon name="open_in_new" size={14} />
+                        <span>Buka Resolusi Penuh</span>
+                      </a>
+
+                      <label className="w-full py-1.5 rounded-full border border-[#D0C5BD] bg-white hover:bg-[#F4EFEB] text-[#141312] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                        <Icon name="refresh" size={14} />
+                        <span>Ganti File / Versi Baru</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileUpload}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        className="w-full py-1 text-red-600 hover:bg-red-50 text-xs rounded-full flex items-center justify-center gap-1 transition-colors"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Apakah Anda yakin ingin menghapus berkas ${selectedAsset.filename} dari master bucket?`
+                            )
+                          ) {
+                            showToast(`Aset ${selectedAsset.filename} berhasil dihapus dari bucket.`);
+                          }
+                        }}
+                      >
+                        <Icon name="delete" size={14} />
+                        <span>Hapus Aset dari Bucket</span>
+                      </button>
+                    </div>
+                  </aside>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 7: PENGATURAN STUDIO INTERNAL & CDN
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'settings' && (
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            <div className="flex flex-col gap-1 pb-2">
+              <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                Sistem &amp; Konfigurasi
+              </span>
+              <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                Pengaturan Studio &amp; Infrastruktur CDN
+              </h2>
+              <p className="text-xs text-[#685E5A] mt-0.5">
+                Konfigurasi operasional Sevaya, kredensial integrasi pengiriman, payment gateway, dan status Supabase Cloud CDN.
+              </p>
+            </div>
+
+            {/* Card 1: Identitas Brand & Toko */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  Identitas Brand &amp; Toko
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
+                </p>
+              </div>
+
+              <div className="divide-y divide-[#E5DDD5]/60">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                  <span className="text-xs font-medium text-[#685E5A]">Nama Brand</span>
+                  <div className="w-full sm:w-80">
+                    <input
+                      type="text"
+                      readOnly
+                      value="SEVAYA"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-semibold text-[#141312] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                  <span className="text-xs font-medium text-[#685E5A]">Domain Resmi</span>
+                  <div className="w-full sm:w-80">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://sevaya.id"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-mono text-[#141312] focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  Status Integrasi Logistik &amp; Payment Gateway
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-[#141312]">Biteship Logistics</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      Live Webhook
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#685E5A]">
+                    Origin: Gudang Sevaya Jakarta Selatan
+                  </p>
+                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                    Dukungan kurir instant, sameday, next day, dan reguler seluruh Indonesia.
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-[#141312]">Midtrans Snap</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                      Production Gateway
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#685E5A]">
+                    QRIS, BCA VA, Mandiri VA, BNI VA, GoPay
+                  </p>
+                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                    Konfirmasi pembayaran otomatis via HTTP POST webhook callback.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Infrastruktur Cloud & Status CDN (Supabase Storage - Merged) */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                    Infrastruktur Cloud &amp; Status CDN (Supabase)
+                  </h3>
+                  <p className="text-xs text-[#685E5A] mt-0.5">
+                    Monitoring bucket Supabase cloud storage, integrasi edge CDN Anycast global, dan latensi node.
+                  </p>
+                </div>
+                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200/60">
+                  ALL REGIONS OK
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/70">
+                    <span className="font-semibold text-[#141312]">Bucket S3 Production</span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-mono text-emerald-800 border border-emerald-200/60">
+                      PUBLIC CDN
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Endpoint S3</span>
+                      <span className="font-mono text-[#141312]">https://cdn.sevaya.id/storage/v1</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">CORS Policy</span>
+                      <span className="text-emerald-700 font-medium">Enabled (GET, HEAD, POST)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Cache Control</span>
+                      <span className="font-mono text-[#141312]">1 Year Immutable</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Enkripsi At-Rest</span>
+                      <span className="text-emerald-700 font-medium">AES-256 Verified</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/70">
+                    <span className="font-semibold text-[#141312]">Edge Network Latency</span>
+                    <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[10px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      Global Anycast
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Jakarta POP (CGK-1)</span>
+                      <span className="font-mono text-emerald-700 font-semibold">11ms • 100% UP</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Singapore POP (SIN-1)</span>
+                      <span className="font-mono text-emerald-700 font-semibold">19ms • 100% UP</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Kuala Lumpur POP (KUL-1)</span>
+                      <span className="font-mono text-emerald-700 font-semibold">24ms • 100% UP</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#685E5A]">Global SSL Cert</span>
+                      <span className="text-emerald-700 font-medium">Aktif s/d Des 2026</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 1: Identitas Brand & Toko */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  Identitas Brand &amp; Toko
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
+                </p>
+              </div>
+
+              <div className="divide-y divide-[#E5DDD5]/60">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                  <span className="text-xs font-medium text-[#685E5A]">Nama Brand</span>
+                  <div className="w-full sm:w-80">
+                    <input
+                      type="text"
+                      readOnly
+                      value="SEVAYA"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-semibold text-[#141312] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                  <span className="text-xs font-medium text-[#685E5A]">Domain Resmi</span>
+                  <div className="w-full sm:w-80">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://sevaya.id"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-mono text-[#141312] focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
+            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-[#E5DDD5]/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  Status Integrasi Logistik &amp; Payment Gateway
+                </h3>
+                <p className="text-xs text-[#685E5A] mt-0.5">
+                  Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-[#141312]">Biteship Logistics</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      Live Webhook
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#685E5A]">
+                    Origin: Gudang Sevaya Jakarta Selatan
+                  </p>
+                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                    Dukungan kurir instant, sameday, next day, dan reguler seluruh Indonesia.
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm text-[#141312]">Midtrans Snap</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                      Production Gateway
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#685E5A]">
+                    QRIS, BCA VA, Mandiri VA, BNI VA, GoPay
+                  </p>
+                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                    Konfirmasi pembayaran otomatis via HTTP POST webhook callback.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* ──────────────────────────────────────────────────────────
+          MODAL: UPLOAD MASTER FOTO KATALOG
+      ────────────────────────────────────────────────────────── */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 bg-[#141312]/50 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] shadow-2xl w-full max-w-lg p-5 sm:p-7 flex flex-col gap-4 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD5]/70">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#141312] text-[#FAF8F5] flex items-center justify-center shrink-0">
+                  <Icon name="cloud_upload" size={18} />
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-sm text-[#141312]">
+                    Unggah Master Foto Katalog
+                  </h3>
+                  <p className="text-[11px] text-[#685E5A]">
+                    Bucket:{' '}
+                    <code className="bg-[#F4EFEB] px-1.5 py-0.5 rounded font-mono text-[10px] text-[#141312]">
+                      production-katalog-sevaya
+                    </code>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                onClick={() => setIsUploadModalOpen(false)}
+                aria-label="Tutup Unggah"
+              >
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            {/* Drag & Drop Zone */}
+            <label className="rounded-xl border-2 border-dashed border-[#D0C5BD] p-5 sm:p-6 flex flex-col items-center justify-center text-center bg-[#FAF8F5] hover:bg-[#F4EFEB] transition-colors cursor-pointer">
+              <Icon name="add_photo_alternate" size={36} className="text-[#141312] mb-2" />
+              <p className="font-semibold text-xs text-[#141312]">
+                Tarik &amp; lepas berkas master di sini
+              </p>
+              <p className="text-[11px] text-[#685E5A] mt-1 max-w-sm">
+                RAW, TIFF, PNG, atau JPG hingga 25 MB per berkas. Sistem mengonversi otomatis ke WebP 4K untuk edge CDN.
+              </p>
+              <span className="mt-4 min-h-[40px] inline-flex items-center rounded-full px-5 py-2 bg-white border border-[#D0C5BD] text-xs font-semibold text-[#141312] hover:bg-[#F4EFEB] shadow-xs active:scale-95 transition">
+                Pilih dari Komputer
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  handleFileUpload(e);
+                  setIsUploadModalOpen(false);
+                }}
+              />
+            </label>
+
+            <div className="space-y-1.5 text-xs">
+              <label className="font-semibold uppercase tracking-wider text-[#685E5A] text-[10px] block">
+                Koleksi Terhubung
+              </label>
+              <select
+                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                value={uploadCollection}
+                onChange={(e) => setUploadCollection(e.target.value)}
+              >
+                <option>Abaya Plum Riverside Silk (Spring 2025)</option>
+                <option>Koleksi Manset Monogram Emas</option>
+                <option>Editorial Padang Rumput &amp; Linen</option>
+                <option>Draft Umum / Belum Terikat</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E5DDD5]/70">
+              <button
+                type="button"
+                className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors active:scale-95"
+                onClick={() => setIsUploadModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  showToast('Aset master berhasil diproses ke CDN!');
+                }}
+              >
+                <Icon name="done" size={15} />
+                <span>Mulai Proses CDN</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          MODAL: PRODUCT CRUD (WITH MULTI-PHOTO SWATCHES)
+      ────────────────────────────────────────────────────────── */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Katalog Koleksi
+                </span>
+                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                  {editingProduct ? 'Edit Produk & Varian Foto' : 'Tambah Produk Baru'}
+                </h3>
+                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                  Tentukan foto utama dan foto spesifik untuk masing-masing varian warna.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProductModalOpen(false)}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                aria-label="Tutup Form Produk"
+              >
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-4 sm:p-7 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Nama / Judul Produk *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.title}
+                    onChange={(e) => setProductForm((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="cth. Fina Abaya - Stripe 2.0"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Slug URL
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.slug}
+                    onChange={(e) => setProductForm((prev) => ({ ...prev, slug: e.target.value }))}
+                    placeholder="otomatis dibuat dari judul"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Edisi / Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.edition}
+                    onChange={(e) =>
+                      setProductForm((prev) => ({ ...prev, edition: e.target.value }))
+                    }
+                    placeholder="cth. Edition 2.0"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Harga (Rp) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={productForm.price}
+                    onChange={(e) =>
+                      setProductForm((prev) => ({ ...prev, price: Number(e.target.value) }))
+                    }
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Harga Normal (Coret)
+                  </label>
+                  <input
+                    type="number"
+                    value={productForm.original_price}
+                    onChange={(e) =>
+                      setProductForm((prev) => ({
+                        ...prev,
+                        original_price: Number(e.target.value),
+                      }))
+                    }
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Badge & Stock & Visibility */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Badge Label (Opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.badge}
+                    onChange={(e) => setProductForm((prev) => ({ ...prev, badge: e.target.value }))}
+                    placeholder="cth. Best Seller, Sale -20%"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col justify-end gap-2">
+                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-2.5">
+                    <input
+                      type="checkbox"
+                      checked={productForm.inStock}
+                      onChange={(e) =>
+                        setProductForm((prev) => ({ ...prev, inStock: e.target.checked }))
+                      }
+                      className="h-4 w-4 accent-[#141312]"
+                    />
+                    <span className="text-xs font-semibold text-[#141312]">
+                      Tersedia dalam Stok (In Stock)
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+                    <input
+                      type="checkbox"
+                      checked={productForm.hidden}
+                      onChange={(e) =>
+                        setProductForm((prev) => ({ ...prev, hidden: e.target.checked }))
+                      }
+                      className="h-4 w-4 accent-amber-600"
+                    />
+                    <span className="text-xs font-semibold text-amber-800">
+                      Sembunyikan dari Toko
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Product Default Image */}
+              <div className="flex flex-col gap-2 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#141312]">
+                    Foto Sampul Utama Produk
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('product');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                  >
+                    <Icon name="image" size={14} />
+                    <span>Pilih dari Galeri</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={productForm.image || '/images/catalog/catalog-01.jpg'}
+                      alt="Product preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <input
+                      type="text"
+                      value={productForm.image}
+                      onChange={(e) =>
+                        setProductForm((prev) => ({ ...prev, image: e.target.value }))
+                      }
+                      placeholder="/images/catalog/catalog-01.jpg atau URL Supabase"
+                      className="w-full min-h-[38px] rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    />
+                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-95">
+                      <Icon name="upload" size={14} />
+                      <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploading}
+                        onChange={(e) => {
+                          setImagePickerTarget('product');
+                          handleFileUpload(e);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Swatches Builder with Multi-Photo per Color */}
+              <div className="flex flex-col gap-3 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-[#141312] block">
+                      Varian Warna &amp; Foto Masing-masing Warna
+                    </span>
+                    <p className="text-[11px] text-[#685E5A]">
+                      Setiap varian warna dapat dihubungkan ke foto abaya warnanya masing-masing.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSwatch}
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                  >
+                    <Icon name="add" size={14} />
+                    <span>Tambah Warna</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  {productForm.swatches.map((sw, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col gap-2.5 rounded-xl border border-[#E5DDD5] bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center"
+                    >
+                      {/* Color Preview & Native Color Picker */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={sw.color}
+                          onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
+                          className="h-9 w-9 cursor-pointer rounded-lg border border-[#E5DDD5] p-0.5"
+                          title="Pilih Warna Hex"
+                        />
+                        <div className="flex flex-col">
+                          <input
+                            type="text"
+                            value={sw.name}
+                            onChange={(e) => handleUpdateSwatch(idx, 'name', e.target.value)}
+                            placeholder="Nama Warna"
+                            className="w-36 min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-2 py-1 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                          />
+                          <input
+                            type="text"
+                            value={sw.color}
+                            onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
+                            placeholder="#1A1A1A"
+                            className="mt-1 w-36 rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-2 py-0.5 font-mono text-[10px] text-[#685E5A] focus:border-[#141312] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Photo for this specific color */}
+                      <div className="flex flex-1 items-center gap-2.5 sm:border-l sm:border-[#E5DDD5] sm:pl-3">
+                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                          <Image
+                            src={sw.image || productForm.image || '/images/catalog/catalog-01.jpg'}
+                            alt={`Foto warna ${sw.name}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+
+                        <div className="flex flex-1 flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImagePickerTarget(`swatch-${idx}` as ImagePickerTarget);
+                                setIsImagePickerOpen(true);
+                              }}
+                              className="min-h-[34px] rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-[11px] font-medium text-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                            >
+                              <Icon name="image" size={12} className="inline mr-1" />
+                              <span>Pilih Foto</span>
+                            </button>
+
+                            <label className="min-h-[34px] flex items-center cursor-pointer rounded-full bg-[#141312] px-3 py-1 text-[11px] font-semibold text-[#FAF8F5] hover:bg-[#2b2826] active:scale-95">
+                              <Icon name="upload" size={11} className="inline mr-1" />
+                              <span>Unggah</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={isUploading}
+                                onChange={(e) => {
+                                  setImagePickerTarget(`swatch-${idx}` as ImagePickerTarget);
+                                  handleFileUpload(e);
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          <span className="truncate font-mono text-[9px] text-[#8E8380]">
+                            {sw.image || productForm.image}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Delete Swatch */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSwatch(idx)}
+                        className="self-end min-h-[36px] min-w-[36px] flex items-center justify-center rounded-full p-1.5 text-red-500 hover:bg-red-50 sm:self-center active:scale-95"
+                        title="Hapus Warna Ini"
+                      >
+                        <Icon name="close" size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-[#E5DDD5]/70 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] active:scale-95 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-6 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                >
+                  <Icon name="check" size={15} />
+                  <span>{isLoading ? 'Menyimpan...' : 'Simpan Produk'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          MODAL: ARTICLE CRUD (NEWS & EDITORIAL JOURNAL)
+      ────────────────────────────────────────────────────────── */}
+      {isArticleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Editorial Journal
+                </span>
+                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                  {editingArticle ? 'Edit Artikel Berita' : 'Tulis Artikel Berita Baru'}
+                </h3>
+                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                  Publikasikan wawasan busana, filosofi tekstil, atau rilis studio ke /news.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsArticleModalOpen(false)}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                aria-label="Tutup Form Artikel"
+              >
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveArticle} className="flex flex-col gap-4.5 p-4 sm:p-7 overflow-y-auto">
+              {/* Title & Slug */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Judul Artikel *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={articleForm.title}
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="cth. The Art of Fewer, Better Choices"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Slug URL
+                  </label>
+                  <input
+                    type="text"
+                    value={articleForm.slug}
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, slug: e.target.value }))}
+                    placeholder="otomatis dibuat dari judul"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Category, Date & Read Time */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Kategori Topik
+                  </label>
+                  <select
+                    value={articleForm.category}
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, category: e.target.value }))}
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  >
+                    {ARTICLE_CATEGORIES.filter((c) => c !== 'All Stories').map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Tanggal Rilis
+                  </label>
+                  <input
+                    type="text"
+                    value={articleForm.date}
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, date: e.target.value }))}
+                    placeholder="cth. Oct 18, 2026"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Estimasi Waktu Baca
+                  </label>
+                  <input
+                    type="text"
+                    value={articleForm.readTime}
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, readTime: e.target.value }))}
+                    placeholder="cth. 4 min read"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Excerpt */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-[#685E5A]">
+                  Cuplikan / Excerpt (Tampil di kartu &amp; preview)
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={articleForm.excerpt}
+                  onChange={(e) => setArticleForm((prev) => ({ ...prev, excerpt: e.target.value }))}
+                  placeholder="Ringkasan 1-2 kalimat mengenai topik artikel ini..."
+                  className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              {/* Full Content */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-[#685E5A]">
+                    Isi Paragraf Konten Lengkap
+                  </label>
+                  <span className="text-[10px] text-[#8E8380]">
+                    Pisahkan antar paragraf dengan 2x Enter (baris kosong)
+                  </span>
+                </div>
+                <textarea
+                  rows={6}
+                  required
+                  value={articleForm.content}
+                  onChange={(e) => setArticleForm((prev) => ({ ...prev, content: e.target.value }))}
+                  placeholder="Tulis narasi lengkap artikel di sini..."
+                  className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none leading-relaxed"
+                />
+              </div>
+
+              {/* Cover Image & Featured Toggle */}
+              <div className="flex flex-col gap-3 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#141312]">
+                    Foto Sampul Artikel
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePickerTarget('article');
+                      setIsImagePickerOpen(true);
+                    }}
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                  >
+                    <Icon name="image" size={14} />
+                    <span>Pilih dari Galeri</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <Image
+                      src={articleForm.image || '/images/catalog/catalog-11.jpg'}
+                      alt="Article preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <input
+                      type="text"
+                      value={articleForm.image}
+                      onChange={(e) =>
+                        setArticleForm((prev) => ({ ...prev, image: e.target.value }))
+                      }
+                      placeholder="/images/catalog/catalog-11.jpg atau URL Supabase"
+                      className="w-full min-h-[38px] rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    />
+                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-95">
+                      <Icon name="upload" size={14} />
+                      <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploading}
+                        onChange={(e) => {
+                          setImagePickerTarget('article');
+                          handleFileUpload(e);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Featured checkbox */}
+                <label className="mt-1 flex cursor-pointer items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3">
+                  <input
+                    type="checkbox"
+                    checked={articleForm.featured}
+                    onChange={(e) =>
+                      setArticleForm((prev) => ({ ...prev, featured: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-amber-600"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-amber-900">
+                      Jadikan Artikel Pilihan Utama (Featured Story)
+                    </span>
+                    <span className="text-[11px] text-amber-700">
+                      Artikel ini akan tampil pada banner hero besar di bagian atas halaman /news.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 border-t border-[#E5DDD5]/70 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsArticleModalOpen(false)}
+                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] active:scale-95 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-6 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                >
+                  <Icon name="check" size={15} />
+                  <span>{editingArticle ? 'Simpan Perubahan' : 'Terbitkan Artikel'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          MODAL: UNIVERSAL IMAGE PICKER & UPLOADER
+      ────────────────────────────────────────────────────────── */}
+      {isImagePickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+              <div>
+                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                  Galeri Media
+                </span>
+                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                  Pilih Gambar untuk Website
+                </h3>
+                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                  Target:{' '}
+                  <span className="font-mono font-semibold text-[#141312]">
+                    {imagePickerTarget || 'Universal'}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImagePickerOpen(false)}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                aria-label="Tutup Pemilih Gambar"
+              >
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 p-4 sm:p-6 overflow-y-auto">
+              {/* Direct Upload in picker */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-[#D0C5BD] bg-[#FAF8F5] p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#141312] text-[#FAF8F5] flex items-center justify-center shrink-0">
+                    <Icon name="upload" size={16} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-[#141312] block">
+                      Unggah Foto Baru ke Supabase
+                    </span>
+                    <p className="text-[11px] text-[#685E5A]">
+                      JPG, PNG, atau WEBP resolusi tinggi
+                    </p>
+                  </div>
+                </div>
+                <label className="min-h-[40px] inline-flex items-center justify-center cursor-pointer rounded-full bg-[#141312] px-4 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] active:scale-95 transition">
+                  <span>{isUploading ? 'Mengunggah...' : 'Pilih File'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Uploaded Media */}
+              {mediaFiles.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#685E5A]">
+                    Foto Upload Supabase ({mediaFiles.length})
+                  </span>
+                  <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
+                    {mediaFiles.map((file) => (
+                      <button
+                        key={file.name}
+                        type="button"
+                        onClick={() => handleSelectPredefinedImage(file.url)}
+                        className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] transition-all hover:scale-105 hover:ring-2 hover:ring-[#141312]"
+                      >
+                        <Image src={file.url} alt={file.name} fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Catalog Photos */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#685E5A]">
+                  Foto Katalog Resolusi Tinggi ({AVAILABLE_CATALOG_IMAGES.length} Foto)
+                </span>
+                <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
+                  {AVAILABLE_CATALOG_IMAGES.map((img) => (
+                    <button
+                      key={img}
+                      type="button"
+                      onClick={() => handleSelectPredefinedImage(img)}
+                      className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] transition-all hover:scale-105 hover:ring-2 hover:ring-[#141312]"
+                    >
+                      <Image src={img} alt="Catalog photo" fill className="object-cover" />
+                      <span className="absolute bottom-1 left-1 rounded-md bg-black/60 px-1.5 py-0.5 font-mono text-[9px] text-white backdrop-blur-xs">
+                        {img.split('/').pop()?.replace('.jpg', '')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
