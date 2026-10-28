@@ -773,6 +773,7 @@ export default function AdminPage() {
       setSections((prev) => {
         const next = { ...prev, hero: { ...prev.hero, image: urlOrPath } };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'spotlight-0') {
@@ -781,6 +782,7 @@ export default function AdminPage() {
         if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
         const next = { ...prev, spotlight: nextSpotlight };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'spotlight-1') {
@@ -789,6 +791,7 @@ export default function AdminPage() {
         if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
         const next = { ...prev, spotlight: nextSpotlight };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'textiles') {
@@ -798,6 +801,7 @@ export default function AdminPage() {
           missionTextiles: { ...prev.missionTextiles, image: urlOrPath },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'journal-0') {
@@ -806,6 +810,7 @@ export default function AdminPage() {
         if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
         const next = { ...prev, journal: nextJournal };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'journal-1') {
@@ -814,6 +819,7 @@ export default function AdminPage() {
         if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
         const next = { ...prev, journal: nextJournal };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target.startsWith('lookbook-')) {
@@ -823,6 +829,7 @@ export default function AdminPage() {
         if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
         const next = { ...prev, lookbook: nextLb };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target.startsWith('lbpage-')) {
@@ -836,6 +843,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'conscious-hero') {
@@ -848,6 +856,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'conscious-bemberg') {
@@ -860,6 +869,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'conscious-tencel') {
@@ -872,6 +882,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'conscious-linen') {
@@ -884,6 +895,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'conscious-modal') {
@@ -896,6 +908,7 @@ export default function AdminPage() {
           },
         };
         saveSiteSections(next);
+        showToast('Foto tersimpan otomatis!');
         return next;
       });
     } else if (target === 'article') {
@@ -1577,7 +1590,19 @@ export default function AdminPage() {
             </div>
           </button>
 
-          
+          {/* Logo Brand SEVAYA (Tampil di Mobile & Desktop) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/admin" className="flex items-center" aria-label="Admin Home">
+              <Logo className="h-4 sm:h-5 w-auto text-black" />
+            </Link>
+            <span className="text-[#d5c2c5] font-light text-xs">|</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[#514346] text-[12px] font-sans min-w-0">
+            <span className="hover:text-[#1a1c1c] cursor-pointer hidden xs:inline shrink-0">Studio</span>
+            <Icon name="chevron_right" size={14} className="text-[#837376] hidden xs:inline shrink-0" />
+            <span className="font-semibold text-[#1a1c1c] truncate">{activeTabMeta.label}</span>
+          </div>
 
           {(activeTab === 'orders' || activeTab === 'catalog' || activeTab === 'media') && (
             <div className="relative flex-1 max-w-xs hidden sm:block">
@@ -1638,6 +1663,229 @@ export default function AdminPage() {
         {activeTab === 'catalog' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
+            <div className="flex items-center justify-between gap-2 pb-2">
+              <div>
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                  Koleksi &amp; Inventori
+                </span>
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
+                  Manajemen Katalog Produk
+                </h2>
+                <p className="text-[11px] text-black/60 mt-0">
+                  1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleOpenCreateModal}
+                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                >
+                  <Icon name="add" size={16} />
+                  <span>Tambah Produk Baru</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Search & Stats Card */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari berdasarkan nama abaya, edisi, atau warna..."
+                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-black/20 bg-white pr-4 pl-9 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:bg-white focus:outline-none"
+                />
+                <Icon
+                  name="search"
+                  size={16}
+                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-black/70"
+                />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-black/70 shrink-0">
+                <span className="rounded-full bg-black/5 px-3 py-1.5 border border-black/15">
+                  Total: <strong className="text-black">{products.length}</strong> produk
+                </span>
+                <span className="rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200/60 text-emerald-800">
+                  Tersedia: <strong className="font-bold">{products.filter((p) => p.inStock !== false).length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Product Grid */}
+            {isLoading && products.length === 0 ? (
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-black/15 bg-white">
+                <span className="text-xs tracking-wider text-black/70 uppercase">
+                  Memuat data produk...
+                </span>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-black/15 bg-white p-6 text-center">
+                <Icon name="shopping_bag" size={28} className="text-black/70" />
+                <p className="text-xs text-black/70">
+                  Tidak ada produk yang cocok dengan pencarian.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateModal}
+                  className="rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white uppercase"
+                >
+                  Tambah Produk Pertama
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/20"
+                  >
+                    {/* Thumbnail Image */}
+                    <div className="relative aspect-[3/4] w-full bg-black/5">
+                      <Image
+                        src={product.image || '/images/catalog/catalog-01.jpg'}
+                        alt={product.title}
+                        fill
+                        className={`object-cover transition-opacity ${product.hidden ? 'opacity-40' : 'opacity-100'}`}
+                      />
+                      {product.hidden && (
+                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                          <span className="rounded-full bg-black/80 px-2 py-0.5 text-center text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-xs sm:text-[10px]">
+                            Disembunyikan
+                          </span>
+                        </div>
+                      )}
+                      {product.badge && (
+                        <span className="absolute top-2 left-2 rounded-full bg-black px-2 py-0.5 text-[9px] font-semibold tracking-wider text-white uppercase sm:text-[10px]">
+                          {product.badge}
+                        </span>
+                      )}
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false ? 'bg-emerald-500' : 'bg-red-500'}`}
+                        />
+                        <span className="xs:inline hidden">
+                          {product.inStock !== false ? 'In Stock' : 'Habis'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+                      {product.edition && (
+                        <span className="font-headline truncate text-[10px] tracking-widest text-black/50 uppercase">
+                          {product.edition}
+                        </span>
+                      )}
+                      <h3 className="font-headline line-clamp-1 text-xs font-semibold text-black sm:text-sm">
+                        {product.title}
+                      </h3>
+                      <span className="truncate text-[10px] font-mono text-black/50 sm:text-xs">
+                        /{product.slug}
+                      </span>
+
+                      {/* Pricing */}
+                      <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
+                        <span className="text-xs font-bold text-black sm:text-sm">
+                          Rp {product.price.toLocaleString('id-ID')}
+                        </span>
+                        {product.original_price && product.original_price > product.price && (
+                          <span className="text-[10px] text-black/50 line-through sm:text-[11px]">
+                            Rp {product.original_price.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Swatches preview with photo indicator */}
+                      {product.swatches && product.swatches.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1 rounded-xl bg-black/5 p-2 text-xs">
+                          <span className="text-[9px] font-semibold tracking-wider text-black/70 uppercase">
+                            {product.swatches.length} Varian:
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {product.swatches.map((sw, idx) => (
+                              <div
+                                key={idx}
+                                title={`${sw.name} - ${sw.image ? 'Ada Foto' : 'Foto Utama'}`}
+                                className="flex items-center gap-1 rounded-full border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs"
+                              >
+                                <span
+                                  style={{ backgroundColor: sw.color }}
+                                  className="h-2.5 w-2.5 rounded-full border border-black/15"
+                                />
+                                <span className="hidden text-[9px] font-medium text-black sm:inline">
+                                  {sw.name.split(' ')[0]}
+                                </span>
+                                {sw.image && (
+                                  <Icon name="image" size={9} className="text-emerald-700" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="mt-3 flex items-center gap-1.5 border-t border-black/15/60 pt-2.5 sm:gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(product)}
+                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
+                        >
+                          <Icon name="edit" size={13} />
+                          <span className="truncate">Edit</span>
+                        </button>
+                        {/* Hide / Show quick toggle */}
+                        <button
+                          type="button"
+                          title={product.hidden ? 'Tampilkan di Toko' : 'Sembunyikan dari Toko'}
+                          onClick={async () => {
+                            const updated = await updateDbProduct(product.id, {
+                              hidden: !product.hidden,
+                            });
+                            if (updated) {
+                              setProducts((prev) =>
+                                prev.map((p) => (p.id === product.id ? updated : p)),
+                              );
+                              showToast(
+                                updated.hidden
+                                  ? `"${updated.title}" disembunyikan dari toko.`
+                                  : `"${updated.title}" ditampilkan kembali di toko.`,
+                              );
+                            }
+                          }}
+                          className={`flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95 ${
+                            product.hidden
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                              : 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100'
+                          }`}
+                        >
+                          <Icon name={product.hidden ? 'visibility' : 'visibility_off'} size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(product.id, product.title)}
+                          className="flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 active:scale-95"
+                          title="Hapus Produk"
+                        >
+                          <Icon name="delete" size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────
+            SECTION 2: BERANDA (HOMEPAGE SECTIONS)
+        ────────────────────────────────────────────────────────── */}
+        {activeTab === 'section-home' && (
+          <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="pb-2">
               <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                 Editorial &amp; Storefront
@@ -1657,7 +1905,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     1. Hero Section (Homepage Banner Utama)
                   </h3>
-                  <p className="hidden sm:block text-[11px] text-black/60">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Banner utama dengan foto latar penuh dan teks tajuk toko.
                   </p>
                 </div>
@@ -1753,7 +2001,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   2. Category Spotlight (2 Kartu Sorotan)
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Dua kartu kategori utama yang ditampilkan berdampingan di beranda.
                 </p>
               </div>
@@ -1822,7 +2070,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   3. Showcase Tekstil Berkelanjutan
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Banner narasi komitmen material premium ramah lingkungan Sevaya.
                 </p>
               </div>
@@ -1869,7 +2117,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   4. Artikel Journal (2 Artikel)
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Artikel editorial gaya hidup dan wawasan abaya di beranda toko.
                 </p>
               </div>
@@ -2017,19 +2265,29 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              <div className="relative flex-1 sm:max-w-xs shrink-0">
-                <input
-                  type="text"
-                  value={newsSearchQuery}
-                  onChange={(e) => setNewsSearchQuery(e.target.value)}
-                  placeholder="Cari judul atau topik artikel..."
-                  className="w-full min-h-[40px] sm:min-h-[36px] rounded-none border border-black/20 bg-white pl-8 pr-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
-                />
-                <Icon
-                  name="search"
-                  size={15}
-                  className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-black/70"
-                />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64 shrink-0">
+                  <input
+                    type="text"
+                    value={newsSearchQuery}
+                    onChange={(e) => setNewsSearchQuery(e.target.value)}
+                    placeholder="Cari judul atau topik artikel..."
+                    className="w-full min-h-[38px] sm:min-h-[34px] rounded-lg border border-black/20 bg-white pl-8 pr-3 py-1.5 text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                  />
+                  <Icon
+                    name="search"
+                    size={15}
+                    className="pointer-events-none absolute left-2.5 top-2.5 text-black/70"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateArticleModal}
+                  className="shrink-0 min-h-[38px] sm:min-h-[34px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95"
+                >
+                  <Icon name="add" size={15} />
+                  <span>Tulis Artikel Baru</span>
+                </button>
               </div>
             </div>
 
@@ -2178,7 +2436,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     1. Foto Editorial Halaman Lookbook (/lookbook)
                   </h3>
-                  <p className="hidden sm:block text-[11px] text-black/60">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Klik &quot;Ganti Foto&quot; pada slot foto mana saja untuk memilih foto dari galeri/unggah baru.
                   </p>
                 </div>
@@ -2578,7 +2836,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     2. Bab / Chapter Lookbook Aktif
                   </h3>
-                  <p className="hidden sm:block text-[11px] text-black/60">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Hanya bab aktif yang ditampilkan (saat ini Chapter 1 / Season 1). Tambah bab baru jika merilis season berikutnya.
                   </p>
                 </div>
@@ -2741,7 +2999,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   1. Banner Utama Halaman About
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
                 </p>
               </div>
@@ -2780,7 +3038,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   2. Foto 4 Arsip Tekstil Berkelanjutan
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
                 </p>
               </div>
@@ -2898,7 +3156,7 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
               <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Aset Digital &amp; Master Storage
                 </span>
                 <div className="flex items-center gap-2.5">
@@ -2909,7 +3167,7 @@ export default function AdminPage() {
                     CDN ACTIVE
                   </span>
                 </div>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Pusat aset master fotografi editorial resolusi tinggi dan integrasi CDN Supabase Storage.
                 </p>
               </div>
@@ -3434,13 +3692,13 @@ export default function AdminPage() {
         {activeTab === 'settings' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex flex-col gap-1 pb-2">
-              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+              <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                 Sistem &amp; Konfigurasi
               </span>
               <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                 Pengaturan Studio &amp; Infrastruktur CDN
               </h2>
-              <p className="hidden sm:block text-[11px] text-black/60">
+              <p className="text-[11px] text-black/60 mt-0">
                 Konfigurasi operasional Sevaya, kredensial integrasi pengiriman, payment gateway, dan status Supabase Cloud CDN.
               </p>
             </div>
@@ -3451,7 +3709,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
@@ -3489,7 +3747,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
@@ -3536,7 +3794,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     Infrastruktur Cloud &amp; Status CDN (Supabase)
                   </h3>
-                  <p className="hidden sm:block text-[11px] text-black/60">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Monitoring bucket Supabase cloud storage, integrasi edge CDN Anycast global, dan latensi node.
                   </p>
                 </div>
@@ -3609,7 +3867,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
@@ -3647,7 +3905,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="hidden sm:block text-[11px] text-black/60">
+                <p className="text-[11px] text-black/60 mt-0">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
@@ -3794,7 +4052,7 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Katalog Koleksi
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
@@ -4140,7 +4398,7 @@ export default function AdminPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial Journal
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
@@ -4513,7 +4771,7 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Galeri Media
                 </span>
                 <h3 className="font-headline text-base font-bold text-black sm:text-lg">
