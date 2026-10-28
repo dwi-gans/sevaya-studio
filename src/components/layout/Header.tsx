@@ -12,6 +12,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
+import { getCachedSiteSections } from '@/integrations/supabase';
 
 const CUSTOMER_LINKS = [
   { label: 'Terms of Service', href: '/customer/terms-of-service' },
@@ -31,7 +32,15 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
   const [lookbookOpen, setLookbookOpen] = useState(false);
+  const [lookbookLinks, setLookbookLinks] = useState(LOOKBOOK_LINKS);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const sections = getCachedSiteSections();
+    if (sections.lookbookLinks && sections.lookbookLinks.length > 0) {
+      setLookbookLinks(sections.lookbookLinks);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -217,7 +226,7 @@ export function Header() {
                   {lookbookOpen && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 z-50 pt-px">
                       <div className="border border-black/8 bg-white shadow-lg min-w-[220px] py-2">
-                        {LOOKBOOK_LINKS.map((link) => (
+                        {lookbookLinks.map((link) => (
                           <Link
                             key={link.id || link.href}
                             href={link.href}

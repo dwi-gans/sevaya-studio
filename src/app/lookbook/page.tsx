@@ -172,7 +172,9 @@ export default function LookbookPage() {
   useEffect(() => {
     // 1. Immediately read cached sections from localStorage
     const cached = getCachedSiteSections();
-    if (cached.lookbookPage) {
+    if (cached.lookbookVolumesConfig?.['vol-1']) {
+      setCfg(cached.lookbookVolumesConfig['vol-1']);
+    } else if (cached.lookbookPage) {
       setCfg(cached.lookbookPage);
     }
     // 2. Mark as mounted to safely render client images without SSR hydration mismatch
@@ -180,7 +182,9 @@ export default function LookbookPage() {
 
     // 3. Refresh from cloud in background
     getSiteSections().then((sections) => {
-      if (sections.lookbookPage) {
+      if (sections.lookbookVolumesConfig?.['vol-1']) {
+        setCfg(sections.lookbookVolumesConfig['vol-1']);
+      } else if (sections.lookbookPage) {
         setCfg(sections.lookbookPage);
       }
     });

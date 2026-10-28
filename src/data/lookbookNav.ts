@@ -25,4 +25,11 @@ export const LOOKBOOK_LINKS: LookbookLink[] = [
     href: '/lookbook',
     badge: 'NEW',
   },
+  {
+    id: 'vol-2',
+    label: 'Vol 2: Autumn Serenade',
+    season: "'26",
+    href: '/lookbook/vol-2',
+    badge: 'VOL 2',
+  },
 ];

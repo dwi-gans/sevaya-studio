@@ -32,6 +32,14 @@ export interface LookbookChapterData {
   image: string;
 }
 
+export interface LookbookLinkItem {
+  id: string;
+  label: string;
+  season?: string;
+  href: string;
+  badge?: string;
+}
+
 export interface LookbookPageConfig {
   heroImage: string;
   heroTitle: string;
@@ -62,7 +70,9 @@ export interface SiteSectionsConfig {
   };
   journal: JournalArticleData[];
   lookbook: LookbookChapterData[];
+  lookbookLinks?: LookbookLinkItem[];
   lookbookPage?: LookbookPageConfig;
+  lookbookVolumesConfig?: Record<string, LookbookPageConfig>;
   conscious?: {
     heroImage: string;
     bembergImage: string;
@@ -127,6 +137,22 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       image: '/images/sevaya_first_chapter.jpg',
     },
   ],
+  lookbookLinks: [
+    {
+      id: 'vol-1',
+      label: 'Vol 1: Into a New Season',
+      season: "'26",
+      href: '/lookbook',
+      badge: 'NEW',
+    },
+    {
+      id: 'vol-2',
+      label: 'Vol 2: Autumn Serenade',
+      season: "'26",
+      href: '/lookbook/vol-2',
+      badge: 'VOL 2',
+    },
+  ],
   lookbookPage: {
     heroImage: '/images/sevaya_first_chapter.jpg',
     heroTitle: 'FLORAISON',
@@ -146,6 +172,48 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     triptychTitle: 'The Summer 2026 Collection',
     triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer’s abundance.',
     fullDress: '/images/lookbook_figma_5.png',
+  },
+  lookbookVolumesConfig: {
+    'vol-1': {
+      heroImage: '/images/sevaya_first_chapter.jpg',
+      heroTitle: 'FLORAISON',
+      heroSubtitle: 'SEVAYA • FLORAISON',
+      seasonTitle: 'The Seed of The Story',
+      seasonDesc: 'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
+      collagePortrait: '/images/lookbook_figma_0.png',
+      collageDetail1: '/images/figma_about_1.png',
+      collageDetail2: '/images/figma_about_2.png',
+      panorama1: '/images/figma_hero.png',
+      panorama1Title: 'Meet The Icon',
+      panorama1Desc: 'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
+      panorama2: '/images/lookbook_figma_1.png',
+      triptych1: '/images/lookbook_figma_2.png',
+      triptych2: '/images/lookbook_figma_3.png',
+      triptych3: '/images/lookbook_figma_4.png',
+      triptychTitle: 'The Summer 2026 Collection',
+      triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer’s abundance.',
+      fullDress: '/images/lookbook_figma_5.png',
+    },
+    'vol-2': {
+      heroImage: '/images/sevaya_hero_editorial.jpg',
+      heroTitle: 'AUTUMN SERENADE',
+      heroSubtitle: 'SEVAYA • VOL 2',
+      seasonTitle: 'A Poetic Transition',
+      seasonDesc: 'A poetic transition into warmer tones, softer draperies, and intimate seasonal silhouettes designed for timeless elegance.',
+      collagePortrait: '/images/lookbook_figma_1.png',
+      collageDetail1: '/images/figma_about_2.png',
+      collageDetail2: '/images/figma_about_1.png',
+      panorama1: '/images/lookbook_figma_6.png',
+      panorama1Title: 'Warm Silhouettes',
+      panorama1Desc: 'Thoughtfully tailored for cooler evenings and graceful movement.',
+      panorama2: '/images/lookbook_figma_7.png',
+      triptych1: '/images/lookbook_figma_8.png',
+      triptych2: '/images/lookbook_figma_9.png',
+      triptych3: '/images/lookbook_figma_0.png',
+      triptychTitle: 'The Autumn Collection',
+      triptychDesc: 'Deep terracotta, espresso, and sage tones echoing nature’s autumn transitions.',
+      fullDress: '/images/lookbook_figma_2.png',
+    },
   },
   conscious: {
     heroImage: '/images/catalog/catalog-06.jpg',
@@ -182,6 +250,10 @@ export function getCachedSiteSections(): SiteSectionsConfig {
           lookbookPage: {
             ...DEFAULT_SITE_SECTIONS.lookbookPage!,
             ...(parsed.lookbookPage || {}),
+          },
+          lookbookVolumesConfig: {
+            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+            ...(parsed.lookbookVolumesConfig || {}),
           },
         };
         _cachedSiteSections = merged;
@@ -228,6 +300,10 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
       ...DEFAULT_SITE_SECTIONS.lookbookPage!,
       ...(localData?.lookbookPage || {}),
     },
+    lookbookVolumesConfig: {
+      ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+      ...(localData?.lookbookVolumesConfig || {}),
+    },
   };
 
   _cachedSiteSections = immediateFallback;
@@ -256,6 +332,11 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
           ...DEFAULT_SITE_SECTIONS.lookbookPage!,
           ...(localData?.lookbookPage || {}),
           ...(parsed.lookbookPage || {}),
+        },
+        lookbookVolumesConfig: {
+          ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+          ...(localData?.lookbookVolumesConfig || {}),
+          ...(parsed.lookbookVolumesConfig || {}),
         },
       };
 
