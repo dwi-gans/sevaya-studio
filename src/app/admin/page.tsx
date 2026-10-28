@@ -1512,21 +1512,27 @@ export default function AdminPage() {
           C. FIXED TOP BAR HEADER (Matching Mockup)
       ────────────────────────────────────────────────────────── */}
       <header
-        className={`fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3.5 md:px-6 flex items-center justify-between gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed top-0 right-0 h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3 sm:px-6 flex items-center justify-between gap-2.5 sm:gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'left-0 md:left-[260px]' : 'left-0'
         }`}
       >
-        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0 max-w-xl">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-xl">
+          {/* Tombol Menu Mobile: Garis 3 (Hamburger) Selalu Tampil di Mobile */}
           <button
             type="button"
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                setIsMobileMenuOpen(true);
-              } else {
-                toggleSidebar();
-              }
-            }}
-            className="group relative flex h-10 w-10 items-center justify-center rounded-none border border-black/20 bg-white text-black hover:bg-black hover:text-white hover:border-black active:scale-95 transition-all duration-300 shrink-0"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-none border border-black/20 bg-white text-black hover:bg-black hover:text-white hover:border-black active:scale-95 transition-all duration-200 shrink-0 md:hidden"
+            aria-label="Buka Menu Admin"
+            title="Buka Menu Admin"
+          >
+            <Icon name="menu" size={20} />
+          </button>
+
+          {/* Tombol Toggle Sidebar Desktop */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="group relative hidden md:flex h-10 w-10 items-center justify-center rounded-none border border-black/20 bg-white text-black hover:bg-black hover:text-white hover:border-black active:scale-95 transition-all duration-300 shrink-0"
             aria-label="Toggle Menu Sidebar"
             title={isSidebarOpen ? 'Sembunyikan Sidebar' : 'Buka Sidebar'}
           >
@@ -1558,14 +1564,13 @@ export default function AdminPage() {
             </div>
           </button>
 
-          {!isSidebarOpen && (
-            <div className="hidden md:flex items-center gap-2.5 pl-1 shrink-0">
-              <Link href="/admin" className="flex items-center" aria-label="Admin Home">
-                <Logo className="h-5 w-auto text-black" />
-              </Link>
-              <span className="text-[#d5c2c5] font-light">|</span>
-            </div>
-          )}
+          {/* Logo Brand SEVAYA (Tampil di Mobile & Desktop) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/admin" className="flex items-center" aria-label="Admin Home">
+              <Logo className="h-4 sm:h-5 w-auto text-black" />
+            </Link>
+            <span className="text-[#d5c2c5] font-light text-xs">|</span>
+          </div>
 
           <div className="flex items-center gap-1.5 text-[#514346] text-[12px] font-sans min-w-0">
             <span className="hover:text-[#1a1c1c] cursor-pointer hidden xs:inline shrink-0">Studio</span>
@@ -1595,6 +1600,14 @@ export default function AdminPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/"
+            target="_blank"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-black/15 bg-white text-black hover:bg-black/5 active:scale-95 transition-colors"
+            title="Lihat Toko Publik"
+          >
+            <Icon name="storefront" size={15} />
+          </Link>
           {activeTab === 'settings' && (
             <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-emerald-50 border border-emerald-200/60 text-[11px] font-medium text-emerald-800">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
@@ -1609,10 +1622,31 @@ export default function AdminPage() {
           D. MAIN TAB CONTENT CONTAINER
       ────────────────────────────────────────────────────────── */}
       <main
-        className={`relative min-h-screen bg-[#f9f9f8] px-3.5 pb-12 pt-20 sm:px-6 sm:pt-24 lg:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative min-h-screen bg-[#f9f9f8] px-3 pb-16 pt-16 sm:px-6 sm:pt-20 lg:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
+        {/* Mobile Quick Horizontal Navigation Pills (Sleek 1-Tap Switching) */}
+        <div className="md:hidden -mx-3 mb-4 px-3 sticky top-14 z-20 bg-[#f9f9f8]/95 backdrop-blur-md py-2 border-b border-black/10 overflow-x-auto no-scrollbar flex items-center gap-1.5 touch-pan-x">
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all active:scale-95 ${
+                  isActive
+                    ? 'bg-black text-white shadow-xs font-semibold'
+                    : 'bg-white text-black/70 hover:bg-black/5 hover:text-black border border-black/15'
+                }`}
+              >
+                <Icon name={item.icon} size={12} className={isActive ? 'text-white' : 'text-black/60'} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
         {/* ──────────────────────────────────────────────────────────
             SECTION 0: DASHBOARD PESANAN & PENGIRIMAN (REAL SUPABASE + BITESHIP)
         ────────────────────────────────────────────────────────── */}
