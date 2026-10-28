@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -527,11 +527,9 @@ export function Header() {
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs">
                     {[
+                      { label: language === 'id' ? 'Semua Koleksi' : 'All Collections', href: '/shop' },
                       { label: 'Abaya', href: '/shop?category=abaya' },
-                      { label: 'Khimar & Veil', href: '/shop?category=khimar' },
-                      { label: 'Kaftan', href: '/shop?category=kaftan' },
-                      { label: 'Modest Sets', href: '/shop?category=sets' },
-                      { label: 'Best Sellers', href: '/shop?category=bestseller' },
+                      { label: 'Khimar', href: '/shop?category=khimar' },
                     ].map((cat) => (
                       <Link
                         key={cat.href}

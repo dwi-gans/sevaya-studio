@@ -17,6 +17,7 @@ export interface Product {
   badge?: string;
   image: string;
   images?: string[];
+  category?: string;
   swatches: { name: string; color: string; image?: string }[];
 }
 

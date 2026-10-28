@@ -21,6 +21,7 @@ const INITIAL_PRODUCTS: Product[] = SEARCH_CATALOG.map((p) => ({
   badge: p.badge,
   image: p.image,
   images: [p.image],
+  category: p.category,
   swatches: [
     { name: 'Black', color: '#1A1A1A', image: p.image },
     { name: 'Mocha', color: '#B28E78', image: p.image },
@@ -31,10 +32,7 @@ const INITIAL_PRODUCTS: Product[] = SEARCH_CATALOG.map((p) => ({
 const CATEGORIES = [
   { id: 'all', label: 'All Collections' },
   { id: 'abaya', label: 'Abaya' },
-  { id: 'khimar', label: 'Khimar & Veil' },
-  { id: 'kaftan', label: 'Kaftan' },
-  { id: 'sets', label: 'Modest Sets' },
-  { id: 'bestseller', label: 'Best Sellers' },
+  { id: 'khimar', label: 'Khimar' },
 ];
 
 function ShopContent() {
@@ -84,25 +82,20 @@ function ShopContent() {
     }
 
     if (activeCategory === 'abaya') {
-      list = list.filter((p) => p.title.toLowerCase().includes('abaya') || p.slug.includes('abaya'));
+      list = list.filter(
+        (p) =>
+          p.category === 'abaya' ||
+          p.title.toLowerCase().includes('abaya') ||
+          p.slug.toLowerCase().includes('abaya'),
+      );
     } else if (activeCategory === 'khimar') {
       list = list.filter(
         (p) =>
+          p.category === 'khimar' ||
           p.title.toLowerCase().includes('khimar') ||
           p.title.toLowerCase().includes('veil') ||
-          p.slug.includes('khimar') ||
-          p.title.toLowerCase().includes('fina'),
+          p.slug.toLowerCase().includes('khimar'),
       );
-    } else if (activeCategory === 'kaftan') {
-      list = list.filter(
-        (p) => p.title.toLowerCase().includes('kaftan') || p.slug.includes('kaftan'),
-      );
-    } else if (activeCategory === 'sets') {
-      list = list.filter(
-        (p) => p.title.toLowerCase().includes('set') || p.slug.includes('set') || p.slug.includes('stripe'),
-      );
-    } else if (activeCategory === 'bestseller') {
-      list = list.filter((p) => Boolean(p.badge?.toLowerCase().includes('seller')) || p.price > 1300000);
     }
 
     // Sort
