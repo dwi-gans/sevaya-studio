@@ -499,7 +499,7 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
-            <div className="order-1 flex flex-col lg:order-2 lg:col-span-6 sticky top-24">
+            <div className="order-1 flex flex-col lg:order-2 lg:col-span-6 static lg:sticky lg:top-24">
               {/* Foto Utama Besar Sejajar */}
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#ECE8E1] border border-black/5">
                 <Image
