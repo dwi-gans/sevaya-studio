@@ -1629,7 +1629,7 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Koleksi &amp; Inventori
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen Katalog Produk
                 </h2>
                 <p className="text-xs text-black/70 mt-0.5">
@@ -1641,7 +1641,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateModal}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tambah Produk Baru</span>
@@ -1697,7 +1697,7 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
@@ -1734,7 +1734,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Product Info */}
-                    <div className="flex flex-1 flex-col p-3 sm:p-4">
+                    <div className="flex flex-1 flex-col p-2.5 sm:p-4">
                       {product.edition && (
                         <span className="font-headline truncate text-[10px] tracking-widest text-black/50 uppercase">
                           {product.edition}
@@ -1852,7 +1852,7 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                   Kelola Section Beranda (Homepage)
                 </h2>
                 <p className="text-xs text-black/70 mt-0.5">
@@ -1863,7 +1863,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Beranda')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Section Beranda</span>
@@ -1926,7 +1926,7 @@ export default function AdminPage() {
                           hero: { ...prev.hero, badge: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                      className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
@@ -1943,7 +1943,7 @@ export default function AdminPage() {
                           hero: { ...prev.hero, title: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                      className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
@@ -1968,7 +1968,7 @@ export default function AdminPage() {
             </div>
 
             {/* 2. CATEGORY SPOTLIGHT */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   2. Category Spotlight (2 Kartu Sorotan)
@@ -2037,7 +2037,7 @@ export default function AdminPage() {
             </div>
 
             {/* 3. SIGNATURE TEXTILES */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   3. Showcase Tekstil Berkelanjutan
@@ -2084,7 +2084,7 @@ export default function AdminPage() {
             </div>
 
             {/* 4. JOURNAL SECTION */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   4. Artikel Journal (2 Artikel)
@@ -2163,7 +2163,7 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen News &amp; Editorial (Jurnal)
                 </h2>
                 <p className="text-xs text-black/70 mt-0.5">
@@ -2184,7 +2184,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateArticleModal}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tulis Artikel Baru</span>
@@ -2406,7 +2406,7 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen Lookbook &amp; Galeri Editorial
                 </h2>
                 <p className="text-xs text-black/70 mt-0.5">
@@ -2417,7 +2417,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Lookbook')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan Lookbook</span>
@@ -2425,7 +2425,7 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN A: SEMUA FOTO HALAMAN LOOKBOOK PUBLIK (/lookbook) ══ */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
               <div className="border-b border-black/15/70 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <h3 className="font-headline text-sm font-semibold text-black">
@@ -2825,7 +2825,7 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN B: BAB LOOKBOOK (Koleksi / Chapter) ══ */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
                 <div>
                   <h3 className="font-headline text-sm font-semibold text-black">
@@ -2981,7 +2981,7 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                   Halaman Tentang Toko (About)
                 </h2>
                 <p className="text-xs text-black/70 mt-0.5">
@@ -2992,7 +2992,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Tentang Toko')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan</span>
@@ -3000,7 +3000,7 @@ export default function AdminPage() {
             </div>
 
             {/* Manifesto Hero Banner */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   1. Banner Utama Halaman About
@@ -3039,7 +3039,7 @@ export default function AdminPage() {
             </div>
 
             {/* 4 Textile Archives */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   2. Foto 4 Arsip Tekstil Berkelanjutan
@@ -3166,7 +3166,7 @@ export default function AdminPage() {
                   Aset Digital &amp; Master Storage
                 </span>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+                  <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                     Galeri Cloud Media
                   </h2>
                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-800 border border-emerald-200/60">
@@ -3182,7 +3182,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setIsUploadModalOpen(true)}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add_photo_alternate" size={16} />
                   <span>Unggah Master Foto</span>
@@ -3701,7 +3701,7 @@ export default function AdminPage() {
               <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                 Sistem &amp; Konfigurasi
               </span>
-              <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+              <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
                 Pengaturan Studio &amp; Infrastruktur CDN
               </h2>
               <p className="text-xs text-black/70 mt-0.5">
@@ -3710,7 +3710,7 @@ export default function AdminPage() {
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   Identitas Brand &amp; Toko
@@ -3748,7 +3748,7 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
@@ -3794,7 +3794,7 @@ export default function AdminPage() {
             </div>
 
             {/* Card 3: Infrastruktur Cloud & Status CDN (Supabase Storage - Merged) */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
                 <div>
                   <h3 className="font-headline text-sm font-semibold text-black">
@@ -3868,7 +3868,7 @@ export default function AdminPage() {
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   Identitas Brand &amp; Toko
@@ -3906,7 +3906,7 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
               <div className="border-b border-black/15/70 pb-3">
                 <h3 className="font-headline text-sm font-semibold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
@@ -4056,7 +4056,7 @@ export default function AdminPage() {
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
           <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Katalog Koleksi
@@ -4078,7 +4078,7 @@ export default function AdminPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-4 sm:p-7 overflow-y-auto">
+            <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-3.5 sm:p-6 overflow-y-auto">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-black/70">
@@ -4090,7 +4090,7 @@ export default function AdminPage() {
                     value={productForm.title}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. Fina Abaya - Stripe 2.0"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4103,7 +4103,7 @@ export default function AdminPage() {
                     value={productForm.slug}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4120,7 +4120,7 @@ export default function AdminPage() {
                       setProductForm((prev) => ({ ...prev, edition: e.target.value }))
                     }
                     placeholder="cth. Edition 2.0"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4135,7 +4135,7 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setProductForm((prev) => ({ ...prev, price: Number(e.target.value) }))
                     }
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4152,7 +4152,7 @@ export default function AdminPage() {
                         original_price: Number(e.target.value),
                       }))
                     }
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4168,7 +4168,7 @@ export default function AdminPage() {
                     value={productForm.badge}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, badge: e.target.value }))}
                     placeholder="cth. Best Seller, Sale -20%"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4402,7 +4402,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
           <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial Journal
@@ -4424,7 +4424,7 @@ export default function AdminPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveArticle} className="flex flex-col gap-4.5 p-4 sm:p-7 overflow-y-auto">
+            <form onSubmit={handleSaveArticle} className="flex flex-col gap-4.5 p-3.5 sm:p-6 overflow-y-auto">
               {/* Title & Slug */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
@@ -4437,7 +4437,7 @@ export default function AdminPage() {
                     value={articleForm.title}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. The Art of Fewer, Better Choices"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4450,7 +4450,7 @@ export default function AdminPage() {
                     value={articleForm.slug}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4481,7 +4481,7 @@ export default function AdminPage() {
                     value={articleForm.date}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, date: e.target.value }))}
                     placeholder="cth. Oct 18, 2026"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4494,7 +4494,7 @@ export default function AdminPage() {
                     value={articleForm.readTime}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, readTime: e.target.value }))}
                     placeholder="cth. 4 min read"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4775,7 +4775,7 @@ export default function AdminPage() {
       {isImagePickerOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
           <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Galeri Media

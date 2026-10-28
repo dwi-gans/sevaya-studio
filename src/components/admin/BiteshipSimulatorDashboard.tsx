@@ -640,7 +640,7 @@ export function BiteshipSimulatorDashboard() {
           <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
             Transaksi &amp; Logistik
           </span>
-          <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
+          <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
             Pesanan &amp; Pengiriman
           </h2>
           <p className="text-xs text-black/70 mt-0.5">
@@ -665,13 +665,13 @@ export function BiteshipSimulatorDashboard() {
       </div>
 
       {/* Unified KPI Summary Card */}
-      <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-5">
+      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3.5 sm:space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-black/15/70 pb-4">
           <div>
             <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
               Total Pendapatan Terkonfirmasi
             </span>
-            <p className="font-headline text-2xl sm:text-3xl font-bold text-black mt-1">
+            <p className="font-headline text-xl sm:text-3xl font-bold text-black mt-0.5 sm:mt-1">
               {formatIDR(totalRevenue)}
             </p>
           </div>
@@ -680,7 +680,7 @@ export function BiteshipSimulatorDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             { label: 'Total Order', value: stats.all, color: 'text-black' },
             { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8A6335]' },
@@ -691,12 +691,12 @@ export function BiteshipSimulatorDashboard() {
           ].map((s) => (
             <div
               key={s.label}
-              className="flex flex-col gap-1 rounded-xl bg-black/5 p-3 border border-black/15/50"
+              className="flex flex-col gap-0.5 sm:gap-1 rounded-lg sm:rounded-xl bg-black/5 p-2.5 sm:p-3 border border-black/15/50"
             >
               <span className="text-[10px] font-semibold uppercase tracking-wider text-black/70">
                 {s.label}
               </span>
-              <span className={`text-xl font-bold ${s.color}`}>{s.value}</span>
+              <span className={`text-base sm:text-xl font-bold ${s.color}`}>{s.value}</span>
             </div>
           ))}
         </div>
@@ -708,14 +708,14 @@ export function BiteshipSimulatorDashboard() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama, no. order, resi, Biteship ID..."
-          className="w-full rounded-none border border-black/20 bg-white px-4 py-2.5 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[44px] sm:min-h-[38px]"
+          className="w-full rounded-none border border-black/20 bg-white px-3.5 py-2 text-xs sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[38px] rounded-lg border border-black/15"
         />
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1.5 pt-0.5 touch-pan-x">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`shrink-0 min-h-[38px] flex items-center rounded-full border px-4 py-1.5 text-xs font-medium transition active:scale-95 ${
+              className={`shrink-0 min-h-[32px] sm:min-h-[36px] flex items-center rounded-full border px-3 sm:px-4 py-1 text-[11px] sm:text-xs font-medium transition active:scale-95 ${
                 filter === tab.key
                   ? 'border-black bg-black text-white'
                   : 'border-black/20 bg-white text-black/70 hover:border-black hover:bg-black/5'
@@ -912,7 +912,7 @@ export function BiteshipSimulatorDashboard() {
                 return (
                   <div
                     key={o.id}
-                    className="rounded-2xl border border-black/15 bg-white p-4 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
+                    className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-2.5 sm:space-y-3"
                   >
                     {/* Top: Order number, date, badges */}
                     <div className="flex items-start justify-between gap-2 border-b border-black/15/70 pb-2.5">
@@ -962,7 +962,7 @@ export function BiteshipSimulatorDashboard() {
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(o)}
-                        className="flex-1 min-h-[44px] flex items-center justify-center rounded-full bg-black py-2.5 text-center text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                        className="flex-1 min-h-[38px] flex items-center justify-center rounded-full bg-black py-2 text-center text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                       >
                         Kelola Pesanan
                       </button>
@@ -970,7 +970,7 @@ export function BiteshipSimulatorDashboard() {
                         type="button"
                         onClick={() => handleDeleteOrder(o.id, o.order_number)}
                         title="Hapus Pesanan"
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 transition hover:bg-red-100 active:scale-95"
+                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 transition hover:bg-red-100 active:scale-95"
                       >
                         🗑
                       </button>
