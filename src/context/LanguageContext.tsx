@@ -338,7 +338,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Footer
     'footer.contact_us': 'Contact Us',
-    'footer.customers': 'Customers',
+    'footer.customers': 'Help',
     'footer.company': 'Company',
     'footer.terms': 'Terms of Service',
     'footer.return_policy': 'Return Policy',

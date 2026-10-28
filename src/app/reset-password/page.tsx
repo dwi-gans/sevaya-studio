@@ -159,16 +159,16 @@ export default function ResetPasswordPage() {
   // ── States ────────────────────────────────────────────────────────────────
   if (pageState === 'loading') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#FAF8F5]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
-        <p className="text-sm text-[#685E5A]">Memverifikasi tautan…</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent" />
+        <p className="text-sm text-black/70">Memverifikasi tautan…</p>
       </div>
     );
   }
 
   if (pageState === 'error') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FAF8F5] px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center gap-4 border border-red-200 bg-red-50 p-8 text-center">
             <Icon name="link_off" size={32} className="text-red-500" />
@@ -182,21 +182,21 @@ export default function ResetPasswordPage() {
 
           {/* Debug info — remove before production */}
           {debugInfo && (
-            <div className="mt-3 border border-[#E5DDD5] bg-white p-3">
-              <p className="text-xs font-semibold text-[#141312]">Debug URL:</p>
-              <p className="break-all text-xs text-[#685E5A]">{debugInfo}</p>
+            <div className="mt-3 border border-black/15 bg-white p-3">
+              <p className="text-xs font-semibold text-black">Debug URL:</p>
+              <p className="break-all text-xs text-black/70">{debugInfo}</p>
             </div>
           )}
 
           <div className="mt-5 flex flex-col gap-3">
             <Link
               href="/forgot-password"
-              className="font-label-lg text-label-lg flex h-12 w-full items-center justify-center gap-2 border border-[#141312] bg-[#141312] font-semibold tracking-wider text-[#FAF8F5] uppercase transition-all hover:bg-[#2b2826]"
+              className="font-label-lg text-label-lg flex h-12 w-full items-center justify-center gap-2 border border-black bg-black font-semibold tracking-wider text-white uppercase transition-all hover:bg-black/85"
             >
               <Icon name="refresh" size={16} />
               Minta Tautan Baru
             </Link>
-            <Link href="/login" className="text-center text-sm text-[#685E5A] underline underline-offset-4 hover:text-[#141312]">
+            <Link href="/login" className="text-center text-sm text-black/70 underline underline-offset-4 hover:text-black">
               Kembali ke Login
             </Link>
           </div>
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
 
   if (pageState === 'success') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FAF8F5] px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center gap-4 border border-emerald-200 bg-emerald-50 p-8 text-center">
             <div className="flex h-14 w-14 items-center justify-center bg-emerald-100">
@@ -225,7 +225,7 @@ export default function ResetPasswordPage() {
           <div className="mt-5">
             <button
               onClick={() => router.push('/login')}
-              className="font-label-lg text-label-lg flex h-12 w-full items-center justify-center gap-2 border border-[#141312] bg-[#141312] font-semibold tracking-wider text-[#FAF8F5] uppercase transition-all hover:bg-[#2b2826]"
+              className="font-label-lg text-label-lg flex h-12 w-full items-center justify-center gap-2 border border-black bg-black font-semibold tracking-wider text-white uppercase transition-all hover:bg-black/85"
             >
               <span>Masuk Sekarang</span>
               <Icon name="arrow_forward" size={16} />
@@ -238,14 +238,14 @@ export default function ResetPasswordPage() {
 
   // ── Main password form ────────────────────────────────────────────────────
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#FAF8F5]">
+    <div className="relative flex min-h-screen w-full flex-col bg-white">
       <main className="pb-safe relative flex w-full flex-1 flex-col py-6">
         <div className="px-margin-mobile mx-auto w-full max-w-lg">
           <div className="mb-8 flex flex-col gap-2">
-            <h1 className="font-headline-xl-mobile font-normal text-[#1B1718] md:text-3xl">
-              Buat <span className="font-sans font-medium text-[#141312]">Kata Sandi Baru</span>
+            <h1 className="font-headline-xl-mobile font-normal text-black md:text-3xl">
+              Buat <span className="font-sans font-medium text-black">Kata Sandi Baru</span>
             </h1>
-            <p className="font-body-md text-body-md leading-relaxed text-[#685E5A]">
+            <p className="font-body-md text-body-md leading-relaxed text-black/70">
               Pilih kata sandi yang kuat untuk akun SEVAYA Anda.
             </p>
           </div>
@@ -260,11 +260,11 @@ export default function ResetPasswordPage() {
 
             {/* New Password */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-label-md tracking-wider text-[#1B1718] uppercase" htmlFor="new-password">
+              <label className="font-label-md text-label-md tracking-wider text-black uppercase" htmlFor="new-password">
                 Kata Sandi Baru
               </label>
-              <div className="relative flex items-center border border-[#E5DDD5] bg-[#FAF8F5] shadow-2xs transition-all focus-within:border-[#141312] focus-within:ring-1 focus-within:ring-[#141312]/20">
-                <Icon name="lock" size={19} className="pointer-events-none absolute left-3.5 text-[#685E5A]" />
+              <div className="relative flex items-center border border-black/15 bg-white shadow-2xs transition-all focus-within:border-black focus-within:ring-1 focus-within:ring-[#000000]/20">
+                <Icon name="lock" size={19} className="pointer-events-none absolute left-3.5 text-black/70" />
                 <input
                   id="new-password"
                   type={showNew ? 'text' : 'password'}
@@ -273,30 +273,30 @@ export default function ResetPasswordPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimal 8 karakter"
-                  className="font-body-md text-body-md h-12 w-full bg-transparent pr-11 pl-11 text-[#1B1718] placeholder:text-[#685E5A]/60 focus:outline-none"
+                  className="font-body-md text-body-md h-12 w-full bg-transparent pr-11 pl-11 text-black placeholder:text-black/70/60 focus:outline-none"
                 />
                 <button type="button" onClick={() => setShowNew(!showNew)} aria-label="Toggle"
-                  className="absolute right-3.5 text-[#685E5A] transition-colors hover:text-[#1B1718]">
+                  className="absolute right-3.5 text-black/70 transition-colors hover:text-black">
                   <Icon name={showNew ? 'visibility_off' : 'visibility'} size={19} />
                 </button>
               </div>
               {newPassword && (
                 <div className="flex flex-col gap-1">
-                  <div className="h-1 w-full bg-[#E5DDD5]">
+                  <div className="h-1 w-full bg-[rgba(0,0,0,0.12)]">
                     <div className={`h-1 transition-all duration-300 ${strength.color} ${strength.width}`} />
                   </div>
-                  <p className="text-xs text-[#685E5A]">Kekuatan: <span className="font-medium text-[#141312]">{strength.label}</span></p>
+                  <p className="text-xs text-black/70">Kekuatan: <span className="font-medium text-black">{strength.label}</span></p>
                 </div>
               )}
             </div>
 
             {/* Confirm Password */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-label-md tracking-wider text-[#1B1718] uppercase" htmlFor="confirm-password">
+              <label className="font-label-md text-label-md tracking-wider text-black uppercase" htmlFor="confirm-password">
                 Konfirmasi Kata Sandi
               </label>
-              <div className="relative flex items-center border border-[#E5DDD5] bg-[#FAF8F5] shadow-2xs transition-all focus-within:border-[#141312] focus-within:ring-1 focus-within:ring-[#141312]/20">
-                <Icon name="lock" size={19} className="pointer-events-none absolute left-3.5 text-[#685E5A]" />
+              <div className="relative flex items-center border border-black/15 bg-white shadow-2xs transition-all focus-within:border-black focus-within:ring-1 focus-within:ring-[#000000]/20">
+                <Icon name="lock" size={19} className="pointer-events-none absolute left-3.5 text-black/70" />
                 <input
                   id="confirm-password"
                   type={showConfirm ? 'text' : 'password'}
@@ -304,10 +304,10 @@ export default function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Ulangi kata sandi baru"
-                  className="font-body-md text-body-md h-12 w-full bg-transparent pr-11 pl-11 text-[#1B1718] placeholder:text-[#685E5A]/60 focus:outline-none"
+                  className="font-body-md text-body-md h-12 w-full bg-transparent pr-11 pl-11 text-black placeholder:text-black/70/60 focus:outline-none"
                 />
                 <button type="button" onClick={() => setShowConfirm(!showConfirm)} aria-label="Toggle"
-                  className="absolute right-3.5 text-[#685E5A] transition-colors hover:text-[#1B1718]">
+                  className="absolute right-3.5 text-black/70 transition-colors hover:text-black">
                   <Icon name={showConfirm ? 'visibility_off' : 'visibility'} size={19} />
                 </button>
               </div>
@@ -322,15 +322,15 @@ export default function ResetPasswordPage() {
             </div>
 
             {/* Requirements */}
-            <div className="border border-[#E5DDD5] bg-white p-3.5">
-              <p className="mb-1.5 text-xs font-semibold tracking-wider text-[#141312] uppercase">Persyaratan</p>
+            <div className="border border-black/15 bg-white p-3.5">
+              <p className="mb-1.5 text-xs font-semibold tracking-wider text-black uppercase">Persyaratan</p>
               <ul className="space-y-1">
                 {[
                   { check: newPassword.length >= 8, text: 'Minimal 8 karakter' },
                   { check: /[A-Za-z]/.test(newPassword), text: 'Mengandung huruf' },
                   { check: /[0-9]/.test(newPassword), text: 'Mengandung angka' },
                 ].map(({ check, text }) => (
-                  <li key={text} className="flex items-center gap-2 text-xs text-[#685E5A]">
+                  <li key={text} className="flex items-center gap-2 text-xs text-black/70">
                     <Icon name={check ? 'check_circle' : 'radio_button_unchecked'} size={13}
                       className={check ? 'text-emerald-500' : 'text-[#B8A99A]'} />
                     {text}
@@ -342,7 +342,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="font-label-lg text-label-lg mt-1 flex h-12 w-full items-center justify-center gap-2 border border-[#141312] bg-[#141312] font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-sm transition-all hover:bg-[#2b2826] active:scale-[0.99] disabled:opacity-50"
+              className="font-label-lg text-label-lg mt-1 flex h-12 w-full items-center justify-center gap-2 border border-black bg-black font-semibold tracking-wider text-white uppercase shadow-sm transition-all hover:bg-black/85 active:scale-[0.99] disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

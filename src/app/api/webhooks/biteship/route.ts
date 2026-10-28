@@ -7,14 +7,28 @@ const supabaseAdmin = createClient(
 );
 
 /**
- * Biteship sends a POST with JSON body on every order status change.
- * We find the matching order by biteship_order_id and update its status + tracking fields.
+ * Biteship Webhook Handler with Signature / Token Verification
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // 1. Webhook Authentication / Secret Verification
+    const expectedSecret =
+      process.env.BITESHIP_WEBHOOK_SECRET ||
+      process.env.BITESHIP_API_KEY ||
+      process.env.BITESHIP_TEST_API_KEY;
 
-    console.log('[Biteship Webhook]', JSON.stringify(body, null, 2));
+    if (expectedSecret) {
+      const authHeader = req.headers.get('authorization') || req.headers.get('x-biteship-secret') || req.headers.get('x-webhook-token');
+      const queryToken = req.nextUrl.searchParams.get('token');
+      const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim() || queryToken;
+
+      if (!providedSecret || providedSecret !== expectedSecret) {
+        console.warn('[Biteship Webhook] Unauthorized attempt with invalid or missing secret.');
+        return NextResponse.json({ success: false, error: 'Unauthorized webhook' }, { status: 401 });
+      }
+    }
+
+    const body = await req.json();
 
     const {
       id: biteshipOrderId,
@@ -74,12 +88,11 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[Biteship Webhook] Supabase update error:', error.message);
-      // Still return 200 so Biteship doesn't retry endlessly
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true, status: finalStatus });
   } catch (err) {
     console.error('[Biteship Webhook] Error:', err);
-    return NextResponse.json({ received: true, error: 'parse error' });
+    return NextResponse.json({ received: true, error: 'parse error' }, { status: 400 });
   }
 }

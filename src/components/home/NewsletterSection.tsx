@@ -19,13 +19,13 @@ export function NewsletterSection() {
   };
 
   return (
-    <section className="px-margin-mobile flex w-full flex-col items-center bg-[#141312] py-14 text-center text-[#FAF8F5]">
+    <section className="px-margin-mobile flex w-full flex-col items-center bg-black py-14 text-center text-white">
       <div className="mx-auto flex max-w-md flex-col items-center">
-        <Icon name="mail" size={30} className="mb-3 text-[#FAF8F5]" />
-        <h2 className="font-headline-lg-mobile mb-2 font-light tracking-wide text-[#FAF8F5] md:text-3xl">
+        <Icon name="mail" size={30} className="mb-3 text-white" />
+        <h2 className="font-headline-lg-mobile mb-2 font-light tracking-wide text-white md:text-3xl">
           {t('newsletter.title')}
         </h2>
-        <p className="font-body-sm text-body-sm mb-6 leading-relaxed font-light text-[#FAF8F5]/80">
+        <p className="font-body-sm text-body-sm mb-6 leading-relaxed font-light text-white/80">
           {t('newsletter.desc')}
         </p>
 
@@ -38,12 +38,12 @@ export function NewsletterSection() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('newsletter.placeholder') || 'Enter your email address'}
-              className="font-body-md text-body-md h-12 w-full rounded border border-[#FAF8F5]/25 bg-[#FAF8F5]/10 px-4 text-[#FAF8F5] transition-all outline-none placeholder:text-[#FAF8F5]/50 focus:border-[#FAF8F5] focus:bg-[#FAF8F5]/15 focus:ring-1 focus:ring-[#FAF8F5]"
+              className="font-body-md text-body-md h-12 w-full rounded border border-white/25 bg-white/10 px-4 text-white transition-all outline-none placeholder:text-white/50 focus:border-white focus:bg-white/15 focus:ring-1 focus:ring-[#FFFFFF]"
             />
           </div>
           <button
             type="submit"
-            className="font-label-md text-label-md h-12 w-full rounded bg-[#FAF8F5] font-semibold tracking-widest text-[#141312] uppercase shadow-sm transition-all hover:bg-[#ffffff] active:scale-[0.99]"
+            className="font-label-md text-label-md h-12 w-full rounded bg-white font-semibold tracking-widest text-black uppercase shadow-sm transition-all hover:bg-[#ffffff] active:scale-[0.99]"
           >
             {t('newsletter.cta') || 'Subscribe'}
           </button>

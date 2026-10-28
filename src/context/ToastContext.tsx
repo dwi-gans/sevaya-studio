@@ -31,7 +31,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           toast.visible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'
         }`}
       >
-        <div className="flex items-center gap-2.5 rounded-full border border-[#342f30]/40 bg-[#1B1718] px-5 py-3 text-[#FAF8F5] shadow-2xl">
+        <div className="flex items-center gap-2.5 rounded-full border border-[#342f30]/40 bg-black px-5 py-3 text-white shadow-2xl">
           <Icon name="check_circle" size={19} className="text-[#ffd9dd]" />
           <span className="font-label-md text-label-md font-medium tracking-wide">
             {toast.message}

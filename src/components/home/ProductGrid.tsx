@@ -206,13 +206,15 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   };
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8" id="collections">
+    <section className="w-full bg-white py-8 text-black section--light" data-section="collections">
       {/* Top Header */}
-      <div className="mb-6 flex flex-col gap-1 text-center sm:text-left">
-        <span className="text-[11px] font-medium tracking-[0.2em] text-[#7C726E] uppercase">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Top Header */}
+        <div className="mb-5 flex flex-col gap-1 text-center sm:text-left">
+        <span className="text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
           {t('grid.tag') || 'SHOP THE COLLECTION'}
         </span>
-        <h2 className="font-sans text-xl font-medium tracking-wider text-[#141312] uppercase sm:text-2xl">
+        <h2 className="font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
           {t('grid.title') || 'BEST-LOVED COLLECTIONS'}
         </h2>
       </div>
@@ -224,7 +226,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
           type="button"
           aria-label="Scroll left"
           onClick={scrollLeft}
-          className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#D0C5BD] bg-white text-[#141312] shadow-md transition-all hover:scale-105 hover:bg-[#FAF8F5] sm:flex"
+          className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
         >
           <Icon name="chevron_left" size={20} />
         </button>
@@ -263,7 +265,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
           type="button"
           aria-label="Scroll right"
           onClick={scrollRight}
-          className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#D0C5BD] bg-white text-[#141312] shadow-md transition-all hover:scale-105 hover:bg-[#FAF8F5] sm:flex"
+          className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
         >
           <Icon name="chevron_right" size={20} />
         </button>
@@ -285,11 +287,12 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
               setActiveIndex(i);
             }}
             className={`h-1.5 rounded-full transition-all duration-300 ${
-              activeIndex === i ? 'w-5 bg-[#141312]' : 'w-1.5 bg-[#D0C5BD]'
+              activeIndex === i ? 'w-5 bg-black' : 'w-1.5 bg-black/20'
             }`}
           />
         ))}
       </div>
+    </div>
     </section>
   );
 }

@@ -57,11 +57,11 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group relative flex flex-col bg-transparent">
       {/* Product Image Frame: 2:3 Portrait Aspect Ratio (Tazalabel abaya silhouette standard) */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#F6F4F0]">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/5">
         <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
           {/* Badge */}
           {product.badge && (
-            <span className="absolute top-3 left-3 z-10 rounded-sm bg-[#141312] px-2.5 py-1 text-[9px] font-medium tracking-widest text-white uppercase sm:text-[10px]">
+            <span className="absolute top-3 left-3 z-10 bg-black px-2.5 py-1 text-[8px] font-medium tracking-widest text-white uppercase">
               {product.badge}
             </span>
           )}
@@ -98,7 +98,7 @@ export function ProductCard({ product }: { product: Product }) {
           type="button"
           aria-label={`Tambah ${product.title} ke tas`}
           onClick={handleQuickAdd}
-          className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#141312] shadow-md transition-all duration-300 hover:scale-110 hover:bg-[#141312] hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
+          className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
           title="Quick Add"
         >
           <Icon name="add" size={18} />
@@ -108,16 +108,16 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Typography & Price below image (Tazalabel centered layout) */}
       <div className="flex flex-col items-center pt-3.5 pb-2 text-center">
         <Link href={`/product/${product.slug}`} className="w-full">
-          <h3 className="line-clamp-1 font-sans text-xs font-medium tracking-[0.14em] text-[#141312] uppercase transition-colors hover:opacity-70 sm:text-[13px]">
+          <h3 className="line-clamp-1 font-sans text-[9px] font-medium tracking-[0.14em] text-black uppercase transition-colors hover:opacity-70 sm:text-[10px]">
             {product.title}
           </h3>
         </Link>
         <div className="mt-1 flex items-baseline justify-center gap-2">
-          <p className="font-sans text-xs font-normal text-[#141312] sm:text-[13px]">
+          <p className="font-sans text-[9px] font-normal text-black sm:text-[10px]">
             {formatPrice(product.price)}
           </p>
           {product.originalPrice && product.originalPrice > product.price && (
-            <p className="font-sans text-[11px] text-[#A89E99] line-through sm:text-xs">
+            <p className="font-sans text-[8px] text-black/50 line-through sm:text-[9px]">
               {formatPrice(product.originalPrice)}
             </p>
           )}
@@ -138,7 +138,7 @@ export function ProductCard({ product }: { product: Product }) {
                 }}
                 className={`h-3.5 w-3.5 rounded-full transition-all ${
                   selectedSwatch === swatch.name
-                    ? 'scale-110 ring-1 ring-[#141312] ring-offset-1'
+                    ? 'scale-110 ring-1 ring-black ring-offset-1'
                     : 'opacity-70 ring-1 ring-black/10 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: swatch.color }}

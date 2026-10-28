@@ -45,24 +45,24 @@ export function CountdownTicker() {
   const format = (num: number) => String(num).padStart(2, '0');
 
   return (
-    <div className="px-margin-mobile flex w-full items-center justify-center gap-2.5 border-b border-[#E5DDD5]/60 bg-[#F4EFEB] py-2.5">
-      <span className="font-label-sm text-label-sm tracking-widest text-[#685E5A] uppercase">
+    <div className="px-margin-mobile flex w-full items-center justify-center gap-2.5 border-b border-black/15/60 bg-black/5 py-2.5">
+      <span className="font-label-sm text-label-sm tracking-widest text-black/70 uppercase">
         {t('home.countdown_ends')}
       </span>
-      <div className="font-label-md text-label-md flex items-center gap-1 font-medium tracking-tight text-[#1B1718]">
-        <span className="rounded-md border border-[#E5DDD5] bg-[#FAF8F5] px-1.5 py-0.5 shadow-2xs">
+      <div className="font-label-md text-label-md flex items-center gap-1 font-medium tracking-tight text-black">
+        <span className="rounded-md border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs">
           {format(timeLeft.days)}d
         </span>
         <span className="font-bold text-[#877274]">:</span>
-        <span className="rounded-md border border-[#E5DDD5] bg-[#FAF8F5] px-1.5 py-0.5 shadow-2xs">
+        <span className="rounded-md border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs">
           {format(timeLeft.hours)}h
         </span>
         <span className="font-bold text-[#877274]">:</span>
-        <span className="rounded-md border border-[#E5DDD5] bg-[#FAF8F5] px-1.5 py-0.5 shadow-2xs">
+        <span className="rounded-md border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs">
           {format(timeLeft.minutes)}m
         </span>
         <span className="font-bold text-[#877274]">:</span>
-        <span className="rounded-md border border-[#6b1d2f]/30 bg-[#FAF8F5] px-1.5 py-0.5 font-semibold text-[#6b1d2f] shadow-2xs">
+        <span className="rounded-md border border-[#6b1d2f]/30 bg-white px-1.5 py-0.5 font-semibold text-[#6b1d2f] shadow-2xs">
           {format(timeLeft.seconds)}s
         </span>
       </div>

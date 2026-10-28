@@ -118,36 +118,23 @@ function ShopContent() {
   }, [activeCategory, sortBy, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       {/* Top Breadcrumb & Editorial Header */}
-      <div className="border-b border-[#E5DDD5]/60 bg-[#FAF8F5]">
+      <div className="border-b border-[#E5E5E5]/60 bg-[#FFFFFF]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-[#7C726E]">
-            <Link href="/" className="hover:text-[#141312]">
-              Home
-            </Link>
-            <span>/</span>
-            <span className="font-medium text-[#141312]">Shop</span>
-            {activeCategory !== 'all' && (
-              <>
-                <span>/</span>
-                <span className="capitalize text-[#141312]">{activeCategory}</span>
-              </>
-            )}
-          </nav>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#8E8380] uppercase">
+              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#666666] uppercase">
                 THE SEVAYA CATALOGUE
               </span>
-              <h1 className="mt-1 font-sans text-2xl font-medium tracking-wide text-[#141312] sm:text-3xl lg:text-4xl">
+              <h1 className="mt-1 font-sans text-base font-medium tracking-wide text-[#000000] sm:text-xl lg:text-2xl">
                 {activeCategory === 'all'
                   ? 'All Collections'
                   : CATEGORIES.find((c) => c.id === activeCategory)?.label || 'Collections'}
               </h1>
             </div>
-            <p className="max-w-md text-xs leading-relaxed text-[#685E5A] sm:text-sm">
+            <p className="max-w-md text-[10px] leading-relaxed text-[#555555] sm:text-xs">
               Discover considered silhouettes, sustainable cupro drapes, and mindful modest wear crafted for lasting comfort.
             </p>
           </div>
@@ -155,7 +142,7 @@ function ShopContent() {
       </div>
 
       {/* Sticky Category Pills & Filter Bar (Taza Label style) */}
-      <div className="sticky top-16 z-30 border-b border-[#E5DDD5]/80 bg-[#FAF8F5]/95 backdrop-blur-md">
+      <div className="sticky top-16 z-30 border-b border-[#E5E5E5]/80 bg-[#FFFFFF]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           {/* Horizontal Category Scroll */}
           <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
@@ -166,10 +153,10 @@ function ShopContent() {
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium tracking-wider uppercase transition-all ${
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-[10px] font-medium tracking-wider uppercase transition-all ${
                     isActive
-                      ? 'bg-[#141312] text-[#FAF8F5] shadow-xs'
-                      : 'border border-[#E5DDD5] bg-white text-[#554C48] hover:border-[#141312] hover:text-[#141312]'
+                      ? 'bg-[#000000] text-[#FFFFFF] shadow-xs'
+                      : 'border border-[#E5E5E5] bg-white text-[#333333] hover:border-[#000000] hover:text-[#000000]'
                   }`}
                 >
                   {cat.label}
@@ -187,14 +174,14 @@ function ShopContent() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={language === 'id' ? 'Cari di katalog...' : 'Search catalogue...'}
-                className="w-44 lg:w-56 rounded-full border border-[#E5DDD5] bg-white py-1.5 pl-8 pr-7 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none transition-all focus:w-64"
+                className="w-44 lg:w-56 rounded-full border border-[#E5E5E5] bg-white py-1.5 pl-8 pr-7 text-[10px] text-[#000000] placeholder:text-[#666666] focus:border-[#000000] focus:outline-none transition-all focus:w-64"
               />
-              <Icon name="search" size={14} className="absolute left-2.5 text-[#8E8380] pointer-events-none" />
+              <Icon name="search" size={14} className="absolute left-2.5 text-[#666666] pointer-events-none" />
               {searchInput && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-2.5 text-[#8E8380] hover:text-[#141312]"
+                  className="absolute right-2.5 text-[#666666] hover:text-[#000000]"
                 >
                   <Icon name="close" size={12} />
                 </button>
@@ -203,14 +190,14 @@ function ShopContent() {
 
             {/* Desktop Sort Dropdown */}
             <div className="hidden items-center gap-2 sm:flex">
-              <label htmlFor="shop-sort" className="text-xs font-medium text-[#8E8380]">
+              <label htmlFor="shop-sort" className="text-[10px] font-medium text-[#666666]">
                 Sort:
               </label>
               <select
                 id="shop-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="cursor-pointer rounded-md border border-[#E5DDD5] bg-white px-3 py-1.5 text-xs font-medium text-[#141312] focus:border-[#141312] focus:outline-none"
+                className="cursor-pointer rounded-md border border-[#E5E5E5] bg-white px-3 py-1.5 text-[10px] font-medium text-[#000000] focus:border-[#000000] focus:outline-none"
               >
                 <option value="featured">Featured</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -223,7 +210,7 @@ function ShopContent() {
             <button
               type="button"
               onClick={() => setFilterDrawerOpen(true)}
-              className="flex items-center gap-1.5 rounded-full border border-[#E5DDD5] bg-white px-3.5 py-1.5 text-xs font-medium text-[#141312] shadow-xs sm:hidden"
+              className="flex items-center gap-1.5 rounded-full border border-[#E5E5E5] bg-white px-3.5 py-1.5 text-[10px] font-medium text-[#000000] shadow-xs sm:hidden"
             >
               <Icon name="tune" size={15} />
               <span>Filter</span>
@@ -236,19 +223,19 @@ function ShopContent() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Active Search Banner */}
         {searchQuery && (
-          <div className="mb-6 flex items-center justify-between rounded-xl bg-[#F4EFEB] border border-[#E5DDD5] px-4 py-3 text-xs text-[#141312]">
+          <div className="mb-6 flex items-center justify-between rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-4 py-3 text-[10px] text-[#000000]">
             <div className="flex items-center gap-2">
-              <Icon name="search" size={16} className="text-[#8E8380] shrink-0" />
+              <Icon name="search" size={16} className="text-[#666666] shrink-0" />
               <span>
                 {language === 'id' ? 'Hasil pencarian untuk:' : 'Search results for:'}{' '}
-                <strong className="font-semibold text-[#141312]">&ldquo;{searchQuery}&rdquo;</strong>{' '}
-                <span className="text-[#8E8380]">({filteredProducts.length} {language === 'id' ? 'produk' : 'pieces'})</span>
+                <strong className="font-semibold text-[#000000]">&ldquo;{searchQuery}&rdquo;</strong>{' '}
+                <span className="text-[#666666]">({filteredProducts.length} {language === 'id' ? 'produk' : 'pieces'})</span>
               </span>
             </div>
             <button
               type="button"
               onClick={handleClearSearch}
-              className="flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-medium text-[#141312] shadow-xs hover:bg-[#FAF8F5] transition"
+              className="flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-medium text-[#000000] shadow-xs hover:bg-[#FFFFFF] transition"
             >
               <Icon name="close" size={12} />
               <span>{language === 'id' ? 'Hapus' : 'Clear'}</span>
@@ -257,14 +244,14 @@ function ShopContent() {
         )}
 
         {/* Item Counter */}
-        <div className="mb-6 flex items-center justify-between text-xs text-[#8E8380]">
+        <div className="mb-6 flex items-center justify-between text-[10px] text-[#666666]">
           <span>Showing {filteredProducts.length} pieces</span>
           <div className="flex items-center gap-3">
             {searchQuery && (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="underline underline-offset-2 hover:text-[#141312]"
+                className="underline underline-offset-2 hover:text-[#000000]"
               >
                 Reset Search
               </button>
@@ -273,7 +260,7 @@ function ShopContent() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('all')}
-                className="underline underline-offset-2 hover:text-[#141312]"
+                className="underline underline-offset-2 hover:text-[#000000]"
               >
                 Reset Category
               </button>
@@ -290,17 +277,17 @@ function ShopContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <Icon name="search_off" size={40} className="text-[#8E8380]" />
-            <h3 className="mt-4 font-sans text-base font-medium text-[#141312] sm:text-lg">
+            <Icon name="search_off" size={40} className="text-[#666666]" />
+            <h3 className="mt-4 font-sans text-xs font-medium text-[#000000] sm:text-sm">
               No pieces found
             </h3>
-            <p className="mt-1 text-xs text-[#685E5A]">
+            <p className="mt-1 text-[10px] text-[#555555]">
               Try choosing another category or clearing your filters.
             </p>
             <button
               type="button"
               onClick={() => setActiveCategory('all')}
-              className="mt-6 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
+              className="mt-6 rounded-full bg-[#000000] px-5 py-2.5 text-[10px] font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
             >
               View All Products
             </button>
@@ -312,17 +299,17 @@ function ShopContent() {
       {filterDrawerOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-[#1B1718]/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-[#000000]/60 backdrop-blur-xs"
             onClick={() => setFilterDrawerOpen(false)}
           />
-          <div className="relative z-10 ml-auto flex h-full w-[85vw] max-w-sm flex-col bg-[#FAF8F5] p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5] pb-4">
-              <h2 className="font-sans text-base font-medium tracking-wide text-[#141312]">Filter &amp; Sort</h2>
+          <div className="relative z-10 ml-auto flex h-full w-[85vw] max-w-sm flex-col bg-[#FFFFFF] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-4">
+              <h2 className="font-sans text-xs font-medium tracking-wide text-[#000000]">Filter &amp; Sort</h2>
               <button
                 type="button"
                 aria-label="Close filters"
                 onClick={() => setFilterDrawerOpen(false)}
-                className="rounded-full p-2 text-[#685E5A] hover:bg-[#F4EFEB]"
+                className="rounded-full p-2 text-[#555555] hover:bg-[#F5F5F5]"
               >
                 <Icon name="close" size={20} />
               </button>
@@ -331,7 +318,7 @@ function ShopContent() {
             <div className="flex-1 space-y-6 overflow-y-auto py-6">
               {/* Mobile Search */}
               <div>
-                <h3 className="mb-2 text-xs font-semibold tracking-wider text-[#8E8380] uppercase">
+                <h3 className="mb-2 text-[10px] font-semibold tracking-wider text-[#666666] uppercase">
                   {language === 'id' ? 'Cari Produk' : 'Search Pieces'}
                 </h3>
                 <form
@@ -346,14 +333,14 @@ function ShopContent() {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={language === 'id' ? 'Ketik nama abaya, bahan...' : 'Type name, fabric...'}
-                    className="w-full rounded-xl border border-[#D0C5BD] bg-white py-2 pl-9 pr-8 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+                    className="w-full rounded-xl border border-[#CCCCCC] bg-white py-2 pl-9 pr-8 text-[10px] text-[#000000] placeholder:text-[#666666] focus:border-[#000000] focus:outline-none"
                   />
-                  <Icon name="search" size={16} className="absolute left-3 text-[#8E8380] pointer-events-none" />
+                  <Icon name="search" size={16} className="absolute left-3 text-[#666666] pointer-events-none" />
                   {searchInput && (
                     <button
                       type="button"
                       onClick={handleClearSearch}
-                      className="absolute right-3 text-[#8E8380] hover:text-[#141312]"
+                      className="absolute right-3 text-[#666666] hover:text-[#000000]"
                     >
                       <Icon name="close" size={14} />
                     </button>
@@ -363,7 +350,7 @@ function ShopContent() {
 
               {/* Category */}
               <div>
-                <h3 className="mb-3 text-xs font-semibold tracking-wider text-[#8E8380] uppercase">
+                <h3 className="mb-3 text-[10px] font-semibold tracking-wider text-[#666666] uppercase">
                   Category
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -374,10 +361,10 @@ function ShopContent() {
                       onClick={() => {
                         setActiveCategory(cat.id);
                       }}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-medium uppercase transition-colors ${
+                      className={`rounded-full px-3.5 py-1.5 text-[10px] font-medium uppercase transition-colors ${
                         activeCategory === cat.id
-                          ? 'bg-[#141312] text-white'
-                          : 'border border-[#E5DDD5] bg-white text-[#554C48]'
+                          ? 'bg-[#000000] text-white'
+                          : 'border border-[#E5E5E5] bg-white text-[#333333]'
                       }`}
                     >
                       {cat.label}
@@ -388,7 +375,7 @@ function ShopContent() {
 
               {/* Sort By */}
               <div>
-                <h3 className="mb-3 text-xs font-semibold tracking-wider text-[#8E8380] uppercase">
+                <h3 className="mb-3 text-[10px] font-semibold tracking-wider text-[#666666] uppercase">
                   Sort By
                 </h3>
                 <div className="space-y-2">
@@ -402,10 +389,10 @@ function ShopContent() {
                       key={s.id}
                       type="button"
                       onClick={() => setSortBy(s.id as any)}
-                      className={`flex w-full items-center justify-between rounded-none border p-3 text-left text-xs font-medium transition-colors ${
+                      className={`flex w-full items-center justify-between rounded-none border p-3 text-left text-[10px] font-medium transition-colors ${
                         sortBy === s.id
-                          ? 'border-[#141312] bg-[#FAF8F5] text-[#141312]'
-                          : 'border-[#E5DDD5] bg-white text-[#685E5A]'
+                          ? 'border-[#000000] bg-[#FFFFFF] text-[#000000]'
+                          : 'border-[#E5E5E5] bg-white text-[#555555]'
                       }`}
                     >
                       <span>{s.label}</span>
@@ -417,11 +404,11 @@ function ShopContent() {
             </div>
 
             {/* Bottom Actions */}
-            <div className="border-t border-[#E5DDD5] pt-4">
+            <div className="border-t border-[#E5E5E5] pt-4">
               <button
                 type="button"
                 onClick={() => setFilterDrawerOpen(false)}
-                className="w-full rounded-full bg-[#141312] py-3 text-center text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
+                className="w-full rounded-full bg-[#000000] py-3 text-center text-[10px] font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
               >
                 Apply Filters ({filteredProducts.length})
               </button>
@@ -440,8 +427,8 @@ export default function ShopPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#FAF8F5]">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
+        <div className="flex min-h-screen items-center justify-center bg-[#FFFFFF]">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#000000] border-t-transparent" />
         </div>
       }
     >

@@ -2,20 +2,25 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ForgotPasswordPage() {
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+
+  const isId = language === 'id';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     if (!email || !email.includes('@')) {
-      setErrorMsg('Harap masukkan alamat email yang valid.');
+      setErrorMsg(isId ? 'Harap masukkan alamat email yang valid.' : 'Please enter a valid email address.');
       return;
     }
 
@@ -28,150 +33,152 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Terjadi kesalahan. Silakan coba lagi.');
-      }
-
-      setSent(true);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
-      setErrorMsg(msg);
-    } finally {
       setIsLoading(false);
+
+      if (res.ok && data.success) {
+        setSent(true);
+      } else {
+        setErrorMsg(data.error || (isId ? 'Gagal mengirim instruksi pemulihan. Coba lagi.' : 'Failed to send recovery instructions.'));
+      }
+    } catch {
+      setIsLoading(false);
+      setErrorMsg(isId ? 'Terjadi kesalahan jaringan. Coba lagi.' : 'Network error occurred. Please try again.');
     }
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#FAF8F5]">
-      <main className="pb-safe relative flex w-full flex-1 flex-col py-6">
-        <div className="px-margin-mobile mx-auto w-full max-w-lg">
+    <div className="min-h-screen bg-white font-body text-black selection:bg-black/5 flex flex-col justify-between">
+      {/* ── TOP HEADER (Matching Profile Page Minimal Bar) ── */}
+      <header className="sticky top-0 z-30 border-b border-black/15 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center transition hover:opacity-85"
+            aria-label="Sevaya Homepage"
+            title="SEVAYA"
+          >
+            <Logo className="h-6 sm:h-7 w-auto" />
+          </Link>
 
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-2">
-            <Link
-              href="/login"
-              className="mb-2 inline-flex items-center gap-1.5 text-xs tracking-wider text-[#685E5A] uppercase transition-colors hover:text-[#141312]"
-            >
-              <Icon name="arrow_back" size={14} />
-              Kembali ke Login
-            </Link>
-            <h1 className="font-headline-xl-mobile font-normal text-[#1B1718] md:text-3xl">
-              Lupa <span className="font-sans font-medium text-[#141312]">Kata Sandi?</span>
-            </h1>
-            <p className="font-body-md text-body-md leading-relaxed text-[#685E5A]">
-              Masukkan alamat email terdaftar Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru.
-            </p>
-          </div>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3.5 py-1 text-xs font-medium text-black/70 transition hover:border-black hover:text-black hover:bg-black/5"
+          >
+            <Icon name="arrow_back" size={14} />
+            <span>{isId ? 'Kembali ke Masuk' : 'Back to Sign In'}</span>
+          </Link>
+        </div>
+      </header>
 
-          {/* Success State */}
+      {/* ── MAIN CONTENT (Minimalist & Elegant Card Matching Profile) ── */}
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
+        <div className="flex items-center gap-6 sm:gap-8 pb-6 justify-center">
+          <h2 className="font-headline text-2xl sm:text-3xl font-semibold tracking-tight text-black/85">
+            {isId ? 'Pemulihan Akun' : 'Account Recovery'}
+          </h2>
+        </div>
+
+        <div className="rounded-2xl border border-black/15 bg-white p-6 sm:p-8 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-5">
           {sent ? (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col items-center gap-4 border border-emerald-200 bg-emerald-50 p-6 text-center">
-                <div className="flex h-12 w-12 items-center justify-center bg-emerald-100">
-                  <Icon name="mark_email_read" size={24} className="text-emerald-700" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <p className="font-sans text-sm font-semibold tracking-wider text-emerald-800 uppercase">
-                    Email Terkirim
-                  </p>
-                  <p className="text-sm leading-relaxed text-emerald-700">
-                    Tautan reset kata sandi telah dikirim ke{' '}
-                    <strong>{email}</strong>.{' '}
-                    Silakan periksa kotak masuk dan folder spam Anda.
-                  </p>
-                  <p className="mt-1 text-xs text-emerald-600">
-                    Tautan berlaku selama <strong>1 jam</strong>.
-                  </p>
-                </div>
+            <div className="text-center py-4 space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+                <Icon name="check" size={24} />
               </div>
-
-              <button
-                type="button"
-                onClick={() => { setSent(false); setEmail(''); }}
-                className="font-label-md text-label-md flex h-12 w-full items-center justify-center gap-2 border border-[#E5DDD5] bg-[#FAF8F5] font-medium tracking-wider text-[#685E5A] uppercase transition-colors hover:border-[#141312] hover:text-[#141312]"
-              >
-                Kirim Ulang ke Email Lain
-              </button>
-
-              <div className="text-center">
+              <div>
+                <h1 className="font-headline text-lg sm:text-xl font-semibold text-black/85">
+                  {isId ? 'Tautan Pemulihan Terkirim' : 'Recovery Link Sent'}
+                </h1>
+                <p className="text-xs sm:text-sm text-black/70 mt-2 leading-relaxed max-w-sm mx-auto">
+                  {isId
+                    ? `Kami telah mengirimkan instruksi atur ulang kata sandi ke ${email}. Silakan periksa folder inbox atau spam Anda.`
+                    : `We've sent password reset instructions to ${email}. Please check your inbox or spam folder.`}
+                </p>
+              </div>
+              <div className="pt-2">
                 <Link
                   href="/login"
-                  className="font-label-md text-label-md font-medium text-[#6b1d2f] underline underline-offset-4 transition-colors hover:text-[#5a1224]"
+                  className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-black/85"
                 >
-                  Kembali ke Halaman Login
+                  {isId ? 'Kembali ke Masuk' : 'Return to Sign In'}
                 </Link>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              {/* Error Alert */}
+            <>
+              <div className="text-center sm:text-left">
+                <h1 className="font-headline text-lg sm:text-xl font-semibold text-black/85">
+                  {isId ? 'Lupa Kata Sandi?' : 'Forgot Your Password?'}
+                </h1>
+                <p className="text-xs sm:text-sm text-black/70 mt-1 leading-relaxed">
+                  {isId
+                    ? 'Masukkan alamat email yang terdaftar. Kami akan mengirimkan tautan untuk mengatur ulang kata sandi Anda.'
+                    : 'Enter your registered email address. We will send a secure link to reset your password.'}
+                </p>
+              </div>
+
               {errorMsg && (
-                <div className="flex items-start gap-2.5 border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
-                  <Icon name="error" size={16} className="mt-0.5 shrink-0 text-red-600" />
+                <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                  <Icon name="error" size={16} className="shrink-0 text-red-600 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              {/* Email Input */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
                   <label
-                    className="font-label-md text-label-md tracking-wider text-[#1B1718] uppercase"
+                    className="text-xs font-semibold tracking-wider text-black uppercase"
                     htmlFor="email"
                   >
-                    Alamat Email
+                    {isId ? 'Alamat Email Terdaftar' : 'Registered Email Address'}
                   </label>
-                  <span className="font-label-sm text-label-sm tracking-tight text-[#685E5A]">
-                    Wajib Diisi
-                  </span>
+                  <div className="relative flex items-center rounded-xl border border-black/15 bg-white transition focus-within:border-black focus-within:bg-white focus-within:ring-1 focus-within:ring-[#000000]/15">
+                    <Icon
+                      name="mail"
+                      size={18}
+                      className="pointer-events-none absolute left-3.5 text-black/50"
+                    />
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      autoFocus
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="h-11 w-full bg-transparent pl-10 pr-4 text-xs sm:text-sm text-black placeholder:text-black/50 focus:outline-none"
+                    />
+                  </div>
                 </div>
-                <div className="relative flex items-center border border-[#E5DDD5] bg-[#FAF8F5] shadow-2xs transition-all focus-within:border-[#141312] focus-within:ring-1 focus-within:ring-[#141312]/20">
-                  <Icon
-                    name="mail"
-                    size={19}
-                    className="pointer-events-none absolute left-3.5 text-[#685E5A]"
-                  />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="font-body-md text-body-md h-12 w-full bg-transparent pr-4 pl-11 text-[#1B1718] placeholder:text-[#685E5A]/60 focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="font-label-lg text-label-lg mt-2 flex h-12 w-full items-center justify-center gap-2 border border-[#141312] bg-[#141312] font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-sm transition-all hover:bg-[#2b2826] active:scale-[0.99] disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <>
-                    <span>Kirim Tautan Reset</span>
-                    <Icon name="send" size={16} />
-                  </>
-                )}
-              </button>
-
-              {/* Back Link */}
-              <div className="mt-2 text-center">
-                <Link
-                  href="/login"
-                  className="font-label-md text-label-md font-medium text-[#685E5A] underline underline-offset-4 transition-colors hover:text-[#141312]"
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-black text-xs font-semibold tracking-wider text-white uppercase shadow-xs transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
                 >
-                  Ingat kata sandi? Masuk di sini
-                </Link>
-              </div>
-            </form>
+                  {isLoading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <>
+                      <span>{isId ? 'Kirim Tautan Pemulihan' : 'Send Recovery Link'}</span>
+                      <Icon name="arrow_forward" size={14} />
+                    </>
+                  )}
+                </button>
+              </form>
+            </>
           )}
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-xs text-black/70">
+            {isId ? 'Ingat kata sandi Anda?' : 'Remember your password?'}{' '}
+            <Link
+              href="/login"
+              className="font-semibold text-black underline underline-offset-4 hover:text-black/70 transition"
+            >
+              {isId ? 'Masuk ke Akun' : 'Sign In'}
+            </Link>
+          </p>
         </div>
       </main>
     </div>

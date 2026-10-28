@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBiteshipRates } from '@/integrations/biteship';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const clientIp = getClientIp(request);
+    const rateCheck = checkRateLimit('ship_' + clientIp, 30, 60 * 1000);
+    if (!rateCheck.success) {
+      return NextResponse.json({ success: false, error: 'Terlalu banyak permintaan kalkulasi ongkir.' }, { status: 429 });
+    }
     const body = await request.json();
     const {
       destination_area_id,

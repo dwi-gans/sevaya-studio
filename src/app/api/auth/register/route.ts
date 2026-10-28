@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const ipCheck = checkRateLimit('reg_' + clientIp, 10, 15 * 60 * 1000);
+    if (!ipCheck.success) {
+      return NextResponse.json(
+        { success: false, error: 'Terlalu banyak pendaftaran akun dari perangkat Anda. Harap coba lagi beberapa menit lagi.' },
+        { status: 429 }
+      );
+    }
     const body = await req.json();
     const { fullName, email, password, phone } = body;
 

@@ -1,64 +1,76 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 export function HeroSection() {
   const { t } = useLanguage();
+  // State awal selalu persis sama antara server dan client (SSR)
   const [hero, setHero] = useState<HeroSectionData>(DEFAULT_SITE_SECTIONS.hero);
 
-  useEffect(() => {
-    // 1. Read cached immediately (zero flash)
+  // useLayoutEffect hanya berjalan di browser client sebelum browser render ke layar
+  // Langsung membaca cache localStorage tanpa memicu hydration mismatch
+  useLayoutEffect(() => {
     const cached = getCachedSiteSections();
-    if (cached.hero) setHero(cached.hero);
-    // 2. Refresh from cloud in background
+    if (cached?.hero?.image) {
+      setHero(cached.hero);
+    }
+  }, []);
+
+  // Cloud refresh di background
+  useEffect(() => {
     getSiteSections().then((sections) => {
-      if (sections.hero) setHero(sections.hero);
+      if (sections?.hero?.image) setHero(sections.hero);
     });
   }, []);
 
+  const heroImageSrc = hero.image || '/images/hero_optimized.jpg';
+
   return (
-    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#141312] sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
-      {/* Background Hero Image */}
-      <div className="absolute inset-0">
-        <Image
-          src={hero.image || '/images/hero_clean.jpg'}
-          alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-          fill
-          priority
-          className="object-cover object-[center_30%] sm:object-[center_35%]"
-          sizes="100vw"
-        />
-        {/* Editorial soft gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
+    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
+      {/* Background Hero Image with smooth Ken Burns to center without fading or turning black */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="relative h-full w-full animate-kenburns bg-cover bg-[center_35%] bg-no-repeat"
+          style={{ backgroundImage: `url("${heroImageSrc}")` }}
+        >
+          {/* Native HTML img for instant priority decoding & accessibility without Next.js Image loader black flash */}
+          <img
+            src={heroImageSrc}
+            alt="SEVAYA Collection - Timeless, Intentional, Effortless"
+            loading="eager"
+            decoding="sync"
+            fetchPriority="high"
+            className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
+          />
+        </div>
+        {/* Subtle, consistent editorial gradient so text is legible without masking the photo */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 pb-24 text-center text-white sm:pb-32 md:pb-36 lg:pb-40">
         {/* Tagline */}
-        <p className="mb-4 text-xs font-normal tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-sm md:text-base">
+        <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
           {t('hero.tagline') || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex items-center justify-center gap-6 sm:gap-12">
+        <div className="animate-hero-fadeup-link flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5">
           <Link
-            href="/lookbook"
-            className="group relative px-2 py-2 text-sm font-medium tracking-widest text-white uppercase transition-all duration-300 hover:opacity-85 sm:text-base md:text-lg"
+            href="/shop"
+            className="inline-flex min-w-[160px] items-center justify-center bg-white px-5 py-3 text-[10px] font-semibold tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 hover:scale-[1.02]"
           >
-            {t('hero.cta_lookbook') || hero.ctaLookbook || 'Lookbook'}
-            <span className="absolute bottom-1 left-2 right-2 h-[1.5px] bg-white transition-transform duration-300 group-hover:scale-x-110" />
+            {t('hero.cta_shop') || hero.ctaShop || 'Shop The Collection'}
           </Link>
 
           <Link
-            href="/shop"
-            className="group relative px-2 py-2 text-sm font-medium tracking-widest text-white uppercase transition-all duration-300 hover:opacity-85 sm:text-base md:text-lg"
+            href="/lookbook"
+            className="inline-flex min-w-[160px] items-center justify-center border border-white bg-transparent px-5 py-3 text-[10px] font-semibold tracking-[0.2em] text-white uppercase transition-all duration-300 hover:bg-white hover:text-black"
           >
-            {t('hero.cta_shop') || hero.ctaShop || 'Shop The Collection'}
-            <span className="absolute bottom-1 left-2 right-2 h-[1.5px] bg-white transition-transform duration-300 group-hover:scale-x-110" />
+            {t('hero.cta_lookbook') || hero.ctaLookbook || 'Lookbook'}
           </Link>
         </div>
       </div>

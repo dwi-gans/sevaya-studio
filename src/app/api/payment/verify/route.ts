@@ -25,7 +25,22 @@ export async function POST(req: NextRequest) {
         .eq('order_number', order_id)
         .single();
 
-      const wasAlreadyPaid = order?.status === 'paid' || order?.status === 'processing';
+      if (!order) {
+        return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+      }
+
+      // Verify gross amount paid in Midtrans matches database grand total
+      const paidAmount = Math.round(Number(midtransData?.gross_amount) || 0);
+      const expectedAmount = Math.round(Number(order.grand_total) || 0);
+      if (expectedAmount > 0 && paidAmount < expectedAmount) {
+        console.error(`[Verify Payment Amount Mismatch] Order: ${order_id}, Expected: ${expectedAmount}, Paid: ${paidAmount}`);
+        return NextResponse.json(
+          { success: false, error: 'Jumlah pembayaran tidak sesuai dengan tagihan pesanan.' },
+          { status: 400 }
+        );
+      }
+
+      const wasAlreadyPaid = order.status === 'paid' || order.status === 'processing';
 
       await supabaseAdmin
         .from('orders')
@@ -35,7 +50,7 @@ export async function POST(req: NextRequest) {
         })
         .eq('order_number', order_id);
 
-      if (!wasAlreadyPaid && order) {
+      if (!wasAlreadyPaid) {
         let items = [];
         try {
           items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items || [];
@@ -72,6 +87,6 @@ export async function POST(req: NextRequest) {
       transaction_status: transStatus || 'unknown',
     });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Gagal memverifikasi status pembayaran.' }, { status: 500 });
   }
 }

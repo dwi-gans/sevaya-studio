@@ -8,8 +8,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
+import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
 
-type SubmenuKey = 'collection' | 'lookbook' | 'conscious' | null;
+type SubmenuKey = 'collection' | 'lookbook' | 'conscious' | 'customer' | null;
 
 export function NavigationDrawer() {
   const pathname = usePathname();
@@ -90,29 +91,37 @@ export function NavigationDrawer() {
     closeDrawer();
   };
 
+  const customerLinks = [
+    { label: 'Terms of Service', href: '/customer/terms-of-service' },
+    { label: 'Shipping Information', href: '/customer/shipping-information' },
+    { label: 'Returns & Exchanges', href: '/customer/returns-exchanges' },
+    { label: 'FAQ', href: '/customer/faq' },
+  ];
+
   const submenuLabel: Record<NonNullable<SubmenuKey>, string> = {
     collection: t('nav.collection'),
     lookbook: t('nav.lookbook'),
     conscious: t('nav.conscious'),
+    customer: 'Help',
   };
 
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#1B1718]/60 backdrop-blur-xs transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 backdrop-blur-xs transition-opacity duration-300"
         onClick={handleClose}
       />
 
       {/* Drawer Canvas with luxury slide-in entrance */}
-      <div className="no-scrollbar relative z-10 ml-0 flex h-full w-[85vw] max-w-sm flex-col bg-[#FAF8F5] shadow-2xl animate-drawer-slide-in">
+      <div className="no-scrollbar relative z-10 ml-0 flex h-full w-[85vw] max-w-sm flex-col bg-black shadow-2xl animate-drawer-slide-in">
         {/* Top Header */}
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#E5DDD5]/50 px-6">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/15 px-6">
           {activeSubmenu ? (
             <button
               type="button"
               onClick={() => setActiveSubmenu(null)}
-              className="flex items-center gap-2 text-[12px] font-semibold tracking-widest text-[#1B1718] uppercase transition-colors hover:text-[#685E5A]"
+              className="flex items-center gap-2 text-[12px] font-semibold tracking-widest text-white uppercase transition-colors hover:text-white/70"
             >
               <Icon name="arrow_back" size={16} />
               <span>{submenuLabel[activeSubmenu]}</span>
@@ -125,14 +134,14 @@ export function NavigationDrawer() {
 
           <div className="flex items-center gap-2">
             {!activeSubmenu && (
-              <div className="flex items-center rounded-full border border-[#E5DDD5] bg-[#F4EFEB] p-0.5 text-[11px] font-semibold tracking-wider">
+              <div className="flex items-center rounded-full border border-white/15 bg-white/10 p-0.5 text-[11px] font-semibold tracking-wider">
                 <button
                   type="button"
                   onClick={() => setLanguage('id')}
                   className={`rounded-full px-2.5 py-1 uppercase transition-all ${
                     language === 'id'
-                      ? 'bg-[#141312] text-[#FAF8F5] shadow-xs'
-                      : 'text-[#685E5A] hover:text-[#1B1718]'
+                      ? 'bg-white text-white shadow-xs'
+                      : 'text-white/70 hover:text-white'
                   }`}
                 >
                   ID
@@ -142,8 +151,8 @@ export function NavigationDrawer() {
                   onClick={() => setLanguage('en')}
                   className={`rounded-full px-2.5 py-1 uppercase transition-all ${
                     language === 'en'
-                      ? 'bg-[#141312] text-[#FAF8F5] shadow-xs'
-                      : 'text-[#685E5A] hover:text-[#1B1718]'
+                      ? 'bg-white text-white shadow-xs'
+                      : 'text-white/70 hover:text-white'
                   }`}
                 >
                   EN
@@ -155,7 +164,7 @@ export function NavigationDrawer() {
               type="button"
               aria-label="Close menu"
               onClick={handleClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-[#685E5A] transition-colors hover:bg-[#F4EFEB] hover:text-[#141312]"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             >
               <Icon name="close" size={20} />
             </button>
@@ -168,9 +177,9 @@ export function NavigationDrawer() {
           {activeSubmenu === 'collection' && (
             <div className="flex flex-col gap-6">
               <Link
-                href="/#collections"
+                href="/shop"
                 onClick={handleClose}
-                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-[#141312]"
+                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-white"
                 style={{ animationDelay: '50ms' }}
               >
                 {isId ? 'Lihat Semua Koleksi' : 'View All Collections'}
@@ -181,12 +190,12 @@ export function NavigationDrawer() {
                     key={item.label}
                     href={item.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up flex items-center justify-between text-[13px] font-medium tracking-widest text-[#1B1718] uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up flex items-center justify-between text-[13px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 40}ms` }}
                   >
                     <span>{item.label}</span>
                     {item.tag && (
-                      <span className="rounded-full bg-[#6b1d2f] px-2 py-0.5 text-[9px] font-bold tracking-widest text-[#FAF8F5]">
+                      <span className="rounded-full bg-[#6b1d2f] px-2 py-0.5 text-[9px] font-bold tracking-widest text-white">
                         {item.tag}
                       </span>
                     )}
@@ -202,21 +211,24 @@ export function NavigationDrawer() {
               <Link
                 href="/lookbook"
                 onClick={handleClose}
-                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-[#141312]"
+                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-white"
                 style={{ animationDelay: '50ms' }}
               >
-                {isId ? 'Lihat Semua Bab' : 'View All Chapters'}
+                {isId ? 'Lihat Semua Lookbook' : 'View All Lookbooks'}
               </Link>
-              <div className="flex flex-col gap-6 pt-2">
-                {chapters.map((chapter, i) => (
+              <div className="flex flex-col gap-5 pt-1">
+                {LOOKBOOK_LINKS.map((lb, i) => (
                   <Link
-                    key={chapter.id}
-                    href={chapter.href}
+                    key={lb.id}
+                    href={lb.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up text-[13px] font-medium tracking-widest text-[#1B1718] uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up flex items-center justify-between text-[13px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 50}ms` }}
                   >
-                    {chapter.title}
+                    <span>{lb.label}</span>
+                    {lb.season && (
+                      <span className="font-mono text-[10px] text-white/50">{lb.season}</span>
+                    )}
                   </Link>
                 ))}
               </div>
@@ -229,7 +241,7 @@ export function NavigationDrawer() {
               <Link
                 href="/conscious"
                 onClick={handleClose}
-                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-[#141312]"
+                className="animate-luxury-fade-up text-[11px] font-semibold tracking-widest text-[#877274] uppercase hover:text-white"
                 style={{ animationDelay: '50ms' }}
               >
                 {isId ? 'Lihat Halaman Lengkap' : 'View Full Page'}
@@ -240,7 +252,7 @@ export function NavigationDrawer() {
                     key={item.label}
                     href={item.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up text-[13px] font-medium tracking-widest text-[#1B1718] uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up text-[13px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 50}ms` }}
                   >
                     {item.label}
@@ -250,6 +262,22 @@ export function NavigationDrawer() {
             </div>
           )}
 
+          {/* ── SUBMENU: CUSTOMER ── */}
+          {activeSubmenu === 'customer' && (
+            <div className="flex flex-col gap-5 pt-1">
+              {customerLinks.map((link, i) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={handleClose}
+                  className="animate-luxury-fade-up text-[13px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                  style={{ animationDelay: `${80 + i * 50}ms` }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
           {/* ── MENU UTAMA dengan Animasi Luxury Staggered Fade Up ── */}
           {activeSubmenu === null && (
             <nav aria-label="Main Navigation" className="flex flex-col gap-6">
@@ -271,14 +299,14 @@ export function NavigationDrawer() {
                     value={drawerSearch}
                     onChange={(e) => setDrawerSearch(e.target.value)}
                     placeholder={isId ? 'Cari abaya, bahan, koleksi...' : 'Search silhouettes, fabrics...'}
-                    className="w-full rounded-full border border-[#E5DDD5] bg-white py-2 pl-9 pr-8 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+                    className="w-full rounded-full border border-white/15 bg-white/10 py-2 pl-9 pr-8 text-xs text-white placeholder:text-white/50 focus:border-white focus:outline-none"
                   />
-                  <Icon name="search" size={16} className="absolute left-3 text-[#8E8380]" />
+                  <Icon name="search" size={16} className="absolute left-3 text-white/50" />
                   {drawerSearch && (
                     <button
                       type="button"
                       onClick={() => setDrawerSearch('')}
-                      className="absolute right-3 text-[#8E8380] hover:text-[#141312]"
+                      className="absolute right-3 text-white/50 hover:text-white"
                     >
                       <Icon name="close" size={14} />
                     </button>
@@ -293,13 +321,13 @@ export function NavigationDrawer() {
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname === '/'
-                      ? 'font-semibold text-[#141312]'
-                      : 'font-medium text-[#1B1718] hover:text-[#877274]'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]'
                   }`}
                 >
                   <span>{isId ? 'Beranda' : 'Home'}</span>
                   <span
-                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-[#141312] transition-all duration-300 origin-left ${
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left ${
                       pathname === '/'
                         ? 'scale-x-100 opacity-100'
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
@@ -318,13 +346,13 @@ export function NavigationDrawer() {
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/shop')
-                      ? 'font-semibold text-[#141312]'
-                      : 'font-medium text-[#1B1718] hover:text-[#877274]'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]'
                   }`}
                 >
                   <span>{isId ? 'Koleksi (Shop)' : 'Shop Collections'}</span>
                   <span
-                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-[#141312] transition-all duration-300 origin-left ${
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left ${
                       pathname.startsWith('/shop')
                         ? 'scale-x-100 opacity-100'
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
@@ -335,7 +363,7 @@ export function NavigationDrawer() {
                   type="button"
                   aria-label="Expand Shop categories"
                   onClick={() => setActiveSubmenu('collection')}
-                  className="p-1 text-[#877274] hover:text-[#141312]"
+                  className="p-1 text-[#877274] hover:text-white"
                 >
                   <Icon name="arrow_forward" size={16} />
                 </button>
@@ -348,13 +376,13 @@ export function NavigationDrawer() {
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/lookbook')
-                      ? 'font-semibold text-[#141312]'
-                      : 'font-medium text-[#1B1718] hover:text-[#877274]'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]'
                   }`}
                 >
                   <span>Lookbook</span>
                   <span
-                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-[#141312] transition-all duration-300 origin-left ${
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left ${
                       pathname.startsWith('/lookbook')
                         ? 'scale-x-100 opacity-100'
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
@@ -370,13 +398,13 @@ export function NavigationDrawer() {
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/conscious')
-                      ? 'font-semibold text-[#141312]'
-                      : 'font-medium text-[#1B1718] hover:text-[#877274]'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]'
                   }`}
                 >
                   <span>{isId ? 'Tentang (About)' : 'About SEVAYA'}</span>
                   <span
-                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-[#141312] transition-all duration-300 origin-left ${
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left ${
                       pathname.startsWith('/conscious')
                         ? 'scale-x-100 opacity-100'
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
@@ -392,13 +420,13 @@ export function NavigationDrawer() {
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/news')
-                      ? 'font-semibold text-[#141312]'
-                      : 'font-medium text-[#1B1718] hover:text-[#877274]'
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]'
                   }`}
                 >
                   <span>{isId ? 'Warta & Editorial (News)' : 'News & Journals'}</span>
                   <span
-                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-[#141312] transition-all duration-300 origin-left ${
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left ${
                       pathname.startsWith('/news')
                         ? 'scale-x-100 opacity-100'
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
@@ -406,13 +434,44 @@ export function NavigationDrawer() {
                   />
                 </Link>
               </div>
+
+              {/* 6. Customer */}
+              <div
+                className="animate-luxury-fade-up flex items-center justify-between"
+                style={{ animationDelay: '370ms' }}
+              >
+                <Link
+                  href="/customer/faq"
+                  onClick={handleClose}
+                  className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors `+
+                    (pathname.startsWith('/customer')
+                      ? 'font-semibold text-white'
+                      : 'font-medium text-white hover:text-[#877274]')}
+                >
+                  <span>Help</span>
+                  <span
+                    className={`absolute -bottom-1 left-0 h-[2px] w-full bg-white transition-all duration-300 origin-left `+
+                      (pathname.startsWith('/customer')
+                        ? 'scale-x-100 opacity-100'
+                        : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100')}
+                  />
+                </Link>
+                <button
+                  type="button"
+                  aria-label="Expand Help links"
+                  onClick={() => setActiveSubmenu('customer')}
+                  className="p-1 text-[#877274] hover:text-white"
+                >
+                  <Icon name="arrow_forward" size={16} />
+                </button>
+              </div>
             </nav>
           )}
         </div>
 
-        {/* ── Footer: Profile / Masuk Button (Menggantikan WhatsApp Concierge) ── */}
+        {/* ── Footer: Profile / Masuk Button (Seamless Luxury Black) ── */}
         <div
-          className="pb-safe animate-luxury-fade-up border-t border-[#E5DDD5]/70 bg-white/60 px-6 py-4"
+          className="pb-safe animate-luxury-fade-up border-t border-white/15 bg-black px-6 py-4"
           style={{ animationDelay: '370ms' }}
         >
           {user ? (
@@ -422,14 +481,14 @@ export function NavigationDrawer() {
                 onClick={handleClose}
                 className="group flex items-center gap-3 text-left"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5DDD5] bg-[#FAF8F5] text-[#141312] transition-colors group-hover:bg-[#141312] group-hover:text-white">
-                  <Icon name="person" size={18} />
+                <div className="flex h-9 w-9 items-center justify-center rounded-none border border-white/20 bg-white/10 text-white font-semibold text-xs tracking-wider transition-colors group-hover:border-white">
+                  {user.name ? user.name.trim().charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-semibold tracking-wider text-[#141312] uppercase">
+                  <span className="text-[12px] font-semibold tracking-wider text-white uppercase">
                     {isId ? 'Akun Saya' : 'My Account'}
                   </span>
-                  <span className="text-[10px] text-[#8E8380] line-clamp-1">
+                  <span className="text-[10px] text-white/60 line-clamp-1">
                     {user.email || 'Member Sevaya'}
                   </span>
                 </div>
@@ -440,7 +499,7 @@ export function NavigationDrawer() {
                   logout();
                   handleClose();
                 }}
-                className="rounded-none border border-[#E5DDD5] px-2.5 py-1 text-[11px] font-medium tracking-wider text-[#685E5A] uppercase transition-colors hover:border-[#141312] hover:text-[#141312]"
+                className="rounded-none border border-white/20 px-3 py-1.5 text-[11px] font-semibold tracking-wider text-white uppercase transition-colors hover:bg-white hover:text-black"
               >
                 {isId ? 'Keluar' : 'Logout'}
               </button>
@@ -449,17 +508,17 @@ export function NavigationDrawer() {
             <Link
               href="/login"
               onClick={handleClose}
-              className="group flex items-center justify-between rounded-xl border border-[#E5DDD5] bg-white px-3.5 py-2.5 shadow-xs transition-all hover:border-[#141312] hover:shadow-sm"
+              className="group flex items-center justify-between rounded-none border border-white/15 bg-white/5 p-3 shadow-xs transition-all hover:border-white hover:bg-white/10"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5DDD5] bg-[#FAF8F5] text-[#141312] transition-colors group-hover:bg-[#141312] group-hover:text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-none border border-white/20 bg-white/10 text-white transition-colors group-hover:border-white">
                   <Icon name="person" size={16} />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[12px] font-semibold tracking-wider text-[#141312] uppercase">
+                  <span className="text-[12px] font-semibold tracking-wider text-white uppercase">
                     {isId ? 'Masuk / Daftar' : 'Sign In / Register'}
                   </span>
-                  <span className="text-[10px] text-[#8E8380]">
+                  <span className="text-[10px] text-white/60">
                     {isId ? 'Akses pesanan & status' : 'Access orders & status'}
                   </span>
                 </div>
@@ -467,7 +526,7 @@ export function NavigationDrawer() {
               <Icon
                 name="chevron_right"
                 size={16}
-                className="text-[#8E8380] transition-transform group-hover:translate-x-0.5"
+                className="text-white/60 transition-transform group-hover:translate-x-0.5"
               />
             </Link>
           )}

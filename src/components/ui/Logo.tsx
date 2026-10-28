@@ -2,13 +2,12 @@ import React from 'react';
 
 interface LogoProps {
   className?: string;
-  variant?: 'dark' | 'light' | 'burgundy';
+  variant?: 'dark' | 'light';
   showSubtitle?: boolean;
 }
 
 export function Logo({ className = 'h-7 w-auto', variant = 'dark' }: LogoProps) {
-  const primaryColor =
-    variant === 'light' ? '#FAF8F5' : variant === 'burgundy' ? '#6b1d2f' : '#141312';
+  const primaryColor = variant === 'light' ? '#FFFFFF' : 'currentColor';
 
   return (
     <svg

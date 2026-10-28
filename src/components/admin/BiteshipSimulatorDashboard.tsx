@@ -45,12 +45,12 @@ const BITESHIP_STATUSES = [
 ];
 
 const INTERNAL_STATUSES = [
-  { value: 'pending_payment', label: 'Belum Bayar', color: 'text-[#8A6335] bg-[#F4EFEB] border-[#E5DDD5]' },
-  { value: 'paid', label: 'Sudah Bayar', color: 'text-[#141312] bg-[#FAF8F5] border-[#141312]/30' },
-  { value: 'processing', label: 'Diproses', color: 'text-[#5B4A42] bg-[#F4EFEB] border-[#E5DDD5]' },
-  { value: 'shipped', label: 'Di Perjalanan', color: 'text-[#874A2C] bg-[#F4EFEB] border-[#E5DDD5]' },
-  { value: 'delivered', label: 'Sampai', color: 'text-[#2D5A3C] bg-[#F4EFEB] border-[#2D5A3C]/20' },
-  { value: 'cancelled', label: 'Dibatalkan', color: 'text-[#8C3A3A] bg-[#F4EFEB] border-[#8C3A3A]/20' },
+  { value: 'pending_payment', label: 'Belum Bayar', color: 'text-[#8A6335] bg-black/5 border-black/15' },
+  { value: 'paid', label: 'Sudah Bayar', color: 'text-black bg-white border-black/30' },
+  { value: 'processing', label: 'Diproses', color: 'text-[#5B4A42] bg-black/5 border-black/15' },
+  { value: 'shipped', label: 'Di Perjalanan', color: 'text-[#874A2C] bg-black/5 border-black/15' },
+  { value: 'delivered', label: 'Sampai', color: 'text-[#2D5A3C] bg-black/5 border-[#2D5A3C]/20' },
+  { value: 'cancelled', label: 'Dibatalkan', color: 'text-[#8C3A3A] bg-black/5 border-[#8C3A3A]/20' },
 ];
 
 const COURIERS = [
@@ -81,7 +81,7 @@ const formatDate = (d: string) =>
 function StatusBadge({ status, type = 'internal' }: { status: string; type?: 'internal' | 'biteship' }) {
   const pool = type === 'biteship' ? BITESHIP_STATUSES : INTERNAL_STATUSES;
   const found = pool.find((s) => s.value === status);
-  if (!found) return <span className="text-xs text-[#685E5A]">{status || '—'}</span>;
+  if (!found) return <span className="text-xs text-black/70">{status || '—'}</span>;
 
   const emoji = ('emoji' in found ? found.emoji : '') as string;
   return (
@@ -173,17 +173,17 @@ function OrderDetailModal({
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E5DDD5] bg-[#FAF8F5] px-4 sm:px-6 py-3.5 sm:py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-black/15 bg-white px-4 sm:px-6 py-3.5 sm:py-4 shrink-0">
           <div>
-            <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+            <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
               Rincian Transaksi
             </span>
-            <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+            <h3 className="font-headline text-base sm:text-lg font-bold text-black">
               #{order.order_number}
             </h3>
-            <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">{formatDate(order.created_at)}</p>
+            <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">{formatDate(order.created_at)}</p>
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={order.status} type="internal" />
@@ -194,7 +194,7 @@ function OrderDetailModal({
             )}
             <button
               onClick={onClose}
-              className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] transition hover:bg-[#F4EFEB] hover:text-[#141312] active:scale-95"
+              className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 transition hover:bg-black/5 hover:text-black active:scale-95"
               aria-label="Tutup Rincian"
             >
               ✕
@@ -207,26 +207,26 @@ function OrderDetailModal({
           <div className="flex flex-col gap-5">
             {/* Customer Info */}
             <section className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
                 Data Penerima
               </h4>
-              <div className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 sm:p-4 text-xs space-y-1.5">
-                <p className="font-semibold text-sm text-[#141312]">{order.customer_name}</p>
-                <p className="text-[#685E5A]">{order.customer_phone}</p>
-                {order.customer_email && <p className="text-[#685E5A]">{order.customer_email}</p>}
-                <p className="text-[#554C48] pt-1 border-t border-[#E5DDD5]/60">{order.customer_address}</p>
+              <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 text-xs space-y-1.5">
+                <p className="font-semibold text-sm text-black">{order.customer_name}</p>
+                <p className="text-black/70">{order.customer_phone}</p>
+                {order.customer_email && <p className="text-black/70">{order.customer_email}</p>}
+                <p className="text-[#554C48] pt-1 border-t border-black/15/60">{order.customer_address}</p>
                 {order.destination_area && (
-                  <p className="text-[#8E8380] text-[11px]">{order.destination_area}</p>
+                  <p className="text-black/50 text-[11px]">{order.destination_area}</p>
                 )}
               </div>
             </section>
 
             {/* Order Details Table */}
             <section className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
                 Detail Pesanan
               </h4>
-              <div className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] overflow-hidden">
+              <div className="rounded-xl border border-black/15 bg-white overflow-hidden">
                 <table className="w-full text-xs">
                   <tbody>
                     {[
@@ -246,16 +246,16 @@ function OrderDetailModal({
                       ['Diperbarui', formatDate(order.updated_at || order.created_at)],
                     ].map(([label, value]) => (
                       label === 'Status Internal' ? (
-                        <tr key={label} className="border-t border-[#E5DDD5]">
-                          <td className="py-2.5 pl-4 pr-2 text-[#685E5A] font-medium w-1/3">{label}</td>
+                        <tr key={label} className="border-t border-black/15">
+                          <td className="py-2.5 pl-4 pr-2 text-black/70 font-medium w-1/3">{label}</td>
                           <td className="py-2.5 pr-4">
                             <StatusBadge status={order.status} type="internal" />
                           </td>
                         </tr>
                       ) : (
-                        <tr key={label} className="border-t border-[#E5DDD5] first:border-t-0">
-                          <td className="py-2.5 pl-4 pr-2 text-[#685E5A] font-medium w-1/3">{label}</td>
-                          <td className="py-2.5 pr-4 font-semibold text-[#141312]">{value}</td>
+                        <tr key={label} className="border-t border-black/15 first:border-t-0">
+                          <td className="py-2.5 pl-4 pr-2 text-black/70 font-medium w-1/3">{label}</td>
+                          <td className="py-2.5 pr-4 font-semibold text-black">{value}</td>
                         </tr>
                       )
                     ))}
@@ -267,17 +267,17 @@ function OrderDetailModal({
             {/* Items */}
             {parsedItems.length > 0 && (
               <section className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
                   Produk
                 </h4>
-                <div className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3 space-y-2">
+                <div className="rounded-xl border border-black/15 bg-white p-3 space-y-2">
                   {parsedItems.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center text-xs py-1 border-b border-[#E5DDD5]/50 last:border-0">
+                    <div key={i} className="flex justify-between items-center text-xs py-1 border-b border-black/15/50 last:border-0">
                       <div>
-                        <p className="font-semibold text-[#141312]">{item.productTitle || item.name}</p>
-                        <p className="text-[#685E5A]">{item.color} · ×{item.qty || 1}</p>
+                        <p className="font-semibold text-black">{item.productTitle || item.name}</p>
+                        <p className="text-black/70">{item.color} · ×{item.qty || 1}</p>
                       </div>
-                      <span className="font-bold text-[#141312]">{formatIDR(item.price || 0)}</span>
+                      <span className="font-bold text-black">{formatIDR(item.price || 0)}</span>
                     </div>
                   ))}
                 </div>
@@ -289,19 +289,19 @@ function OrderDetailModal({
           <div className="flex flex-col gap-5">
             {/* Update Internal Status */}
             <section className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
                 Ubah Status Internal
               </h4>
-              <div className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 sm:p-4 space-y-3">
+              <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-[#685E5A] font-medium uppercase tracking-wider">
+                  <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider">
                     Nomor Resi (opsional)
                   </label>
                   <input
                     value={trackingInput}
                     onChange={(e) => setTrackingInput(e.target.value)}
                     placeholder="Masukkan nomor resi..."
-                    className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-2 text-base sm:text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none min-h-[42px] sm:min-h-[36px]"
+                    className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -312,8 +312,8 @@ function OrderDetailModal({
                       onClick={() => handleInternalStatusChange(s.value)}
                       className={`min-h-[38px] rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95
                         ${order.status === s.value
-                          ? s.color + ' opacity-100 ring-2 ring-[#141312]/30'
-                          : 'border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB] disabled:opacity-40'
+                          ? s.color + ' opacity-100 ring-2 ring-[#000000]/30'
+                          : 'border-black/20 bg-white text-black/70 hover:bg-black/5 disabled:opacity-40'
                         }`}
                     >
                       {order.status === s.value ? '▶ ' : ''}{s.label}
@@ -325,10 +325,10 @@ function OrderDetailModal({
 
             {/* Shipping Carrier / Biteship */}
             <section className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
                 Pengiriman Kurir (Biteship)
               </h4>
-              <div className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 sm:p-4 space-y-3">
+              <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 space-y-3">
                 {order.biteship_order_id ? (
                   <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/60 p-3.5 text-xs space-y-2">
                     <p className="font-bold text-emerald-800">✅ Terhubung ke Biteship</p>
@@ -370,19 +370,19 @@ function OrderDetailModal({
                       href="https://dashboard.biteship.com/orders"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block mt-1 text-xs text-[#141312] underline hover:text-[#685E5A]"
+                      className="inline-block mt-1 text-xs text-black underline hover:text-black/70"
                     >
                       Buka Biteship Dashboard →
                     </a>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-xs text-[#685E5A]">
+                    <p className="text-xs text-black/70">
                       Pilih kurir dan layanan untuk memproses resi pengiriman otomatis.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-[#685E5A] font-medium uppercase tracking-wider block mb-1">
+                        <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider block mb-1">
                           Kurir
                         </label>
                         <select
@@ -392,7 +392,7 @@ function OrderDetailModal({
                             const firstService = COURIERS.find(c => c.value === e.target.value)?.services[0] || 'reg';
                             setSelectedService(firstService);
                           }}
-                          className="w-full rounded-none border border-[#D0C5BD] bg-white px-2.5 py-2 text-base sm:text-xs text-[#141312] focus:outline-none min-h-[42px] sm:min-h-[36px]"
+                          className="w-full rounded-none border border-black/20 bg-white px-2.5 py-2 text-base sm:text-xs text-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
                         >
                           {COURIERS.map((c) => (
                             <option key={c.value} value={c.value}>{c.label}</option>
@@ -400,13 +400,13 @@ function OrderDetailModal({
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] text-[#685E5A] font-medium uppercase tracking-wider block mb-1">
+                        <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider block mb-1">
                           Layanan
                         </label>
                         <select
                           value={selectedService}
                           onChange={(e) => setSelectedService(e.target.value)}
-                          className="w-full rounded-none border border-[#D0C5BD] bg-white px-2.5 py-2 text-base sm:text-xs text-[#141312] focus:outline-none min-h-[42px] sm:min-h-[36px]"
+                          className="w-full rounded-none border border-black/20 bg-white px-2.5 py-2 text-base sm:text-xs text-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
                         >
                           {courierServices.map((s) => (
                             <option key={s} value={s}>{s.toUpperCase()}</option>
@@ -417,7 +417,7 @@ function OrderDetailModal({
                     <button
                       onClick={handleCreateBiteship}
                       disabled={loading}
-                      className="w-full min-h-[44px] rounded-full bg-[#141312] py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99] disabled:opacity-40"
+                      className="w-full min-h-[44px] rounded-full bg-black py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-40"
                     >
                       {loading ? 'Memproses...' : '📦 Atur Pengiriman Kurir'}
                     </button>
@@ -429,14 +429,14 @@ function OrderDetailModal({
             {/* Logs */}
             <section className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#685E5A]">Log Aktivitas</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">Log Aktivitas</h4>
                 {logs.length > 0 && (
-                  <button onClick={() => setLogs([])} className="text-[10px] text-[#685E5A] hover:text-[#141312] underline">
+                  <button onClick={() => setLogs([])} className="text-[10px] text-black/70 hover:text-black underline">
                     Bersihkan
                   </button>
                 )}
               </div>
-              <div className="rounded-xl border border-[#E5DDD5] bg-[#141312] p-3 max-h-36 overflow-y-auto font-mono text-[10px]">
+              <div className="rounded-xl border border-black/15 bg-black p-3 max-h-36 overflow-y-auto font-mono text-[10px]">
                 {logs.length === 0 ? (
                   <p className="text-neutral-500">Belum ada aktivitas...</p>
                 ) : (
@@ -637,27 +637,27 @@ export function BiteshipSimulatorDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div>
-          <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+          <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
             Transaksi &amp; Logistik
           </span>
-          <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+          <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
             Pesanan &amp; Pengiriman
           </h2>
-          <p className="text-xs text-[#685E5A] mt-0.5">
+          <p className="text-xs text-black/70 mt-0.5">
             Pantau transaksi pelanggan, status pengiriman kurir, dan nomor resi secara real-time.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {lastRefresh && (
-            <span className="text-[11px] text-[#8E8380]">
+            <span className="text-[11px] text-black/50">
               Update: {lastRefresh.toLocaleTimeString('id-ID')}
             </span>
           )}
           <button
             onClick={() => fetchOrders(true)}
             disabled={refreshing}
-            className="rounded-full border border-[#D0C5BD] bg-white px-3.5 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95 disabled:opacity-40"
+            className="rounded-full border border-black/20 bg-white px-3.5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95 disabled:opacity-40"
           >
             {refreshing ? '↻ Memuat...' : '↻ Segarkan'}
           </button>
@@ -665,24 +665,24 @@ export function BiteshipSimulatorDashboard() {
       </div>
 
       {/* Unified KPI Summary Card */}
-      <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-[#E5DDD5]/70 pb-4">
+      <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-black/15/70 pb-4">
           <div>
-            <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+            <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
               Total Pendapatan Terkonfirmasi
             </span>
-            <p className="font-headline text-2xl sm:text-3xl font-bold text-[#141312] mt-1">
+            <p className="font-headline text-2xl sm:text-3xl font-bold text-black mt-1">
               {formatIDR(totalRevenue)}
             </p>
           </div>
-          <p className="text-xs text-[#685E5A]">
+          <p className="text-xs text-black/70">
             Akumulasi transaksi aktif &amp; berhasil diproses
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Total Order', value: stats.all, color: 'text-[#141312]' },
+            { label: 'Total Order', value: stats.all, color: 'text-black' },
             { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8A6335]' },
             { label: 'Diproses', value: stats.processing, color: 'text-[#5B4A42]' },
             { label: 'Dikirim', value: stats.shipped, color: 'text-[#874A2C]' },
@@ -691,9 +691,9 @@ export function BiteshipSimulatorDashboard() {
           ].map((s) => (
             <div
               key={s.label}
-              className="flex flex-col gap-1 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/50"
+              className="flex flex-col gap-1 rounded-xl bg-black/5 p-3 border border-black/15/50"
             >
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#685E5A]">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-black/70">
                 {s.label}
               </span>
               <span className={`text-xl font-bold ${s.color}`}>{s.value}</span>
@@ -708,7 +708,7 @@ export function BiteshipSimulatorDashboard() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama, no. order, resi, Biteship ID..."
-          className="w-full rounded-none border border-[#D0C5BD] bg-white px-4 py-2.5 text-base sm:text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none min-h-[44px] sm:min-h-[38px]"
+          className="w-full rounded-none border border-black/20 bg-white px-4 py-2.5 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[44px] sm:min-h-[38px]"
         />
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1.5 pt-0.5 touch-pan-x">
           {FILTER_TABS.map((tab) => (
@@ -717,8 +717,8 @@ export function BiteshipSimulatorDashboard() {
               onClick={() => setFilter(tab.key)}
               className={`shrink-0 min-h-[38px] flex items-center rounded-full border px-4 py-1.5 text-xs font-medium transition active:scale-95 ${
                 filter === tab.key
-                  ? 'border-[#141312] bg-[#141312] text-[#FAF8F5]'
-                  : 'border-[#D0C5BD] bg-white text-[#685E5A] hover:border-[#141312] hover:bg-[#F4EFEB]'
+                  ? 'border-black bg-black text-white'
+                  : 'border-black/20 bg-white text-black/70 hover:border-black hover:bg-black/5'
               }`}
             >
               {tab.label}
@@ -736,15 +736,15 @@ export function BiteshipSimulatorDashboard() {
 
       {/* Biteship info banner when no orders */}
       {!loading && orders.length === 0 && !error && (
-        <div className="rounded-2xl border border-[#E5DDD5] bg-white p-8 text-center space-y-2">
+        <div className="rounded-2xl border border-black/15 bg-white p-8 text-center space-y-2">
           <p className="text-2xl">📦</p>
-          <p className="font-semibold text-sm text-[#141312]">Belum ada data pesanan</p>
-          <p className="text-xs text-[#685E5A]">
+          <p className="font-semibold text-sm text-black">Belum ada data pesanan</p>
+          <p className="text-xs text-black/70">
             Pesanan baru pelanggan dari toko akan otomatis tersinkronisasi dan tampil di sini.
           </p>
           <a
             href="/test-shipping"
-            className="mt-2 inline-block text-xs font-medium text-[#141312] underline hover:text-[#685E5A]"
+            className="mt-2 inline-block text-xs font-medium text-black underline hover:text-black/70"
           >
             Buka form simulasi sandbox &rarr;
           </a>
@@ -753,16 +753,16 @@ export function BiteshipSimulatorDashboard() {
 
       {/* Orders Table */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center rounded-2xl border border-[#E5DDD5] bg-white">
-          <div className="text-xs text-[#685E5A]">Memuat data pesanan dari Supabase...</div>
+        <div className="flex h-48 items-center justify-center rounded-2xl border border-black/15 bg-white">
+          <div className="text-xs text-black/70">Memuat data pesanan dari Supabase...</div>
         </div>
       ) : (
         filtered.length > 0 && (
           <div className="space-y-4">
             {/* Desktop Table Scroll Bar & Controls */}
-            <div className="hidden md:flex items-center justify-between rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] px-4 py-2 text-xs">
-              <div className="flex items-center gap-2 text-[#685E5A]">
-                <span className="font-bold text-[#141312]">{filtered.length} Pesanan</span>
+            <div className="hidden md:flex items-center justify-between rounded-xl border border-black/15 bg-black/5 px-4 py-2 text-xs">
+              <div className="flex items-center gap-2 text-black/70">
+                <span className="font-bold text-black">{filtered.length} Pesanan</span>
                 <span>&bull;</span>
                 <span className="text-[11px] text-[#7C726E]">
                   Gunakan tombol geser di kanan untuk melihat kolom secara penuh
@@ -772,28 +772,28 @@ export function BiteshipSimulatorDashboard() {
                 <button
                   type="button"
                   onClick={scrollToLeftEdge}
-                  className="rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-[11px] font-medium text-[#141312] transition hover:bg-[#F4EFEB]"
+                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
                 >
                   ⏮ Paling Kiri
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollTable(-320)}
-                  className="rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-[11px] font-medium text-[#141312] transition hover:bg-[#F4EFEB]"
+                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
                 >
                   &larr; Geser Kiri
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollTable(320)}
-                  className="rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-[11px] font-medium text-[#141312] transition hover:bg-[#F4EFEB]"
+                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
                 >
                   Geser Kanan &rarr;
                 </button>
                 <button
                   type="button"
                   onClick={scrollToRightEdge}
-                  className="rounded-full bg-[#141312] px-3.5 py-1 text-[11px] font-medium text-[#FAF8F5] transition hover:bg-[#2b2826]"
+                  className="rounded-full bg-black px-3.5 py-1 text-[11px] font-medium text-white transition hover:bg-black/85"
                 >
                   Kolom Aksi ⏭
                 </button>
@@ -803,11 +803,11 @@ export function BiteshipSimulatorDashboard() {
             {/* Desktop Table View */}
             <div
               ref={tableContainerRef}
-              className="hidden md:block overflow-x-auto rounded-2xl border border-[#E5DDD5] bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] scroll-smooth"
+              className="hidden md:block overflow-x-auto rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] scroll-smooth"
             >
               <table className="w-full text-xs min-w-[1050px]">
                 <thead>
-                  <tr className="border-b border-[#E5DDD5] bg-[#F4EFEB]">
+                  <tr className="border-b border-black/15 bg-black/5">
                     {[
                       'Order ID / Ref',
                       'Pelanggan',
@@ -821,17 +821,17 @@ export function BiteshipSimulatorDashboard() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="whitespace-nowrap px-4 py-3 text-left font-headline text-[10px] font-bold uppercase tracking-wider text-[#685E5A]"
+                        className="whitespace-nowrap px-4 py-3 text-left font-headline text-[10px] font-bold uppercase tracking-wider text-black/70"
                       >
                         {h}
                       </th>
                     ))}
-                    <th className="sticky right-0 z-20 whitespace-nowrap bg-[#F4EFEB] px-4 py-3 text-left font-headline text-[10px] font-bold uppercase tracking-wider text-[#685E5A] shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
+                    <th className="sticky right-0 z-20 whitespace-nowrap bg-black/5 px-4 py-3 text-left font-headline text-[10px] font-bold uppercase tracking-wider text-black/70 shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
                       Aksi
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5DDD5]/60">
+                <tbody className="divide-y divide-[rgba(0,0,0,0.12)]/60">
                   {filtered.map((o) => {
                     let parsedItems: { qty?: number }[] = [];
                     try { parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || []; } catch { /* */ }
@@ -840,27 +840,27 @@ export function BiteshipSimulatorDashboard() {
                     return (
                       <tr
                         key={o.id}
-                        className="group bg-white transition hover:bg-[#FAF8F5]"
+                        className="group bg-white transition hover:bg-white"
                       >
                         <td className="px-4 py-3.5">
-                          <p className="font-bold text-[#141312]">#{o.order_number}</p>
-                          <p className="font-mono text-[10px] text-[#8E8380]">{o.id?.slice(0, 8)}...</p>
+                          <p className="font-bold text-black">#{o.order_number}</p>
+                          <p className="font-mono text-[10px] text-black/50">{o.id?.slice(0, 8)}...</p>
                         </td>
                         <td className="px-4 py-3.5">
-                          <p className="font-semibold text-[#141312]">{o.customer_name}</p>
-                          <p className="text-[#685E5A]">{o.customer_phone}</p>
+                          <p className="font-semibold text-black">{o.customer_name}</p>
+                          <p className="text-black/70">{o.customer_phone}</p>
                         </td>
                         <td className="px-4 py-3.5">
-                          <p className="text-[#141312]">{o.destination_area || '—'}</p>
+                          <p className="text-black">{o.destination_area || '—'}</p>
                         </td>
-                        <td className="px-4 py-3.5 text-center font-semibold text-[#141312]">
+                        <td className="px-4 py-3.5 text-center font-semibold text-black">
                           {totalItems}
                         </td>
-                        <td className="px-4 py-3.5 font-semibold text-[#141312]">
+                        <td className="px-4 py-3.5 font-semibold text-black">
                           {formatIDR(o.shipping_cost || 0)}
                         </td>
                         <td className="px-4 py-3.5">
-                          <p className="text-[#141312]">{o.courier_name || '—'}</p>
+                          <p className="text-black">{o.courier_name || '—'}</p>
                           {o.tracking_number && (
                             <p className="font-mono text-[10px] text-emerald-800 font-semibold">{o.tracking_number}</p>
                           )}
@@ -872,17 +872,17 @@ export function BiteshipSimulatorDashboard() {
                           {o.biteship_status ? (
                             <StatusBadge status={o.biteship_status} type="biteship" />
                           ) : (
-                            <span className="text-[#8E8380]">—</span>
+                            <span className="text-black/50">—</span>
                           )}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3.5 text-[#685E5A]">
+                        <td className="whitespace-nowrap px-4 py-3.5 text-black/70">
                           {formatDate(o.created_at)}
                         </td>
-                        <td className="sticky right-0 z-10 whitespace-nowrap bg-white group-hover:bg-[#FAF8F5] px-4 py-3.5 shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
+                        <td className="sticky right-0 z-10 whitespace-nowrap bg-white group-hover:bg-white px-4 py-3.5 shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => setSelectedOrder(o)}
-                              className="rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                              className="rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
                             >
                               Kelola
                             </button>
@@ -912,13 +912,13 @@ export function BiteshipSimulatorDashboard() {
                 return (
                   <div
                     key={o.id}
-                    className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
+                    className="rounded-2xl border border-black/15 bg-white p-4 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
                   >
                     {/* Top: Order number, date, badges */}
-                    <div className="flex items-start justify-between gap-2 border-b border-[#E5DDD5]/70 pb-2.5">
+                    <div className="flex items-start justify-between gap-2 border-b border-black/15/70 pb-2.5">
                       <div>
-                        <p className="font-bold text-sm text-[#141312]">#{o.order_number}</p>
-                        <p className="text-[10px] text-[#8E8380]">{formatDate(o.created_at)}</p>
+                        <p className="font-bold text-sm text-black">#{o.order_number}</p>
+                        <p className="text-[10px] text-black/50">{formatDate(o.created_at)}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <StatusBadge status={o.status} type="internal" />
@@ -931,38 +931,38 @@ export function BiteshipSimulatorDashboard() {
                     {/* Customer & Destination */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] font-semibold text-[#8E8380] uppercase tracking-wider">Pelanggan</span>
-                        <p className="font-semibold text-[#141312] truncate">{o.customer_name}</p>
-                        <p className="text-[11px] text-[#685E5A]">{o.customer_phone}</p>
+                        <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Pelanggan</span>
+                        <p className="font-semibold text-black truncate">{o.customer_name}</p>
+                        <p className="text-[11px] text-black/70">{o.customer_phone}</p>
                       </div>
                       <div>
-                        <span className="text-[10px] font-semibold text-[#8E8380] uppercase tracking-wider">Tujuan</span>
-                        <p className="text-[#141312] text-[11px] line-clamp-2">{o.destination_area || o.customer_address || '—'}</p>
+                        <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Tujuan</span>
+                        <p className="text-black text-[11px] line-clamp-2">{o.destination_area || o.customer_address || '—'}</p>
                       </div>
                     </div>
 
                     {/* Courier & Shipping Cost */}
-                    <div className="flex items-center justify-between rounded-xl bg-[#F4EFEB] px-3 py-2 text-xs">
+                    <div className="flex items-center justify-between rounded-xl bg-black/5 px-3 py-2 text-xs">
                       <div>
-                        <p className="font-semibold text-[#141312]">{o.courier_name || 'Kurir Reguler'}</p>
+                        <p className="font-semibold text-black">{o.courier_name || 'Kurir Reguler'}</p>
                         {o.tracking_number ? (
                           <p className="font-mono text-[10px] text-emerald-800 font-semibold">Resi: {o.tracking_number}</p>
                         ) : (
-                          <p className="text-[10px] text-[#8E8380]">Belum ada resi</p>
+                          <p className="text-[10px] text-black/50">Belum ada resi</p>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-[#8E8380]">{totalItems} Item</p>
-                        <p className="font-bold text-[#141312]">{formatIDR(o.shipping_cost || 0)}</p>
+                        <p className="text-[10px] text-black/50">{totalItems} Item</p>
+                        <p className="font-bold text-black">{formatIDR(o.shipping_cost || 0)}</p>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-[#E5DDD5]/50">
+                    <div className="flex items-center gap-2 pt-1 border-t border-black/15/50">
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(o)}
-                        className="flex-1 min-h-[44px] flex items-center justify-center rounded-full bg-[#141312] py-2.5 text-center text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                        className="flex-1 min-h-[44px] flex items-center justify-center rounded-full bg-black py-2.5 text-center text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                       >
                         Kelola Pesanan
                       </button>

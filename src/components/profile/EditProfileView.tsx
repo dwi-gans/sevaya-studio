@@ -71,12 +71,12 @@ export function EditProfileView({ onCancel, onSuccess }: EditProfileViewProps) {
   };
 
   return (
-    <div className="border border-[#E5DDD5] bg-white p-6 sm:p-8 shadow-xs">
-      <div className="border-b border-[#E5DDD5] pb-4">
-        <h2 className="font-sans text-base font-semibold tracking-wider text-[#141312] uppercase">
+    <div className="border border-black/15 bg-white p-6 sm:p-8 shadow-xs">
+      <div className="border-b border-black/15 pb-4">
+        <h2 className="font-sans text-base font-semibold tracking-wider text-black/85 uppercase">
           Ubah Data Profil
         </h2>
-        <p className="mt-1 text-xs text-[#685E5A]">
+        <p className="mt-1 text-xs text-black/70">
           Perbarui nama lengkap, nomor kontak WhatsApp, dan tautan foto profil Anda.
         </p>
       </div>
@@ -91,23 +91,23 @@ export function EditProfileView({ onCancel, onSuccess }: EditProfileViewProps) {
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         {/* Email Field (Read Only) */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Alamat Email
           </label>
           <input
             type="email"
             disabled
             value={user?.email || ''}
-            className="w-full border border-[#E5DDD5] bg-[#F4EFEB] px-4 py-3 text-xs text-[#685E5A] cursor-not-allowed"
+            className="w-full border border-black/15 bg-black/5 px-4 py-3 text-xs text-black/70 cursor-not-allowed"
           />
-          <p className="text-[11px] text-[#8E8380]">
+          <p className="text-[11px] text-black/50">
             Email utama akun Anda terhubung dengan verifikasi keamanan dan tidak dapat diubah secara langsung.
           </p>
         </div>
 
         {/* Full Name */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Nama Lengkap <span className="text-red-500">*</span>
           </label>
           <input
@@ -116,13 +116,13 @@ export function EditProfileView({ onCancel, onSuccess }: EditProfileViewProps) {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Contoh: Amira Zahra"
-            className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+            className="w-full border border-black/15 bg-white px-4 py-3 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
           />
         </div>
 
         {/* Phone */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Nomor Telepon / WhatsApp
           </label>
           <input
@@ -130,16 +130,16 @@ export function EditProfileView({ onCancel, onSuccess }: EditProfileViewProps) {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="0812 3456 7890"
-            className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+            className="w-full border border-black/15 bg-white px-4 py-3 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
           />
-          <p className="text-[11px] text-[#8E8380]">
+          <p className="text-[11px] text-black/50">
             Digunakan untuk konfirmasi pesanan dan update nomor resi pengiriman kurir Biteship.
           </p>
         </div>
 
         {/* Avatar URL */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Tautan Foto Profil (Avatar URL)
           </label>
           <input
@@ -147,27 +147,27 @@ export function EditProfileView({ onCancel, onSuccess }: EditProfileViewProps) {
             value={avatarUrl}
             onChange={(e) => setAvatarUrl(e.target.value)}
             placeholder="https://example.com/avatar.jpg"
-            className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+            className="w-full border border-black/15 bg-white px-4 py-3 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
           />
-          <p className="text-[11px] text-[#8E8380]">
+          <p className="text-[11px] text-black/50">
             Masukkan link gambar publik untuk foto profil Anda. Kosongkan untuk menggunakan inisial nama.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5DDD5]">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-black/15">
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="border border-[#D0C5BD] bg-white px-5 py-2.5 text-xs font-semibold tracking-wider text-[#141312] uppercase transition hover:border-[#141312]"
+            className="border border-black/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wider text-black uppercase transition hover:border-black"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 border border-[#141312] bg-[#141312] px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+            className="inline-flex items-center gap-2 border border-black bg-black px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
           >
             {isSubmitting && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}</span>

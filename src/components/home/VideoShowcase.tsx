@@ -34,7 +34,7 @@ export function VideoShowcase() {
   return (
     <section className="mx-auto w-full max-w-7xl px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
       {/* Pure Cinematic Video Screen: 100% clean, no buttons, no overlays (Tazalabel standard) */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#141312] shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-black shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
         <video
           ref={videoRef}
           src="/videos/kani.mp4"

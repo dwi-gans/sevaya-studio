@@ -13,15 +13,17 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get('status');
-
     const userEmail = (user.email || '').trim().toLowerCase();
 
-    // Query orders by user's email directly
-    const { data: emailData, error: emailErr } = await supabaseAdmin
+    // Query orders by user's email directly - with fast timeout & limit
+    let query = supabaseAdmin
       .from('orders')
       .select('*')
       .ilike('customer_email', userEmail)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const { data: emailData, error: emailErr } = await query;
 
     if (emailErr) {
       console.error('Fetch user orders error:', emailErr.message);
@@ -33,29 +35,25 @@ export async function GET(req: NextRequest) {
 
     let orders: any[] = emailData || [];
 
-    // Auto-cancel pending orders older than 10 minutes
+    // Filter in memory if filter query exists
+    if (statusFilter && statusFilter !== 'all') {
+      orders = orders.filter((o) => o.status === statusFilter);
+    }
+
     const now = Date.now();
-    for (const o of orders) {
+    const expiredIds: string[] = [];
+
+    const mappedOrders = orders.map((o) => {
+      let isExpired = false;
       if (
         (o.status === 'pending' || o.status === 'pending_payment' || o.status === 'unpaid') &&
         o.created_at &&
         now - new Date(o.created_at).getTime() > 10 * 60 * 1000
       ) {
-        o.status = 'cancelled';
-        supabaseAdmin
-          .from('orders')
-          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-          .eq('id', o.id)
-          .then(() => {});
+        isExpired = true;
+        expiredIds.push(o.id);
       }
-    }
 
-    // Apply status filter in memory if needed
-    if (statusFilter && statusFilter !== 'all') {
-      orders = orders.filter((o) => o.status === statusFilter);
-    }
-
-    const mappedOrders = orders.map((o) => {
       let parsedItems = [];
       try {
         parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || [];
@@ -84,11 +82,20 @@ export async function GET(req: NextRequest) {
         tracking_number: o.tracking_number,
         biteship_order_id: o.biteship_order_id,
         biteship_status: o.biteship_status,
-        status: o.status,
+        status: isExpired ? 'cancelled' : o.status,
         created_at: o.created_at,
         updated_at: o.updated_at,
       };
     });
+
+    // Asynchronously update expired orders in bulk without blocking API response
+    if (expiredIds.length > 0) {
+      supabaseAdmin
+        .from('orders')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .in('id', expiredIds)
+        .then(() => {});
+    }
 
     return NextResponse.json({
       success: true,
@@ -98,7 +105,7 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     console.error('User orders API error:', err);
     return NextResponse.json(
-      { success: false, error: 'Terjadi kesalahan server saat memuat riwayat pesanan.' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

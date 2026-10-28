@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchBiteshipAreas } from '@/integrations/biteship';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
+    const clientIp = getClientIp(request);
+    const rateCheck = checkRateLimit('dest_' + clientIp, 60, 60 * 1000);
+    if (!rateCheck.success) {
+      return NextResponse.json({ success: false, error: 'Terlalu banyak pencarian wilayah.' }, { status: 429 });
+    }
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('search') || '';
 

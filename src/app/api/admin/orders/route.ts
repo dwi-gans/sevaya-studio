@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkMidtransStatus } from '@/integrations/midtrans';
+import { verifyAdminSession } from '@/lib/auth-admin';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +30,12 @@ const { key: BITESHIP_TEST_KEY, isLive: IS_BITESHIP_LIVE } = getBiteshipAuthHead
  * - Automatically updates Supabase if status changed
  * - Automatically deletes order if status in Biteship is 'cancelled'
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ success: false, error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const { data: rawOrders, error } = await supabaseAdmin
       .from('orders')
@@ -170,6 +176,11 @@ export async function GET() {
  * Body: { id, status, tracking_number?, courier_name?, biteship_order_id? }
  */
 export async function PATCH(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ success: false, error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { id, status, tracking_number, courier_name, biteship_order_id, biteship_status } = body;
@@ -252,6 +263,11 @@ export async function PATCH(req: NextRequest) {
  * Body: { order_id, courier_company, courier_type, destination_* }
  */
 export async function POST(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ success: false, error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { order_id, courier_company, courier_type, destination_address, destination_postal_code, destination_name, destination_phone, items } = body;
@@ -359,6 +375,11 @@ export async function POST(req: NextRequest) {
  * Body: { biteship_order_id, deleteIfCancelled?: boolean }
  */
 export async function PUT(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ success: false, error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { biteship_order_id, deleteIfCancelled = false } = body;
@@ -446,6 +467,11 @@ export async function PUT(req: NextRequest) {
  * DELETE /api/admin/orders — Delete an order by ID AND cancel it on Biteship
  */
 export async function DELETE(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ success: false, error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

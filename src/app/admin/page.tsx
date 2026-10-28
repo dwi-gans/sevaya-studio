@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
@@ -336,30 +336,47 @@ const ADMIN_NAV_ITEMS: { id: AdminTab; label: string; icon: IconName }[] = ADMIN
   g.items.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))
 );
 
+const emptySubscribe = () => () => {};
+
 export default function AdminPage() {
   const { showToast } = useToast();
 
-  // ── Authentication State (Direct persistent storage, prevents loading loop) ──
-  const [isMounted, setIsMounted] = useState(false);
+  // Hydration-safe mounting check to prevent any SSR mismatch
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Hydration-safe mount & session recovery
+  // Secure server-side admin session check
   useEffect(() => {
-    setIsMounted(true);
-    try {
-      const isAuth =
-        localStorage.getItem('sevaya_admin_session') === 'true' ||
-        sessionStorage.getItem('sevaya_admin_session') === 'true';
-      if (isAuth) {
-        setIsAuthenticated(true);
+    let isMounted = true;
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/admin/auth');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.authenticated) {
+            setIsAuthenticated(true);
+          }
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (isMounted) setAuthChecked(true);
       }
-    } catch {
-      // ignore
     }
+    checkSession();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
 
   // ── Admin Active Tab & Mobile Drawer (Persisted across refreshes) ──
   const [activeTab, setActiveTabState] = useState<AdminTab>('orders');
@@ -543,30 +560,39 @@ export default function AdminPage() {
     };
   }, [isAuthenticated, showToast]);
 
-  // ── Admin Login Handler ──
-  const handleAdminLogin = (e: React.FormEvent) => {
+  // ── Admin Login Handler (Server-Verified & HttpOnly Session) ──
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
-    if (adminUsername === 'admin' && adminPassword === 'sevayaStudio1!') {
-      try {
-        localStorage.setItem('sevaya_admin_session', 'true');
-        sessionStorage.setItem('sevaya_admin_session', 'true');
-      } catch {
-        // ignore
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: adminUsername.trim(),
+          password: adminPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        setAdminPassword('');
+        showToast('Login Admin Berhasil. Selamat datang di Sevaya Studio.');
+      } else {
+        setAuthError(data.error || 'Username atau password admin salah.');
+        showToast('Kredensial admin tidak valid.');
       }
-      setIsAuthenticated(true);
-      showToast('Login Admin Berhasil. Selamat datang di Sevaya Studio.');
-    } else {
-      setAuthError('Username atau password admin salah.');
-      showToast('Kredensial admin tidak valid.');
+    } catch {
+      setAuthError('Gagal menghubungi server untuk autentikasi admin.');
     }
   };
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = async () => {
     try {
-      localStorage.removeItem('sevaya_admin_session');
-      sessionStorage.removeItem('sevaya_admin_session');
+      await fetch('/api/admin/auth', { method: 'DELETE' });
     } catch {
       // ignore
     }
@@ -619,7 +645,7 @@ export default function AdminPage() {
               image: s.image || product.image,
             }))
           : [
-              { name: 'Black', color: '#1B1718', image: product.image },
+              { name: 'Black', color: '#000000', image: product.image },
               { name: 'Garnet', color: '#6B2D2B', image: product.image },
             ],
     });
@@ -692,7 +718,7 @@ export default function AdminPage() {
         ...prev.swatches,
         {
           name: `Warna #${prev.swatches.length + 1}`,
-          color: '#685E5A',
+          color: 'rgba(0,0,0,0.64)',
           image: prev.image || '/images/catalog/catalog-01.jpg',
         },
       ],
@@ -1045,115 +1071,151 @@ export default function AdminPage() {
   );
 
   // ──────────────────────────────────────────────────────────
-  // 0. AUTH HYDRATION CHECK
+  
   // ──────────────────────────────────────────────────────────
-  if (!isMounted) {
+  // ──────────────────────────────────────────────────────────
+  // 0. AUTH HYDRATION CHECK (Exact server/client match on initial tick)
+  // ──────────────────────────────────────────────────────────
+  if (!isClient || !authChecked) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#FAF8F5]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
+      <div className="min-h-screen w-full bg-[#f9f9f8] text-[#1a1c1c] antialiased flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1a1c1c] border-t-transparent" />
+          <span className="font-mono text-xs tracking-wider text-[#514346] uppercase">
+            Memuat Sevaya Studio...
+          </span>
+        </div>
       </div>
     );
   }
-
-  // ──────────────────────────────────────────────────────────
-  // 1. ADMIN LOGIN GATE (HIDDEN ACCESS)
-  // ──────────────────────────────────────────────────────────
+  // 1. ADMIN LOGIN GATE (MATCHING USER PROFILE MINIMAL & ELEGANT DESIGN)
+  // -------------------------------------------------------------------------
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#FAF8F5] px-4 py-12">
-        <div className="w-full max-w-md rounded-2xl border border-[#E5DDD5] bg-white p-8 sm:p-10 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase mb-2">
-              SISTEM OTORISASI INTERNAL
-            </span>
-            <Logo className="mb-2 h-7 w-auto" />
-            <h1 className="font-headline font-bold text-xl tracking-tight text-[#141312] uppercase mt-1">
-              Admin Control Console
-            </h1>
-            <p className="text-xs text-[#685E5A] mt-1.5 leading-relaxed">
-              Area khusus pengelolaan operasional pesanan, katalog koleksi abaya, dan editorial konten.
-            </p>
+      <div className="min-h-screen bg-white font-body text-black selection:bg-black/5 flex flex-col justify-between">
+        {/* Top Header (Matching Profile Page Minimal Bar) */}
+        <header className="sticky top-0 z-30 border-b border-black/15 bg-white/90 backdrop-blur-md">
+          <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Link
+              href="/"
+              className="flex items-center transition hover:opacity-85"
+              aria-label="Sevaya Homepage"
+              title="SEVAYA"
+            >
+              <Logo className="h-6 sm:h-7 w-auto" />
+            </Link>
+
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3.5 py-1 text-xs font-medium text-black/70 transition hover:border-black hover:text-black hover:bg-black/5"
+            >
+              <Icon name="arrow_back" size={14} />
+              <span className="hidden sm:inline">Kembali ke Beranda Publik</span>
+              <span className="sm:hidden">Kembali</span>
+            </Link>
+          </div>
+        </header>
+
+        {/* Main Content Card */}
+        <main className="mx-auto w-full max-w-lg flex-1 px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
+          <div className="flex items-center gap-6 sm:gap-8 pb-6 justify-center">
+            <h2 className="font-headline text-2xl sm:text-3xl font-semibold tracking-tight text-black">
+              Admin Console
+            </h2>
           </div>
 
-          <form onSubmit={handleAdminLogin} className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-black/15 bg-white p-6 sm:p-8 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-5">
+            <div className="text-center sm:text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800 uppercase tracking-wider">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span>Sistem Internal Terenkripsi</span>
+                </span>
+              </div>
+              <h1 className="font-headline text-lg sm:text-xl font-semibold text-black">
+                Otorisasi Akses Pengelola
+              </h1>
+              <p className="text-xs sm:text-sm text-black/70 mt-1 leading-relaxed">
+                Area khusus pengelolaan operasional pesanan, katalog koleksi abaya, dan editorial konten.
+              </p>
+            </div>
+
             {authError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-center text-xs font-medium text-red-700">
-                {authError}
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                <Icon name="error" size={16} className="shrink-0 text-red-600 mt-0.5" />
+                <span>{authError}</span>
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                className="text-xs font-semibold tracking-wider text-[#141312] uppercase"
-                htmlFor="admin-user"
-              >
-                ID Operator / Username
-              </label>
-              <div className="relative flex items-center border border-[#D0C5BD] bg-white focus-within:border-[#141312] transition-colors">
-                <input
-                  id="admin-user"
-                  type="text"
-                  required
-                  autoFocus
-                  value={adminUsername}
-                  onChange={(e) => setAdminUsername(e.target.value)}
-                  placeholder="admin"
-                  className="h-11 w-full bg-transparent px-3.5 pr-10 text-base sm:text-xs tracking-wide text-[#141312] placeholder:text-[#8E8380] focus:outline-none"
-                />
-                <Icon
-                  name="person"
-                  size={16}
-                  className="pointer-events-none absolute right-3 text-[#685E5A]"
-                />
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label
+                  className="text-xs font-semibold tracking-wider text-black uppercase"
+                  htmlFor="admin-user"
+                >
+                  ID Operator / Username
+                </label>
+                <div className="relative flex items-center rounded-xl border border-black/15 bg-white transition focus-within:border-black focus-within:bg-white focus-within:ring-1 focus-within:ring-[#000000]/15">
+                  <Icon
+                    name="person"
+                    size={18}
+                    className="pointer-events-none absolute left-3.5 text-black/50"
+                  />
+                  <input
+                    id="admin-user"
+                    type="text"
+                    required
+                    autoFocus
+                    value={adminUsername}
+                    onChange={(e) => setAdminUsername(e.target.value)}
+                    placeholder="admin"
+                    className="h-11 w-full bg-transparent pl-10 pr-4 text-xs sm:text-sm text-black placeholder:text-black/50 focus:outline-none"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                className="text-xs font-semibold tracking-wider text-[#141312] uppercase"
-                htmlFor="admin-pass"
-              >
-                Kata Sandi Keamanan
-              </label>
-              <div className="relative flex items-center border border-[#D0C5BD] bg-white focus-within:border-[#141312] transition-colors">
-                <input
-                  id="admin-pass"
-                  type="password"
-                  required
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="h-11 w-full bg-transparent px-3.5 pr-10 text-base sm:text-xs tracking-wide text-[#141312] placeholder:text-[#8E8380] focus:outline-none"
-                />
-                <Icon
-                  name="lock"
-                  size={16}
-                  className="pointer-events-none absolute right-3 text-[#685E5A]"
-                />
+              <div className="space-y-1.5">
+                <label
+                  className="text-xs font-semibold tracking-wider text-black uppercase"
+                  htmlFor="admin-pass"
+                >
+                  Kata Sandi Keamanan
+                </label>
+                <div className="relative flex items-center rounded-xl border border-black/15 bg-white transition focus-within:border-black focus-within:bg-white focus-within:ring-1 focus-within:ring-[#000000]/15">
+                  <Icon
+                    name="lock"
+                    size={18}
+                    className="pointer-events-none absolute left-3.5 text-black/50"
+                  />
+                  <input
+                    id="admin-pass"
+                    type="password"
+                    required
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="h-11 w-full bg-transparent pl-10 pr-4 text-xs sm:text-sm text-black placeholder:text-black/50 focus:outline-none"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#141312] bg-[#141312] text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-xs transition-all hover:bg-[#2b2826] active:scale-[0.99]"
-            >
-              <Icon name="lock" size={14} />
-              <span>Buka Konsol Studio</span>
-            </button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-[#E5DDD5] flex flex-col items-center gap-3 text-center">
-            <span className="text-[10px] text-[#8E8380] tracking-widest uppercase font-mono">
-              SEVAYA &bull; SESI TERENKRIPSI
-            </span>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition"
-            >
-              &larr; Kembali ke Beranda Publik
-            </Link>
+              <button
+                type="submit"
+                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-black text-xs font-semibold tracking-wider text-white uppercase shadow-xs transition hover:bg-black/85 active:scale-[0.99] cursor-pointer"
+              >
+                <Icon name="lock" size={14} />
+                <span>Buka Konsol Studio</span>
+                <Icon name="arrow_forward" size={14} />
+              </button>
+            </form>
           </div>
-        </div>
+
+          <div className="mt-8 text-center">
+            <p className="font-mono text-[11px] text-black/50 uppercase tracking-wider">
+              SEVAYA STUDIO &bull; INTERNAL MANAGEMENT CONSOLE
+            </p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -1174,15 +1236,17 @@ export default function AdminPage() {
           A. DESKTOP SIDEBAR (Collapsible Luxury Drawer)
       ────────────────────────────────────────────────────────── */}
       <aside
-        className={`hidden md:flex fixed left-0 top-0 h-full w-[260px] bg-white border-r border-[#d5c2c5]/30 z-50 flex-col justify-between transition-transform duration-300 ease-in-out shadow-sm ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+        className={`hidden md:flex fixed left-0 top-0 h-full w-[260px] bg-white border-r border-[#d5c2c5]/30 z-50 flex-col justify-between transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isSidebarOpen
+            ? 'translate-x-0 opacity-100 shadow-[8px_0_36px_rgba(26,28,28,0.06)]'
+            : '-translate-x-full opacity-0 pointer-events-none shadow-none'
         }`}
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Header Brand */}
-          <div className="p-4 border-b border-[#E5DDD5]/70 flex items-center">
+          <div className="p-4 border-b border-black/15/70 flex items-center">
             <Link href="/admin" className="flex items-center" aria-label="Admin Home">
-              <Logo className="h-5 w-auto text-[#141312]" />
+              <Logo className="h-5 w-auto text-black" />
             </Link>
           </div>
 
@@ -1289,7 +1353,7 @@ export default function AdminPage() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          <aside className="fixed inset-y-0 left-0 flex w-[85vw] max-w-xs flex-col justify-between border-r border-[#d5c2c5]/30 bg-white p-5 shadow-2xl transition-transform duration-300 ease-out z-10 overflow-y-auto">
+          <aside className="fixed inset-y-0 left-0 flex w-[85vw] max-w-xs flex-col justify-between border-r border-[#d5c2c5]/30 bg-white p-5 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] animate-drawer-slide-in rounded-none z-10 overflow-y-auto">
             <div>
               <div className="flex items-center justify-between border-b border-[#d5c2c5]/20 pb-4">
                 <div className="flex flex-col gap-0.5">
@@ -1298,7 +1362,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#d5c2c5]/40 text-[#1a1c1c] hover:bg-[#eeeeed] active:scale-95 transition"
+                  className="flex h-10 w-10 items-center justify-center rounded-none border border-black/20 text-[#1a1c1c] hover:bg-black hover:text-white active:scale-95 transition"
                   aria-label="Tutup Menu"
                 >
                   <Icon name="close" size={20} />
@@ -1391,7 +1455,7 @@ export default function AdminPage() {
           C. FIXED TOP BAR HEADER (Matching Mockup)
       ────────────────────────────────────────────────────────── */}
       <header
-        className={`fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3.5 md:px-6 flex items-center justify-between gap-3 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3.5 md:px-6 flex items-center justify-between gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'left-0 md:left-[260px]' : 'left-0'
         }`}
       >
@@ -1405,17 +1469,42 @@ export default function AdminPage() {
                 toggleSidebar();
               }
             }}
-            className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#685E5A] hover:text-[#141312] border border-[#D0C5BD] hover:bg-[#F4EFEB] active:scale-95 transition-colors shrink-0"
+            className="group relative flex h-10 w-10 items-center justify-center rounded-none border border-black/20 bg-white text-black hover:bg-black hover:text-white hover:border-black active:scale-95 transition-all duration-300 shrink-0"
             aria-label="Toggle Menu Sidebar"
             title={isSidebarOpen ? 'Sembunyikan Sidebar' : 'Buka Sidebar'}
           >
-            <Icon name={isSidebarOpen ? 'menu_open' : 'menu'} size={18} />
+            <div className="relative flex h-[14px] w-[18px] flex-col justify-between items-start overflow-hidden">
+              {/* Bar 1 (Top line) */}
+              <span
+                className={`h-[1.5px] bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  isSidebarOpen
+                    ? 'w-[18px] translate-y-[6.25px] rotate-45'
+                    : 'w-[18px] translate-y-0 rotate-0 group-hover:w-3'
+                }`}
+              />
+              {/* Bar 2 (Middle line) */}
+              <span
+                className={`h-[1.5px] bg-current transition-all duration-200 ease-out ${
+                  isSidebarOpen
+                    ? 'w-0 opacity-0 -translate-x-3'
+                    : 'w-3 group-hover:w-[18px] opacity-100 translate-x-0'
+                }`}
+              />
+              {/* Bar 3 (Bottom line) */}
+              <span
+                className={`h-[1.5px] bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  isSidebarOpen
+                    ? 'w-[18px] -translate-y-[6.25px] -rotate-45'
+                    : 'w-[18px] translate-y-0 rotate-0 group-hover:w-3'
+                }`}
+              />
+            </div>
           </button>
 
           {!isSidebarOpen && (
             <div className="hidden md:flex items-center gap-2.5 pl-1 shrink-0">
               <Link href="/admin" className="flex items-center" aria-label="Admin Home">
-                <Logo className="h-5 w-auto text-[#141312]" />
+                <Logo className="h-5 w-auto text-black" />
               </Link>
               <span className="text-[#d5c2c5] font-light">|</span>
             </div>
@@ -1463,7 +1552,7 @@ export default function AdminPage() {
           D. MAIN TAB CONTENT CONTAINER
       ────────────────────────────────────────────────────────── */}
       <main
-        className={`relative min-h-screen bg-[#f9f9f8] px-3.5 pb-12 pt-20 sm:px-6 sm:pt-24 lg:px-8 transition-all duration-300 ease-in-out ${
+        className={`relative min-h-screen bg-[#f9f9f8] px-3.5 pb-12 pt-20 sm:px-6 sm:pt-24 lg:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
@@ -1480,13 +1569,13 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Koleksi &amp; Inventori
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen Katalog Produk
                 </h2>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
                 </p>
               </div>
@@ -1495,7 +1584,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateModal}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tambah Produk Baru</span>
@@ -1504,24 +1593,24 @@ export default function AdminPage() {
             </div>
 
             {/* Search & Stats Card */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
               <div className="relative flex-1">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari berdasarkan nama abaya, edisi, atau warna..."
-                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pr-4 pl-9 py-2 text-base sm:text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-black/20 bg-white pr-4 pl-9 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:bg-white focus:outline-none"
                 />
                 <Icon
                   name="search"
                   size={16}
-                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-[#685E5A]"
+                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-black/70"
                 />
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-[#685E5A] shrink-0">
-                <span className="rounded-full bg-[#F4EFEB] px-3 py-1.5 border border-[#E5DDD5]">
-                  Total: <strong className="text-[#141312]">{products.length}</strong> produk
+              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-black/70 shrink-0">
+                <span className="rounded-full bg-black/5 px-3 py-1.5 border border-black/15">
+                  Total: <strong className="text-black">{products.length}</strong> produk
                 </span>
                 <span className="rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200/60 text-emerald-800">
                   Tersedia: <strong className="font-bold">{products.filter((p) => p.inStock !== false).length}</strong>
@@ -1531,21 +1620,21 @@ export default function AdminPage() {
 
             {/* Product Grid */}
             {isLoading && products.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E5DDD5] bg-white">
-                <span className="text-xs tracking-wider text-[#685E5A] uppercase">
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-black/15 bg-white">
+                <span className="text-xs tracking-wider text-black/70 uppercase">
                   Memuat data produk...
                 </span>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-6 text-center">
-                <Icon name="shopping_bag" size={28} className="text-[#685E5A]" />
-                <p className="text-xs text-[#685E5A]">
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-black/15 bg-white p-6 text-center">
+                <Icon name="shopping_bag" size={28} className="text-black/70" />
+                <p className="text-xs text-black/70">
                   Tidak ada produk yang cocok dengan pencarian.
                 </p>
                 <button
                   type="button"
                   onClick={handleOpenCreateModal}
-                  className="rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] uppercase"
+                  className="rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white uppercase"
                 >
                   Tambah Produk Pertama
                 </button>
@@ -1555,10 +1644,10 @@ export default function AdminPage() {
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5DDD5] bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-[#D0C5BD]"
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/20"
                   >
                     {/* Thumbnail Image */}
-                    <div className="relative aspect-[3/4] w-full bg-[#F4EFEB]">
+                    <div className="relative aspect-[3/4] w-full bg-black/5">
                       <Image
                         src={product.image || '/images/catalog/catalog-01.jpg'}
                         alt={product.title}
@@ -1567,17 +1656,17 @@ export default function AdminPage() {
                       />
                       {product.hidden && (
                         <div className="absolute inset-0 flex items-center justify-center p-2">
-                          <span className="rounded-full bg-[#141312]/80 px-2 py-0.5 text-center text-[9px] font-bold tracking-wider text-[#FAF8F5] uppercase backdrop-blur-xs sm:text-[10px]">
+                          <span className="rounded-full bg-black/80 px-2 py-0.5 text-center text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-xs sm:text-[10px]">
                             Disembunyikan
                           </span>
                         </div>
                       )}
                       {product.badge && (
-                        <span className="absolute top-2 left-2 rounded-full bg-[#141312] px-2 py-0.5 text-[9px] font-semibold tracking-wider text-[#FAF8F5] uppercase sm:text-[10px]">
+                        <span className="absolute top-2 left-2 rounded-full bg-black px-2 py-0.5 text-[9px] font-semibold tracking-wider text-white uppercase sm:text-[10px]">
                           {product.badge}
                         </span>
                       )}
-                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-[#141312] shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false ? 'bg-emerald-500' : 'bg-red-500'}`}
                         />
@@ -1590,24 +1679,24 @@ export default function AdminPage() {
                     {/* Product Info */}
                     <div className="flex flex-1 flex-col p-3 sm:p-4">
                       {product.edition && (
-                        <span className="font-headline truncate text-[10px] tracking-widest text-[#8E8380] uppercase">
+                        <span className="font-headline truncate text-[10px] tracking-widest text-black/50 uppercase">
                           {product.edition}
                         </span>
                       )}
-                      <h3 className="font-headline line-clamp-1 text-xs font-semibold text-[#141312] sm:text-sm">
+                      <h3 className="font-headline line-clamp-1 text-xs font-semibold text-black sm:text-sm">
                         {product.title}
                       </h3>
-                      <span className="truncate text-[10px] font-mono text-[#8E8380] sm:text-xs">
+                      <span className="truncate text-[10px] font-mono text-black/50 sm:text-xs">
                         /{product.slug}
                       </span>
 
                       {/* Pricing */}
                       <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
-                        <span className="text-xs font-bold text-[#141312] sm:text-sm">
+                        <span className="text-xs font-bold text-black sm:text-sm">
                           Rp {product.price.toLocaleString('id-ID')}
                         </span>
                         {product.original_price && product.original_price > product.price && (
-                          <span className="text-[10px] text-[#8E8380] line-through sm:text-[11px]">
+                          <span className="text-[10px] text-black/50 line-through sm:text-[11px]">
                             Rp {product.original_price.toLocaleString('id-ID')}
                           </span>
                         )}
@@ -1615,8 +1704,8 @@ export default function AdminPage() {
 
                       {/* Swatches preview with photo indicator */}
                       {product.swatches && product.swatches.length > 0 && (
-                        <div className="mt-2 flex flex-col gap-1 rounded-xl bg-[#F4EFEB] p-2 text-xs">
-                          <span className="text-[9px] font-semibold tracking-wider text-[#685E5A] uppercase">
+                        <div className="mt-2 flex flex-col gap-1 rounded-xl bg-black/5 p-2 text-xs">
+                          <span className="text-[9px] font-semibold tracking-wider text-black/70 uppercase">
                             {product.swatches.length} Varian:
                           </span>
                           <div className="flex flex-wrap items-center gap-1">
@@ -1624,13 +1713,13 @@ export default function AdminPage() {
                               <div
                                 key={idx}
                                 title={`${sw.name} - ${sw.image ? 'Ada Foto' : 'Foto Utama'}`}
-                                className="flex items-center gap-1 rounded-full border border-[#E5DDD5] bg-white px-1.5 py-0.5 shadow-2xs"
+                                className="flex items-center gap-1 rounded-full border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs"
                               >
                                 <span
                                   style={{ backgroundColor: sw.color }}
                                   className="h-2.5 w-2.5 rounded-full border border-black/15"
                                 />
-                                <span className="hidden text-[9px] font-medium text-[#141312] sm:inline">
+                                <span className="hidden text-[9px] font-medium text-black sm:inline">
                                   {sw.name.split(' ')[0]}
                                 </span>
                                 {sw.image && (
@@ -1643,11 +1732,11 @@ export default function AdminPage() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className="mt-3 flex items-center gap-1.5 border-t border-[#E5DDD5]/60 pt-2.5 sm:gap-2">
+                      <div className="mt-3 flex items-center gap-1.5 border-t border-black/15/60 pt-2.5 sm:gap-2">
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(product)}
-                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:bg-[#F4EFEB] active:scale-95"
+                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
                         >
                           <Icon name="edit" size={13} />
                           <span className="truncate">Edit</span>
@@ -1703,13 +1792,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                   Kelola Section Beranda (Homepage)
                 </h2>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal.
                 </p>
               </div>
@@ -1717,7 +1806,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Beranda')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Section Beranda</span>
@@ -1725,27 +1814,27 @@ export default function AdminPage() {
             </div>
 
             {/* 1. HERO SECTION */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+            <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  <h3 className="font-headline text-sm font-semibold text-black">
                     1. Hero Section (Homepage Banner Utama)
                   </h3>
-                  <p className="text-xs text-[#685E5A] mt-0.5">
+                  <p className="text-xs text-black/70 mt-0.5">
                     Banner utama dengan foto latar penuh dan teks tajuk toko.
                   </p>
                 </div>
-                <span className="rounded-full bg-[#F4EFEB] px-2.5 py-0.5 text-[10px] font-semibold text-[#685E5A] border border-[#E5DDD5]">
+                <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[10px] font-semibold text-black/70 border border-black/15">
                   Desktop &amp; Mobile
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="flex flex-col gap-2.5">
-                  <span className="text-xs font-medium text-[#685E5A]">
+                  <span className="text-xs font-medium text-black/70">
                     Gambar Latar Hero
                   </span>
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                     <Image
                       src={sections.hero.image}
                       alt="Hero preview"
@@ -1759,7 +1848,7 @@ export default function AdminPage() {
                       setImagePickerTarget('hero');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-2 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-2 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                   >
                     <Icon name="image" size={14} />
                     <span>Ganti Gambar Hero</span>
@@ -1768,7 +1857,7 @@ export default function AdminPage() {
 
                 <div className="flex flex-col gap-3.5 lg:col-span-2">
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#685E5A]">
+                    <label className="text-xs font-medium text-black/70">
                       Badge Label
                     </label>
                     <input
@@ -1780,12 +1869,12 @@ export default function AdminPage() {
                           hero: { ...prev.hero, badge: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#685E5A]">
+                    <label className="text-xs font-medium text-black/70">
                       Judul Utama (Title)
                     </label>
                     <input
@@ -1797,12 +1886,12 @@ export default function AdminPage() {
                           hero: { ...prev.hero, title: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[#685E5A]">
+                    <label className="text-xs font-medium text-black/70">
                       Deskripsi Hero
                     </label>
                     <textarea
@@ -1814,7 +1903,7 @@ export default function AdminPage() {
                           hero: { ...prev.hero, desc: e.target.value },
                         }))
                       }
-                      className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                      className="w-full rounded-none border border-black/20 bg-white p-3 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1822,12 +1911,12 @@ export default function AdminPage() {
             </div>
 
             {/* 2. CATEGORY SPOTLIGHT */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   2. Category Spotlight (2 Kartu Sorotan)
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Dua kartu kategori utama yang ditampilkan berdampingan di beranda.
                 </p>
               </div>
@@ -1836,12 +1925,12 @@ export default function AdminPage() {
                 {sections.spotlight.map((card, idx) => (
                   <div
                     key={card.id}
-                    className="flex flex-col gap-3 rounded-xl bg-[#F4EFEB] p-4 border border-[#E5DDD5]/60"
+                    className="flex flex-col gap-3 rounded-xl bg-black/5 p-4 border border-black/15/60"
                   >
-                    <span className="text-xs font-semibold text-[#685E5A] uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                       Kartu Spotlight #{idx + 1}
                     </span>
-                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                       <Image src={card.image} alt={card.title} fill className="object-cover" />
                     </div>
                     <button
@@ -1850,7 +1939,7 @@ export default function AdminPage() {
                         setImagePickerTarget(`spotlight-${idx}` as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Gambar #{idx + 1}</span>
@@ -1868,7 +1957,7 @@ export default function AdminPage() {
                           });
                         }}
                         placeholder="Judul"
-                        className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                        className="w-full rounded-none border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                       />
                       <input
                         type="text"
@@ -1882,7 +1971,7 @@ export default function AdminPage() {
                           });
                         }}
                         placeholder="Subjudul"
-                        className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                        className="w-full rounded-none border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1891,18 +1980,18 @@ export default function AdminPage() {
             </div>
 
             {/* 3. SIGNATURE TEXTILES */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   3. Showcase Tekstil Berkelanjutan
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Banner narasi komitmen material premium ramah lingkungan Sevaya.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                   <Image
                     src={sections.missionTextiles.image}
                     alt="Textiles background"
@@ -1917,7 +2006,7 @@ export default function AdminPage() {
                       setImagePickerTarget('textiles');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
                   >
                     <Icon name="image" size={14} />
                     <span>Ganti Gambar Showcase Tekstil</span>
@@ -1931,19 +2020,19 @@ export default function AdminPage() {
                         missionTextiles: { ...prev.missionTextiles, title: e.target.value },
                       }))
                     }
-                    className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full rounded-none border border-black/20 bg-white px-3.5 py-2 text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* 4. JOURNAL SECTION */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   4. Artikel Journal (2 Artikel)
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Artikel editorial gaya hidup dan wawasan abaya di beranda toko.
                 </p>
               </div>
@@ -1952,12 +2041,12 @@ export default function AdminPage() {
                 {sections.journal.map((art, idx) => (
                   <div
                     key={art.id}
-                    className="flex flex-col gap-3 rounded-xl bg-[#F4EFEB] p-4 border border-[#E5DDD5]/60"
+                    className="flex flex-col gap-3 rounded-xl bg-black/5 p-4 border border-black/15/60"
                   >
-                    <span className="text-xs font-semibold text-[#685E5A] uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-black/70 uppercase tracking-wider">
                       Artikel #{idx + 1}
                     </span>
-                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                       <Image src={art.image} alt={art.title} fill className="object-cover" />
                     </div>
                     <button
@@ -1966,7 +2055,7 @@ export default function AdminPage() {
                         setImagePickerTarget(`journal-${idx}` as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Gambar Artikel #{idx + 1}</span>
@@ -1983,7 +2072,7 @@ export default function AdminPage() {
                         });
                       }}
                       placeholder="Judul Artikel"
-                      className="w-full rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      className="w-full rounded-none border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                     />
                     <textarea
                       rows={2}
@@ -1997,7 +2086,7 @@ export default function AdminPage() {
                         });
                       }}
                       placeholder="Kutipan ringkasan"
-                      className="w-full rounded-none border border-[#D0C5BD] bg-white p-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      className="w-full rounded-none border border-black/20 bg-white p-2.5 text-xs text-black focus:border-black focus:outline-none"
                     />
                   </div>
                 ))}
@@ -2014,14 +2103,14 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen News &amp; Editorial (Jurnal)
                 </h2>
-                <p className="text-xs text-[#685E5A] mt-0.5">
-                  Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-[#141312] bg-[#F4EFEB] px-1 py-0.5 rounded">/news</code>.
+                <p className="text-xs text-black/70 mt-0.5">
+                  Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-black bg-black/5 px-1 py-0.5 rounded">/news</code>.
                 </p>
               </div>
 
@@ -2029,7 +2118,7 @@ export default function AdminPage() {
                 <Link
                   href="/news"
                   target="_blank"
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-semibold text-[#141312] hover:bg-[#F4EFEB] transition active:scale-95"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-black/5 transition active:scale-95"
                 >
                   <Icon name="storefront" size={14} />
                   <span>Lihat Halaman /news</span>
@@ -2038,7 +2127,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateArticleModal}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tulis Artikel Baru</span>
@@ -2047,47 +2136,47 @@ export default function AdminPage() {
             </div>
 
             {/* Telemetry Summary Card */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E5DDD5]/70 gap-4 sm:gap-6">
+            <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/70 gap-4 sm:gap-6">
                 <div className="flex flex-col justify-between space-y-1 sm:pr-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                     Total Artikel Terbit
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-[#141312]">{articles.length}</span>
-                    <span className="text-xs text-[#685E5A]">artikel aktif</span>
+                    <span className="text-2xl font-bold text-black">{articles.length}</span>
+                    <span className="text-xs text-black/70">artikel aktif</span>
                   </div>
-                  <span className="text-[11px] text-[#685E5A]">
+                  <span className="text-[11px] text-black/70">
                     Tersinkronisasi otomatis dengan /news
                   </span>
                 </div>
 
                 <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                     Artikel Utama (Featured)
                   </span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-amber-600">
                       {articles.filter((a) => a.featured).length}
                     </span>
-                    <span className="text-xs text-[#685E5A]">sorotan beranda</span>
+                    <span className="text-xs text-black/70">sorotan beranda</span>
                   </div>
-                  <span className="text-[11px] text-[#685E5A]">
+                  <span className="text-[11px] text-black/70">
                     Tampil sebagai banner hero editorial
                   </span>
                 </div>
 
                 <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                     Kategori Topik
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-[#141312]">
+                    <span className="text-2xl font-bold text-black">
                       {ARTICLE_CATEGORIES.filter((c) => c !== 'All Stories').length}
                     </span>
-                    <span className="text-xs text-[#685E5A]">kategori aktif</span>
+                    <span className="text-xs text-black/70">kategori aktif</span>
                   </div>
-                  <span className="text-[11px] text-[#685E5A]">
+                  <span className="text-[11px] text-black/70">
                     Philosophy, Textile, Heritage, Care
                   </span>
                 </div>
@@ -2095,7 +2184,7 @@ export default function AdminPage() {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3.5 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3.5 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 touch-pan-x">
                 {ARTICLE_CATEGORIES.map((cat) => (
                   <button
@@ -2104,8 +2193,8 @@ export default function AdminPage() {
                     onClick={() => setNewsFilterCategory(cat)}
                     className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
                       newsFilterCategory === cat
-                        ? 'bg-[#141312] text-[#FAF8F5]'
-                        : 'border border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312]'
+                        ? 'bg-black text-white'
+                        : 'border border-black/20 bg-white text-black/70 hover:bg-black/5 hover:text-black'
                     }`}
                   >
                     {cat}
@@ -2119,12 +2208,12 @@ export default function AdminPage() {
                   value={newsSearchQuery}
                   onChange={(e) => setNewsSearchQuery(e.target.value)}
                   placeholder="Cari judul atau topik artikel..."
-                  className="w-full min-h-[40px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pl-8 pr-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  className="w-full min-h-[40px] sm:min-h-[36px] rounded-none border border-black/20 bg-white pl-8 pr-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                 />
                 <Icon
                   name="search"
                   size={15}
-                  className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-[#685E5A]"
+                  className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-black/70"
                 />
               </div>
             </div>
@@ -2145,16 +2234,16 @@ export default function AdminPage() {
 
               if (filtered.length === 0) {
                 return (
-                  <div className="rounded-2xl border border-[#E5DDD5] bg-white p-12 text-center text-[#685E5A]">
-                    <Icon name="search_off" size={36} className="mb-2 text-[#8E8380] mx-auto block" />
-                    <p className="font-semibold text-sm text-[#141312]">Tidak ada artikel yang cocok</p>
-                    <p className="text-xs text-[#685E5A] mt-1">
+                  <div className="rounded-2xl border border-black/15 bg-white p-12 text-center text-black/70">
+                    <Icon name="search_off" size={36} className="mb-2 text-black/50 mx-auto block" />
+                    <p className="font-semibold text-sm text-black">Tidak ada artikel yang cocok</p>
+                    <p className="text-xs text-black/70 mt-1">
                       Coba ganti kata kunci pencarian atau pilih kategori lain.
                     </p>
                     <button
                       type="button"
                       onClick={handleOpenCreateArticleModal}
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826]"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85"
                     >
                       <Icon name="add" size={15} />
                       <span>Tulis Artikel Baru</span>
@@ -2168,10 +2257,10 @@ export default function AdminPage() {
                   {filtered.map((art) => (
                     <div
                       key={art.id}
-                      className="flex flex-col rounded-2xl border border-[#E5DDD5] bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden transition hover:border-[#D0C5BD]"
+                      className="flex flex-col rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden transition hover:border-black/20"
                     >
                       {/* Cover Photo */}
-                      <div className="relative aspect-[16/10] w-full bg-[#F4EFEB] overflow-hidden">
+                      <div className="relative aspect-[16/10] w-full bg-black/5 overflow-hidden">
                         <Image
                           src={art.image || '/images/catalog/catalog-11.jpg'}
                           alt={art.title}
@@ -2180,7 +2269,7 @@ export default function AdminPage() {
                           className="object-cover"
                         />
                         {art.featured && (
-                          <div className="absolute top-2.5 left-2.5 rounded-full bg-[#141312]/90 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 border border-amber-300/30">
+                          <div className="absolute top-2.5 left-2.5 rounded-full bg-black/90 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 border border-amber-300/30">
                             ⭐ Featured Story
                           </div>
                         )}
@@ -2191,29 +2280,29 @@ export default function AdminPage() {
 
                       {/* Content Info */}
                       <div className="flex flex-1 flex-col p-4 sm:p-5">
-                        <div className="flex items-center justify-between text-[11px] text-[#8E8380]">
-                          <span className="font-semibold text-[#685E5A]">{art.category}</span>
+                        <div className="flex items-center justify-between text-[11px] text-black/50">
+                          <span className="font-semibold text-black/70">{art.category}</span>
                           <span>{art.date}</span>
                         </div>
 
-                        <h3 className="font-headline mt-2 text-sm sm:text-base font-bold text-[#141312] line-clamp-2">
+                        <h3 className="font-headline mt-2 text-sm sm:text-base font-bold text-black line-clamp-2">
                           {art.title}
                         </h3>
 
-                        <p className="mt-1.5 text-xs text-[#685E5A] line-clamp-2 leading-relaxed flex-1">
+                        <p className="mt-1.5 text-xs text-black/70 line-clamp-2 leading-relaxed flex-1">
                           {art.excerpt}
                         </p>
 
-                        <div className="mt-2 text-[10px] font-mono text-[#8E8380]">
+                        <div className="mt-2 text-[10px] font-mono text-black/50">
                           /{art.slug}
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-4 pt-3 border-t border-[#E5DDD5]/60 flex items-center gap-1.5 sm:gap-2">
+                        <div className="mt-4 pt-3 border-t border-black/15/60 flex items-center gap-1.5 sm:gap-2">
                           <button
                             type="button"
                             onClick={() => handleOpenEditArticleModal(art)}
-                            className="flex-1 min-h-[38px] flex items-center justify-center gap-1 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:bg-[#F4EFEB] active:scale-95"
+                            className="flex-1 min-h-[38px] flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
                           >
                             <Icon name="edit" size={13} />
                             <span>Edit</span>
@@ -2226,7 +2315,7 @@ export default function AdminPage() {
                             className={`min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border transition-colors active:scale-95 ${
                               art.featured
                                 ? 'border-amber-300 bg-amber-50 text-amber-700'
-                                : 'border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB]'
+                                : 'border-black/20 bg-white text-black/70 hover:bg-black/5'
                             }`}
                           >
                             <Icon name="star" size={14} filled={art.featured} />
@@ -2257,13 +2346,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                   Manajemen Lookbook &amp; Galeri Editorial
                 </h2>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Sesuaikan seluruh foto yang tampil di halaman Lookbook publik (/lookbook) dan bab koleksi aktif.
                 </p>
               </div>
@@ -2271,7 +2360,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Lookbook')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan Lookbook</span>
@@ -2279,17 +2368,17 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN A: SEMUA FOTO HALAMAN LOOKBOOK PUBLIK (/lookbook) ══ */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
-              <div className="border-b border-[#E5DDD5]/70 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
+              <div className="border-b border-black/15/70 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  <h3 className="font-headline text-sm font-semibold text-black">
                     1. Foto Editorial Halaman Lookbook (/lookbook)
                   </h3>
-                  <p className="text-xs text-[#685E5A] mt-0.5">
+                  <p className="text-xs text-black/70 mt-0.5">
                     Klik &quot;Ganti Foto&quot; pada slot foto mana saja untuk memilih foto dari galeri/unggah baru.
                   </p>
                 </div>
-                <span className="self-start sm:self-auto rounded-full bg-[#F4EFEB] px-2.5 py-0.5 text-[10px] font-semibold text-[#685E5A] border border-[#E5DDD5]">
+                <span className="self-start sm:self-auto rounded-full bg-black/5 px-2.5 py-0.5 text-[10px] font-semibold text-black/70 border border-black/15">
                   Live di /lookbook
                 </span>
               </div>
@@ -2297,20 +2386,20 @@ export default function AdminPage() {
               {/* Grid Slot Foto Lookbook */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
                 {/* 1. Hero Poster / Foto Utama */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         1. Foto Utama (The First Chapter)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 4:3
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: sevaya_first_chapter.jpg
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.heroImage || '/images/sevaya_first_chapter.jpg'}
                         alt="Hero Lookbook"
@@ -2326,7 +2415,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-heroImage' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Hero</span>
@@ -2335,20 +2424,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 2. Kolase Kiri (Portrait) */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         2. Kolase Kiri (Portrait Besar)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 4:5
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_0.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collagePortrait || '/images/lookbook_figma_0.png'}
                         alt="Kolase Portrait"
@@ -2364,7 +2453,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-collagePortrait' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Kolase 1</span>
@@ -2373,20 +2462,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 3. Kolase Kanan Atas */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         3. Kolase Kanan Atas (Detail)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 16:10
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: figma_about_1.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collageDetail1 || '/images/figma_about_1.png'}
                         alt="Kolase Detail 1"
@@ -2402,7 +2491,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-collageDetail1' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Detail 1</span>
@@ -2411,20 +2500,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 4. Kolase Kanan Bawah */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         4. Kolase Kanan Bawah (Buku)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 16:10
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: figma_about_2.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collageDetail2 || '/images/figma_about_2.png'}
                         alt="Kolase Detail 2"
@@ -2440,7 +2529,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-collageDetail2' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Detail 2</span>
@@ -2449,20 +2538,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 5. Panorama Lebar 1 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         5. Panorama Lebar 1 (Duo Abaya)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 16:9
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: figma_hero.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.panorama1 || '/images/figma_hero.png'}
                         alt="Panorama 1"
@@ -2478,7 +2567,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-panorama1' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Panorama 1</span>
@@ -2487,20 +2576,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 6. Panorama Lebar 2 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         6. Panorama Lebar 2 (Tepi Sungai)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 16:9
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_1.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.panorama2 || '/images/lookbook_figma_1.png'}
                         alt="Panorama 2"
@@ -2516,7 +2605,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-panorama2' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Panorama 2</span>
@@ -2525,20 +2614,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 7. Triptych Foto 1 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         7. Triptych Bawah 1 (Atelier)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 3:4
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_2.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych1 || '/images/lookbook_figma_2.png'}
                         alt="Triptych 1"
@@ -2554,7 +2643,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-triptych1' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Triptych 1</span>
@@ -2563,20 +2652,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 8. Triptych Foto 2 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         8. Triptych Bawah 2 (Duo Model)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 3:4
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_3.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych2 || '/images/lookbook_figma_3.png'}
                         alt="Triptych 2"
@@ -2592,7 +2681,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-triptych2' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Triptych 2</span>
@@ -2601,20 +2690,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 9. Triptych Foto 3 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         9. Triptych Bawah 3 (Detail Cuff)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 3:4
                       </span>
                     </div>
-                    <p className="text-[10px] font-semibold text-[#141312] truncate">
+                    <p className="text-[10px] font-semibold text-black truncate">
                       Default: lookbook_figma_4.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych3 || '/images/lookbook_figma_4.png'}
                         alt="Triptych 3"
@@ -2630,7 +2719,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-triptych3' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Triptych 3</span>
@@ -2639,20 +2728,20 @@ export default function AdminPage() {
                 </div>
 
                 {/* 10. Panorama Penutup (Flowing Dress) */}
-                <div className="flex flex-col justify-between rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3.5 shadow-xs sm:col-span-2 lg:col-span-3">
+                <div className="flex flex-col justify-between rounded-xl border border-black/15 bg-white p-3.5 shadow-xs sm:col-span-2 lg:col-span-3">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#141312] uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-black uppercase tracking-wide">
                         10. Foto Panorama Penutup (Flowing Dress Shot)
                       </span>
-                      <span className="rounded bg-[#E5DDD5]/60 px-1.5 py-0.5 text-[9px] font-medium text-[#685E5A]">
+                      <span className="rounded bg-[rgba(0,0,0,0.12)]/60 px-1.5 py-0.5 text-[9px] font-medium text-black/70">
                         Tampil: 21:10
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#8E8380] truncate">
+                    <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_5.png
                     </p>
-                    <div className="relative aspect-[21/9] sm:aspect-[21/10] w-full overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative aspect-[21/9] sm:aspect-[21/10] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.fullDress || '/images/lookbook_figma_5.png'}
                         alt="Full Flowing Dress"
@@ -2668,7 +2757,7 @@ export default function AdminPage() {
                         setImagePickerTarget('lbpage-fullDress' as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-5 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white px-5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Penutup</span>
@@ -2679,17 +2768,17 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN B: BAB LOOKBOOK (Koleksi / Chapter) ══ */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  <h3 className="font-headline text-sm font-semibold text-black">
                     2. Bab / Chapter Lookbook Aktif
                   </h3>
-                  <p className="text-xs text-[#685E5A] mt-0.5">
+                  <p className="text-xs text-black/70 mt-0.5">
                     Hanya bab aktif yang ditampilkan (saat ini Chapter 1 / Season 1). Tambah bab baru jika merilis season berikutnya.
                   </p>
                 </div>
-                <span className="rounded-full bg-[#141312] px-2.5 py-0.5 text-[10px] font-bold text-[#FAF8F5]">
+                <span className="rounded-full bg-black px-2.5 py-0.5 text-[10px] font-bold text-white">
                   {sections.lookbook.length} Bab Aktif
                 </span>
               </div>
@@ -2699,14 +2788,14 @@ export default function AdminPage() {
                 {sections.lookbook.map((ch, idx) => (
                   <div
                     key={ch.id || idx}
-                    className="flex flex-col rounded-2xl border border-[#E5DDD5] bg-[#FAF8F5] p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
+                    className="flex flex-col rounded-2xl border border-black/15 bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/60">
-                      <span className="rounded-full bg-[#141312] px-2.5 py-0.5 text-[10px] font-bold text-[#FAF8F5] uppercase">
+                    <div className="flex items-center justify-between pb-2 border-b border-black/15/60">
+                      <span className="rounded-full bg-black px-2.5 py-0.5 text-[10px] font-bold text-white uppercase">
                         {ch.num || `BAB ${idx + 1}`}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-[#685E5A]">
+                        <span className="text-xs text-black/70">
                           Look {String(idx + 1).padStart(2, '0')}
                         </span>
                         {sections.lookbook.length > 1 && (
@@ -2730,7 +2819,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Chapter Image Preview */}
-                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                       <Image
                         src={ch.image || '/images/sevaya_first_chapter.jpg'}
                         alt={ch.title}
@@ -2746,7 +2835,7 @@ export default function AdminPage() {
                         setImagePickerTarget(`lookbook-${idx}` as ImagePickerTarget);
                         setIsImagePickerOpen(true);
                       }}
-                      className="inline-flex w-full min-h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                      className="inline-flex w-full min-h-[38px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                     >
                       <Icon name="image" size={14} />
                       <span>Ganti Foto Bab</span>
@@ -2755,7 +2844,7 @@ export default function AdminPage() {
                     {/* Form fields */}
                     <div className="flex flex-col gap-2 pt-1">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[11px] font-medium text-[#685E5A] uppercase">
+                        <label className="text-[11px] font-medium text-black/70 uppercase">
                           Label Bab
                         </label>
                         <input
@@ -2769,12 +2858,12 @@ export default function AdminPage() {
                               return { ...prev, lookbook: next };
                             });
                           }}
-                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-white px-2.5 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-black/20 bg-white px-2.5 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
                         />
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <label className="text-[11px] font-medium text-[#685E5A] uppercase">
+                        <label className="text-[11px] font-medium text-black/70 uppercase">
                           Judul Look / Chapter
                         </label>
                         <input
@@ -2788,7 +2877,7 @@ export default function AdminPage() {
                               return { ...prev, lookbook: next };
                             });
                           }}
-                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-white px-2.5 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                          className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-black/20 bg-white px-2.5 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
                         />
                       </div>
                     </div>
@@ -2797,7 +2886,7 @@ export default function AdminPage() {
               </div>
 
               {/* Add New Chapter Button */}
-              <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-[#D0C5BD] bg-[#FAF8F5] py-5">
+              <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-black/20 bg-white py-5">
                 <button
                   type="button"
                   onClick={() => {
@@ -2815,7 +2904,7 @@ export default function AdminPage() {
                       ],
                     }));
                   }}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full border border-[#D0C5BD] bg-white px-6 py-2.5 text-xs font-semibold text-[#141312] shadow-xs transition-all hover:bg-[#FAF8F5] hover:border-[#141312] active:scale-[0.98]"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full border border-black/20 bg-white px-6 py-2.5 text-xs font-semibold text-black shadow-xs transition-all hover:bg-white hover:border-black active:scale-[0.98]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tambah Bab Baru (Season Berikutnya)</span>
@@ -2832,13 +2921,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                   Halaman Tentang Toko (About)
                 </h2>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya.
                 </p>
               </div>
@@ -2846,7 +2935,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Tentang Toko')}
-                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan</span>
@@ -2854,18 +2943,18 @@ export default function AdminPage() {
             </div>
 
             {/* Manifesto Hero Banner */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   1. Banner Utama Halaman About
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
                 </p>
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB]">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                   <Image
                     src={sections.conscious?.heroImage || '/images/catalog/catalog-11.jpg'}
                     alt="Conscious hero"
@@ -2880,12 +2969,12 @@ export default function AdminPage() {
                       setImagePickerTarget('conscious-hero');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#D0C5BD] bg-white px-4 py-1.5 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB]"
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
                   >
                     <Icon name="image" size={14} />
                     <span>Ganti Gambar Hero Filosofi</span>
                   </button>
-                  <p className="text-xs text-[#685E5A]">
+                  <p className="text-xs text-black/70">
                     Tampilan editorial manifesto untuk mengedukasi pelanggan mengenai etika pembuatan pakaian Sevaya.
                   </p>
                 </div>
@@ -2893,23 +2982,23 @@ export default function AdminPage() {
             </div>
 
             {/* 4 Textile Archives */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   2. Foto 4 Arsip Tekstil Berkelanjutan
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {/* 1. Bemberg */}
-                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
-                  <span className="truncate text-xs font-semibold text-[#141312]">
+                <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
+                  <span className="truncate text-xs font-semibold text-black">
                     Bemberg™ Cupro
                   </span>
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={sections.conscious?.bembergImage || '/images/catalog/catalog-06.jpg'}
                       alt="Bemberg Cupro"
@@ -2923,18 +3012,18 @@ export default function AdminPage() {
                       setImagePickerTarget('conscious-bemberg');
                       setIsImagePickerOpen(true);
                     }}
-                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                    className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
                   >
                     Ganti Foto
                   </button>
                 </div>
 
                 {/* 2. Tencel */}
-                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
-                  <span className="truncate text-xs font-semibold text-[#141312]">
+                <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
+                  <span className="truncate text-xs font-semibold text-black">
                     TENCEL™ Lyocell
                   </span>
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={sections.conscious?.tencelImage || '/images/catalog/catalog-16.jpg'}
                       alt="Tencel Lyocell"
@@ -2948,18 +3037,18 @@ export default function AdminPage() {
                       setImagePickerTarget('conscious-tencel');
                       setIsImagePickerOpen(true);
                     }}
-                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                    className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
                   >
                     Ganti Foto
                   </button>
                 </div>
 
                 {/* 3. Linen */}
-                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
-                  <span className="truncate text-xs font-semibold text-[#141312]">
+                <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
+                  <span className="truncate text-xs font-semibold text-black">
                     Pure Flax Linen
                   </span>
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={sections.conscious?.linenImage || '/images/catalog/catalog-15.jpg'}
                       alt="Pure Flax Linen"
@@ -2973,18 +3062,18 @@ export default function AdminPage() {
                       setImagePickerTarget('conscious-linen');
                       setIsImagePickerOpen(true);
                     }}
-                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                    className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
                   >
                     Ganti Foto
                   </button>
                 </div>
 
                 {/* 4. Modal */}
-                <div className="flex flex-col gap-2 rounded-xl bg-[#F4EFEB] p-3 border border-[#E5DDD5]/60">
-                  <span className="truncate text-xs font-semibold text-[#141312]">
+                <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
+                  <span className="truncate text-xs font-semibold text-black">
                     Eco Modal
                   </span>
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={sections.conscious?.modalImage || '/images/catalog/catalog-04.jpg'}
                       alt="Eco Modal"
@@ -2998,7 +3087,7 @@ export default function AdminPage() {
                       setImagePickerTarget('conscious-modal');
                       setIsImagePickerOpen(true);
                     }}
-                    className="rounded-full border border-[#D0C5BD] bg-white py-1.5 text-center text-[11px] font-medium text-[#141312] hover:border-[#141312]"
+                    className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
                   >
                     Ganti Foto
                   </button>
@@ -3016,18 +3105,18 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Aset Digital &amp; Master Storage
                 </span>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+                  <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                     Galeri Cloud Media
                   </h2>
                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-800 border border-emerald-200/60">
                     CDN ACTIVE
                   </span>
                 </div>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Pusat aset master fotografi editorial resolusi tinggi dan integrasi CDN Supabase Storage.
                 </p>
               </div>
@@ -3036,7 +3125,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setIsUploadModalOpen(true)}
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add_photo_alternate" size={16} />
                   <span>Unggah Master Foto</span>
@@ -3045,22 +3134,22 @@ export default function AdminPage() {
             </div>
 
             {/* Telemetry Summary Card */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E5DDD5]/70 gap-4 sm:gap-6">
+            <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/70 gap-4 sm:gap-6">
                 {/* Metric 1: Kapasitas Bucket */}
                 <div className="flex flex-col justify-between space-y-2 sm:pr-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Kapasitas Bucket
                     </span>
-                    <span className="font-mono text-xs font-semibold text-[#141312]">
+                    <span className="font-mono text-xs font-semibold text-black">
                       18.4 GB / 50 GB
                     </span>
                   </div>
-                  <div className="w-full bg-[#F4EFEB] h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-[#141312] h-full rounded-full" style={{ width: '36.8%' }} />
+                  <div className="w-full bg-black/5 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-black h-full rounded-full" style={{ width: '36.8%' }} />
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#685E5A]">
+                  <div className="flex items-center justify-between text-[11px] text-black/70">
                     <span>{MASTER_CATALOG_ASSETS.length} Foto Abaya Aktif</span>
                     <span className="text-emerald-700 font-medium">36.8% terpakai</span>
                   </div>
@@ -3069,7 +3158,7 @@ export default function AdminPage() {
                 {/* Metric 2: CDN Edge Caching */}
                 <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Status Edge CDN
                     </span>
                     <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px] font-semibold">
@@ -3078,10 +3167,10 @@ export default function AdminPage() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-bold text-[#141312]">12 ms</span>
-                    <span className="text-[11px] text-[#685E5A]">TTFB P95 Jakarta (CGK-1)</span>
+                    <span className="text-xl font-bold text-black">12 ms</span>
+                    <span className="text-[11px] text-black/70">TTFB P95 Jakarta (CGK-1)</span>
                   </div>
-                  <div className="text-[11px] text-[#685E5A]">
+                  <div className="text-[11px] text-black/70">
                     Kompresi Brotli 4K otomatis
                   </div>
                 </div>
@@ -3089,7 +3178,7 @@ export default function AdminPage() {
                 {/* Metric 3: Sinkronisasi Katalog */}
                 <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#685E5A]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Koneksi Storefront
                     </span>
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200/60">
@@ -3097,18 +3186,18 @@ export default function AdminPage() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-bold text-[#141312]">18 / 18</span>
-                    <span className="text-[11px] text-[#685E5A]">PDP Terkoneksi</span>
+                    <span className="text-xl font-bold text-black">18 / 18</span>
+                    <span className="text-[11px] text-black/70">PDP Terkoneksi</span>
                   </div>
-                  <div className="text-[11px] text-[#685E5A]">
-                    Bucket: <code className="font-mono text-[10px] text-[#141312]">production-katalog</code>
+                  <div className="text-[11px] text-black/70">
+                    Bucket: <code className="font-mono text-[10px] text-black">production-katalog</code>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-3 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 touch-pan-x">
                 {[
                   { id: 'all', label: `Semua (${MASTER_CATALOG_ASSETS.length})` },
@@ -3122,8 +3211,8 @@ export default function AdminPage() {
                     onClick={() => setMediaCategory(tab.id as any)}
                     className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
                       mediaCategory === tab.id
-                        ? 'bg-[#141312] text-[#FAF8F5]'
-                        : 'border border-[#D0C5BD] bg-white text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312]'
+                        ? 'bg-black text-white'
+                        : 'border border-black/20 bg-white text-black/70 hover:bg-black/5 hover:text-black'
                     }`}
                   >
                     {tab.label}
@@ -3138,23 +3227,23 @@ export default function AdminPage() {
                     value={mediaSearchQuery}
                     onChange={(e) => setMediaSearchQuery(e.target.value)}
                     placeholder="Filter berkas..."
-                    className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] pl-8 pr-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[40px] sm:min-h-[34px] rounded-none border border-black/20 bg-white pl-8 pr-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                   <Icon
                     name="filter_alt"
                     size={15}
-                    className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-[#685E5A]"
+                    className="pointer-events-none absolute left-2.5 top-3 sm:top-2.5 text-black/70"
                   />
                 </div>
 
-                <div className="flex items-center rounded-full border border-[#D0C5BD] p-0.5 bg-[#F4EFEB]">
+                <div className="flex items-center rounded-full border border-black/20 p-0.5 bg-black/5">
                   <button
                     type="button"
                     onClick={() => setMediaViewMode('grid')}
                     className={`min-h-[34px] min-w-[34px] flex items-center justify-center rounded-full transition-colors ${
                       mediaViewMode === 'grid'
-                        ? 'bg-white text-[#141312] shadow-2xs'
-                        : 'text-[#685E5A] hover:text-[#141312]'
+                        ? 'bg-white text-black shadow-2xs'
+                        : 'text-black/70 hover:text-black'
                     }`}
                     title="Tampilan Kisi"
                   >
@@ -3165,8 +3254,8 @@ export default function AdminPage() {
                     onClick={() => setMediaViewMode('table')}
                     className={`min-h-[34px] min-w-[34px] flex items-center justify-center rounded-full transition-colors ${
                       mediaViewMode === 'table'
-                        ? 'bg-white text-[#141312] shadow-2xs'
-                        : 'text-[#685E5A] hover:text-[#141312]'
+                        ? 'bg-white text-black shadow-2xs'
+                        : 'text-black/70 hover:text-black'
                     }`}
                     title="Tampilan Tabel"
                   >
@@ -3194,10 +3283,10 @@ export default function AdminPage() {
 
                   if (filteredAssets.length === 0) {
                     return (
-                      <div className="rounded-2xl border border-[#E5DDD5] bg-white p-12 text-center text-[#685E5A]">
-                        <Icon name="search_off" size={36} className="mb-2 text-[#8E8380] mx-auto block" />
-                        <p className="font-semibold text-sm text-[#141312]">Tidak ada foto yang cocok</p>
-                        <p className="text-xs text-[#685E5A] mt-1">
+                      <div className="rounded-2xl border border-black/15 bg-white p-12 text-center text-black/70">
+                        <Icon name="search_off" size={36} className="mb-2 text-black/50 mx-auto block" />
+                        <p className="font-semibold text-sm text-black">Tidak ada foto yang cocok</p>
+                        <p className="text-xs text-black/70 mt-1">
                           Coba ganti kata kunci pencarian atau ubah filter kategori di atas.
                         </p>
                       </div>
@@ -3215,11 +3304,11 @@ export default function AdminPage() {
                               onClick={() => { setSelectedAsset(asset); setInspectorOpen(true); }}
                               className={`group relative rounded-2xl border bg-white overflow-hidden cursor-pointer transition-all shadow-[0_1px_4px_rgba(27,23,24,0.03)] ${
                                 isSelected && inspectorOpen
-                                  ? 'border-[#141312] ring-1 ring-[#141312]'
-                                  : 'border-[#E5DDD5] hover:border-[#141312]'
+                                  ? 'border-black ring-1 ring-[#000000]'
+                                  : 'border-black/15 hover:border-black'
                               }`}
                             >
-                              <div className="relative aspect-[3/4] w-full bg-[#F4EFEB] overflow-hidden">
+                              <div className="relative aspect-[3/4] w-full bg-black/5 overflow-hidden">
                                 <Image
                                   src={asset.src}
                                   alt={asset.collection}
@@ -3236,7 +3325,7 @@ export default function AdminPage() {
                                         ? 'bg-purple-50 text-purple-800 border border-purple-200/60'
                                         : asset.badge === 'DETAIL PDP'
                                         ? 'bg-blue-50 text-blue-800 border border-blue-200/60'
-                                        : 'bg-[#F4EFEB] text-[#685E5A]'
+                                        : 'bg-black/5 text-black/70'
                                     }`}
                                   >
                                     {asset.badge}
@@ -3250,7 +3339,7 @@ export default function AdminPage() {
                                       navigator.clipboard.writeText(asset.cdnUrl);
                                       showToast(`Path CDN ${asset.filename} disalin!`);
                                     }}
-                                    className="w-7 h-7 rounded-full bg-[#141312]/80 backdrop-blur-xs text-white flex items-center justify-center hover:bg-[#141312] transition-colors"
+                                    className="w-7 h-7 rounded-full bg-black/80 backdrop-blur-xs text-white flex items-center justify-center hover:bg-black transition-colors"
                                     title="Salin Path CDN"
                                   >
                                     <Icon name="content_copy" size={13} />
@@ -3259,14 +3348,14 @@ export default function AdminPage() {
                               </div>
                               <div className="p-3 flex flex-col gap-0.5">
                                 <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-xs text-[#141312] truncate max-w-[130px]">
+                                  <span className="font-semibold text-xs text-black truncate max-w-[130px]">
                                     {asset.filename}
                                   </span>
-                                  <span className="font-mono text-[10px] text-[#8E8380]">
+                                  <span className="font-mono text-[10px] text-black/50">
                                     {asset.size}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-[#685E5A] truncate">
+                                <span className="text-[11px] text-black/70 truncate">
                                   {asset.collection}
                                 </span>
                               </div>
@@ -3279,11 +3368,11 @@ export default function AdminPage() {
 
                   // Table View
                   return (
-                    <div className="rounded-2xl border border-[#E5DDD5] bg-white overflow-hidden shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+                    <div className="rounded-2xl border border-black/15 bg-white overflow-hidden shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b border-[#E5DDD5] bg-[#FAF8F5] text-[11px] font-semibold text-[#685E5A] uppercase tracking-wider">
+                            <tr className="border-b border-black/15 bg-white text-[11px] font-semibold text-black/70 uppercase tracking-wider">
                               <th className="py-2.5 px-3">Pratinjau</th>
                               <th className="py-2.5 px-3">Nama Berkas Master</th>
                               <th className="py-2.5 px-3">Dimensi</th>
@@ -3293,7 +3382,7 @@ export default function AdminPage() {
                               <th className="py-2.5 px-3 text-right">Aksi</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#E5DDD5]/60 text-xs">
+                          <tbody className="divide-y divide-[rgba(0,0,0,0.12)]/60 text-xs">
                             {filteredAssets.map((asset) => {
                               const isSelected = selectedAsset.filename === asset.filename;
                               return (
@@ -3302,12 +3391,12 @@ export default function AdminPage() {
                                   onClick={() => { setSelectedAsset(asset); setInspectorOpen(true); }}
                                   className={`cursor-pointer transition-colors ${
                                     isSelected && inspectorOpen
-                                      ? 'bg-[#F4EFEB] font-medium'
-                                      : 'hover:bg-[#FAF8F5]'
+                                      ? 'bg-black/5 font-medium'
+                                      : 'hover:bg-white'
                                   }`}
                                 >
                                   <td className="py-2 px-3">
-                                    <div className="relative w-8 h-10 overflow-hidden rounded-md bg-[#F4EFEB]">
+                                    <div className="relative w-8 h-10 overflow-hidden rounded-md bg-black/5">
                                       <Image
                                         src={asset.src}
                                         alt={asset.filename}
@@ -3318,17 +3407,17 @@ export default function AdminPage() {
                                     </div>
                                   </td>
                                   <td className="py-2 px-3">
-                                    <span className="font-semibold text-[#141312] block">
+                                    <span className="font-semibold text-black block">
                                       {asset.filename}
                                     </span>
-                                    <span className="text-[11px] text-[#685E5A] truncate block max-w-xs">
+                                    <span className="text-[11px] text-black/70 truncate block max-w-xs">
                                       {asset.collection}
                                     </span>
                                   </td>
-                                  <td className="py-2 px-3 font-mono text-[11px] text-[#141312]">
+                                  <td className="py-2 px-3 font-mono text-[11px] text-black">
                                     {asset.res}
                                   </td>
-                                  <td className="py-2 px-3 font-mono text-[11px] text-[#685E5A]">
+                                  <td className="py-2 px-3 font-mono text-[11px] text-black/70">
                                     {asset.size}
                                   </td>
                                   <td className="py-2 px-3">
@@ -3336,7 +3425,7 @@ export default function AdminPage() {
                                       className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
                                         asset.badge === 'LIVE PDP'
                                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
-                                          : 'bg-[#F4EFEB] text-[#685E5A]'
+                                          : 'bg-black/5 text-black/70'
                                       }`}
                                     >
                                       {asset.badge}
@@ -3357,7 +3446,7 @@ export default function AdminPage() {
                                           navigator.clipboard.writeText(asset.cdnUrl);
                                           showToast(`Path CDN ${asset.filename} disalin!`);
                                         }}
-                                        className="rounded-full p-1 text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition-colors"
+                                        className="rounded-full p-1 text-black/70 hover:text-black hover:bg-black/5 transition-colors"
                                         title="Salin Path CDN"
                                       >
                                         <Icon name="content_copy" size={15} />
@@ -3367,7 +3456,7 @@ export default function AdminPage() {
                                         target="_blank"
                                         rel="noreferrer"
                                         onClick={(e) => e.stopPropagation()}
-                                        className="rounded-full p-1 text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] transition-colors"
+                                        className="rounded-full p-1 text-black/70 hover:text-black hover:bg-black/5 transition-colors"
                                         title="Buka Resolusi Penuh"
                                       >
                                         <Icon name="open_in_new" size={15} />
@@ -3389,14 +3478,14 @@ export default function AdminPage() {
               {inspectorOpen && (
                 <>
                   <div
-                    className="fixed inset-0 bg-[#141312]/40 backdrop-blur-xs z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden"
                     onClick={() => setInspectorOpen(false)}
                   />
-                  <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-sm sm:max-w-md bg-white border-l border-[#E5DDD5] p-5 shadow-2xl overflow-y-auto lg:static lg:z-auto lg:w-[320px] xl:w-[350px] lg:max-w-none lg:rounded-2xl lg:border lg:p-5 lg:shadow-[0_1px_4px_rgba(27,23,24,0.03)] lg:sticky lg:top-24 lg:overflow-visible animate-in slide-in-from-right duration-200">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD5]/70">
+                  <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-sm sm:max-w-md bg-white border-l border-black/15 p-5 shadow-2xl overflow-y-auto lg:static lg:z-auto lg:w-[320px] xl:w-[350px] lg:max-w-none lg:rounded-2xl lg:border lg:p-5 lg:shadow-[0_1px_4px_rgba(27,23,24,0.03)] lg:sticky lg:top-24 lg:overflow-visible animate-in slide-in-from-right duration-200">
+                    <div className="flex items-center justify-between pb-3 border-b border-black/15/70">
                       <div className="flex items-center gap-1.5">
-                        <Icon name="info" size={16} className="text-[#141312]" />
-                        <span className="text-xs uppercase font-bold tracking-wider text-[#141312]">
+                        <Icon name="info" size={16} className="text-black" />
+                        <span className="text-xs uppercase font-bold tracking-wider text-black">
                           Inspektur Berkas
                         </span>
                       </div>
@@ -3405,7 +3494,7 @@ export default function AdminPage() {
                           className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
                             selectedAsset.badge === 'LIVE PDP'
                               ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
-                              : 'bg-[#F4EFEB] text-[#685E5A]'
+                              : 'bg-black/5 text-black/70'
                           }`}
                         >
                           {selectedAsset.badge}
@@ -3413,7 +3502,7 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => setInspectorOpen(false)}
-                          className="flex min-h-[36px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[#685E5A] hover:text-[#141312] hover:bg-[#F4EFEB] border border-[#D0C5BD] transition-colors active:scale-95"
+                          className="flex min-h-[36px] items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-black/70 hover:text-black hover:bg-black/5 border border-black/20 transition-colors active:scale-95"
                           title="Tutup Inspektur"
                         >
                           <Icon name="close" size={14} />
@@ -3423,7 +3512,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Preview Box */}
-                    <div className="my-3 overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] relative aspect-[3/4]">
+                    <div className="my-3 overflow-hidden rounded-xl border border-black/15 bg-black/5 relative aspect-[3/4]">
                       <Image
                         src={selectedAsset.src}
                         alt={selectedAsset.collection}
@@ -3431,7 +3520,7 @@ export default function AdminPage() {
                         sizes="350px"
                         className="object-cover"
                       />
-                      <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-[#141312]/80 backdrop-blur-md px-2.5 py-1 text-white text-[10px] font-mono flex items-center justify-between">
+                      <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-black/80 backdrop-blur-md px-2.5 py-1 text-white text-[10px] font-mono flex items-center justify-between">
                         <span>{selectedAsset.res} px</span>
                         <span>{selectedAsset.format}</span>
                       </div>
@@ -3440,35 +3529,35 @@ export default function AdminPage() {
                     {/* Metadata Attributes */}
                     <div className="space-y-2 text-xs pt-1">
                       <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-black/50 block">
                           Nama Berkas Master
                         </span>
-                        <span className="font-semibold text-[#141312] text-xs break-all">
+                        <span className="font-semibold text-black text-xs break-all">
                           {selectedAsset.filename}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-black/50 block">
                           Deskripsi Siluet &amp; Koleksi
                         </span>
-                        <span className="text-[#141312] text-xs">
+                        <span className="text-black text-xs">
                           {selectedAsset.collection}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#8E8380] block">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-black/50 block">
                           Supabase Storage CDN Path
                         </span>
                         <div className="flex items-center gap-1 mt-0.5">
                           <input
-                            className="flex-1 bg-[#FAF8F5] text-[#141312] font-mono text-[10.5px] px-2 py-1 border border-[#D0C5BD] select-all truncate rounded-none focus:outline-none"
+                            className="flex-1 bg-white text-black font-mono text-[10.5px] px-2 py-1 border border-black/20 select-all truncate rounded-none focus:outline-none"
                             readOnly
                             type="text"
                             value={selectedAsset.cdnUrl}
                           />
                           <button
                             type="button"
-                            className="rounded-full p-1.5 bg-[#F4EFEB] hover:bg-[#EAE4DD] text-[#141312] transition-colors shrink-0"
+                            className="rounded-full p-1.5 bg-black/5 hover:bg-[#EAE4DD] text-black transition-colors shrink-0"
                             onClick={() => {
                               navigator.clipboard.writeText(selectedAsset.cdnUrl);
                               showToast('Path Supabase CDN berhasil disalin!');
@@ -3479,20 +3568,20 @@ export default function AdminPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E5DDD5]/60 text-[11px]">
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/15/60 text-[11px]">
                         <div>
-                          <span className="text-[#8E8380] text-[10px] block font-bold uppercase tracking-wider">
+                          <span className="text-black/50 text-[10px] block font-bold uppercase tracking-wider">
                             Ukuran File
                           </span>
-                          <span className="font-mono font-semibold text-[#141312]">
+                          <span className="font-mono font-semibold text-black">
                             {selectedAsset.size}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#8E8380] text-[10px] block font-bold uppercase tracking-wider">
+                          <span className="text-black/50 text-[10px] block font-bold uppercase tracking-wider">
                             Waktu Unggah
                           </span>
-                          <span className="font-mono text-[#141312] text-[10.5px]">
+                          <span className="font-mono text-black text-[10.5px]">
                             {selectedAsset.date}
                           </span>
                         </div>
@@ -3500,9 +3589,9 @@ export default function AdminPage() {
                     </div>
 
                     {/* Quick Action Cluster */}
-                    <div className="mt-4 pt-3 border-t border-[#E5DDD5]/60 flex flex-col gap-2">
+                    <div className="mt-4 pt-3 border-t border-black/15/60 flex flex-col gap-2">
                       <a
-                        className="w-full py-1.5 rounded-full border border-[#D0C5BD] bg-white hover:bg-[#F4EFEB] text-[#141312] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                        className="w-full py-1.5 rounded-full border border-black/20 bg-white hover:bg-black/5 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
                         href={selectedAsset.src}
                         target="_blank"
                         rel="noreferrer"
@@ -3511,7 +3600,7 @@ export default function AdminPage() {
                         <span>Buka Resolusi Penuh</span>
                       </a>
 
-                      <label className="w-full py-1.5 rounded-full border border-[#D0C5BD] bg-white hover:bg-[#F4EFEB] text-[#141312] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                      <label className="w-full py-1.5 rounded-full border border-black/20 bg-white hover:bg-black/5 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
                         <Icon name="refresh" size={14} />
                         <span>Ganti File / Versi Baru</span>
                         <input
@@ -3552,49 +3641,49 @@ export default function AdminPage() {
         {activeTab === 'settings' && (
           <div className="mx-auto w-full max-w-5xl space-y-6">
             <div className="flex flex-col gap-1 pb-2">
-              <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+              <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                 Sistem &amp; Konfigurasi
               </span>
-              <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-[#141312]">
+              <h2 className="font-headline text-xl sm:text-2xl font-bold tracking-tight text-black">
                 Pengaturan Studio &amp; Infrastruktur CDN
               </h2>
-              <p className="text-xs text-[#685E5A] mt-0.5">
+              <p className="text-xs text-black/70 mt-0.5">
                 Konfigurasi operasional Sevaya, kredensial integrasi pengiriman, payment gateway, dan status Supabase Cloud CDN.
               </p>
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
 
-              <div className="divide-y divide-[#E5DDD5]/60">
+              <div className="divide-y divide-[rgba(0,0,0,0.12)]/60">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
-                  <span className="text-xs font-medium text-[#685E5A]">Nama Brand</span>
+                  <span className="text-xs font-medium text-black/70">Nama Brand</span>
                   <div className="w-full sm:w-80">
                     <input
                       type="text"
                       readOnly
                       value="SEVAYA"
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-semibold text-[#141312] focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-semibold text-black focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
-                  <span className="text-xs font-medium text-[#685E5A]">Domain Resmi</span>
+                  <span className="text-xs font-medium text-black/70">Domain Resmi</span>
                   <div className="w-full sm:w-80">
                     <input
                       type="text"
                       readOnly
                       value="https://sevaya.id"
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-mono text-[#141312] focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-mono text-black focus:outline-none"
                     />
                   </div>
                 </div>
@@ -3602,45 +3691,45 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-[#141312]">Biteship Logistics</span>
+                    <span className="font-semibold text-sm text-black">Biteship Logistics</span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                       Live Webhook
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#685E5A]">
+                  <p className="text-[11px] text-black/70">
                     Origin: Gudang Sevaya Jakarta Selatan
                   </p>
-                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                  <div className="pt-2 border-t border-black/15/70 text-[11px] text-[#554C48]">
                     Dukungan kurir instant, sameday, next day, dan reguler seluruh Indonesia.
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-[#141312]">Midtrans Snap</span>
+                    <span className="font-semibold text-sm text-black">Midtrans Snap</span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                       Production Gateway
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#685E5A]">
+                  <p className="text-[11px] text-black/70">
                     QRIS, BCA VA, Mandiri VA, BNI VA, GoPay
                   </p>
-                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                  <div className="pt-2 border-t border-black/15/70 text-[11px] text-[#554C48]">
                     Konfirmasi pembayaran otomatis via HTTP POST webhook callback.
                   </div>
                 </div>
@@ -3648,13 +3737,13 @@ export default function AdminPage() {
             </div>
 
             {/* Card 3: Infrastruktur Cloud & Status CDN (Supabase Storage - Merged) */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3 flex items-center justify-between">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-[#141312]">
+                  <h3 className="font-headline text-sm font-semibold text-black">
                     Infrastruktur Cloud &amp; Status CDN (Supabase)
                   </h3>
-                  <p className="text-xs text-[#685E5A] mt-0.5">
+                  <p className="text-xs text-black/70 mt-0.5">
                     Monitoring bucket Supabase cloud storage, integrasi edge CDN Anycast global, dan latensi node.
                   </p>
                 </div>
@@ -3664,36 +3753,36 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2.5">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/70">
-                    <span className="font-semibold text-[#141312]">Bucket S3 Production</span>
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/15/70">
+                    <span className="font-semibold text-black">Bucket S3 Production</span>
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-mono text-emerald-800 border border-emerald-200/60">
                       PUBLIC CDN
                     </span>
                   </div>
                   <div className="space-y-1.5 text-[11px]">
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Endpoint S3</span>
-                      <span className="font-mono text-[#141312]">https://cdn.sevaya.id/storage/v1</span>
+                      <span className="text-black/70">Endpoint S3</span>
+                      <span className="font-mono text-black">https://cdn.sevaya.id/storage/v1</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">CORS Policy</span>
+                      <span className="text-black/70">CORS Policy</span>
                       <span className="text-emerald-700 font-medium">Enabled (GET, HEAD, POST)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Cache Control</span>
-                      <span className="font-mono text-[#141312]">1 Year Immutable</span>
+                      <span className="text-black/70">Cache Control</span>
+                      <span className="font-mono text-black">1 Year Immutable</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Enkripsi At-Rest</span>
+                      <span className="text-black/70">Enkripsi At-Rest</span>
                       <span className="text-emerald-700 font-medium">AES-256 Verified</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2.5">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDD5]/70">
-                    <span className="font-semibold text-[#141312]">Edge Network Latency</span>
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/15/70">
+                    <span className="font-semibold text-black">Edge Network Latency</span>
                     <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[10px]">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                       Global Anycast
@@ -3701,19 +3790,19 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-1.5 text-[11px]">
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Jakarta POP (CGK-1)</span>
+                      <span className="text-black/70">Jakarta POP (CGK-1)</span>
                       <span className="font-mono text-emerald-700 font-semibold">11ms • 100% UP</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Singapore POP (SIN-1)</span>
+                      <span className="text-black/70">Singapore POP (SIN-1)</span>
                       <span className="font-mono text-emerald-700 font-semibold">19ms • 100% UP</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Kuala Lumpur POP (KUL-1)</span>
+                      <span className="text-black/70">Kuala Lumpur POP (KUL-1)</span>
                       <span className="font-mono text-emerald-700 font-semibold">24ms • 100% UP</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#685E5A]">Global SSL Cert</span>
+                      <span className="text-black/70">Global SSL Cert</span>
                       <span className="text-emerald-700 font-medium">Aktif s/d Des 2026</span>
                     </div>
                   </div>
@@ -3722,37 +3811,37 @@ export default function AdminPage() {
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
 
-              <div className="divide-y divide-[#E5DDD5]/60">
+              <div className="divide-y divide-[rgba(0,0,0,0.12)]/60">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
-                  <span className="text-xs font-medium text-[#685E5A]">Nama Brand</span>
+                  <span className="text-xs font-medium text-black/70">Nama Brand</span>
                   <div className="w-full sm:w-80">
                     <input
                       type="text"
                       readOnly
                       value="SEVAYA"
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-semibold text-[#141312] focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-semibold text-black focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
-                  <span className="text-xs font-medium text-[#685E5A]">Domain Resmi</span>
+                  <span className="text-xs font-medium text-black/70">Domain Resmi</span>
                   <div className="w-full sm:w-80">
                     <input
                       type="text"
                       readOnly
                       value="https://sevaya.id"
-                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#F4EFEB] px-3.5 py-2 text-base sm:text-xs font-mono text-[#141312] focus:outline-none"
+                      className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-mono text-black focus:outline-none"
                     />
                   </div>
                 </div>
@@ -3760,45 +3849,45 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-[#E5DDD5]/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-[#141312]">
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/15/70 pb-3">
+                <h3 className="font-headline text-sm font-semibold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-xs text-[#685E5A] mt-0.5">
+                <p className="text-xs text-black/70 mt-0.5">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-[#141312]">Biteship Logistics</span>
+                    <span className="font-semibold text-sm text-black">Biteship Logistics</span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                       Live Webhook
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#685E5A]">
+                  <p className="text-[11px] text-black/70">
                     Origin: Gudang Sevaya Jakarta Selatan
                   </p>
-                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                  <div className="pt-2 border-t border-black/15/70 text-[11px] text-[#554C48]">
                     Dukungan kurir instant, sameday, next day, dan reguler seluruh Indonesia.
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[#F4EFEB] p-4 text-xs border border-[#E5DDD5]/60 space-y-2">
+                <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-[#141312]">Midtrans Snap</span>
+                    <span className="font-semibold text-sm text-black">Midtrans Snap</span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                       Production Gateway
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#685E5A]">
+                  <p className="text-[11px] text-black/70">
                     QRIS, BCA VA, Mandiri VA, BNI VA, GoPay
                   </p>
-                  <div className="pt-2 border-t border-[#E5DDD5]/70 text-[11px] text-[#554C48]">
+                  <div className="pt-2 border-t border-black/15/70 text-[11px] text-[#554C48]">
                     Konfirmasi pembayaran otomatis via HTTP POST webhook callback.
                   </div>
                 </div>
@@ -3812,20 +3901,20 @@ export default function AdminPage() {
           MODAL: UPLOAD MASTER FOTO KATALOG
       ────────────────────────────────────────────────────────── */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 bg-[#141312]/50 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] shadow-2xl w-full max-w-lg p-5 sm:p-7 flex flex-col gap-4 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5DDD5]/70">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-black/15 shadow-2xl w-full max-w-lg p-5 sm:p-7 flex flex-col gap-4 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-black/15/70">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-[#141312] text-[#FAF8F5] flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center shrink-0">
                   <Icon name="cloud_upload" size={18} />
                 </div>
                 <div>
-                  <h3 className="font-headline font-bold text-sm text-[#141312]">
+                  <h3 className="font-headline font-bold text-sm text-black">
                     Unggah Master Foto Katalog
                   </h3>
-                  <p className="text-[11px] text-[#685E5A]">
+                  <p className="text-[11px] text-black/70">
                     Bucket:{' '}
-                    <code className="bg-[#F4EFEB] px-1.5 py-0.5 rounded font-mono text-[10px] text-[#141312]">
+                    <code className="bg-black/5 px-1.5 py-0.5 rounded font-mono text-[10px] text-black">
                       production-katalog-sevaya
                     </code>
                   </p>
@@ -3833,7 +3922,7 @@ export default function AdminPage() {
               </div>
               <button
                 type="button"
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                 onClick={() => setIsUploadModalOpen(false)}
                 aria-label="Tutup Unggah"
               >
@@ -3842,15 +3931,15 @@ export default function AdminPage() {
             </div>
 
             {/* Drag & Drop Zone */}
-            <label className="rounded-xl border-2 border-dashed border-[#D0C5BD] p-5 sm:p-6 flex flex-col items-center justify-center text-center bg-[#FAF8F5] hover:bg-[#F4EFEB] transition-colors cursor-pointer">
-              <Icon name="add_photo_alternate" size={36} className="text-[#141312] mb-2" />
-              <p className="font-semibold text-xs text-[#141312]">
+            <label className="rounded-xl border-2 border-dashed border-black/20 p-5 sm:p-6 flex flex-col items-center justify-center text-center bg-white hover:bg-black/5 transition-colors cursor-pointer">
+              <Icon name="add_photo_alternate" size={36} className="text-black mb-2" />
+              <p className="font-semibold text-xs text-black">
                 Tarik &amp; lepas berkas master di sini
               </p>
-              <p className="text-[11px] text-[#685E5A] mt-1 max-w-sm">
+              <p className="text-[11px] text-black/70 mt-1 max-w-sm">
                 RAW, TIFF, PNG, atau JPG hingga 25 MB per berkas. Sistem mengonversi otomatis ke WebP 4K untuk edge CDN.
               </p>
-              <span className="mt-4 min-h-[40px] inline-flex items-center rounded-full px-5 py-2 bg-white border border-[#D0C5BD] text-xs font-semibold text-[#141312] hover:bg-[#F4EFEB] shadow-xs active:scale-95 transition">
+              <span className="mt-4 min-h-[40px] inline-flex items-center rounded-full px-5 py-2 bg-white border border-black/20 text-xs font-semibold text-black hover:bg-black/5 shadow-xs active:scale-95 transition">
                 Pilih dari Komputer
               </span>
               <input
@@ -3865,11 +3954,11 @@ export default function AdminPage() {
             </label>
 
             <div className="space-y-1.5 text-xs">
-              <label className="font-semibold uppercase tracking-wider text-[#685E5A] text-[10px] block">
+              <label className="font-semibold uppercase tracking-wider text-black/70 text-[10px] block">
                 Koleksi Terhubung
               </label>
               <select
-                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                 value={uploadCollection}
                 onChange={(e) => setUploadCollection(e.target.value)}
               >
@@ -3880,17 +3969,17 @@ export default function AdminPage() {
               </select>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E5DDD5]/70">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/15/70">
               <button
                 type="button"
-                className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors active:scale-95"
+                className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black transition-colors active:scale-95"
                 onClick={() => setIsUploadModalOpen(false)}
               >
                 Batal
               </button>
               <button
                 type="button"
-                className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 onClick={() => {
                   setIsUploadModalOpen(false);
                   showToast('Aset master berhasil diproses ke CDN!');
@@ -3908,24 +3997,24 @@ export default function AdminPage() {
           MODAL: PRODUCT CRUD (WITH MULTI-PHOTO SWATCHES)
       ────────────────────────────────────────────────────────── */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
-          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Katalog Koleksi
                 </span>
-                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                <h3 className="font-headline text-base sm:text-lg font-bold text-black">
                   {editingProduct ? 'Edit Produk & Varian Foto' : 'Tambah Produk Baru'}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
                   Tentukan foto utama dan foto spesifik untuk masing-masing varian warna.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProductModalOpen(false)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                 aria-label="Tutup Form Produk"
               >
                 <Icon name="close" size={20} />
@@ -3935,7 +4024,7 @@ export default function AdminPage() {
             <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-4 sm:p-7 overflow-y-auto">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Nama / Judul Produk *
                   </label>
                   <input
@@ -3944,12 +4033,12 @@ export default function AdminPage() {
                     value={productForm.title}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. Fina Abaya - Stripe 2.0"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Slug URL
                   </label>
                   <input
@@ -3957,14 +4046,14 @@ export default function AdminPage() {
                     value={productForm.slug}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Edisi / Subtitle
                   </label>
                   <input
@@ -3974,12 +4063,12 @@ export default function AdminPage() {
                       setProductForm((prev) => ({ ...prev, edition: e.target.value }))
                     }
                     placeholder="cth. Edition 2.0"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Harga (Rp) *
                   </label>
                   <input
@@ -3989,12 +4078,12 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setProductForm((prev) => ({ ...prev, price: Number(e.target.value) }))
                     }
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Harga Normal (Coret)
                   </label>
                   <input
@@ -4006,7 +4095,7 @@ export default function AdminPage() {
                         original_price: Number(e.target.value),
                       }))
                     }
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4014,7 +4103,7 @@ export default function AdminPage() {
               {/* Badge & Stock & Visibility */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Badge Label (Opsional)
                   </label>
                   <input
@@ -4022,21 +4111,21 @@ export default function AdminPage() {
                     value={productForm.badge}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, badge: e.target.value }))}
                     placeholder="cth. Best Seller, Sale -20%"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col justify-end gap-2">
-                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-2.5">
+                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-black/15 bg-white p-2.5">
                     <input
                       type="checkbox"
                       checked={productForm.inStock}
                       onChange={(e) =>
                         setProductForm((prev) => ({ ...prev, inStock: e.target.checked }))
                       }
-                      className="h-4 w-4 accent-[#141312]"
+                      className="h-4 w-4 accent-[#000000]"
                     />
-                    <span className="text-xs font-semibold text-[#141312]">
+                    <span className="text-xs font-semibold text-black">
                       Tersedia dalam Stok (In Stock)
                     </span>
                   </label>
@@ -4057,9 +4146,9 @@ export default function AdminPage() {
               </div>
 
               {/* Product Default Image */}
-              <div className="flex flex-col gap-2 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+              <div className="flex flex-col gap-2 rounded-xl border border-black/15/70 bg-black/5 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#141312]">
+                  <span className="text-xs font-semibold text-black">
                     Foto Sampul Utama Produk
                   </span>
                   <button
@@ -4068,7 +4157,7 @@ export default function AdminPage() {
                       setImagePickerTarget('product');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
                   >
                     <Icon name="image" size={14} />
                     <span>Pilih dari Galeri</span>
@@ -4076,7 +4165,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex items-center gap-3.5">
-                  <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={productForm.image || '/images/catalog/catalog-01.jpg'}
                       alt="Product preview"
@@ -4092,9 +4181,9 @@ export default function AdminPage() {
                         setProductForm((prev) => ({ ...prev, image: e.target.value }))
                       }
                       placeholder="/images/catalog/catalog-01.jpg atau URL Supabase"
-                      className="w-full min-h-[38px] rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      className="w-full min-h-[38px] rounded-none border border-black/20 bg-white px-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
                     />
-                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-95">
+                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95">
                       <Icon name="upload" size={14} />
                       <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
                       <input
@@ -4113,20 +4202,20 @@ export default function AdminPage() {
               </div>
 
               {/* Color Swatches Builder with Multi-Photo per Color */}
-              <div className="flex flex-col gap-3 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-black/15/70 bg-black/5 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-semibold text-[#141312] block">
+                    <span className="text-xs font-semibold text-black block">
                       Varian Warna &amp; Foto Masing-masing Warna
                     </span>
-                    <p className="text-[11px] text-[#685E5A]">
+                    <p className="text-[11px] text-black/70">
                       Setiap varian warna dapat dihubungkan ke foto abaya warnanya masing-masing.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleAddSwatch}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
                   >
                     <Icon name="add" size={14} />
                     <span>Tambah Warna</span>
@@ -4137,7 +4226,7 @@ export default function AdminPage() {
                   {productForm.swatches.map((sw, idx) => (
                     <div
                       key={idx}
-                      className="flex flex-col gap-2.5 rounded-xl border border-[#E5DDD5] bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center"
+                      className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center"
                     >
                       {/* Color Preview & Native Color Picker */}
                       <div className="flex items-center gap-2">
@@ -4145,7 +4234,7 @@ export default function AdminPage() {
                           type="color"
                           value={sw.color}
                           onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
-                          className="h-9 w-9 cursor-pointer rounded-lg border border-[#E5DDD5] p-0.5"
+                          className="h-9 w-9 cursor-pointer rounded-lg border border-black/15 p-0.5"
                           title="Pilih Warna Hex"
                         />
                         <div className="flex flex-col">
@@ -4154,21 +4243,21 @@ export default function AdminPage() {
                             value={sw.name}
                             onChange={(e) => handleUpdateSwatch(idx, 'name', e.target.value)}
                             placeholder="Nama Warna"
-                            className="w-36 min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-2 py-1 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                            className="w-36 min-h-[36px] rounded-none border border-black/20 bg-white px-2 py-1 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                           />
                           <input
                             type="text"
                             value={sw.color}
                             onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
                             placeholder="#1A1A1A"
-                            className="mt-1 w-36 rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-2 py-0.5 font-mono text-[10px] text-[#685E5A] focus:border-[#141312] focus:outline-none"
+                            className="mt-1 w-36 rounded-none border border-black/20 bg-white px-2 py-0.5 font-mono text-[10px] text-black/70 focus:border-black focus:outline-none"
                           />
                         </div>
                       </div>
 
                       {/* Photo for this specific color */}
-                      <div className="flex flex-1 items-center gap-2.5 sm:border-l sm:border-[#E5DDD5] sm:pl-3">
-                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <div className="flex flex-1 items-center gap-2.5 sm:border-l sm:border-black/15 sm:pl-3">
+                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg border border-black/15 bg-black/5">
                           <Image
                             src={sw.image || productForm.image || '/images/catalog/catalog-01.jpg'}
                             alt={`Foto warna ${sw.name}`}
@@ -4185,13 +4274,13 @@ export default function AdminPage() {
                                 setImagePickerTarget(`swatch-${idx}` as ImagePickerTarget);
                                 setIsImagePickerOpen(true);
                               }}
-                              className="min-h-[34px] rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-[11px] font-medium text-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                              className="min-h-[34px] rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black hover:bg-black/5 active:scale-95"
                             >
                               <Icon name="image" size={12} className="inline mr-1" />
                               <span>Pilih Foto</span>
                             </button>
 
-                            <label className="min-h-[34px] flex items-center cursor-pointer rounded-full bg-[#141312] px-3 py-1 text-[11px] font-semibold text-[#FAF8F5] hover:bg-[#2b2826] active:scale-95">
+                            <label className="min-h-[34px] flex items-center cursor-pointer rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:bg-black/85 active:scale-95">
                               <Icon name="upload" size={11} className="inline mr-1" />
                               <span>Unggah</span>
                               <input
@@ -4206,7 +4295,7 @@ export default function AdminPage() {
                               />
                             </label>
                           </div>
-                          <span className="truncate font-mono text-[9px] text-[#8E8380]">
+                          <span className="truncate font-mono text-[9px] text-black/50">
                             {sw.image || productForm.image}
                           </span>
                         </div>
@@ -4227,18 +4316,18 @@ export default function AdminPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-[#E5DDD5]/70 pt-4">
+              <div className="flex items-center justify-end gap-2.5 border-t border-black/15/70 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsProductModalOpen(false)}
-                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] active:scale-95 transition"
+                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black active:scale-95 transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-6 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-6 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="check" size={15} />
                   <span>{isLoading ? 'Menyimpan...' : 'Simpan Produk'}</span>
@@ -4253,25 +4342,25 @@ export default function AdminPage() {
           MODAL: ARTICLE CRUD (NEWS & EDITORIAL JOURNAL)
       ────────────────────────────────────────────────────────── */}
       {isArticleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
-          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial Journal
                 </span>
-                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                <h3 className="font-headline text-base sm:text-lg font-bold text-black">
                   {editingArticle ? 'Edit Artikel Berita' : 'Tulis Artikel Berita Baru'}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
                   Publikasikan wawasan busana, filosofi tekstil, atau rilis studio ke /news.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsArticleModalOpen(false)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                 aria-label="Tutup Form Artikel"
               >
                 <Icon name="close" size={20} />
@@ -4282,7 +4371,7 @@ export default function AdminPage() {
               {/* Title & Slug */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Judul Artikel *
                   </label>
                   <input
@@ -4291,12 +4380,12 @@ export default function AdminPage() {
                     value={articleForm.title}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. The Art of Fewer, Better Choices"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Slug URL
                   </label>
                   <input
@@ -4304,7 +4393,7 @@ export default function AdminPage() {
                     value={articleForm.slug}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4312,13 +4401,13 @@ export default function AdminPage() {
               {/* Category, Date & Read Time */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Kategori Topik
                   </label>
                   <select
                     value={articleForm.category}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, category: e.target.value }))}
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   >
                     {ARTICLE_CATEGORIES.filter((c) => c !== 'All Stories').map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -4327,7 +4416,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Tanggal Rilis
                   </label>
                   <input
@@ -4335,12 +4424,12 @@ export default function AdminPage() {
                     value={articleForm.date}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, date: e.target.value }))}
                     placeholder="cth. Oct 18, 2026"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Estimasi Waktu Baca
                   </label>
                   <input
@@ -4348,14 +4437,14 @@ export default function AdminPage() {
                     value={articleForm.readTime}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, readTime: e.target.value }))}
                     placeholder="cth. 4 min read"
-                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-[#D0C5BD] bg-[#FAF8F5] px-3.5 py-2 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                    className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3.5 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Excerpt */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-[#685E5A]">
+                <label className="text-xs font-medium text-black/70">
                   Cuplikan / Excerpt (Tampil di kartu &amp; preview)
                 </label>
                 <textarea
@@ -4364,17 +4453,17 @@ export default function AdminPage() {
                   value={articleForm.excerpt}
                   onChange={(e) => setArticleForm((prev) => ({ ...prev, excerpt: e.target.value }))}
                   placeholder="Ringkasan 1-2 kalimat mengenai topik artikel ini..."
-                  className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none"
+                  className="w-full rounded-none border border-black/20 bg-white p-3 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                 />
               </div>
 
               {/* Full Content */}
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-[#685E5A]">
+                  <label className="text-xs font-medium text-black/70">
                     Isi Paragraf Konten Lengkap
                   </label>
-                  <span className="text-[10px] text-[#8E8380]">
+                  <span className="text-[10px] text-black/50">
                     Pisahkan antar paragraf dengan 2x Enter (baris kosong)
                   </span>
                 </div>
@@ -4384,14 +4473,14 @@ export default function AdminPage() {
                   value={articleForm.content}
                   onChange={(e) => setArticleForm((prev) => ({ ...prev, content: e.target.value }))}
                   placeholder="Tulis narasi lengkap artikel di sini..."
-                  className="w-full rounded-none border border-[#D0C5BD] bg-[#FAF8F5] p-3 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:bg-white focus:outline-none leading-relaxed"
+                  className="w-full rounded-none border border-black/20 bg-white p-3 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none leading-relaxed"
                 />
               </div>
 
               {/* Cover Image & Featured Toggle */}
-              <div className="flex flex-col gap-3 rounded-xl border border-[#E5DDD5]/70 bg-[#F4EFEB] p-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-black/15/70 bg-black/5 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#141312]">
+                  <span className="text-xs font-semibold text-black">
                     Foto Sampul Artikel
                   </span>
                   <button
@@ -4400,7 +4489,7 @@ export default function AdminPage() {
                       setImagePickerTarget('article');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[#D0C5BD] bg-white px-3 py-1 text-xs font-medium text-[#141312] hover:bg-[#FAF8F5] active:scale-95"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
                   >
                     <Icon name="image" size={14} />
                     <span>Pilih dari Galeri</span>
@@ -4408,7 +4497,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex items-center gap-3.5">
-                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border border-[#E5DDD5] bg-white">
+                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border border-black/15 bg-white">
                     <Image
                       src={articleForm.image || '/images/catalog/catalog-11.jpg'}
                       alt="Article preview"
@@ -4424,9 +4513,9 @@ export default function AdminPage() {
                         setArticleForm((prev) => ({ ...prev, image: e.target.value }))
                       }
                       placeholder="/images/catalog/catalog-11.jpg atau URL Supabase"
-                      className="w-full min-h-[38px] rounded-none border border-[#D0C5BD] bg-white px-3 py-1.5 text-base sm:text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                      className="w-full min-h-[38px] rounded-none border border-black/20 bg-white px-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
                     />
-                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-[#141312] px-4 py-1.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-95">
+                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95">
                       <Icon name="upload" size={14} />
                       <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
                       <input
@@ -4465,17 +4554,17 @@ export default function AdminPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-[#E5DDD5]/70 pt-4">
+              <div className="flex items-center justify-end gap-2.5 border-t border-black/15/70 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsArticleModalOpen(false)}
-                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-medium text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] active:scale-95 transition"
+                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black active:scale-95 transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-[#141312] px-6 py-2 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-6 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="check" size={15} />
                   <span>{editingArticle ? 'Simpan Perubahan' : 'Terbitkan Artikel'}</span>
@@ -4490,19 +4579,19 @@ export default function AdminPage() {
           MODAL: UNIVERSAL IMAGE PICKER & UPLOADER
       ────────────────────────────────────────────────────────── */}
       {isImagePickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#141312]/50 sm:p-4 backdrop-blur-xs">
-          <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#E5DDD5] bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5]/70 bg-[#FAF8F5] px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
+          <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-7 py-3.5 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-[#8E8380] uppercase block">
+                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Galeri Media
                 </span>
-                <h3 className="font-headline text-base sm:text-lg font-bold text-[#141312]">
+                <h3 className="font-headline text-base sm:text-lg font-bold text-black">
                   Pilih Gambar untuk Website
                 </h3>
-                <p className="text-[11px] sm:text-xs text-[#685E5A] mt-0.5">
+                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
                   Target:{' '}
-                  <span className="font-mono font-semibold text-[#141312]">
+                  <span className="font-mono font-semibold text-black">
                     {imagePickerTarget || 'Universal'}
                   </span>
                 </p>
@@ -4510,7 +4599,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setIsImagePickerOpen(false)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-[#685E5A] hover:bg-[#F4EFEB] hover:text-[#141312] transition-colors"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                 aria-label="Tutup Pemilih Gambar"
               >
                 <Icon name="close" size={20} />
@@ -4519,21 +4608,21 @@ export default function AdminPage() {
 
             <div className="flex flex-col gap-4 p-4 sm:p-6 overflow-y-auto">
               {/* Direct Upload in picker */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-[#D0C5BD] bg-[#FAF8F5] p-3.5 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-black/20 bg-white p-3.5 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#141312] text-[#FAF8F5] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0">
                     <Icon name="upload" size={16} />
                   </div>
                   <div>
-                    <span className="text-xs font-semibold text-[#141312] block">
+                    <span className="text-xs font-semibold text-black block">
                       Unggah Foto Baru ke Supabase
                     </span>
-                    <p className="text-[11px] text-[#685E5A]">
+                    <p className="text-[11px] text-black/70">
                       JPG, PNG, atau WEBP resolusi tinggi
                     </p>
                   </div>
                 </div>
-                <label className="min-h-[40px] inline-flex items-center justify-center cursor-pointer rounded-full bg-[#141312] px-4 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] active:scale-95 transition">
+                <label className="min-h-[40px] inline-flex items-center justify-center cursor-pointer rounded-full bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-black/85 active:scale-95 transition">
                   <span>{isUploading ? 'Mengunggah...' : 'Pilih File'}</span>
                   <input
                     type="file"
@@ -4548,7 +4637,7 @@ export default function AdminPage() {
               {/* Uploaded Media */}
               {mediaFiles.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#685E5A]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-black/70">
                     Foto Upload Supabase ({mediaFiles.length})
                   </span>
                   <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
@@ -4557,7 +4646,7 @@ export default function AdminPage() {
                         key={file.name}
                         type="button"
                         onClick={() => handleSelectPredefinedImage(file.url)}
-                        className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] transition-all hover:scale-105 hover:ring-2 hover:ring-[#141312]"
+                        className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-black/15 bg-black/5 transition-all hover:scale-105 hover:ring-2 hover:ring-[#000000]"
                       >
                         <Image src={file.url} alt={file.name} fill className="object-cover" />
                       </button>
@@ -4568,7 +4657,7 @@ export default function AdminPage() {
 
               {/* Catalog Photos */}
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#685E5A]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-black/70">
                   Foto Katalog Resolusi Tinggi ({AVAILABLE_CATALOG_IMAGES.length} Foto)
                 </span>
                 <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
@@ -4577,7 +4666,7 @@ export default function AdminPage() {
                       key={img}
                       type="button"
                       onClick={() => handleSelectPredefinedImage(img)}
-                      className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#F4EFEB] transition-all hover:scale-105 hover:ring-2 hover:ring-[#141312]"
+                      className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-black/15 bg-black/5 transition-all hover:scale-105 hover:ring-2 hover:ring-[#000000]"
                     >
                       <Image src={img} alt="Catalog photo" fill className="object-cover" />
                       <span className="absolute bottom-1 left-1 rounded-md bg-black/60 px-1.5 py-0.5 font-mono text-[9px] text-white backdrop-blur-xs">

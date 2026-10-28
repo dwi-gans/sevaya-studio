@@ -27,19 +27,29 @@ export interface OrderEmailData {
 }
 
 const formatIDR = (n?: number) => `Rp ${(n || 0).toLocaleString('id-ID')}`;
+function escapeHtml(str?: string | number | null): string {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 
 const buildItemsHtml = (items: OrderEmailItem[]) => {
   return (items || [])
     .map((item) => {
-      const title = item.title || item.name || 'Koleksi SEVAYA';
+      const title = escapeHtml(item.title || item.name || 'Koleksi SEVAYA');
       const price = item.price || 0;
       const qty = item.quantity || 1;
-      const variant = [item.color, item.size].filter(Boolean).join(' &bull; ') || 'Standar';
+      const variant = [escapeHtml(item.color), escapeHtml(item.size)].filter(Boolean).join(' &bull; ') || 'Standar';
 
       return `
         <tr>
           <td style="padding: 14px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top;">
-            <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #141312; line-height: 1.4;">
+            <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #000000; line-height: 1.4;">
               ${title}
             </p>
             <p style="margin: 4px 0 0 0; font-size: 11px; color: #7A706A;">
@@ -50,7 +60,7 @@ const buildItemsHtml = (items: OrderEmailItem[]) => {
             &times; ${qty}
           </td>
           <td style="padding: 14px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: right; white-space: nowrap;">
-            <p style="margin: 0; font-family: monospace; font-size: 13px; font-weight: 600; color: #141312;">
+            <p style="margin: 0; font-family: monospace; font-size: 13px; font-weight: 600; color: #000000;">
               ${formatIDR(price * qty)}
             </p>
           </td>
@@ -92,14 +102,14 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menunggu Pembayaran #${data.orderNumber} - SEVAYA</title>
+  <title>Menunggu Pembayaran #${escapeHtml(data.orderNumber)} - SEVAYA</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #FAF8F5;
+      background-color: #FFFFFF;
       font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
-      color: #141312;
+      color: #000000;
       -webkit-font-smoothing: antialiased;
     }
     table {
@@ -115,15 +125,15 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FAF8F5;">
-  <center style="width: 100%; background-color: #FAF8F5; padding: 40px 12px;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF;">
+  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 12px;">
     <!-- Main Container -->
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E5E0D8; border-radius: 8px; overflow: hidden; margin: 0 auto; text-align: left; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
       
       <!-- Brand Header -->
       <tr>
-        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FAF8F5;">
-          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #141312; line-height: 1;">
+        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FFFFFF;">
+          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #000000; line-height: 1;">
             SEVAYA
           </h1>
           <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E837E;">
@@ -145,11 +155,11 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
             </p>
           </div>
 
-          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #141312; letter-spacing: -0.01em; line-height: 1.3;">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #000000; letter-spacing: -0.01em; line-height: 1.3;">
             Segera Selesaikan Pembayaran Pesanan Anda
           </h2>
           <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.6; color: #5C544F;">
-            Halo <strong>${data.customerName}</strong>, pesanan Anda dengan nomor <strong>#${data.orderNumber}</strong> telah berhasil kami catat. Item pesanan Anda telah diamankan sementara selama 10 menit.
+            Halo <strong>${escapeHtml(data.customerName)}</strong>, pesanan Anda dengan nomor <strong>#${escapeHtml(data.orderNumber)}</strong> telah berhasil kami catat. Item pesanan Anda telah diamankan sementara selama 10 menit.
           </p>
 
           <!-- Order Metadata -->
@@ -158,15 +168,15 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
               <td style="font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
                 Nomor Pesanan
               </td>
-              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #141312; text-align: right;">
-                #${data.orderNumber}
+              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
+                #${escapeHtml(data.orderNumber)}
               </td>
             </tr>
             <tr>
               <td style="padding-top: 8px; font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
                 Tanggal
               </td>
-              <td style="padding-top: 8px; font-size: 12px; color: #141312; text-align: right;">
+              <td style="padding-top: 8px; font-size: 12px; color: #000000; text-align: right;">
                 ${dateStr}
               </td>
             </tr>
@@ -177,14 +187,14 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
       <!-- Prominent Pay Button Callout Box -->
       <tr>
         <td style="padding: 0 36px 28px 36px; text-align: center;">
-          <div style="background-color: #FAF8F5; border: 1px solid #EAE5DE; border-radius: 8px; padding: 24px 20px; text-align: center;">
+          <div style="background-color: #FFFFFF; border: 1px solid #EAE5DE; border-radius: 8px; padding: 24px 20px; text-align: center;">
             <p style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7A706A;">
               Total yang Harus Dibayar
             </p>
-            <p style="margin: 6px 0 18px 0; font-family: monospace; font-size: 24px; font-weight: 700; color: #141312;">
+            <p style="margin: 6px 0 18px 0; font-family: monospace; font-size: 24px; font-weight: 700; color: #000000;">
               ${formatIDR(data.grandTotal)}
             </p>
-            <a href="${payUrl}" target="_blank" style="display: inline-block; background-color: #141312; color: #FAF8F5; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 15px 36px; border-radius: 4px;">
+            <a href="${payUrl}" target="_blank" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 15px 36px; border-radius: 4px;">
               BAYAR SEKARANG
             </a>
             <p style="margin: 12px 0 0 0; font-size: 11px; color: #8E837E;">
@@ -199,14 +209,14 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
         <td style="padding: 0 36px 20px 36px;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <thead>
-              <tr style="border-bottom: 1px solid #141312;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: left;">
+              <tr style="border-bottom: 1px solid #000000;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;">
                   Item
                 </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: center;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
                   Qty
                 </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: right;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: right;">
                   Harga
                 </th>
               </tr>
@@ -224,11 +234,11 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Subtotal</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #141312; text-align: right;">${formatIDR(data.subtotal)}</td>
+              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.subtotal)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Ongkos Kirim (${data.courierName || 'Kurir Reguler'})</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #141312; text-align: right;">${formatIDR(data.shippingCost)}</td>
+              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.shippingCost)}</td>
             </tr>
             ${
               data.discount
@@ -239,10 +249,10 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
                 : ''
             }
             <tr>
-              <td style="padding-top: 14px; border-top: 1px solid #141312; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #141312;">
+              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #000000;">
                 Total Pembayaran
               </td>
-              <td style="padding-top: 14px; border-top: 1px solid #141312; font-size: 16px; font-family: monospace; font-weight: bold; color: #141312; text-align: right;">
+              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 16px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
                 ${formatIDR(data.grandTotal)}
               </td>
             </tr>
@@ -252,19 +262,19 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
 
       <!-- Customer Address & Payment Method -->
       <tr>
-        <td style="padding: 24px 36px; background-color: #FAF8F5; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
+        <td style="padding: 24px 36px; background-color: #FFFFFF; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td width="48%" valign="top" class="col-block">
                 <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
                   Alamat Pengiriman
                 </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #141312;">
-                  ${data.customerName}
+                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
+                  ${escapeHtml(data.customerName)}
                 </p>
                 <p style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.5; color: #5C544F;">
                   ${data.customerAddress || '-'}<br>
-                  WhatsApp: ${data.customerPhone || '-'}
+                  WhatsApp: ${escapeHtml(data.customerPhone || '-')}
                 </p>
               </td>
               <td width="4%" class="col-block col-spacer"></td>
@@ -272,7 +282,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
                 <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
                   Metode Pembayaran
                 </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #141312;">
+                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
                   ${
                     data.paymentMethod === 'midtrans'
                       ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
@@ -295,7 +305,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
         <td style="padding: 24px 36px; text-align: center;">
           <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
             Pertanyaan mengenai pesanan atau pembayaran?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #141312; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #141312; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
+            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
           </p>
           <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B; letter-spacing: 0.05em;">
             &copy; 2026 SEVAYA Studio. All rights reserved.
@@ -311,7 +321,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Menunggu Pembayaran #${data.orderNumber} — Segera Selesaikan Pembayaran Anda`,
+      subject: `Menunggu Pembayaran #${escapeHtml(data.orderNumber)} — Segera Selesaikan Pembayaran Anda`,
       html: emailHtml,
     });
 
@@ -320,7 +330,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
       if (errorMsg.includes('only send testing emails')) {
         console.warn(
           `[Resend Sandbox Restriction] Cannot send to ${recipient}. ` +
-          `Order ${data.orderNumber} created — pending payment email skipped.`
+          `Order ${escapeHtml(data.orderNumber)} created — pending payment email skipped.`
         );
         return { success: false, sandboxRestriction: true, error: 'resend_sandbox_restriction' };
       }
@@ -366,14 +376,14 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pembayaran Berhasil #${data.orderNumber} - SEVAYA</title>
+  <title>Pembayaran Berhasil #${escapeHtml(data.orderNumber)} - SEVAYA</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #FAF8F5;
+      background-color: #FFFFFF;
       font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
-      color: #141312;
+      color: #000000;
       -webkit-font-smoothing: antialiased;
     }
     table {
@@ -389,15 +399,15 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FAF8F5;">
-  <center style="width: 100%; background-color: #FAF8F5; padding: 40px 12px;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF;">
+  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 12px;">
     <!-- Main Receipt Container -->
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E5E0D8; border-radius: 8px; overflow: hidden; margin: 0 auto; text-align: left; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
       
       <!-- Brand Header -->
       <tr>
-        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FAF8F5;">
-          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #141312; line-height: 1;">
+        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FFFFFF;">
+          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #000000; line-height: 1;">
             SEVAYA
           </h1>
           <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E837E;">
@@ -419,8 +429,8 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
             </p>
           </div>
 
-          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #141312; letter-spacing: -0.01em; line-height: 1.3;">
-            Terima kasih atas pesanan Anda, ${data.customerName}
+          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #000000; letter-spacing: -0.01em; line-height: 1.3;">
+            Terima kasih atas pesanan Anda, ${escapeHtml(data.customerName)}
           </h2>
           <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.6; color: #5C544F;">
             Pesanan Anda saat ini sedang disiapkan dengan cermat oleh tim SEVAYA dan akan segera dikirimkan ke alamat Anda. Berikut adalah tanda terima resmi transaksi Anda:
@@ -432,15 +442,15 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
               <td style="font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
                 Nomor Pesanan
               </td>
-              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #141312; text-align: right;">
-                #${data.orderNumber}
+              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
+                #${escapeHtml(data.orderNumber)}
               </td>
             </tr>
             <tr>
               <td style="padding-top: 8px; font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
                 Tanggal
               </td>
-              <td style="padding-top: 8px; font-size: 12px; color: #141312; text-align: right;">
+              <td style="padding-top: 8px; font-size: 12px; color: #000000; text-align: right;">
                 ${dateStr}
               </td>
             </tr>
@@ -453,14 +463,14 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
         <td style="padding: 0 36px 20px 36px;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <thead>
-              <tr style="border-bottom: 1px solid #141312;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: left;">
+              <tr style="border-bottom: 1px solid #000000;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;">
                   Item
                 </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: center;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
                   Qty
                 </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #141312; text-align: right;">
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: right;">
                   Harga
                 </th>
               </tr>
@@ -478,11 +488,11 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Subtotal</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #141312; text-align: right;">${formatIDR(data.subtotal)}</td>
+              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.subtotal)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Ongkos Kirim (${data.courierName || 'Kurir Reguler'})</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #141312; text-align: right;">${formatIDR(data.shippingCost)}</td>
+              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.shippingCost)}</td>
             </tr>
             ${
               data.discount
@@ -493,10 +503,10 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
                 : ''
             }
             <tr>
-              <td style="padding-top: 14px; border-top: 1px solid #141312; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #141312;">
+              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #000000;">
                 Total Pembayaran
               </td>
-              <td style="padding-top: 14px; border-top: 1px solid #141312; font-size: 16px; font-family: monospace; font-weight: bold; color: #141312; text-align: right;">
+              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 16px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
                 ${formatIDR(data.grandTotal)}
               </td>
             </tr>
@@ -506,19 +516,19 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
 
       <!-- Shipping Address & Payment Method -->
       <tr>
-        <td style="padding: 24px 36px; background-color: #FAF8F5; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
+        <td style="padding: 24px 36px; background-color: #FFFFFF; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td width="48%" valign="top" class="col-block">
                 <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
                   Alamat Pengiriman
                 </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #141312;">
-                  ${data.customerName}
+                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
+                  ${escapeHtml(data.customerName)}
                 </p>
                 <p style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.5; color: #5C544F;">
                   ${data.customerAddress || '-'}<br>
-                  WhatsApp: ${data.customerPhone || '-'}
+                  WhatsApp: ${escapeHtml(data.customerPhone || '-')}
                 </p>
               </td>
               <td width="4%" class="col-block col-spacer"></td>
@@ -526,7 +536,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
                 <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
                   Metode Pembayaran
                 </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #141312;">
+                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
                   ${
                     data.paymentMethod === 'midtrans'
                       ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
@@ -547,11 +557,11 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
       <!-- Order Tracking CTA -->
       <tr>
         <td style="padding: 32px 36px; text-align: center;">
-          <a href="${trackingUrl}" target="_blank" style="display: inline-block; background-color: #141312; color: #FAF8F5; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
+          <a href="${trackingUrl}" target="_blank" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
             Pantau Status Pesanan
           </a>
           <p style="margin: 14px 0 0 0; font-size: 11px; color: #8E837E;">
-            Atau kunjungi <a href="${siteUrl}" style="color: #141312; text-decoration: underline;">${siteUrl.replace('https://', '')}</a>
+            Atau kunjungi <a href="${siteUrl}" style="color: #000000; text-decoration: underline;">${siteUrl.replace('https://', '')}</a>
           </p>
         </td>
       </tr>
@@ -561,7 +571,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
         <td style="padding: 24px 36px; border-top: 1px solid #F0ECE7; text-align: center;">
           <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
             Pertanyaan mengenai pesanan atau pengiriman?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #141312; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #141312; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
+            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
           </p>
           <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B; letter-spacing: 0.05em;">
             &copy; 2026 SEVAYA Studio. All rights reserved.
@@ -577,7 +587,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Pembayaran Diterima #${data.orderNumber} — Pesanan Sedang Disiapkan`,
+      subject: `Pembayaran Diterima #${escapeHtml(data.orderNumber)} — Pesanan Sedang Disiapkan`,
       html: emailHtml,
     });
 
@@ -586,7 +596,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
       if (errorMsg.includes('only send testing emails')) {
         console.warn(
           `[Resend Sandbox Restriction] Cannot send to ${recipient}. ` +
-          `Order ${data.orderNumber} paid — email receipt skipped.`
+          `Order ${escapeHtml(data.orderNumber)} paid — email receipt skipped.`
         );
         return { success: false, sandboxRestriction: true, error: 'resend_sandbox_restriction' };
       }
@@ -627,19 +637,19 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pesanan Dibatalkan #${data.orderNumber} - SEVAYA</title>
+  <title>Pesanan Dibatalkan #${escapeHtml(data.orderNumber)} - SEVAYA</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FAF8F5; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; color: #141312;">
-  <center style="width: 100%; background-color: #FAF8F5; padding: 40px 16px;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; color: #000000;">
+  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 16px;">
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E8E2D9; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
       
       <!-- Header Brand -->
       <tr>
-        <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #EAE5DE; background-color: #FAF8F5;">
-          <h1 style="margin: 0; font-family: 'Century Gothic', -apple-system, sans-serif; font-size: 22px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: #141312;">
+        <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #EAE5DE; background-color: #FFFFFF;">
+          <h1 style="margin: 0; font-family: 'Century Gothic', -apple-system, sans-serif; font-size: 22px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: #000000;">
             SEVAYA
           </h1>
-          <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #8E8380;">
+          <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.4);">
             Studio &bull; Modest Wear
           </p>
         </td>
@@ -653,12 +663,12 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
               STATUS: PESANAN DIBATALKAN
             </p>
             <p style="margin: 6px 0 0 0; font-size: 12px; line-height: 1.5; color: #7F1D1D;">
-              Pesanan <strong>#${data.orderNumber}</strong> telah dibatalkan secara otomatis karena melewati batas waktu pembayaran 10 menit.
+              Pesanan <strong>#${escapeHtml(data.orderNumber)}</strong> telah dibatalkan secara otomatis karena melewati batas waktu pembayaran 10 menit.
             </p>
           </div>
 
-          <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #141312; letter-spacing: -0.01em;">
-            Halo ${data.customerName},
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #000000; letter-spacing: -0.01em;">
+            Halo ${escapeHtml(data.customerName)},
           </h2>
           <p style="margin: 10px 0 0 0; font-size: 13px; line-height: 1.6; color: #554C48;">
             Kami menginformasikan bahwa pesanan busana Anda tidak dapat kami proses lebih lanjut karena batas waktu transaksi 10 menit telah berakhir. Item pada pesanan ini telah dilepaskan kembali ke stok koleksi.
@@ -672,9 +682,9 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <thead>
               <tr>
-                <th style="padding-bottom: 8px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #8E8380; border-bottom: 1px solid #141312;">Item Pesanan</th>
-                <th style="padding-bottom: 8px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #8E8380; border-bottom: 1px solid #141312;">Qty</th>
-                <th style="padding-bottom: 8px; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #8E8380; border-bottom: 1px solid #141312;">Harga</th>
+                <th style="padding-bottom: 8px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Item Pesanan</th>
+                <th style="padding-bottom: 8px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Qty</th>
+                <th style="padding-bottom: 8px; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Harga</th>
               </tr>
             </thead>
             <tbody>
@@ -684,8 +694,8 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
 
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 16px;">
             <tr>
-              <td style="font-size: 13px; font-weight: 700; color: #141312;">Total Tagihan</td>
-              <td style="font-size: 15px; font-weight: 700; color: #141312; text-align: right; font-family: monospace;">${formatIDR(data.grandTotal)}</td>
+              <td style="font-size: 13px; font-weight: 700; color: #000000;">Total Tagihan</td>
+              <td style="font-size: 15px; font-weight: 700; color: #000000; text-align: right; font-family: monospace;">${formatIDR(data.grandTotal)}</td>
             </tr>
           </table>
         </td>
@@ -694,10 +704,10 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
       <!-- Re-order CTA Button -->
       <tr>
         <td style="padding: 0 32px 32px; text-align: center;">
-          <a href="${shopUrl}" style="display: inline-block; background-color: #141312; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
+          <a href="${shopUrl}" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
             Pesan Ulang Koleksi
           </a>
-          <p style="margin: 16px 0 0 0; font-size: 11px; line-height: 1.5; color: #8E8380;">
+          <p style="margin: 16px 0 0 0; font-size: 11px; line-height: 1.5; color: rgba(0,0,0,0.4);">
             Koleksi favorit Anda masih dapat dipesan kembali selama ketersediaan stok tersedia.
           </p>
         </td>
@@ -705,10 +715,10 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
 
       <!-- Footer Help -->
       <tr>
-        <td style="padding: 24px 32px; background-color: #FAF8F5; border-top: 1px solid #EAE5DE; text-align: center;">
+        <td style="padding: 24px 32px; background-color: #FFFFFF; border-top: 1px solid #EAE5DE; text-align: center;">
           <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
             Dana Anda sudah terpotong atau mengalami kendala pembayaran?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #141312; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #141312; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a> untuk konfirmasi manual.
+            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a> untuk konfirmasi manual.
           </p>
           <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B;">
             &copy; 2026 SEVAYA Studio. All rights reserved.
@@ -724,7 +734,7 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Pesanan Dibatalkan #${data.orderNumber} — Batas Waktu Pembayaran Berakhir`,
+      subject: `Pesanan Dibatalkan #${escapeHtml(data.orderNumber)} — Batas Waktu Pembayaran Berakhir`,
       html: emailHtml,
     });
 

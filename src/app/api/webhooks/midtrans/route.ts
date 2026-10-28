@@ -43,12 +43,25 @@ export async function POST(req: NextRequest) {
       internalStatus = 'pending_payment';
     }
 
-    // Check existing order status first to prevent duplicate notifications
+    // Check existing order status and grand total to prevent duplicate notifications and amount tampering
     const { data: existingOrder } = await supabaseAdmin
       .from('orders')
-      .select('status')
+      .select('status, grand_total')
       .eq('order_number', orderId)
       .single();
+
+    // Verify gross amount matches the recorded grand total in database
+    if (internalStatus === 'paid' && existingOrder) {
+      const webhookAmount = Math.round(Number(grossAmount) || 0);
+      const expectedAmount = Math.round(Number(existingOrder.grand_total) || 0);
+
+      if (expectedAmount > 0 && webhookAmount < expectedAmount) {
+        console.error(
+          `[Midtrans Webhook Security Alert] Paid amount (${webhookAmount}) is less than expected order total (${expectedAmount}) for order ${orderId}!`
+        );
+        return NextResponse.json({ message: 'Amount mismatch detected' }, { status: 400 });
+      }
+    }
 
     const wasAlreadyPaid = existingOrder?.status === 'paid' || existingOrder?.status === 'processing';
 

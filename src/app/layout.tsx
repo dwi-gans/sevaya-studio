@@ -30,7 +30,9 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: '/images/logo.png',
+    icon: '/favicon-sv.svg',
+    shortcut: '/favicon-sv.svg',
+    apple: '/images/logo.png',
   },
 };
 
@@ -48,10 +50,18 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <head>
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          href="https://fonts.cdnfonts.com/css/avenir"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.cdnfonts.com/css/avenir-next-lt-pro"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
       </head>
-      <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FAF8F5] text-[#1B1718] antialiased">
+      <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FFFFFF] text-[#000000] antialiased">
         <Providers>
           <ConditionalNav />
           <LayoutContent>{children}</LayoutContent>

@@ -77,24 +77,24 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     badge: "Ramadan & Eid '26",
     title: 'Floraison',
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
-    image: '/images/catalog/catalog-02.jpg',
+    image: '/images/hero_optimized.jpg',
     ctaLookbook: 'View Lookbook',
     ctaShop: 'Shop Capsule',
   },
   spotlight: [
     {
       id: 'spotlight-1',
-      title: 'Abaya Klasik',
+      title: 'Abaya',
       subtitle: 'Modest Drapery',
       image: '/images/catalog/catalog-01.jpg',
       href: '/product/fina-abaya-stripe-2',
     },
     {
       id: 'spotlight-2',
-      title: 'Kaftan & Sets',
+      title: 'Khimar',
       subtitle: 'Silk Kaftans',
       image: '/images/catalog/catalog-04.jpg',
-      href: '/#collections',
+      href: '/shop',
     },
   ],
   missionTextiles: {
@@ -104,7 +104,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   journal: [
     {
       id: 'journal-1',
-      title: 'Rangkuman Floraison: Menanam, Mekar, Berbuah, dan Arti Bertumbuh',
+      title: 'Rangkuman 26°Rhapsody: Menanam, Mekar, Berbuah, dan Arti Bertumbuh',
       date: '5 Okt 2026 • Catatan Bab',
       excerpt:
         'Pertumbuhan bukanlah panen sekali jadi. Ini adalah kesabaran merawat akar kita, menyadari bahwa setiap diri bertumbuh dengan caranya masing-masing...',

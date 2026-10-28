@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { sendEmail } from '@/lib/resend';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const ipCheck = checkRateLimit('fp_' + clientIp, 5, 15 * 60 * 1000);
+    if (!ipCheck.success) {
+      return NextResponse.json(
+        { success: false, error: 'Terlalu banyak permintaan reset kata sandi dari perangkat Anda. Harap tunggu 15 menit.' },
+        { status: 429 }
+      );
+    }
     const { email } = await req.json();
 
     if (!email || !email.includes('@')) {
@@ -91,16 +100,16 @@ function buildResetEmailHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reset Kata Sandi — SEVAYA Studio</title>
 </head>
-<body style="margin:0;padding:0;background-color:#F4EFEB;font-family:'Georgia',serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4EFEB;padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#FFFFFF;font-family:'Georgia',serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;padding:40px 16px;">
     <tr>
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;max-width:600px;width:100%;">
 
           <!-- Header -->
           <tr>
-            <td style="background-color:#141312;padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;font-size:22px;font-weight:500;color:#FAF8F5;letter-spacing:0.34em;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Inter','Century Gothic',Futura,sans-serif;text-transform:uppercase;">
+            <td style="background-color:#000000;padding:32px 40px;text-align:center;">
+              <h1 style="margin:0;font-size:22px;font-weight:500;color:#FFFFFF;letter-spacing:0.34em;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Inter','Century Gothic',Futura,sans-serif;text-transform:uppercase;">
                 SEVAYA
               </h1>
             </td>
@@ -112,15 +121,15 @@ function buildResetEmailHtml({
               <p style="margin:0 0 8px;font-size:11px;letter-spacing:3px;color:#6b1d2f;text-transform:uppercase;font-family:Arial,sans-serif;">
                 KEAMANAN AKUN
               </p>
-              <h2 style="margin:0 0 20px;font-size:22px;font-weight:400;color:#141312;font-family:'Georgia',serif;">
+              <h2 style="margin:0 0 20px;font-size:22px;font-weight:400;color:#000000;font-family:'Georgia',serif;">
                 Reset Kata Sandi Anda
               </h2>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#685E5A;font-family:Arial,sans-serif;">
-                Halo, <strong style="color:#141312;">${userName}</strong>.
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:rgba(0,0,0,0.64);font-family:Arial,sans-serif;">
+                Halo, <strong style="color:#000000;">${userName}</strong>.
               </p>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#685E5A;font-family:Arial,sans-serif;">
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:rgba(0,0,0,0.64);font-family:Arial,sans-serif;">
                 Kami menerima permintaan untuk mereset kata sandi akun SEVAYA yang terhubung dengan alamat email
-                <strong style="color:#141312;">${email}</strong>.
+                <strong style="color:#000000;">${email}</strong>.
                 Klik tombol di bawah untuk membuat kata sandi baru.
               </p>
 
@@ -129,7 +138,7 @@ function buildResetEmailHtml({
                 <tr>
                   <td align="center" style="padding:8px 0 32px;">
                     <a href="${resetLink}"
-                      style="display:inline-block;background-color:#141312;color:#FAF8F5;padding:16px 40px;font-size:11px;letter-spacing:3px;text-decoration:none;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:600;">
+                      style="display:inline-block;background-color:#000000;color:#FFFFFF;padding:16px 40px;font-size:11px;letter-spacing:3px;text-decoration:none;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:600;">
                       RESET KATA SANDI
                     </a>
                   </td>
@@ -139,14 +148,14 @@ function buildResetEmailHtml({
               <!-- Divider -->
               <tr>
                 <td style="padding:0 40px;">
-                  <div style="height:1px;background-color:#E5DDD5;margin-bottom:24px;"></div>
+                  <div style="height:1px;background-color:rgba(0,0,0,0.12);margin-bottom:24px;"></div>
                 </td>
               </tr>
 
-              <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#685E5A;font-family:Arial,sans-serif;">
+              <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:rgba(0,0,0,0.64);font-family:Arial,sans-serif;">
                 Tautan ini hanya berlaku selama <strong>1 jam</strong> dan hanya dapat digunakan sekali.
               </p>
-              <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#685E5A;font-family:Arial,sans-serif;">
+              <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:rgba(0,0,0,0.64);font-family:Arial,sans-serif;">
                 Jika tombol di atas tidak berfungsi, salin dan tempel tautan ini ke browser Anda:
               </p>
               <p style="margin:0 0 24px;word-break:break-all;">
@@ -160,7 +169,7 @@ function buildResetEmailHtml({
 
           <!-- Footer -->
           <tr>
-            <td style="background-color:#FAF8F5;border-top:1px solid #E5DDD5;padding:24px 40px;text-align:center;">
+            <td style="background-color:#FFFFFF;border-top:1px solid rgba(0,0,0,0.12);padding:24px 40px;text-align:center;">
               <p style="margin:0 0 4px;font-size:10px;letter-spacing:3px;color:#B8A99A;text-transform:uppercase;font-family:Arial,sans-serif;">
                 SEVAYA STUDIO — Abaya &amp; Modest Fashion
               </p>

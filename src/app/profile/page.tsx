@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -445,13 +445,13 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F5]">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3.5 text-center">
           <div className="relative flex h-10 w-10 items-center justify-center">
-            <div className="absolute h-full w-full animate-ping rounded-full bg-[#141312]/10" />
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
+            <div className="absolute h-full w-full animate-ping rounded-none bg-black/10" />
+            <div className="h-8 w-8 animate-spin rounded-none border-2 border-black border-t-transparent" />
           </div>
-          <p className="font-headline text-xs tracking-widest text-[#685E5A] uppercase animate-pulse">
+          <p className="font-headline text-xs tracking-widest text-black/70 uppercase animate-pulse">
             Memuat Akun...
           </p>
         </div>
@@ -463,9 +463,9 @@ export default function ProfilePage() {
   const userInitial = user?.name ? user.name.trim().charAt(0).toUpperCase() : (user?.email?.charAt(0).toUpperCase() || 'U');
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] font-body text-[#141312] selection:bg-[#F4EFEB] flex flex-col justify-between">
+    <div className="min-h-screen bg-white font-body text-black selection:bg-black/5 flex flex-col justify-between">
       {/* ── STORE HEADER: MATCHING HOME LOGO SIZE & PLACEMENT ── */}
-      <header className="sticky top-0 z-30 border-b border-[#E5DDD5] bg-[#FAF8F5]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-black/15 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           {/* Desktop Left Logo (matching Home layout & size) */}
           <Link
@@ -498,8 +498,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => handleTabChange('orders')}
-            className={`font-headline text-2xl sm:text-3xl font-semibold tracking-tight transition-colors ${
-              activeTab === 'orders' ? 'text-[#141312]' : 'text-[#A89E99] hover:text-[#685E5A]'
+            className={`font-sans text-sm font-semibold tracking-wider uppercase transition-colors ${
+              activeTab === 'orders' ? 'text-black' : 'text-[#A89E99] hover:text-black/70'
             }`}
           >
             {t('profile.tab_orders')}
@@ -507,8 +507,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => handleTabChange('profile')}
-            className={`font-headline text-2xl sm:text-3xl font-semibold tracking-tight transition-colors ${
-              activeTab === 'profile' ? 'text-[#141312]' : 'text-[#A89E99] hover:text-[#685E5A]'
+            className={`font-sans text-sm font-semibold tracking-wider uppercase transition-colors ${
+              activeTab === 'profile' ? 'text-black' : 'text-[#A89E99] hover:text-black/70'
             }`}
           >
             {t('profile.tab_profile')}
@@ -521,16 +521,16 @@ export default function ProfilePage() {
         {activeTab === 'orders' && (
           <div className="space-y-6">
             {/* Welcome banner card */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+            <div className="flex items-center justify-between gap-3 rounded-none border border-black/15 bg-white p-4 sm:p-6">
               <div className="min-w-0 pr-2">
-                <h2 className="font-headline text-base sm:text-lg font-semibold text-[#141312] truncate">
+                <h2 className="font-headline text-base sm:text-lg font-semibold text-black/85 truncate">
                   {t('profile.welcome')}, {firstName}
                 </h2>
-                <p className="text-xs sm:text-sm text-[#685E5A] mt-0.5">{t('profile.ready_to_shop')}</p>
+                <p className="text-xs sm:text-sm text-black/70 mt-0.5">{t('profile.ready_to_shop')}</p>
               </div>
               <Link
                 href="/shop"
-                className="inline-flex items-center justify-center shrink-0 whitespace-nowrap rounded-full bg-[#141312] px-4 py-2 sm:px-6 sm:py-2.5 text-[11px] sm:text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase transition hover:bg-[#2b2826] active:scale-[0.99]"
+                className="inline-flex items-center justify-center shrink-0 whitespace-nowrap rounded-none bg-black px-4 py-2 sm:px-6 sm:py-2.5 text-[10px] font-semibold tracking-wider text-white uppercase transition hover:bg-black/85 active:scale-[0.99]"
               >
                 {t('profile.shop_now')}
               </Link>
@@ -540,24 +540,24 @@ export default function ProfilePage() {
             {ordersLoading ? (
               <div className="space-y-3 pt-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="animate-pulse rounded-2xl border border-[#E5DDD5] bg-white p-6 space-y-3">
-                    <div className="h-4 w-36 bg-[#F4EFEB] rounded" />
-                    <div className="h-16 bg-[#F4EFEB] rounded-xl" />
+                  <div key={i} className="animate-pulse rounded-none border border-black/15 bg-white p-6 space-y-3">
+                    <div className="h-4 w-36 bg-black/5 rounded-none" />
+                    <div className="h-16 bg-black/5 rounded-none" />
                   </div>
                 ))}
               </div>
             ) : orders.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#D0C5BD] bg-white p-12 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F4EFEB] border border-[#E5DDD5] text-[#8E8380]">
+              <div className="border border-dashed border-black/10 bg-white p-10 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-none bg-black/5 border border-black/15 text-black/50">
                   <Icon name="shopping_bag" size={24} />
                 </div>
-                <h3 className="mt-4 text-sm font-semibold text-[#141312]">{t('profile.no_orders')}</h3>
-                <p className="mt-1 text-xs text-[#685E5A] max-w-sm mx-auto">
+                <h3 className="mt-4 text-sm font-semibold text-black">{t('profile.no_orders')}</h3>
+                <p className="mt-1 text-xs text-black/70 max-w-sm mx-auto">
                   {t('profile.no_orders_sub')}
                 </p>
                 <Link
                   href="/shop"
-                  className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase transition hover:bg-[#2b2826]"
+                  className="mt-5 inline-flex items-center gap-1.5 rounded-none bg-black px-5 py-2 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-black/85"
                 >
                   {t('profile.explore')}
                 </Link>
@@ -579,19 +579,19 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={ord.id || ord.order_number}
-                      className="rounded-2xl border border-[#E5DDD5] bg-white p-5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4 transition hover:border-[#D0C5BD]"
+                      className="rounded-none border border-black/15 bg-white p-5 sm:p-6 space-y-4 transition hover:border-black/20"
                     >
                       {/* Top Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5DDD5]/70 pb-3.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/15/70 pb-3.5">
                         <div className="flex items-center gap-3">
-                          <p className="font-headline text-sm font-semibold text-[#141312]">#{ord.order_number}</p>
+                          <p className="font-headline text-sm font-semibold text-black">#{ord.order_number}</p>
                           <span className="text-neutral-300">&bull;</span>
-                          <p className="text-xs text-[#685E5A]">{dateStr}</p>
+                          <p className="text-xs text-black/70">{dateStr}</p>
                         </div>
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${badge.bg}`}
+                          className={`inline-flex items-center gap-1.5 rounded-none border px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${badge.bg}`}
                         >
-                          <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
+                          <span className={`h-1.5 w-1.5 rounded-none ${badge.dot}`} />
                           <span>{badge.label}</span>
                         </span>
                       </div>
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-1">
                         {firstItem && (
                           <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                            <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-none border border-[#E5DDD5] bg-[#F4EFEB]">
+                            <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-none border border-black/15 bg-black/5">
                               {firstItem.image ? (
                                 <Image
                                   src={firstItem.image}
@@ -609,20 +609,20 @@ export default function ProfilePage() {
                                   className="object-cover"
                                 />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[#8E8380]">
+                                <div className="flex h-full w-full items-center justify-center text-black/50">
                                   <Icon name="shopping_bag" size={18} />
                                 </div>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-semibold text-[#141312] truncate">
+                              <p className="text-xs sm:text-sm font-semibold text-black truncate">
                                 {firstItem.title || firstItem.name || 'Busana Modest'}
                               </p>
-                              <p className="text-xs text-[#685E5A] mt-0.5">
+                              <p className="text-xs text-black/70 mt-0.5">
                                 {[firstItem.color, firstItem.size].filter(Boolean).join(' / ') || 'Standar'} &bull; {firstItem.quantity || 1} {t('profile.items_count')}
                               </p>
                               {extraItems > 0 && (
-                                <p className="text-[11px] text-[#8E8380] mt-0.5">
+                                <p className="text-[11px] text-black/50 mt-0.5">
                                   +{extraItems} {t('profile.more_items')}
                                 </p>
                               )}
@@ -631,10 +631,10 @@ export default function ProfilePage() {
                         )}
 
                         <div className="text-left sm:text-right shrink-0">
-                          <span className="text-[10px] tracking-wider text-[#8E8380] uppercase block">
+                          <span className="text-[10px] tracking-wider text-black/50 uppercase block">
                             {t('profile.total_bill')}
                           </span>
-                          <p className="text-sm sm:text-base font-bold text-[#141312]">
+                          <p className="text-sm sm:text-base font-bold text-black">
                             {formatIDR(ord.grand_total)}
                           </p>
                         </div>
@@ -642,8 +642,8 @@ export default function ProfilePage() {
 
                       {/* Courier Waybill info */}
                       {ord.tracking_number && (
-                        <div className="flex items-center justify-between rounded-xl bg-[#F4EFEB] px-3.5 py-2.5 text-xs">
-                          <span className="text-xs font-medium text-[#685E5A]">
+                        <div className="flex items-center justify-between rounded-none bg-black/5 px-3.5 py-2.5 text-xs">
+                          <span className="text-xs font-medium text-black/70">
                             {ord.courier_name || 'Kurir Reguler'}
                           </span>
                           <span className="font-mono text-xs font-semibold text-emerald-800">
@@ -653,10 +653,10 @@ export default function ProfilePage() {
                       )}
 
                       {/* Action Button: 1 Tombol Gabungan */}
-                      <div className="flex items-center justify-end pt-2 border-t border-[#E5DDD5]/50">
+                      <div className="flex items-center justify-end pt-2 border-t border-black/15/50">
                         <Link
                           href={`/profile/orders/${ord.order_number}`}
-                          className="inline-flex items-center gap-2 rounded-full bg-[#141312] px-5 py-2.5 text-xs font-semibold text-[#FAF8F5] transition hover:bg-[#2b2826] active:scale-[0.99]"
+                          className="inline-flex items-center gap-2 rounded-none bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                         >
                           <Icon name="local_shipping" size={14} />
                           <span>{t('profile.order_details')}</span>
@@ -681,22 +681,22 @@ export default function ProfilePage() {
               {/* 1. Name & Email Section */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <span className="font-headline text-sm font-semibold text-[#141312] lowercase">
+                  <span className="font-headline text-sm font-semibold text-black lowercase">
                     {user?.name || 'Customer'}
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsEditProfileOpen(true)}
-                    className="rounded-full border border-[#D0C5BD] bg-white px-3.5 py-1 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    className="rounded-none border border-black/20 bg-white px-3.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                   >
                     Edit
                   </button>
                 </div>
 
                 {/* Email Card */}
-                <div className="flex items-center justify-between rounded-2xl border border-[#E5DDD5] bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-                  <span className="text-xs text-[#685E5A]">Email</span>
-                  <span className="text-sm font-medium text-[#141312] underline underline-offset-4">
+                <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
+                  <span className="text-xs text-black/70">Email</span>
+                  <span className="text-sm font-medium text-black underline underline-offset-4">
                     {user?.email || '—'}
                   </span>
                 </div>
@@ -705,27 +705,27 @@ export default function ProfilePage() {
               {/* 2. Addresses Section */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <span className="font-headline text-sm font-semibold text-[#141312]">{t('profile.saved_addresses')}</span>
+                  <span className="font-headline text-sm font-semibold text-black">{t('profile.saved_addresses')}</span>
                   <button
                     type="button"
                     onClick={openAddAddressModal}
-                    className="rounded-full border border-[#D0C5BD] bg-white px-3.5 py-1 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    className="rounded-none border border-black/20 bg-white px-3.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                   >
                     {t('profile.add_address')}
                   </button>
                 </div>
 
                 {addressesLoading ? (
-                  <div className="animate-pulse rounded-2xl border border-[#E5DDD5] bg-white p-5">
-                    <div className="h-6 w-36 bg-[#F4EFEB] rounded" />
+                  <div className="animate-pulse rounded-none border border-black/15 bg-white p-5">
+                    <div className="h-6 w-36 bg-black/5 rounded-none" />
                   </div>
                 ) : addresses.length === 0 ? (
                   /* Empty address view (Exact matching screenshot 1) */
-                  <div className="flex items-center gap-3.5 rounded-2xl border border-[#E5DDD5] bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F4EFEB] text-[#141312]">
+                  <div className="flex items-center gap-3.5 rounded-none border border-black/15 bg-white p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-black/5 text-black">
                       <Icon name="location_on" size={18} />
                     </div>
-                    <span className="text-sm text-[#685E5A]">{t('profile.no_addresses')}</span>
+                    <span className="text-sm text-black/70">{t('profile.no_addresses')}</span>
                   </div>
                 ) : (
                   /* List of saved addresses */
@@ -733,23 +733,23 @@ export default function ProfilePage() {
                     {addresses.map((addr) => (
                       <div
                         key={addr.id}
-                        className="rounded-2xl border border-[#E5DDD5] bg-white p-4 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-2.5 transition hover:border-[#D0C5BD]"
+                        className="rounded-none border border-black/15 bg-white p-4 sm:p-5 space-y-2.5 transition hover:border-black/20"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F4EFEB] text-[#141312]">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-black/5 text-black">
                               <Icon name="location_on" size={15} />
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#141312]">
+                              <p className="text-xs font-bold text-black">
                                 {addr.recipient_name}
                               </p>
-                              <p className="text-[11px] text-[#685E5A]">{addr.phone}</p>
+                              <p className="text-[11px] text-black/70">{addr.phone}</p>
                             </div>
                           </div>
 
                           {addr.is_default && (
-                            <span className="rounded-full bg-[#F4EFEB] border border-[#E5DDD5] px-2.5 py-0.5 text-[10px] font-semibold text-[#141312]">
+                            <span className="rounded-none bg-black/5 border border-black/15 px-2.5 py-0.5 text-[10px] font-semibold text-black">
                               {t('profile.default')}
                             </span>
                           )}
@@ -759,12 +759,12 @@ export default function ProfilePage() {
                           {addr.address_line}, {addr.city}, {addr.province} {addr.postal_code}
                         </p>
 
-                        <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#E5DDD5]/60">
+                        <div className="flex items-center justify-end gap-3 pt-2 border-t border-black/15/60">
                           {!addr.is_default && (
                             <button
                               type="button"
                               onClick={() => handleSetDefaultAddress(addr)}
-                              className="text-[11px] font-medium text-[#685E5A] hover:text-[#141312]"
+                              className="text-[11px] font-medium text-black/70 hover:text-black"
                             >
                               {t('profile.set_default')}
                             </button>
@@ -772,7 +772,7 @@ export default function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => openEditAddressModal(addr)}
-                            className="text-[11px] font-medium text-[#141312] hover:underline"
+                            className="text-[11px] font-medium text-black hover:underline"
                           >
                             {t('profile.edit')}
                           </button>
@@ -796,40 +796,40 @@ export default function ProfilePage() {
               {/* 3. Security (Ganti Kata Sandi) */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <span className="font-headline text-sm font-semibold text-[#141312]">{t('profile.security')}</span>
+                  <span className="font-headline text-sm font-semibold text-black">{t('profile.security')}</span>
                   <button
                     type="button"
                     onClick={openPasswordModal}
-                    className="rounded-full border border-[#D0C5BD] bg-white px-3.5 py-1 text-xs font-medium text-[#141312] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-95"
+                    className="rounded-none border border-black/20 bg-white px-3.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                   >
                     {t('profile.change')}
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between rounded-2xl border border-[#E5DDD5] bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+                <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F4EFEB] text-[#141312]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-none bg-black/5 text-black">
                       <Icon name="lock" size={16} />
                     </div>
                     <div>
-                      <span className="text-xs text-[#685E5A] block">{t('profile.password')}</span>
-                      <span className="text-xs font-semibold text-[#141312]">••••••••••••</span>
+                      <span className="text-xs text-black/70 block">{t('profile.password')}</span>
+                      <span className="text-xs font-semibold text-black">••••••••••••</span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-[#8E8380]">{t('profile.encrypted')}</span>
+                  <span className="text-[11px] text-black/50">{t('profile.encrypted')}</span>
                 </div>
               </section>
 
               {/* 4. Marketing Preferences (Screenshot 1) */}
               <section className="space-y-2">
                 <div className="px-1">
-                  <span className="font-headline text-sm font-semibold text-[#141312]">{t('profile.marketing_pref')}</span>
+                  <span className="font-headline text-sm font-semibold text-black">{t('profile.marketing_pref')}</span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-2xl border border-[#E5DDD5] bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+                <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
                   <div className="flex items-center gap-2.5">
-                    <Icon name="mail" size={18} className="text-[#141312]" />
-                    <span className="text-sm font-medium text-[#141312]">Email</span>
+                    <Icon name="mail" size={18} className="text-black" />
+                    <span className="text-sm font-medium text-black">Email</span>
                   </div>
 
                   {/* Switch toggle with checkmark */}
@@ -842,16 +842,16 @@ export default function ProfilePage() {
                       setEmailMarketing(next);
                       showToast(next ? 'Preferensi email diaktifkan' : 'Preferensi email dinonaktifkan');
                     }}
-                    className={`relative flex h-7 w-12 items-center rounded-full transition-colors ${
-                      emailMarketing ? 'bg-[#141312]' : 'bg-[#E5DDD5]'
+                    className={`relative flex h-6 w-11 items-center rounded-none transition-colors ${
+                      emailMarketing ? 'bg-black' : 'bg-[rgba(0,0,0,0.12)]'
                     }`}
                   >
                     <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs transition-transform ${
+                      className={`flex h-4 w-4 items-center justify-center rounded-none bg-white shadow-xs transition-transform ${
                         emailMarketing ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     >
-                      {emailMarketing && <Icon name="check" size={12} className="text-[#141312]" />}
+                      {emailMarketing && <Icon name="check" size={12} className="text-black" />}
                     </span>
                   </button>
                 </div>
@@ -860,26 +860,26 @@ export default function ProfilePage() {
               {/* 4b. Language Preference */}
               <section className="space-y-2">
                 <div className="px-1">
-                  <span className="font-headline text-sm font-semibold text-[#141312]">{t('profile.language_pref')}</span>
+                  <span className="font-headline text-sm font-semibold text-black">{t('profile.language_pref')}</span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-2xl border border-[#E5DDD5] bg-white p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+                <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
                   <div className="flex items-center gap-2.5">
-                    <Icon name="settings" size={18} className="text-[#141312]" />
-                    <span className="text-sm font-medium text-[#141312]">
+                    <Icon name="settings" size={18} className="text-black" />
+                    <span className="text-sm font-medium text-black">
                       {language === 'id' ? 'Bahasa Indonesia' : 'English'}
                     </span>
                   </div>
 
                   {/* EN / ID pill toggle */}
-                  <div className="flex items-center rounded-full border border-[#E5DDD5] bg-[#F4EFEB] p-0.5">
+                  <div className="flex items-center rounded-none border border-black/15 bg-black/5 p-0.5">
                     <button
                       type="button"
                       onClick={() => setLanguage('id')}
-                      className={`rounded-full px-3.5 py-1 text-xs font-semibold tracking-wider transition-all ${
+                      className={`rounded-none px-3.5 py-1 text-xs font-semibold tracking-wider transition-all ${
                         language === 'id'
-                          ? 'bg-[#141312] text-[#FAF8F5] shadow-xs'
-                          : 'text-[#685E5A] hover:text-[#141312]'
+                          ? 'bg-black text-white shadow-xs'
+                          : 'text-black/70 hover:text-black'
                       }`}
                     >
                       ID
@@ -887,10 +887,10 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => setLanguage('en')}
-                      className={`rounded-full px-3.5 py-1 text-xs font-semibold tracking-wider transition-all ${
+                      className={`rounded-none px-3.5 py-1 text-xs font-semibold tracking-wider transition-all ${
                         language === 'en'
-                          ? 'bg-[#141312] text-[#FAF8F5] shadow-xs'
-                          : 'text-[#685E5A] hover:text-[#141312]'
+                          ? 'bg-black text-white shadow-xs'
+                          : 'text-black/70 hover:text-black'
                       }`}
                     >
                       EN
@@ -904,14 +904,14 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="w-full rounded-2xl border border-[#D0C5BD] bg-white py-3 text-center text-sm font-semibold text-[#141312] shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-[#141312] hover:bg-[#F4EFEB] active:scale-[0.99]"
+                  className="w-full rounded-none border border-black/20 bg-white py-3 text-center text-sm font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-[0.99]"
                 >
                   {t('profile.sign_out')}
                 </button>
                 <button
                   type="button"
                   onClick={handleSignOutAllDevices}
-                  className="text-xs text-[#685E5A] transition hover:text-[#141312] hover:underline"
+                  className="text-xs text-black/70 transition hover:text-black hover:underline"
                 >
                   {t('profile.sign_out_all')}
                 </button>
@@ -922,25 +922,25 @@ export default function ProfilePage() {
       </main>
 
       {/* ── MINIMAL FOOTER LINKS (Matching Screenshot 1 & 2) ── */}
-      <footer className="border-t border-[#E5DDD5] py-6 text-center text-xs text-[#685E5A]">
+      <footer className="border-t border-black/15 py-6 text-center text-xs text-black/70">
         <div className="mx-auto w-full max-w-4xl lg:max-w-5xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <span className="flex items-center gap-1 cursor-pointer hover:text-[#141312]">
+          <span className="flex items-center gap-1 cursor-pointer hover:text-black">
             <span>Indonesia</span>
             <Icon name="keyboard_arrow_down" size={14} />
           </span>
-          <Link href="/conscious" className="hover:text-[#141312] hover:underline">
+          <Link href="/conscious" className="hover:text-black hover:underline">
             Return &amp; Exchange
           </Link>
-          <Link href="/conscious" className="hover:text-[#141312] hover:underline">
+          <Link href="/conscious" className="hover:text-black hover:underline">
             Shipping
           </Link>
-          <Link href="/conscious" className="hover:text-[#141312] hover:underline">
+          <Link href="/conscious" className="hover:text-black hover:underline">
             Privacy policy
           </Link>
-          <Link href="/conscious" className="hover:text-[#141312] hover:underline">
+          <Link href="/conscious" className="hover:text-black hover:underline">
             Terms of service
           </Link>
-          <Link href="/conscious" className="hover:text-[#141312] hover:underline">
+          <Link href="/conscious" className="hover:text-black hover:underline">
             Contact information
           </Link>
         </div>
@@ -951,13 +951,13 @@ export default function ProfilePage() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {isEditProfileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5DDD5] p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5] pb-3">
-              <h3 className="font-headline text-base font-semibold text-[#141312]">Ubah Data Profil</h3>
+          <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-black/15 pb-3">
+              <h3 className="font-headline text-base font-semibold text-black/85">Ubah Data Profil</h3>
               <button
                 type="button"
                 onClick={() => setIsEditProfileOpen(false)}
-                className="text-[#8E8380] hover:text-[#141312]"
+                className="text-black/50 hover:text-black"
               >
                 <Icon name="close" size={18} />
               </button>
@@ -965,23 +965,23 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSaveProfile} className="space-y-3.5">
               <div>
-                <label className="text-xs font-semibold text-[#141312]">Nama Lengkap</label>
+                <label className="text-xs font-semibold text-black">Nama Lengkap</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="mt-1 w-full rounded-none border border-black/20 px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                   placeholder="Masukkan nama Anda"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#141312]">Nomor Telepon / WhatsApp</label>
+                <label className="text-xs font-semibold text-black">Nomor Telepon / WhatsApp</label>
                 <input
                   type="text"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="mt-1 w-full rounded-none border border-black/20 px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                   placeholder="Contoh: 081234567890"
                 />
               </div>
@@ -990,14 +990,14 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(false)}
-                  className="rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-medium text-[#141312] hover:bg-[#F4EFEB]"
+                  className="rounded-none border border-black/20 bg-white px-4 py-2 text-xs font-medium text-black hover:bg-black/5"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={editSubmitting}
-                  className="rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] disabled:opacity-50"
+                  className="rounded-none bg-black px-5 py-2 text-xs font-semibold text-white hover:bg-black/85 disabled:opacity-50"
                 >
                   {editSubmitting ? 'Menyimpan...' : 'Simpan'}
                 </button>
@@ -1012,15 +1012,15 @@ export default function ProfilePage() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {isAddressModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5DDD5] p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5] pb-3">
-              <h3 className="font-headline text-base font-semibold text-[#141312]">
+          <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-black/15 pb-3">
+              <h3 className="font-headline text-base font-semibold text-black/85">
                 {editingAddress ? 'Edit Alamat' : 'Tambah Alamat Baru'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddressModalOpen(false)}
-                className="text-[#8E8380] hover:text-[#141312]"
+                className="text-black/50 hover:text-black"
               >
                 <Icon name="close" size={18} />
               </button>
@@ -1029,68 +1029,68 @@ export default function ProfilePage() {
             <form onSubmit={handleSaveAddress} className="space-y-3">
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-[11px] font-semibold text-[#141312]">Nama Penerima</label>
+                  <label className="text-[11px] font-semibold text-black">Nama Penerima</label>
                   <input
                     type="text"
                     value={addrRecipient}
                     onChange={(e) => setAddrRecipient(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
                     placeholder="Nama penerima"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-[#141312]">No. Telepon / WA</label>
+                  <label className="text-[11px] font-semibold text-black">No. Telepon / WA</label>
                   <input
                     type="text"
                     value={addrPhone}
                     onChange={(e) => setAddrPhone(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
                     placeholder="08..."
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-[#141312]">Alamat Lengkap (Jalan, No, RT/RW)</label>
+                <label className="text-[11px] font-semibold text-black">Alamat Lengkap (Jalan, No, RT/RW)</label>
                 <textarea
                   rows={2}
                   value={addrLine}
                   onChange={(e) => setAddrLine(e.target.value)}
-                  className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
                   placeholder="Nama jalan, gedung, blok, nomor rumah"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-[11px] font-semibold text-[#141312]">Kota / Kecamatan</label>
+                  <label className="text-[11px] font-semibold text-black">Kota / Kecamatan</label>
                   <input
                     type="text"
                     value={addrCity}
                     onChange={(e) => setAddrCity(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
                     placeholder="Kota atau kecamatan"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-[#141312]">Kode Pos</label>
+                  <label className="text-[11px] font-semibold text-black">Kode Pos</label>
                   <input
                     type="text"
                     maxLength={5}
                     value={addrPostal}
                     onChange={(e) => setAddrPostal(e.target.value.replace(/\D/g, ''))}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
                     placeholder="12345"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-[#141312]">Provinsi</label>
+                <label className="text-[11px] font-semibold text-black">Provinsi</label>
                 <select
                   value={addrProvince}
                   onChange={(e) => setAddrProvince(e.target.value)}
-                  className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3 py-2 text-xs text-[#141312] focus:border-[#141312] focus:outline-none bg-white"
+                  className="mt-1 w-full rounded-none border border-black/20 px-3 py-2 text-xs text-black focus:border-black focus:outline-none bg-white"
                 >
                   {INDONESIA_PROVINCES.map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -1103,23 +1103,23 @@ export default function ProfilePage() {
                   type="checkbox"
                   checked={addrIsDefault}
                   onChange={(e) => setAddrIsDefault(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[#141312]"
+                  className="h-4 w-4 rounded-none accent-[#000000]"
                 />
                 <span>Jadikan sebagai alamat pengiriman utama</span>
               </label>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5DDD5]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-black/15">
                 <button
                   type="button"
                   onClick={() => setIsAddressModalOpen(false)}
-                  className="rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-medium text-[#141312] hover:bg-[#F4EFEB]"
+                  className="rounded-none border border-black/20 bg-white px-4 py-2 text-xs font-medium text-black hover:bg-black/5"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={addrSubmitting}
-                  className="rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] disabled:opacity-50"
+                  className="rounded-none bg-black px-5 py-2 text-xs font-semibold text-white hover:bg-black/85 disabled:opacity-50"
                 >
                   {addrSubmitting ? 'Menyimpan...' : 'Simpan Alamat'}
                 </button>
@@ -1134,13 +1134,13 @@ export default function ProfilePage() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5DDD5] p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E5DDD5] pb-3">
+          <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-black/15 pb-3">
               <div>
-                <h3 className="font-headline text-base font-semibold text-[#141312]">
+                <h3 className="font-headline text-base font-semibold text-black/85">
                   {language === 'id' ? 'Perbarui Kata Sandi' : 'Update Password'}
                 </h3>
-                <p className="text-[11px] text-[#8E8380] mt-0.5">
+                <p className="text-[11px] text-black/50 mt-0.5">
                   {language === 'id'
                     ? 'Pilih metode untuk memperbarui kata sandi akun Anda'
                     : 'Choose a method to update your account password'}
@@ -1149,21 +1149,21 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="text-[#8E8380] hover:text-[#141312] p-1 rounded-full hover:bg-[#F4EFEB] transition-colors"
+                className="text-black/50 hover:text-black p-1 rounded-none hover:bg-black/5 transition-colors"
               >
                 <Icon name="close" size={18} />
               </button>
             </div>
 
             {/* Method Tabs */}
-            <div className="grid grid-cols-2 p-1 bg-[#F4EFEB] rounded-xl text-xs font-medium">
+            <div className="grid grid-cols-2 border border-black/15 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setPasswordMethod('old_password')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 transition-all ${
                   passwordMethod === 'old_password'
-                    ? 'bg-white text-[#141312] shadow-xs font-semibold'
-                    : 'text-[#8E8380] hover:text-[#141312]'
+                    ? 'bg-white text-black shadow-xs font-semibold'
+                    : 'text-black/50 hover:text-black'
                 }`}
               >
                 <Icon name="lock" size={14} />
@@ -1172,10 +1172,10 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setPasswordMethod('email')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 transition-all ${
                   passwordMethod === 'email'
-                    ? 'bg-white text-[#141312] shadow-xs font-semibold'
-                    : 'text-[#8E8380] hover:text-[#141312]'
+                    ? 'bg-white text-black shadow-xs font-semibold'
+                    : 'text-black/50 hover:text-black'
                 }`}
               >
                 <Icon name="mail" size={14} />
@@ -1186,42 +1186,42 @@ export default function ProfilePage() {
             {passwordMethod === 'old_password' ? (
               <form onSubmit={handleChangePassword} className="space-y-3.5 pt-1">
                 <div>
-                  <label className="text-xs font-semibold text-[#141312]">
+                  <label className="text-xs font-semibold text-black">
                     {language === 'id' ? 'Kata Sandi Saat Ini' : 'Current Password'}
                   </label>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                     placeholder={language === 'id' ? 'Masukkan kata sandi lama' : 'Enter current password'}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#141312]">
+                  <label className="text-xs font-semibold text-black">
                     {language === 'id' ? 'Kata Sandi Baru' : 'New Password'}
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                     placeholder={language === 'id' ? 'Minimal 6 karakter' : 'At least 6 characters'}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#141312]">
+                  <label className="text-xs font-semibold text-black">
                     {language === 'id' ? 'Konfirmasi Kata Sandi Baru' : 'Confirm New Password'}
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1 w-full rounded-none border border-[#D0C5BD] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="mt-1 w-full rounded-none border border-black/20 px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                     placeholder={language === 'id' ? 'Ulangi kata sandi baru' : 'Repeat new password'}
                     required
                   />
@@ -1231,14 +1231,14 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setIsPasswordModalOpen(false)}
-                    className="rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-medium text-[#141312] hover:bg-[#F4EFEB]"
+                    className="rounded-none border border-black/20 bg-white px-4 py-2 text-xs font-medium text-black hover:bg-black/5"
                   >
                     {language === 'id' ? 'Batal' : 'Cancel'}
                   </button>
                   <button
                     type="submit"
                     disabled={passwordSubmitting}
-                    className="rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] disabled:opacity-50"
+                    className="rounded-none bg-black px-5 py-2 text-xs font-semibold text-white hover:bg-black/85 disabled:opacity-50"
                   >
                     {passwordSubmitting
                       ? (language === 'id' ? 'Memproses...' : 'Processing...')
@@ -1248,14 +1248,14 @@ export default function ProfilePage() {
               </form>
             ) : (
               <div className="space-y-4 pt-1">
-                <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#E5DDD5] space-y-1.5">
-                  <p className="text-[11px] font-medium text-[#8E8380]">
+                <div className="p-3.5 rounded-none bg-white border border-black/15 space-y-1.5">
+                  <p className="text-[11px] font-medium text-black/50">
                     {language === 'id' ? 'Email Akun Anda:' : 'Your Account Email:'}
                   </p>
-                  <p className="text-sm font-semibold text-[#141312] break-all">
+                  <p className="text-sm font-semibold text-black break-all">
                     {user?.email || '-'}
                   </p>
-                  <p className="text-[11px] text-[#8E8380] pt-1 leading-relaxed">
+                  <p className="text-[11px] text-black/50 pt-1 leading-relaxed">
                     {language === 'id'
                       ? 'Kami akan mengirimkan tautan reset kata sandi resmi ke alamat email di atas. Klik tautan tersebut untuk membuat kata sandi baru secara aman.'
                       : 'We will send a secure password reset link to the email above. Follow the link to create a new password.'}
@@ -1263,7 +1263,7 @@ export default function ProfilePage() {
                 </div>
 
                 {emailResetSent && (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2">
+                  <div className="p-3 rounded-none bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2">
                     <Icon name="check_circle" size={16} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span>
                       {language === 'id'
@@ -1277,7 +1277,7 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setIsPasswordModalOpen(false)}
-                    className="rounded-full border border-[#D0C5BD] bg-white px-4 py-2 text-xs font-medium text-[#141312] hover:bg-[#F4EFEB]"
+                    className="rounded-none border border-black/20 bg-white px-4 py-2 text-xs font-medium text-black hover:bg-black/5"
                   >
                     {language === 'id' ? 'Tutup' : 'Close'}
                   </button>
@@ -1285,7 +1285,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleSendResetEmail}
                     disabled={emailResetLoading}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#141312] px-5 py-2 text-xs font-semibold text-[#FAF8F5] hover:bg-[#2b2826] disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-none bg-black px-5 py-2 text-xs font-semibold text-white hover:bg-black/85 disabled:opacity-50"
                   >
                     <Icon name="send" size={13} />
                     {emailResetLoading

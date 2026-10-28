@@ -11,7 +11,7 @@ export default async function HomePage() {
   const products = await fetchCatalogProducts();
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col bg-[#FAF8F5]">
+    <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">
       {/* 1. Hero Section matching Figma: TIMELESS • INTENTIONAL • EFFORTLESS */}
       <HeroSection />
 

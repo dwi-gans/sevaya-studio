@@ -226,12 +226,12 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
   return (
     <div className="space-y-6">
       {/* Header and Add Button */}
-      <div className="flex flex-col gap-4 border border-[#E5DDD5] bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-xs">
+      <div className="flex flex-col gap-4 border border-black/15 bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-xs">
         <div>
-          <h2 className="font-sans text-base font-semibold tracking-wider text-[#141312] uppercase">
+          <h2 className="font-sans text-base font-semibold tracking-wider text-black/85 uppercase">
             Buku Alamat Pengiriman
           </h2>
-          <p className="mt-1 text-xs text-[#685E5A]">
+          <p className="mt-1 text-xs text-black/70">
             Kelola alamat tujuan untuk kemudahan checkout otomatis kurir Biteship.
           </p>
         </div>
@@ -239,7 +239,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
         <button
           type="button"
           onClick={openAddForm}
-          className="inline-flex items-center justify-center gap-2 border border-[#141312] bg-[#141312] px-5 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 border border-black bg-black px-5 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] active:scale-[0.98]"
         >
           <Icon name="add" size={16} />
           <span>Tambah Alamat Baru</span>
@@ -248,15 +248,15 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
 
       {/* Modal / Inline Form for Add & Edit */}
       {isFormOpen && (
-        <div className="border border-[#141312] bg-white p-6 sm:p-8 shadow-sm animate-luxury-fade-up">
-          <div className="flex items-center justify-between border-b border-[#E5DDD5] pb-3">
-            <h3 className="font-sans text-sm font-semibold tracking-wider text-[#141312] uppercase">
+        <div className="border border-black bg-white p-6 sm:p-8 shadow-sm animate-luxury-fade-up">
+          <div className="flex items-center justify-between border-b border-black/15 pb-3">
+            <h3 className="font-sans text-sm font-semibold tracking-wider text-black/85 uppercase">
               {editingAddress ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Baru'}
             </h3>
             <button
               type="button"
               onClick={() => setIsFormOpen(false)}
-              className="p-1 text-[#8E8380] hover:text-[#141312]"
+              className="p-1 text-black/50 hover:text-black"
             >
               <Icon name="close" size={18} />
             </button>
@@ -265,7 +265,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
           <form onSubmit={handleSave} className="mt-5 space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+                <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                   Nama Penerima <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -274,12 +274,12 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
                   placeholder="Nama lengkap penerima"
-                  className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+                <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                   Nomor Telepon Penerima <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -288,13 +288,13 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="0812 3456 7890"
-                  className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+              <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                 Alamat Lengkap <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -303,19 +303,19 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                 value={addressLine}
                 onChange={(e) => setAddressLine(e.target.value)}
                 placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan"
-                className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
               />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+                <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                   Provinsi <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={province}
                   onChange={(e) => setProvince(e.target.value)}
-                  className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="w-full border border-black/15 bg-white px-3 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                 >
                   {INDONESIA_PROVINCES.map((prov) => (
                     <option key={prov} value={prov}>
@@ -326,7 +326,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+                <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                   Kota / Kabupaten <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -335,12 +335,12 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Contoh: Jakarta Selatan"
-                  className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+                <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                   Kode Pos <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -350,13 +350,13 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="12190"
-                  className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                  className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold tracking-wider text-[#141312] uppercase">
+              <label className="text-[11px] font-semibold tracking-wider text-black uppercase">
                 Catatan Pengiriman (Opsional)
               </label>
               <input
@@ -364,7 +364,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Patokan rumah, instruksi satpam / kurir"
-                className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-3.5 py-2.5 text-xs text-[#141312] focus:border-[#141312] focus:outline-none"
+                className="w-full border border-black/15 bg-white px-3.5 py-2.5 text-xs text-black focus:border-black focus:outline-none"
               />
             </div>
 
@@ -374,26 +374,26 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                 type="checkbox"
                 checked={isDefault}
                 onChange={(e) => setIsDefault(e.target.checked)}
-                className="h-4 w-4 cursor-pointer text-[#141312] accent-[#141312]"
+                className="h-4 w-4 cursor-pointer text-black accent-[#000000]"
               />
               <label htmlFor="isDefault" className="cursor-pointer text-xs text-[#554C48]">
                 Jadikan sebagai alamat pengiriman utama (default)
               </label>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5DDD5]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-black/15">
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}
                 disabled={isSaving}
-                className="border border-[#D0C5BD] bg-white px-5 py-2 text-xs font-semibold tracking-wider text-[#141312] uppercase transition hover:border-[#141312]"
+                className="border border-black/20 bg-white px-5 py-2 text-xs font-semibold tracking-wider text-black uppercase transition hover:border-black"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="inline-flex items-center gap-2 border border-[#141312] bg-[#141312] px-6 py-2 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+                className="inline-flex items-center gap-2 border border-black bg-black px-6 py-2 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
               >
                 {isSaving && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
                 <span>{isSaving ? 'Menyimpan...' : 'Simpan Alamat'}</span>
@@ -407,10 +407,10 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="animate-pulse border border-[#E5DDD5] bg-white p-5 space-y-3">
-              <div className="h-4 w-32 bg-[#E5DDD5]/60" />
-              <div className="h-3 w-64 bg-[#E5DDD5]/40" />
-              <div className="h-3 w-48 bg-[#E5DDD5]/40" />
+            <div key={i} className="animate-pulse border border-black/15 bg-white p-5 space-y-3">
+              <div className="h-4 w-32 bg-[rgba(0,0,0,0.12)]/60" />
+              <div className="h-3 w-64 bg-[rgba(0,0,0,0.12)]/40" />
+              <div className="h-3 w-48 bg-[rgba(0,0,0,0.12)]/40" />
             </div>
           ))}
         </div>
@@ -426,20 +426,20 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
           </button>
         </div>
       ) : addresses.length === 0 ? (
-        <div className="border border-dashed border-[#D0C5BD] bg-white p-12 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center border border-[#E5DDD5] bg-[#FAF8F5] text-[#8E8380]">
+        <div className="border border-dashed border-black/20 bg-white p-12 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center border border-black/15 bg-white text-black/50">
             <Icon name="location_on" size={24} />
           </div>
-          <h3 className="mt-4 font-sans text-sm font-semibold tracking-wider text-[#141312] uppercase">
+          <h3 className="mt-4 font-sans text-sm font-semibold tracking-wider text-black/85 uppercase">
             Belum Ada Alamat Tersimpan
           </h3>
-          <p className="mt-1 text-xs text-[#685E5A]">
+          <p className="mt-1 text-xs text-black/70">
             Tambahkan alamat pengiriman pertama Anda untuk proses belanja yang lebih cepat.
           </p>
           <button
             type="button"
             onClick={openAddForm}
-            className="mt-5 inline-flex items-center gap-1.5 border border-[#141312] bg-[#141312] px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
+            className="mt-5 inline-flex items-center gap-1.5 border border-black bg-black px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
           >
             <Icon name="add" size={15} />
             <span>Tambah Alamat Sekarang</span>
@@ -452,17 +452,17 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
               key={addr.id}
               className={`border bg-white p-5 transition-colors shadow-xs ${
                 addr.is_default
-                  ? 'border-[#141312] ring-1 ring-[#141312]/20'
-                  : 'border-[#E5DDD5] hover:border-[#8E8380]'
+                  ? 'border-black ring-1 ring-[#000000]/20'
+                  : 'border-black/15 hover:border-[rgba(0,0,0,0.4)]'
               }`}
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-sans text-sm font-semibold tracking-wider text-[#141312] uppercase">
+                  <span className="font-sans text-sm font-semibold tracking-wider text-black uppercase">
                     {addr.recipient_name}
                   </span>
                   {addr.is_default && (
-                    <span className="bg-[#141312] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase">
+                    <span className="bg-black px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase">
                       Alamat Utama
                     </span>
                   )}
@@ -473,7 +473,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                     <button
                       type="button"
                       onClick={() => handleSetDefault(addr)}
-                      className="text-[#685E5A] hover:text-[#141312] underline underline-offset-2"
+                      className="text-black/70 hover:text-black underline underline-offset-2"
                     >
                       Jadikan Utama
                     </button>
@@ -481,7 +481,7 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
                   <button
                     type="button"
                     onClick={() => openEditForm(addr)}
-                    className="inline-flex items-center gap-1 text-[#141312] hover:opacity-75 font-medium"
+                    className="inline-flex items-center gap-1 text-black hover:opacity-75 font-medium"
                   >
                     <Icon name="edit" size={13} />
                     <span>Ubah</span>
@@ -498,13 +498,13 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
               </div>
 
               <div className="mt-2.5 space-y-1 text-xs text-[#554C48]">
-                <p className="font-medium text-[#141312]">{addr.phone}</p>
+                <p className="font-medium text-black">{addr.phone}</p>
                 <p className="leading-relaxed">{addr.address_line}</p>
-                <p className="text-[#685E5A]">
+                <p className="text-black/70">
                   {addr.city}, {addr.province} {addr.postal_code}
                 </p>
                 {addr.notes && (
-                  <p className="text-[11px] text-[#8E8380] italic">
+                  <p className="text-[11px] text-black/50 italic">
                     Catatan: &ldquo;{addr.notes}&rdquo;
                   </p>
                 )}

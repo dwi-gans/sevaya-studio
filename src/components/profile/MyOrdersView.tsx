@@ -148,11 +148,11 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-2 border border-[#E5DDD5] bg-white p-6 shadow-xs">
-        <h2 className="font-sans text-base font-semibold tracking-wider text-[#141312] uppercase">
+      <div className="flex flex-col gap-2 border border-black/15 bg-white p-6 shadow-xs">
+        <h2 className="font-sans text-base font-semibold tracking-wider text-black/85 uppercase">
           Riwayat Transaksi &amp; Pesanan
         </h2>
-        <p className="text-xs text-[#685E5A]">
+        <p className="text-xs text-black/70">
           Pantau status pemrosesan pesanan abaya &amp; khiban eksklusif Anda, nomor resi kurir Biteship, dan rincian transaksi.
         </p>
 
@@ -167,8 +167,8 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                 onClick={() => setActiveStatus(tab.id)}
                 className={`shrink-0 border px-3.5 py-1.5 text-xs tracking-wider uppercase transition-colors ${
                   isSelected
-                    ? 'border-[#141312] bg-[#141312] font-semibold text-white'
-                    : 'border-[#E5DDD5] bg-[#FAF8F5] text-[#554C48] hover:border-[#141312] hover:text-[#141312]'
+                    ? 'border-black bg-black font-semibold text-white'
+                    : 'border-black/15 bg-white text-[#554C48] hover:border-black hover:text-black'
                 }`}
               >
                 {tab.label}
@@ -182,22 +182,22 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse border border-[#E5DDD5] bg-white p-5 space-y-4">
+            <div key={i} className="animate-pulse border border-black/15 bg-white p-5 space-y-4">
               <div className="flex justify-between">
-                <div className="h-4 w-40 bg-[#E5DDD5]/70" />
-                <div className="h-4 w-24 bg-[#E5DDD5]/50" />
+                <div className="h-4 w-40 bg-[rgba(0,0,0,0.12)]/70" />
+                <div className="h-4 w-24 bg-[rgba(0,0,0,0.12)]/50" />
               </div>
               <div className="flex gap-4">
-                <div className="h-16 w-16 bg-[#E5DDD5]/50 shrink-0" />
+                <div className="h-16 w-16 bg-[rgba(0,0,0,0.12)]/50 shrink-0" />
                 <div className="space-y-2 flex-1">
-                  <div className="h-3.5 w-48 bg-[#E5DDD5]/60" />
-                  <div className="h-3 w-28 bg-[#E5DDD5]/40" />
+                  <div className="h-3.5 w-48 bg-[rgba(0,0,0,0.12)]/60" />
+                  <div className="h-3 w-28 bg-[rgba(0,0,0,0.12)]/40" />
                 </div>
               </div>
-              <div className="h-px bg-[#E5DDD5]" />
+              <div className="h-px bg-[rgba(0,0,0,0.12)]" />
               <div className="flex justify-between">
-                <div className="h-4 w-28 bg-[#E5DDD5]/60" />
-                <div className="h-8 w-28 bg-[#E5DDD5]/60" />
+                <div className="h-4 w-28 bg-[rgba(0,0,0,0.12)]/60" />
+                <div className="h-8 w-28 bg-[rgba(0,0,0,0.12)]/60" />
               </div>
             </div>
           ))}
@@ -215,21 +215,21 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
           </button>
         </div>
       ) : orders.length === 0 ? (
-        <div className="border border-dashed border-[#D0C5BD] bg-white p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center border border-[#E5DDD5] bg-[#FAF8F5] text-[#8E8380]">
+        <div className="border border-dashed border-black/20 bg-white p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center border border-black/15 bg-white text-black/50">
             <Icon name="shopping_bag" size={26} />
           </div>
-          <h3 className="mt-4 font-sans text-sm font-semibold tracking-wider text-[#141312] uppercase">
+          <h3 className="mt-4 font-sans text-sm font-semibold tracking-wider text-black/85 uppercase">
             Tidak Ada Pesanan Ditemukan
           </h3>
-          <p className="mt-1 text-xs text-[#685E5A] max-w-sm mx-auto">
+          <p className="mt-1 text-xs text-black/70 max-w-sm mx-auto">
             {activeStatus === 'all'
               ? 'Anda belum memiliki riwayat pembelian. Temukan koleksi abaya dan khiban eksklusif SEVAYA sekarang.'
               : `Tidak ada pesanan dengan status "${STATUS_FILTERS.find((f) => f.id === activeStatus)?.label}".`}
           </p>
           <Link
             href="/shop"
-            className="mt-6 inline-flex items-center gap-2 border border-[#141312] bg-[#141312] px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
+            className="mt-6 inline-flex items-center gap-2 border border-black bg-black px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
           >
             <Icon name="storefront" size={15} />
             <span>Mulai Belanja</span>
@@ -254,16 +254,16 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
             return (
               <div
                 key={ord.id}
-                className="border border-[#E5DDD5] bg-white p-5 transition-shadow hover:shadow-md shadow-xs"
+                className="border border-black/15 bg-white p-5 transition-shadow hover:shadow-md shadow-xs"
               >
                 {/* Order Header */}
-                <div className="flex flex-col gap-2 pb-3.5 border-b border-[#E5DDD5] sm:flex-row sm:items-center sm:justify-between text-xs">
+                <div className="flex flex-col gap-2 pb-3.5 border-b border-black/15 sm:flex-row sm:items-center sm:justify-between text-xs">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono font-bold text-[#141312]">
+                    <span className="font-mono font-bold text-black">
                       #{ord.order_number}
                     </span>
-                    <span className="text-[#8E8380]">|</span>
-                    <span className="text-[#685E5A]">{dateStr}</span>
+                    <span className="text-black/50">|</span>
+                    <span className="text-black/70">{dateStr}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                 <div className="py-4">
                   {firstItem ? (
                     <div className="flex items-center gap-4">
-                      <div className="relative h-18 w-14 shrink-0 overflow-hidden bg-[#FAF8F5] border border-[#E5DDD5]">
+                      <div className="relative h-18 w-14 shrink-0 overflow-hidden bg-white border border-black/15">
                         {firstItem.image ? (
                           <Image
                             src={firstItem.image}
@@ -289,24 +289,24 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[#8E8380]">
+                          <div className="flex h-full w-full items-center justify-center text-black/50">
                             <Icon name="shopping_bag" size={18} />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-sans text-xs font-semibold tracking-wider text-[#141312] uppercase truncate">
+                        <h4 className="font-sans text-xs font-semibold tracking-wider text-black/85 uppercase truncate">
                           {firstItem.title || firstItem.name || 'Koleksi Sevaya'}
                         </h4>
-                        <p className="mt-0.5 text-[11px] text-[#685E5A]">
+                        <p className="mt-0.5 text-[11px] text-black/70">
                           {[firstItem.color, firstItem.size]
                             .filter(Boolean)
                             .join(' / ') || 'Standar'}{' '}
                           &bull; {firstItem.quantity || 1} barang
                         </p>
                         {extraItemCount > 0 && (
-                          <p className="mt-1 text-[11px] text-[#8E8380]">
+                          <p className="mt-1 text-[11px] text-black/50">
                             +{extraItemCount} produk lainnya dalam pesanan ini
                           </p>
                         )}
@@ -315,10 +315,10 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                       {/* Courier & Waybill */}
                       {ord.courier_name && (
                         <div className="hidden sm:flex flex-col text-right text-xs">
-                          <span className="text-[10px] tracking-wider text-[#8E8380] uppercase">
+                          <span className="text-[10px] tracking-wider text-black/50 uppercase">
                             Kurir
                           </span>
-                          <span className="font-medium text-[#141312]">
+                          <span className="font-medium text-black">
                             {ord.courier_name}
                           </span>
                           {ord.tracking_number && (
@@ -330,17 +330,17 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                       )}
                     </div>
                   ) : (
-                    <p className="text-xs text-[#8E8380]">Informasi produk tidak tersedia</p>
+                    <p className="text-xs text-black/50">Informasi produk tidak tersedia</p>
                   )}
                 </div>
 
                 {/* Order Footer & Total */}
-                <div className="flex flex-col gap-3 pt-3.5 border-t border-[#E5DDD5] sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 pt-3.5 border-t border-black/15 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <span className="text-[11px] text-[#8E8380] tracking-wider uppercase block">
+                    <span className="text-[11px] text-black/50 tracking-wider uppercase block">
                       Total Pembayaran
                     </span>
-                    <span className="font-sans text-base font-bold text-[#141312]">
+                    <span className="font-sans text-base font-bold text-black">
                       {formatIDR(ord.grand_total)}
                     </span>
                   </div>
@@ -348,14 +348,14 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
                       href={`/profile/orders/${ord.order_number}#tracking`}
-                      className="inline-flex items-center gap-1.5 border border-[#141312] bg-white px-3.5 py-2 text-xs font-semibold tracking-wider text-[#141312] uppercase transition hover:bg-[#FAF8F5]"
+                      className="inline-flex items-center gap-1.5 border border-black bg-white px-3.5 py-2 text-xs font-semibold tracking-wider text-black uppercase transition hover:bg-white"
                     >
                       <Icon name="local_shipping" size={14} />
                       <span>Lacak Pesanan</span>
                     </Link>
                     <Link
                       href={`/profile/orders/${ord.order_number}`}
-                      className="inline-flex items-center gap-1.5 border border-[#141312] bg-[#141312] px-4 py-2 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
+                      className="inline-flex items-center gap-1.5 border border-black bg-black px-4 py-2 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29]"
                     >
                       <span>Lihat Rincian</span>
                       <Icon name="arrow_forward" size={13} />

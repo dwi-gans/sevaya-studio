@@ -70,12 +70,12 @@ export function ChangePasswordView() {
   };
 
   return (
-    <div className="border border-[#E5DDD5] bg-white p-6 sm:p-8 shadow-xs">
-      <div className="border-b border-[#E5DDD5] pb-4">
-        <h2 className="font-sans text-base font-semibold tracking-wider text-[#141312] uppercase">
+    <div className="border border-black/15 bg-white p-6 sm:p-8 shadow-xs">
+      <div className="border-b border-black/15 pb-4">
+        <h2 className="font-sans text-base font-semibold tracking-wider text-black/85 uppercase">
           Keamanan &amp; Kata Sandi
         </h2>
-        <p className="mt-1 text-xs text-[#685E5A]">
+        <p className="mt-1 text-xs text-black/70">
           Ganti kata sandi akun Anda secara berkala untuk menjaga keamanan data belanja Anda.
         </p>
       </div>
@@ -97,7 +97,7 @@ export function ChangePasswordView() {
       <form onSubmit={handleSubmit} className="mt-6 max-w-lg space-y-4.5">
         {/* Current Password */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Kata Sandi Saat Ini
           </label>
           <div className="relative flex items-center">
@@ -106,12 +106,12 @@ export function ChangePasswordView() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Masukkan kata sandi lama Anda"
-              className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 pr-11 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+              className="w-full border border-black/15 bg-white px-4 py-3 pr-11 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setShowCurrent(!showCurrent)}
-              className="absolute right-3 text-[#685E5A] hover:text-[#141312]"
+              className="absolute right-3 text-black/70 hover:text-black"
             >
               <Icon name={showCurrent ? 'visibility_off' : 'visibility'} size={18} />
             </button>
@@ -120,7 +120,7 @@ export function ChangePasswordView() {
 
         {/* New Password */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Kata Sandi Baru <span className="text-red-500">*</span>
           </label>
           <div className="relative flex items-center">
@@ -131,24 +131,24 @@ export function ChangePasswordView() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Minimal 6 karakter"
-              className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 pr-11 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+              className="w-full border border-black/15 bg-white px-4 py-3 pr-11 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setShowNew(!showNew)}
-              className="absolute right-3 text-[#685E5A] hover:text-[#141312]"
+              className="absolute right-3 text-black/70 hover:text-black"
             >
               <Icon name={showNew ? 'visibility_off' : 'visibility'} size={18} />
             </button>
           </div>
-          <p className="text-[11px] text-[#8E8380]">
+          <p className="text-[11px] text-black/50">
             Gunakan kombinasi huruf, angka, dan simbol untuk keamanan maksimal.
           </p>
         </div>
 
         {/* Confirm New Password */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold tracking-wider text-[#141312] uppercase">
+          <label className="text-xs font-semibold tracking-wider text-black uppercase">
             Konfirmasi Kata Sandi Baru <span className="text-red-500">*</span>
           </label>
           <input
@@ -158,15 +158,15 @@ export function ChangePasswordView() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Ulangi kata sandi baru"
-            className="w-full border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-3 text-xs text-[#141312] placeholder:text-[#8E8380] focus:border-[#141312] focus:outline-none"
+            className="w-full border border-black/15 bg-white px-4 py-3 text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none"
           />
         </div>
 
-        <div className="pt-3 border-t border-[#E5DDD5]">
+        <div className="pt-3 border-t border-black/15">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 border border-[#141312] bg-[#141312] px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+            className="inline-flex items-center gap-2 border border-black bg-black px-6 py-2.5 text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
           >
             {isSubmitting && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             <span>{isSubmitting ? 'Memperbarui...' : 'Simpan Kata Sandi'}</span>

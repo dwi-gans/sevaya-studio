@@ -92,6 +92,7 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('');
   const [saveInfo, setSaveInfo] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('midtrans');
+  const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,6 +190,7 @@ export default function CheckoutPage() {
   const [shippingRates, setShippingRates] = useState<BiteshipRateOption[]>([]);
   const [selectedRate, setSelectedRate] = useState<BiteshipRateOption | null>(null);
   const [isLoadingRates, setIsLoadingRates] = useState(false);
+  const [shippingDropdownOpen, setShippingDropdownOpen] = useState(false);
   const [shippingNotice, setShippingNotice] = useState<string | null>(null);
   const [shippingError, setShippingError] = useState<string | null>(null);
 
@@ -465,9 +467,9 @@ export default function CheckoutPage() {
   // ── Wait for cart items to load from localStorage before checking empty ──
   if (!isLoaded || authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F5]">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#141312] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent" />
           <p className="text-xs text-[#7C726E]">Memuat data pesanan...</p>
         </div>
       </div>
@@ -477,12 +479,12 @@ export default function CheckoutPage() {
   // ── Empty bag check: show polite empty view instead of injecting fake items ──
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] text-[#141312]">
-        <header className="sticky top-0 z-40 border-b border-[#E5DDD5] bg-[#FAF8F5]/95 backdrop-blur-sm">
+      <div className="min-h-screen bg-white text-black">
+        <header className="sticky top-0 z-40 border-b border-black/15 bg-white/95 backdrop-blur-sm">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-[#141312]"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
             >
               <Icon name="arrow_back" size={14} />
               <span className="hidden sm:inline">Toko</span>
@@ -490,7 +492,7 @@ export default function CheckoutPage() {
             <Logo className="h-5 w-auto" />
             <Link
               href="/bag"
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-[#141312]"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
             >
               <Icon name="shopping_bag" size={14} />
               <span className="hidden sm:inline">Tas</span>
@@ -499,17 +501,17 @@ export default function CheckoutPage() {
         </header>
 
         <main className="mx-auto flex max-w-md flex-col items-center justify-center px-4 py-24 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#E5DDD5] bg-[#F4EFEB] text-[#141312]">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-black/15 bg-black/5 text-black">
             <Icon name="shopping_bag" size={28} />
           </div>
-          <h1 className="font-sans text-xl font-medium text-[#141312] sm:text-2xl">Tas Belanja Anda Kosong</h1>
+          <h1 className="font-sans text-xl font-medium text-black sm:text-2xl">Tas Belanja Anda Kosong</h1>
           <p className="mt-2 text-xs leading-relaxed text-[#7C726E]">
             Belum ada busana di dalam tas belanja Anda. Silakan pilih busana modest abaya dari koleksi Sevaya untuk melanjutkan pemesanan.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
             <Link
               href="/shop"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#141312] px-6 py-3 text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-sm transition hover:bg-[#2b2826]"
+              className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-3 text-xs font-semibold tracking-wider text-white uppercase shadow-sm transition hover:bg-black/85"
             >
               <Icon name="shopping_bag" size={15} />
               <span>Jelajahi Koleksi Busana</span>
@@ -530,7 +532,7 @@ export default function CheckoutPage() {
                   quantity: 1,
                 });
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#D0C5BD] bg-white px-4 py-3 text-xs font-medium tracking-wider text-[#141312] uppercase transition hover:border-[#141312]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-black/20 bg-white px-4 py-3 text-xs font-medium tracking-wider text-black uppercase transition hover:border-black"
             >
               <span>+ Coba dengan 1 Item Contoh</span>
             </button>
@@ -543,12 +545,12 @@ export default function CheckoutPage() {
   // ── Authentication check: User MUST log in before checking out so orders are properly saved & tracked ──
   if (!authLoading && !isAuthenticated && !user) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] text-[#141312]">
-        <header className="sticky top-0 z-40 border-b border-[#E5DDD5] bg-[#FAF8F5]/95 backdrop-blur-sm">
+      <div className="min-h-screen bg-white text-black">
+        <header className="sticky top-0 z-40 border-b border-black/15 bg-white/95 backdrop-blur-sm">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link
               href="/bag"
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-[#141312]"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
             >
               <Icon name="arrow_back" size={14} />
               <span className="hidden sm:inline">Tas Belanja</span>
@@ -559,13 +561,13 @@ export default function CheckoutPage() {
         </header>
 
         <main className="mx-auto flex max-w-md flex-col items-center justify-center px-4 py-24 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#E5DDD5] bg-[#F4EFEB] text-[#141312]">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-black/15 bg-black/5 text-black">
             <Icon name="lock" size={28} />
           </div>
           <span className="font-label-sm text-[11px] font-bold tracking-[0.2em] text-[#8C827A] uppercase">
             Autentikasi Diperlukan
           </span>
-          <h1 className="mt-2 font-headline-md text-2xl font-semibold text-[#141312]">
+          <h1 className="mt-2 font-headline-md text-2xl font-semibold text-black">
             Masuk untuk Melanjutkan Checkout
           </h1>
           <p className="mt-2 text-xs leading-relaxed text-[#7C726E]">
@@ -574,21 +576,21 @@ export default function CheckoutPage() {
           <div className="mt-8 flex w-full flex-col gap-3">
             <Link
               href="/login?redirect=/test-checkout"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#141312] text-xs font-semibold tracking-wider text-[#FAF8F5] uppercase shadow-sm transition hover:bg-[#2b2826]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-black text-xs font-semibold tracking-wider text-white uppercase shadow-sm transition hover:bg-black/85"
             >
               <Icon name="person" size={16} />
               <span>Masuk ke Akun Anda</span>
             </Link>
             <Link
               href="/register?redirect=/test-checkout"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D0C5BD] bg-white text-xs font-medium tracking-wider text-[#141312] uppercase transition hover:border-[#141312]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-black/20 bg-white text-xs font-medium tracking-wider text-black uppercase transition hover:border-black"
             >
               <Icon name="arrow_forward" size={16} />
               <span>Daftar Akun Baru</span>
             </Link>
             <Link
               href="/bag"
-              className="mt-2 text-[11px] font-medium tracking-wider text-[#7C726E] underline underline-offset-4 hover:text-[#141312]"
+              className="mt-2 text-[11px] font-medium tracking-wider text-[#7C726E] underline underline-offset-4 hover:text-black"
             >
               Kembali ke Tas Belanja
             </Link>
@@ -603,7 +605,7 @@ export default function CheckoutPage() {
   const displayTotal = grandTotal;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#141312]">
+    <div className="min-h-screen bg-white text-black">
       {/* Midtrans Snap JS */}
       <Script
         src={
@@ -615,11 +617,11 @@ export default function CheckoutPage() {
         strategy="afterInteractive"
       />
       {/* ── Checkout Header ── */}
-      <header className="sticky top-0 z-40 border-b border-[#E5DDD5] bg-[#FAF8F5]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-black/15 bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-[#141312]"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
           >
             <Icon name="arrow_back" size={14} />
             <span className="hidden sm:inline">Toko</span>
@@ -629,7 +631,7 @@ export default function CheckoutPage() {
 
           <Link
             href="/bag"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-[#141312]"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
           >
             <Icon name="shopping_bag" size={14} />
             <span className="hidden sm:inline">Tas</span>
@@ -645,32 +647,32 @@ export default function CheckoutPage() {
           <aside className="order-first lg:order-last">
             <div className="lg:sticky lg:top-20 space-y-5">
 
-              {/* Items */}
-              <div className="space-y-4">
+              {/* Items List Responsive */}
+              <div className="space-y-3 sm:space-y-4">
                 {displayItems.map((item, idx) => (
-                  <div key={`${item.id || item.title}-${item.color || ''}-${idx}`} className="flex items-start gap-4">
+                  <div key={`${item.id || item.title}-${item.color || ''}-${idx}`} className="flex items-center gap-3 sm:gap-4 border-b border-black/5 pb-3 last:border-b-0 last:pb-0">
                     <div className="relative shrink-0">
-                      <div className="h-16 w-16 overflow-hidden rounded-md border border-[#E5DDD5] bg-[#F4EFEB]">
+                      <div className="h-14 w-12 sm:h-16 sm:w-14 overflow-hidden rounded-none border border-black/15 bg-black/5">
                         <Image
                           src={item.image}
                           alt={item.title}
-                          width={64}
+                          width={56}
                           height={64}
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#7C726E] text-[10px] font-semibold text-white">
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-none bg-black text-[9px] font-semibold text-white">
                         {item.quantity}
                       </span>
                     </div>
-                    <div className="flex flex-1 items-start justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-medium text-[#141312]">{item.title}</p>
-                        <p className="mt-0.5 text-[11px] text-[#7C726E]">
-                          {item.color} / {item.size}
+                    <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <p className="text-[11px] sm:text-xs font-medium text-black truncate">{item.title}</p>
+                        <p className="mt-0.5 text-[10px] text-[#7C726E] truncate">
+                          {[item.color, item.size].filter(Boolean).join(' / ')}
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-[#141312] whitespace-nowrap">
+                      <span className="text-[11px] sm:text-xs font-semibold text-black whitespace-nowrap shrink-0">
                         {formatIDR(item.price * item.quantity)}
                       </span>
                     </div>
@@ -678,7 +680,7 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <hr className="border-[#E5DDD5]" />
+              <hr className="border-black/15" />
 
               {/* Discount code */}
               <div className="flex gap-2">
@@ -687,23 +689,23 @@ export default function CheckoutPage() {
                   value={discountCode}
                   onChange={(e) => setDiscountCode(e.target.value)}
                   placeholder="Kode diskon"
-                  className="flex-1 rounded-lg border border-[#D0C5BD] bg-white px-3 py-2.5 text-xs text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none"
+                  className="flex-1 rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none"
                 />
                 <button
                   type="button"
-                  className="rounded-lg border border-[#141312] bg-white px-4 py-2.5 text-xs font-medium text-[#141312] transition hover:bg-[#141312] hover:text-white"
+                  className="rounded-lg border border-black bg-white px-4 py-2.5 text-xs font-medium text-black transition hover:bg-black hover:text-white"
                 >
                   Terapkan
                 </button>
               </div>
 
-              <hr className="border-[#E5DDD5]" />
+              <hr className="border-black/15" />
 
               {/* Price breakdown */}
               <div className="space-y-2.5 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-[#554C48]">Subtotal</span>
-                  <span className="font-medium text-[#141312]">{formatIDR(displaySubtotal)}</span>
+                  <span className="font-medium text-black">{formatIDR(displaySubtotal)}</span>
                 </div>
 
                 {discount > 0 && (
@@ -716,29 +718,29 @@ export default function CheckoutPage() {
                 {giftPackaging && (
                   <div className="flex items-center justify-between">
                     <span className="text-[#554C48]">Gift Packaging</span>
-                    <span className="font-medium text-[#141312]">{formatIDR(giftFee)}</span>
+                    <span className="font-medium text-black">{formatIDR(giftFee)}</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between">
                   <span className="text-[#554C48]">Pengiriman</span>
-                  <span className={`font-medium ${selectedRate ? 'text-[#141312]' : 'text-[#8E8380] text-xs'}`}>
+                  <span className={`font-medium ${selectedRate ? 'text-black' : 'text-black/50 text-xs'}`}>
                     {selectedRate ? formatIDR(shippingCost) : 'Masukkan alamat pengiriman'}
                   </span>
                 </div>
               </div>
 
-              <hr className="border-[#E5DDD5]" />
+              <hr className="border-black/15" />
 
               {/* Total */}
               <div className="flex items-baseline justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-[#141312]">Total</p>
+                  <p className="text-sm font-semibold text-black">Total</p>
                   <p className="text-[10px] text-[#7C726E]">Termasuk pajak yang berlaku</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] tracking-wider text-[#7C726E] uppercase">IDR</p>
-                  <p className="text-xl font-semibold text-[#141312]">{formatIDR(displayTotal)}</p>
+                  <p className="text-xl font-semibold text-black">{formatIDR(displayTotal)}</p>
                 </div>
               </div>
 
@@ -785,7 +787,7 @@ export default function CheckoutPage() {
             {/* 1. Contact */}
             <section>
               <div className="mb-4">
-                <h2 className="text-sm font-semibold tracking-[0.12em] text-[#141312] uppercase">
+                <h2 className="text-[10px] font-semibold tracking-[0.18em] text-black/60 uppercase">
                   Kontak
                 </h2>
               </div>
@@ -795,14 +797,14 @@ export default function CheckoutPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none"
+                  className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none"
                 />
                 <label className="flex cursor-pointer items-center gap-2 text-xs text-[#554C48]">
                   <input
                     type="checkbox"
                     checked={emailNews}
                     onChange={(e) => setEmailNews(e.target.checked)}
-                    className="h-3.5 w-3.5 rounded accent-[#141312]"
+                    className="h-3.5 w-3.5 rounded accent-[#000000]"
                   />
                   Kirim penawaran dan berita via email
                 </label>
@@ -811,7 +813,7 @@ export default function CheckoutPage() {
 
             {/* 2. Delivery */}
             <section>
-              <h2 className="mb-4 text-sm font-semibold tracking-[0.12em] text-[#141312] uppercase">
+              <h2 className="mb-4 text-[10px] font-semibold tracking-[0.18em] text-black/60 uppercase">
                 Pengiriman
               </h2>
               <div className="space-y-3">
@@ -819,30 +821,30 @@ export default function CheckoutPage() {
                 <div className="relative">
                   <select
                     defaultValue="ID"
-                    className="w-full appearance-none rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] focus:border-[#141312] focus:outline-none"
+                    className="w-full appearance-none rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black focus:border-black focus:outline-none"
                   >
                     <option value="ID">Indonesia</option>
                   </select>
-                  <Icon name="keyboard_arrow_down" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#8E8380]" />
+                  <Icon name="keyboard_arrow_down" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-black/50" />
                 </div>
 
                 {/* Name */}
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nama depan" className="rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
-                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nama belakang" className="rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nama depan" className="rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nama belakang" className="rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
                 </div>
 
-                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Alamat" className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
-                <input type="text" value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder="Apartemen, suite, dll. (opsional)" className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
-                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kota / Kecamatan" className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
+                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Alamat" className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
+                <input type="text" value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder="Apartemen, suite, dll. (opsional)" className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kota / Kecamatan" className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
 
                 {/* Province + Postal */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="relative">
-                    <select value={province} onChange={(e) => setProvince(e.target.value)} className="w-full appearance-none rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] focus:border-[#141312] focus:outline-none">
+                    <select value={province} onChange={(e) => setProvince(e.target.value)} className="w-full appearance-none rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black focus:border-black focus:outline-none">
                       {INDONESIA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                     </select>
-                    <Icon name="keyboard_arrow_down" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#8E8380]" />
+                    <Icon name="keyboard_arrow_down" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-black/50" />
                   </div>
 
                   <div className="relative">
@@ -852,18 +854,18 @@ export default function CheckoutPage() {
                       onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
                       placeholder="Kode Pos"
                       maxLength={5}
-                      className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none"
+                      className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none"
                     />
                     {isSearchingArea && (
-                      <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-[#8E8380]">Mencari...</span>
+                      <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-black/50">Mencari...</span>
                     )}
                   </div>
                 </div>
 
                 {/* Biteship area dropdown */}
                 {showAreaDropdown && areaResults.length > 0 && (
-                  <div className="rounded-lg border border-[#E5DDD5] bg-white shadow-md overflow-hidden">
-                    <p className="border-b border-[#E5DDD5] px-3 py-2 text-[10px] font-semibold tracking-wider text-[#8E8380] uppercase">
+                  <div className="rounded-lg border border-black/15 bg-white shadow-md overflow-hidden">
+                    <p className="border-b border-black/15 px-3 py-2 text-[10px] font-semibold tracking-wider text-black/50 uppercase">
                       Pilih area tujuan
                     </p>
                     <div className="max-h-40 overflow-y-auto">
@@ -878,10 +880,10 @@ export default function CheckoutPage() {
                             if (area.postal_code) setPostalCode(String(area.postal_code));
                             setShowAreaDropdown(false);
                           }}
-                          className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-xs transition hover:bg-[#FAF8F5] ${selectedArea?.id === area.id ? 'bg-[#F4EFEB] font-semibold' : ''}`}
+                          className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-xs transition hover:bg-white ${selectedArea?.id === area.id ? 'bg-black/5 font-semibold' : ''}`}
                         >
                           <span>{area.name}</span>
-                          {area.postal_code && <span className="text-[10px] text-[#8E8380]">{area.postal_code}</span>}
+                          {area.postal_code && <span className="text-[10px] text-black/50">{area.postal_code}</span>}
                         </button>
                       ))}
                     </div>
@@ -915,10 +917,10 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nomor HP / WhatsApp" className="w-full rounded-lg border border-[#D0C5BD] bg-white px-4 py-3 text-sm text-[#141312] placeholder:text-[#A89E99] focus:border-[#141312] focus:outline-none" />
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nomor HP / WhatsApp" className="w-full rounded-lg border border-black/20 bg-white px-3 py-2.5 text-xs text-black placeholder:text-[#A89E99] focus:border-black focus:outline-none" />
 
                 <label className="flex cursor-pointer items-center gap-2 text-xs text-[#554C48]">
-                  <input type="checkbox" checked={saveInfo} onChange={(e) => setSaveInfo(e.target.checked)} className="h-3.5 w-3.5 rounded accent-[#141312]" />
+                  <input type="checkbox" checked={saveInfo} onChange={(e) => setSaveInfo(e.target.checked)} className="h-3.5 w-3.5 rounded accent-[#000000]" />
                   Simpan informasi ini untuk lain kali
                 </label>
               </div>
@@ -926,23 +928,23 @@ export default function CheckoutPage() {
 
             {/* 3. Shipping Method */}
             <section>
-              <h2 className="mb-4 text-sm font-semibold tracking-[0.12em] text-[#141312] uppercase">
+              <h2 className="mb-4 text-[10px] font-semibold tracking-[0.18em] text-black/60 uppercase">
                 Metode Pengiriman
               </h2>
 
               {!addressComplete ? (
-                <div className="rounded-lg border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-4 text-sm text-[#8E8380]">
+                <div className="rounded-lg border border-black/15 bg-white px-4 py-4 text-sm text-black/50">
                   Masukkan alamat pengiriman untuk melihat pilihan kurir.
                 </div>
               ) : isLoadingRates ? (
-                <div className="flex items-center gap-2.5 rounded-lg border border-[#E5DDD5] bg-[#FAF8F5] px-4 py-4 text-sm text-[#8E8380]">
-                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#D0C5BD] border-t-[#141312]" />
+                <div className="flex items-center gap-2.5 rounded-lg border border-black/15 bg-white px-4 py-4 text-sm text-black/50">
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/20 border-t-[#000000]" />
                   Menghitung tarif Biteship...
                 </div>
               ) : shippingError ? (
                 <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-600">{shippingError}</div>
               ) : shippingRates.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-[#D0C5BD] bg-[#FAF8F5] px-4 py-4 text-sm text-[#8E8380]">
+                <div className="rounded-lg border border-dashed border-black/20 bg-white px-4 py-4 text-sm text-black/50">
                   Tidak ada kurir tersedia untuk lokasi ini.
                 </div>
               ) : (
@@ -952,237 +954,250 @@ export default function CheckoutPage() {
                       {shippingNotice}
                     </div>
                   )}
-                  {shippingRates.map((rate, idx) => {
-                    const isSelected =
-                      selectedRate?.courier_code === rate.courier_code &&
-                      selectedRate?.courier_service_code === rate.courier_service_code;
-                    return (
-                      <label
-                        key={`${rate.courier_code}-${rate.courier_service_code}-${idx}`}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3.5 transition ${isSelected ? 'border-[#141312] bg-white' : 'border-[#D0C5BD] bg-white hover:border-[#B5AAA2]'}`}
-                      >
-                        <input type="radio" name="shipping_rate" checked={isSelected} onChange={() => setSelectedRate(rate)} className="accent-[#141312]" />
-                        <div className="flex flex-1 items-center justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-semibold text-[#141312]">
-                              {rate.courier_name} — {rate.courier_service_name}
+                  {/* Dropdown selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShippingDropdownOpen((v) => !v)}
+                      className="flex w-full items-center justify-between gap-3 rounded-lg border border-black/20 bg-white px-4 py-3 text-left transition hover:border-black/50"
+                    >
+                      {selectedRate ? (
+                        <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-black truncate">
+                              {selectedRate.courier_name} — {selectedRate.courier_service_name}
                             </p>
-                            <p className="text-[11px] text-[#7C726E]">
-                              Estimasi {rate.duration || '2-4 hari kerja'}
-                              {rate.available_for_cash_on_delivery && (
-                                <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">COD</span>
+                            <p className="text-[10px] text-[#7C726E]">
+                              Estimasi {selectedRate.duration || '2-4 hari kerja'}
+                              {selectedRate.available_for_cash_on_delivery && (
+                                <span className="ml-1.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">COD</span>
                               )}
                             </p>
                           </div>
-                          <span className="text-xs font-semibold text-[#141312] whitespace-nowrap">{formatIDR(rate.price)}</span>
+                          <span className="shrink-0 text-[11px] font-semibold text-black">{formatIDR(selectedRate.price)}</span>
                         </div>
-                      </label>
-                    );
-                  })}
+                      ) : (
+                        <span className="text-[11px] text-black/50">Pilih jasa pengiriman</span>
+                      )}
+                      <Icon
+                        name="keyboard_arrow_down"
+                        size={18}
+                        className={`ml-1 shrink-0 text-black/50 transition-transform ${shippingDropdownOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {shippingDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-black/15 bg-white shadow-lg">
+                        {shippingRates.map((rate, idx) => {
+                          const isSel =
+                            selectedRate?.courier_code === rate.courier_code &&
+                            selectedRate?.courier_service_code === rate.courier_service_code;
+                          return (
+                            <button
+                              key={`${rate.courier_code}-${rate.courier_service_code}-${idx}`}
+                              type="button"
+                              onClick={() => {
+                                setSelectedRate(rate);
+                                setShippingDropdownOpen(false);
+                              }}
+                              className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-black/5 ${isSel ? 'bg-black/5 font-medium' : ''}`}
+                            >
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-semibold text-black truncate">
+                                  {rate.courier_name} — {rate.courier_service_name}
+                                </p>
+                                <p className="text-[10px] text-[#7C726E]">
+                                  Estimasi {rate.duration || '2-4 hari kerja'}
+                                  {rate.available_for_cash_on_delivery && (
+                                    <span className="ml-1.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">COD</span>
+                                  )}
+                                </p>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-2">
+                                <span className="text-[11px] font-semibold text-black">{formatIDR(rate.price)}</span>
+                                {isSel && <Icon name="check" size={12} className="text-black" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </section>
 
-            {/* 4. Payment Section (Embedded & Luxury) */}
-            <section id="section-payment" className="space-y-4">
+            {/* 4. Payment Section — Single Responsive Dropdown */}
+            <section id="section-payment" className="space-y-3">
               <div>
-                <h2 className="text-sm font-semibold tracking-[0.12em] text-[#141312] uppercase">
+                <h2 className="text-[10px] font-semibold tracking-[0.18em] text-black/60 uppercase">
                   4. Metode Pembayaran
                 </h2>
-                <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-emerald-700">
+                <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-emerald-700">
                   <Icon name="lock" size={11} />
                   Semua transaksi terenkripsi &amp; aman langsung di halaman ini.
                 </p>
               </div>
 
-              {/* Payment Method Selector Cards */}
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                {PAYMENT_METHODS.map((m) => {
-                  const isSelected = paymentMethod === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        setPaymentMethod(m.id);
-                        if (m.id !== 'midtrans') {
-                          setSnapToken(null);
-                          setEmbeddedOrderNumber(null);
-                        }
-                      }}
-                      className={`relative flex flex-col items-start rounded-xl border p-3.5 text-left transition-all ${
-                        isSelected
-                          ? 'border-[#141312] bg-white ring-2 ring-[#141312] shadow-sm'
-                          : 'border-[#D0C5BD] bg-[#FAF8F5] hover:border-[#141312]/60 hover:bg-white'
-                      }`}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Icon name={m.icon} size={15} className="text-[#141312]" />
-                          <span className="text-xs font-bold text-[#141312]">{m.label}</span>
+              {/* Dropdown Selector Metode Pembayaran */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setPaymentDropdownOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-3 rounded-lg border border-black/20 bg-white px-4 py-3 text-left transition hover:border-black/60"
+                >
+                  {(() => {
+                    const current = PAYMENT_METHODS.find((m) => m.id === paymentMethod) ?? PAYMENT_METHODS[0]!;
+                    return (
+                      <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon name={current.icon} size={16} className="shrink-0 text-black" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-semibold text-black truncate">{current.label}</span>
+                              {current.badge && (
+                                <span className="rounded bg-black px-1.5 py-0.2 text-[8px] font-semibold text-white uppercase tracking-wider">
+                                  {current.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-[#7C726E] truncate">{current.desc}</p>
+                          </div>
                         </div>
-                        {isSelected && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#141312] text-white">
-                            <Icon name="check" size={10} />
-                          </span>
-                        )}
                       </div>
-                      <span className="mt-1 text-[10px] text-[#7C726E] line-clamp-2">{m.desc}</span>
-                      {m.badge && (
-                        <span className="mt-2 inline-block rounded bg-[#141312] px-1.5 py-0.5 text-[8px] font-bold text-[#FAF8F5] uppercase tracking-wider">
-                          {m.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                    );
+                  })()}
+                  <Icon
+                    name="keyboard_arrow_down"
+                    size={18}
+                    className={`shrink-0 text-black/50 transition-transform ${paymentDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
 
-              {/* DYNAMIC CONTENT FOR CHOSEN PAYMENT */}
-
-              {/* OPTION 1: MIDTRANS EMBEDDED */}
-              {paymentMethod === 'midtrans' && (
-                <div className="rounded-2xl border border-[#D0C5BD] bg-white p-4 shadow-2xs sm:p-5">
-                  {!snapToken ? (
-                    <div className="space-y-4">
-                      <div className="border-b border-[#F0EAE3] pb-3">
-                        <h3 className="text-xs font-bold tracking-wider text-[#141312] uppercase">
-                          Pilih Metode Pembayaran
-                        </h3>
-                        <p className="mt-0.5 text-[11px] text-[#7C726E]">
-                          Klik salah satu di bawah, lalu tekan &ldquo;Bayar Sekarang&rdquo;. Pembayaran tampil langsung di halaman ini.
-                        </p>
-                      </div>
-
-                      {/* Sub-method selector — clickable */}
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {MIDTRANS_SUB_METHODS.map((sub) => {
-                          const isSubSelected = midtransSubMethod === sub.id;
-                          return (
-                            <button
-                              key={sub.id}
-                              type="button"
-                              onClick={() => setMidtransSubMethod(sub.id)}
-                              className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all ${
-                                isSubSelected
-                                  ? 'border-[#141312] bg-white ring-2 ring-[#141312]'
-                                  : 'border-[#E5DDD5] bg-[#FAF8F5] hover:border-[#141312]/50 hover:bg-white'
-                              }`}
-                            >
-                              <div className="flex w-full items-center justify-between">
-                                <Icon name={sub.icon} size={16} className={isSubSelected ? 'text-[#141312]' : 'text-[#8E8380]'} />
-                                {isSubSelected && (
-                                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#141312] text-white">
-                                    <Icon name="check" size={9} />
+                {/* Dropdown Options */}
+                {paymentDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-black/15 bg-white shadow-lg">
+                    {PAYMENT_METHODS.map((m) => {
+                      const isSel = paymentMethod === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setPaymentMethod(m.id);
+                            setPaymentDropdownOpen(false);
+                            if (m.id !== 'midtrans') {
+                              setSnapToken(null);
+                              setEmbeddedOrderNumber(null);
+                            }
+                          }}
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-black/5 ${
+                            isSel ? 'bg-black/5 font-medium' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon name={m.icon} size={16} className="shrink-0 text-black" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-semibold text-black truncate">{m.label}</span>
+                                {m.badge && (
+                                  <span className="rounded bg-black px-1.5 py-0.2 text-[8px] font-semibold text-white uppercase tracking-wider">
+                                    {m.badge}
                                   </span>
                                 )}
                               </div>
-                              <p className={`text-[11px] font-semibold leading-tight ${isSubSelected ? 'text-[#141312]' : 'text-[#554C48]'}`}>{sub.label}</p>
-                              <p className="text-[9px] text-[#8E8380]">{sub.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
+                              <p className="text-[10px] text-[#7C726E] truncate">{m.desc}</p>
+                            </div>
+                          </div>
+                          {isSel && <Icon name="check" size={14} className="shrink-0 text-black" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* KONTEN METODE TERPILIH */}
+              {/* Option 1: Bayar Otomatis (Midtrans) */}
+              {paymentMethod === 'midtrans' && (
+                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48]">
+                  {!snapToken ? (
+                    <div className="flex items-center gap-2">
+                      <Icon name="verified_user" size={15} className="text-black shrink-0" />
+                      <p className="text-[11px] leading-relaxed">
+                        Mendukung <strong>QRIS (GoPay, OVO, BCA, Shopee)</strong>, <strong>Virtual Account</strong>, <strong>E-Wallet</strong>, dan <strong>Kartu Kredit</strong>. Layar pembayaran instan akan langsung terbuka saat menekan tombol &ldquo;Bayar Sekarang&rdquo;.
+                      </p>
                     </div>
                   ) : (
-                    /* The Active Embedded Midtrans Container */
+                    /* Active Embedded Midtrans */
                     <div id="section-payment-embed" className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-[#F0EAE3] pb-3">
+                      <div className="flex items-center justify-between border-b border-black/10 pb-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <h3 className="text-xs font-bold tracking-wider text-[#141312] uppercase">
-                            Selesaikan Pembayaran
+                          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <h3 className="text-xs font-semibold text-black uppercase tracking-wider">
+                            Selesaikan Pembayaran #{embeddedOrderNumber}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-[11px] font-semibold text-[#685E5A]">
-                            #{embeddedOrderNumber}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSnapToken(null);
-                              setEmbeddedOrderNumber(null);
-                              try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
-                            }}
-                            className="text-[11px] text-[#8E8380] hover:text-[#141312] underline"
-                          >
-                            Batalkan
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSnapToken(null);
+                            setEmbeddedOrderNumber(null);
+                            try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
+                          }}
+                          className="text-[11px] text-black/60 underline hover:text-black"
+                        >
+                          Batalkan
+                        </button>
                       </div>
-
-                      {/* Embed Container where Midtrans iframe is injected */}
-                      <div className="overflow-hidden rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-1">
-                        <div
-                          id="snap-embed-container"
-                          className="min-h-[540px] w-full rounded-lg"
-                        />
+                      <div className="overflow-hidden rounded-lg border border-black/15 bg-white p-1">
+                        <div id="snap-embed-container" className="min-h-[500px] w-full rounded" />
                       </div>
-                      <p className="text-center text-[10px] text-[#8E8380]">
-                        Setelah pembayaran dilakukan di atas, pesanan Anda otomatis terverifikasi tanpa perlu konfirmasi manual.
-                      </p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* OPTION 2: TRANSFER BANK MANUAL */}
+              {/* Option 2: Transfer Bank Manual */}
               {paymentMethod === 'transfer' && (
-                <div className="rounded-2xl border border-[#D0C5BD] bg-white p-5 shadow-2xs space-y-4">
-                  <div className="flex items-center gap-2 border-b border-[#F0EAE3] pb-3">
-                    <Icon name="payments" size={18} className="text-[#141312]" />
-                    <h3 className="text-xs font-bold tracking-wider text-[#141312] uppercase">
-                      Rekening Pembayaran Resmi Sevaya
-                    </h3>
-                  </div>
-                  <p className="text-xs text-[#7C726E]">
-                    Silakan transfer tepat sebesar <strong className="text-[#141312]">{formatIDR(displayTotal)}</strong> ke salah satu rekening resmi berikut:
+                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48] space-y-3">
+                  <p className="text-[11px] leading-relaxed">
+                    Silakan transfer tepat sebesar <strong className="text-black">{formatIDR(displayTotal)}</strong> ke rekening resmi Sevaya:
                   </p>
-
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {[
                       { bank: 'BCA', no: '8720998122', display: '8720-9981-22', name: 'SEVAYA STUDIO INDONESIA' },
                       { bank: 'Mandiri', no: '137002918821', display: '1370-0291-8821', name: 'SEVAYA STUDIO INDONESIA' },
                       { bank: 'BSI (Syariah)', no: '7190281901', display: '7190-2819-01', name: 'SEVAYA STUDIO INDONESIA' },
                     ].map((b) => (
-                      <div key={b.bank} className="rounded-xl border border-[#E5DDD5] bg-[#FAF8F5] p-3 space-y-1">
+                      <div key={b.bank} className="rounded-md border border-black/15 bg-white p-2.5 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold tracking-wider text-[#8E8380] uppercase">
-                            Bank {b.bank}
-                          </span>
+                          <span className="text-[9px] font-bold text-black/60 uppercase">Bank {b.bank}</span>
                           <button
                             type="button"
                             onClick={() => copyBankToClipboard(b.no, b.bank)}
-                            className="rounded border border-[#D0C5BD] bg-white px-1.5 py-0.5 text-[9px] font-semibold text-[#554C48] hover:border-[#141312]"
+                            className="rounded border border-black/20 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-[#554C48] hover:border-black"
                           >
                             {copiedBank === b.bank ? 'Tersalin' : 'Salin'}
                           </button>
                         </div>
-                        <p className="font-mono text-xs font-bold text-[#141312]">{b.display}</p>
-                        <p className="text-[9px] text-[#8E8380]">a.n. {b.name}</p>
+                        <p className="font-mono text-xs font-bold text-black">{b.display}</p>
+                        <p className="text-[9px] text-black/50">a.n. {b.name}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* OPTION 3: COD */}
+              {/* Option 3: COD */}
               {paymentMethod === 'cod' && (
-                <div className="rounded-2xl border border-[#D0C5BD] bg-white p-5 shadow-2xs space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Icon name="local_shipping" size={18} className="text-[#141312]" />
-                    <h3 className="text-xs font-bold tracking-wider text-[#141312] uppercase">
-                      Bayar Tunai di Tempat (COD)
-                    </h3>
-                  </div>
-                  <p className="text-xs leading-relaxed text-[#7C726E]">
-                    Siapkan uang pas sebesar <strong className="text-[#141312]">{formatIDR(displayTotal)}</strong> saat kurir Biteship menyerahkan paket pesanan di alamat tujuan Anda.
+                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48]">
+                  <p className="text-[11px] leading-relaxed">
+                    Siapkan uang pas sebesar <strong className="text-black">{formatIDR(displayTotal)}</strong> saat kurir menyerahkan paket di alamat tujuan Anda.
                   </p>
                 </div>
               )}
             </section>
-
 
             {/* CTA — desktop (bottom of form, after payment method) */}
             <div className="hidden lg:block space-y-3">
@@ -1202,7 +1217,7 @@ export default function CheckoutPage() {
                     : handleSubmitOrder
                 }
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center rounded-lg bg-[#141312] py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
               >
                 {isSubmitting
                   ? 'Memproses Pesanan...'
@@ -1210,7 +1225,7 @@ export default function CheckoutPage() {
                     ? 'Lanjutkan Pembayaran'
                     : 'Bayar Sekarang'}
               </button>
-              <p className="flex items-center justify-center gap-1.5 text-[10px] text-[#8E8380]">
+              <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
                 Pembayaran aman &amp; terenkripsi
               </p>
@@ -1235,7 +1250,7 @@ export default function CheckoutPage() {
                     : handleSubmitOrder
                 }
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center rounded-lg bg-[#141312] py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
               >
                 {isSubmitting
                   ? 'Memproses Pesanan...'
@@ -1243,7 +1258,7 @@ export default function CheckoutPage() {
                     ? 'Lanjutkan Pembayaran'
                     : 'Bayar Sekarang'}
               </button>
-              <p className="flex items-center justify-center gap-1.5 text-[10px] text-[#8E8380]">
+              <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
                 Pembayaran aman &amp; terenkripsi
               </p>

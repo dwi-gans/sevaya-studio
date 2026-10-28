@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { VideoShowcase } from './VideoShowcase';
@@ -11,34 +11,37 @@ export function NarrativeSection() {
   const { t } = useLanguage();
   const [lbPage, setLbPage] = useState<LookbookPageConfig>(DEFAULT_SITE_SECTIONS.lookbookPage!);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const cached = getCachedSiteSections();
-    if (cached.lookbookPage) setLbPage(cached.lookbookPage);
+    if (cached?.lookbookPage) setLbPage(cached.lookbookPage);
+  }, []);
+
+  useEffect(() => {
     getSiteSections().then((sections) => {
       if (sections.lookbookPage) setLbPage(sections.lookbookPage);
     });
   }, []);
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-white text-black section--light">
       {/* 1. Elegance in Simplicity Narrative */}
-      <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6">
-        <h2 className="font-sans text-2xl font-normal tracking-wide text-[#141312] sm:text-3xl">
+      <section className="mx-auto max-w-4xl px-4 py-8 text-center sm:px-6">
+        <h2 className="font-sans text-xs font-normal tracking-wide text-black sm:text-sm">
           {t('narrative.elegance_title') || 'Elegance in Simplicity'}
         </h2>
-        <div className="mx-auto mt-4 max-w-2xl space-y-3 text-xs leading-relaxed text-[#554C48] sm:text-sm">
+        <div className="mx-auto mt-3 max-w-2xl space-y-2 text-[10px] leading-relaxed text-black/70">
           <p>
             {t('narrative.elegance_p') ||
               'At SEVAYA, we believe the most beautiful pieces are often the ones we return to, again and again. We create thoughtfully designed modestwear that brings together comfort, versatility, and understated elegance, pieces to accompany you through everyday moments and the occasions that matter.'}
           </p>
-          <p className="font-medium text-[#141312]">
+          <p className="font-medium text-black">
             {t('narrative.less_more') || 'Less, but more meaningful'}
           </p>
         </div>
         <div className="mt-6">
           <Link
             href="/conscious"
-            className="inline-block text-xs sm:text-sm font-normal text-[#141312] border-b border-[#141312] pb-0.5 transition hover:text-[#685E5A] hover:border-[#685E5A]"
+            className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
           >
             {t('narrative.read_more') || 'Read more'}
           </Link>
@@ -49,69 +52,66 @@ export function NarrativeSection() {
       <VideoShowcase />
 
       {/* 3. Brand Pillars */}
-      <section className="mx-auto w-full max-w-7xl px-3 pt-4 pb-14 sm:px-6 sm:pt-6 sm:pb-20 lg:px-8">
+      <section className="mx-auto w-full max-w-7xl px-3 pt-4 pb-8 sm:px-6 sm:pt-4 sm:pb-10 lg:px-8">
         <div className="text-center">
-          <span className="text-[10px] font-medium tracking-[0.25em] text-[#7C726E] uppercase sm:text-[11px]">
+          <span className="text-[9px] font-medium tracking-[0.25em] text-black/60 uppercase">
             OUR CORE VALUES
           </span>
-          <h2 className="mt-1.5 font-sans text-xl font-medium tracking-wider text-[#141312] uppercase sm:text-2xl lg:text-3xl">
+          <h2 className="mt-1.5 font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
             Brand Pillars
           </h2>
-          <div className="mx-auto mt-3 h-[1px] w-12 bg-[#D0C5BD]" />
+          <div className="mx-auto mt-3 h-[1px] w-12 bg-black/20" />
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 md:mt-16 md:grid-cols-3 md:gap-0 md:divide-x md:border-y md:border-[#E5DDD5]">
+        <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-0 md:divide-x md:border-y md:border-black/15">
           {/* Pillar 1: Timeless */}
-          <div className="group col-span-2 flex flex-col items-center rounded-xl border border-[#E5DDD5] bg-white p-6 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:rounded-none md:bg-transparent md:p-12 md:shadow-none">
-            <span className="font-sans text-[11px] font-semibold tracking-widest text-[#8E8380]">01</span>
-            <h3 className="mt-2 font-sans text-base font-medium tracking-wider text-[#141312] uppercase sm:text-lg lg:text-xl">
+          <div className="group col-span-2 flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:bg-transparent md:p-8 md:shadow-none">
+            <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">01</span>
+            <h3 className="mt-2 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[13px]">
               Timeless
             </h3>
-            <p className="mt-2.5 max-w-sm text-xs leading-relaxed text-[#685E5A] sm:text-sm">
+            <p className="mt-2.5 max-w-sm text-[10px] leading-relaxed text-black/60">
               Designed beyond fleeting trends, with silhouettes and colours you&apos;ll want to wear season after season.
             </p>
           </div>
 
           {/* Pillar 2: Intentional */}
-          <div className="group col-span-1 flex flex-col items-center rounded-xl border border-[#E5DDD5] bg-white p-5 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:rounded-none md:bg-transparent md:p-12 md:shadow-none">
-            <span className="font-sans text-[10px] font-semibold tracking-widest text-[#8E8380] sm:text-[11px]">02</span>
-            <h3 className="mt-1.5 font-sans text-sm font-medium tracking-wider text-[#141312] uppercase sm:text-base lg:text-lg">
+          <div className="group col-span-1 flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:bg-transparent md:p-8 md:shadow-none">
+            <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">02</span>
+            <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
               Intentional
             </h3>
-            <p className="mt-2 text-[11px] leading-relaxed text-[#685E5A] sm:text-xs md:text-sm">
+            <p className="mt-2 text-[10px] leading-relaxed text-black/60">
               From fabric selection to details, every decision creates meaning.
             </p>
           </div>
 
           {/* Pillar 3: Effortless */}
-          <div className="group col-span-1 flex flex-col items-center rounded-xl border border-[#E5DDD5] bg-white p-5 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:rounded-none md:bg-transparent md:p-12 md:shadow-none">
-            <span className="font-sans text-[10px] font-semibold tracking-widest text-[#8E8380] sm:text-[11px]">03</span>
-            <h3 className="mt-1.5 font-sans text-sm font-medium tracking-wider text-[#141312] uppercase sm:text-base lg:text-lg">
+          <div className="group col-span-1 flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:col-span-1 md:border-0 md:bg-transparent md:p-8 md:shadow-none">
+            <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">03</span>
+            <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
               Effortless
             </h3>
-            <p className="mt-2 text-[11px] leading-relaxed text-[#685E5A] sm:text-xs md:text-sm">
+            <p className="mt-2 text-[10px] leading-relaxed text-black/60">
               Modest silhouettes made for ease, comfort, and quiet confidence.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 4. About SEVAYA: A Softer Way of Dressing */}
-      <section className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      {/* 4. About SEVAYA */}
+      <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
           {/* Mobile Title */}
-          <div className="space-y-2 md:hidden">
-            <span className="text-[11px] font-medium tracking-[0.25em] text-[#8E8380] uppercase">
-              {t('narrative.about_sub') || 'ABOUT SEVAYA'}
+          <div className="space-y-1 md:hidden">
+            <span className="text-[9px] font-medium tracking-[0.25em] text-black/50 uppercase">
+              ABOUT SEVAYA
             </span>
-            <h2 className="font-sans text-2xl font-light tracking-tight text-[#141312]">
-              {t('narrative.about_title') || 'A Softer Way of Dressing.'}
-            </h2>
           </div>
 
-          {/* 2 Editorial Photos — now connected to admin */}
-          <div className="order-2 md:order-2 grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#F3EFEA] shadow-xs">
+          {/* 2 Editorial Photos */}
+          <div className="order-2 md:order-2 grid grid-cols-2 gap-3 sm:gap-4 items-start">
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
               <Image
                 src={lbPage.collageDetail1 || '/images/figma_about_1.png'}
                 alt="SEVAYA editorial 1"
@@ -120,7 +120,7 @@ export function NarrativeSection() {
                 sizes="(max-width: 768px) 50vw, 25vw"
               />
             </div>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#F3EFEA] shadow-xs translate-y-3 sm:translate-y-4 md:translate-y-6">
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
               <Image
                 src={lbPage.collageDetail2 || '/images/figma_about_2.png'}
                 alt="SEVAYA editorial 2"
@@ -132,28 +132,35 @@ export function NarrativeSection() {
           </div>
 
           {/* Left Text */}
-          <div className="order-3 md:order-1 space-y-5 pr-0 md:pr-8">
-            {/* Desktop Title */}
-            <div className="hidden md:block space-y-3">
-              <span className="text-[11px] font-medium tracking-[0.25em] text-[#8E8380] uppercase">
-                {t('narrative.about_sub') || 'ABOUT SEVAYA'}
+          <div className="order-3 md:order-1 space-y-3 pr-0 md:pr-8">
+            <div className="hidden md:block">
+              <span className="text-[9px] font-medium tracking-[0.25em] text-black/50 uppercase">
+                ABOUT SEVAYA
               </span>
-              <h2 className="font-sans text-3xl lg:text-4xl font-light tracking-tight text-[#141312]">
-                {t('narrative.about_title') || 'A Softer Way of Dressing.'}
-              </h2>
             </div>
 
-            <p className="text-xs leading-relaxed text-[#554C48] sm:text-sm">
-              {t('narrative.about_p') ||
-                'SEVAYA was born from a love for timeless design, the beauty of modest dressing, and the belief that what we wear can be both beautiful and meaningful. Inspired by the architectural heritage of Andalusia, particularly the enduring beauty of Sevilla and Granada, SEVAYA brings together understated elegance, thoughtful details, and a sense of quiet simplicity.'}
+            <p className="text-[10px] leading-relaxed text-black/70">
+              SEVAYA was born from a love for timeless design, the beauty of modest dressing, and the belief that modesty should never limit the way a woman lives, dreams, or expresses herself. We believe a woman can be graceful and bold, gentle and ambitious, grounded in her faith and confident in her own direction. She can lead a room, build something meaningful, explore the world, and pursue her aspirations while staying true to what she believes in.
+            </p>
+            <p className="text-[10px] leading-relaxed text-black/70">
+              Modest dressing should move with her life, not hold her back. It should offer the freedom to show up as herself, with comfort, confidence, and a sense of ease in every moment.
+            </p>
+            <p className="text-[10px] leading-relaxed text-black/70">
+              Inspired by the architectural heritage of Andalusia, particularly the enduring beauty of Sevilla and Granada, SEVAYA brings together thoughtful design, understated elegance, and everyday functionality to create modestwear that feels as good to live in as it is beautiful to look at.
+            </p>
+            <p className="text-[10px] leading-relaxed text-black/70">
+              SEVAYA is an invitation to embrace modesty on your own terms, with intention, confidence, and no limits on who you can become.
+            </p>
+            <p className="text-[9px] font-medium tracking-[0.28em] text-black/35 uppercase mt-4">
+              TIMELESS • INTENTIONAL • EFFORTLESS
             </p>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <Link
                 href="/conscious"
-                className="inline-block text-xs sm:text-sm font-normal text-[#141312] border-b border-[#141312] pb-0.5 transition hover:text-[#685E5A] hover:border-[#685E5A]"
+                className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
               >
-                {t('narrative.read_more') || 'Read more'}
+                Read more
               </Link>
             </div>
           </div>

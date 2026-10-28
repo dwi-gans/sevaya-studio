@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Image from 'next/image';
@@ -8,32 +8,24 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#141312]">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#000000]">
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-xs text-[#7C726E]">
-          <Link href="/" className="hover:text-[#141312]">
-            Home
-          </Link>
-          <span>/</span>
-          <span className="text-[#141312]">About</span>
-        </nav>
 
         {/* Section 1: Title & Hero Narrative */}
         <div className="mb-12 text-center">
-          <h1 className="text-xs font-semibold tracking-[0.25em] text-[#7C726E] uppercase">
+          <h1 className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
             ABOUT SEVAYA
           </h1>
-          <h2 className="mt-2 font-sans text-2xl font-normal tracking-wide text-[#141312] sm:text-3xl">
+          <h2 className="mt-2 font-sans text-base font-normal tracking-wide text-[#000000] sm:text-xl">
             A Softer Way of Dressing.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-[#554C48] sm:text-sm">
+          <p className="mx-auto mt-4 max-w-2xl text-[10px] leading-relaxed text-[#333333] sm:text-xs">
             SEVAYA was born from a love for timeless design, the beauty of modest dressing, and the belief that what we wear can be both beautiful and meaningful. Inspired by the architectural heritage of Andalusia, particularly the enduring beauty of Sevilla and Granada, SEVAYA brings together understated elegance, thoughtful details, and a sense of quiet simplicity.
           </p>
         </div>
 
         {/* Big Panoramic Landscape Banner */}
-        <div className="relative mb-14 aspect-[16/7] w-full overflow-hidden rounded-xl bg-[#F3EFEA] shadow-xs">
+        <div className="relative mb-14 aspect-[16/7] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
           <Image
             src="/images/figma_about_1.png"
             alt="SEVAYA Landscape"
@@ -47,21 +39,22 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Philosophy Journey text */}
-        <div className="mx-auto mb-14 max-w-3xl space-y-4 text-center text-xs leading-relaxed text-[#554C48] sm:text-sm">
+        {/* Philosophy text */}
+        <div className="mx-auto mb-14 max-w-3xl space-y-4 text-center text-[10px] leading-relaxed text-[#333333] sm:text-xs">
+          <span className="block text-[10px] font-semibold tracking-[0.25em] text-black/50 uppercase mb-2">OUR PHILOSOPHY</span>
           <p>
-            Our journey began with a simple intention: to create modestwear that feels as beautiful to wear as it is to look at. Pieces that offer ease in everyday life, confidence in modesty, and lasting value beyond a single season.
+            We believe modesty is not about making yourself smaller. It is about dressing in a way that feels true to your values while making space for everything you aspire to be. Whether you are leading a team, creating something new, building a career, spending time with loved ones, or simply finding your own rhythm in everyday life, what you wear should support you through it all.
           </p>
           <p>
-            We believe good design is never only about appearance. It is also about how a garment feels, how often it is worn, and the thought behind its making. This is our way of approaching fashion: more intentionally, more thoughtfully, and always with room to grow.
+            At SEVAYA, we design with this in mind: graceful silhouettes, thoughtful details, and comfort that allows you to move freely through your day. Pieces that respect your commitment to modesty without asking you to compromise on personal style, comfort, or ambition.
           </p>
-          <p className="font-medium text-[#141312]">
-            Welcome to SEVAYA
+          <p className="font-medium text-[#000000]">
+            Because being a modest woman does not mean choosing between your faith and your aspirations. You can honour both, beautifully.
           </p>
         </div>
 
         {/* Pillars Horizontal divider */}
-        <div className="my-10 flex items-center justify-center gap-6 text-[11px] font-semibold tracking-[0.2em] text-[#7C726E] uppercase sm:gap-10 sm:text-xs">
+        <div className="my-10 flex items-center justify-center gap-6 text-[10px] font-semibold tracking-[0.2em] text-[#666666] uppercase sm:gap-10 sm:text-[10px]">
           <span>TIMELESS</span>
           <span>&bull;</span>
           <span>INTENTIONAL</span>
@@ -71,7 +64,7 @@ export default function AboutPage() {
 
         {/* Section 2: Our Inspiration (Image left, text right) */}
         <div className="my-16 grid grid-cols-1 items-center gap-10 md:grid-cols-2">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#F3EFEA] shadow-xs sm:aspect-[1/1]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none bg-black/5 shadow-xs sm:aspect-[1/1]">
             <Image
               src="/images/figma_about_2.png"
               alt="Our Inspiration Andalusia"
@@ -82,20 +75,23 @@ export default function AboutPage() {
           </div>
 
           <div className="space-y-4">
-            <span className="text-[11px] font-semibold tracking-[0.2em] text-[#7C726E] uppercase">
+            <span className="text-[10px] font-semibold tracking-[0.2em] text-[#666666] uppercase">
               OUR INSPIRATION
             </span>
-            <h3 className="font-sans text-xl font-normal tracking-wide text-[#141312] sm:text-2xl">
-              Inspired by Andalusia. Made for Everyday Life.
+            <h3 className="font-sans text-sm font-normal tracking-wide text-[#000000] sm:text-lg">
+              Inspired by Andalusia. Made for the Woman You Are Becoming.
             </h3>
-            <p className="text-xs leading-relaxed text-[#554C48] sm:text-sm">
-              There is something timeless about Andalusia—the warmth of its architecture, the rhythm of its courtyards, the intricate patterns of its tiles, and the effortless beauty found in the simplest details.
+            <p className="text-[10px] leading-relaxed text-[#333333] sm:text-xs">
+              There is something timeless about Andalusia—the warmth of its architecture, the rhythm of its courtyards, the intricate patterns of its tiles, and the quiet beauty found in the simplest details.
             </p>
-            <p className="text-xs leading-relaxed text-[#554C48] sm:text-sm">
-              Inspired by the cities of Sevilla and Granada, our aesthetic celebrates warm tones, graceful forms, and quiet sophistication. Rather than recreating the past, we take these inspirations into the present, translating their spirit into modestwear made for the way we live today.
+            <p className="text-[10px] leading-relaxed text-[#333333] sm:text-xs">
+              Inspired by Sevilla and Granada, our aesthetic draws from warm Mediterranean tones, graceful forms, and a deep appreciation for thoughtful design. With a background in architecture, we see clothing much like the spaces we inhabit: every proportion, detail, and material has a purpose.
             </p>
-            <div className="pt-2 text-xs italic text-[#7C726E]">
-              &ldquo;A little Mediterranean warmth. A little everyday simplicity. A style that feels entirely your own.&rdquo;
+            <p className="text-[10px] leading-relaxed text-[#333333] sm:text-xs">
+              We translate this inspiration into modestwear for contemporary women—pieces that feel timeless yet relevant, elegant yet effortless, and beautiful without sacrificing the ease of everyday life.
+            </p>
+            <div className="pt-2 text-[10px] italic text-[#666666]">
+              Rooted in heritage. Designed for the life ahead.
             </div>
           </div>
         </div>
@@ -103,15 +99,15 @@ export default function AboutPage() {
         {/* Section 3: The Founder's Story (Full width) */}
         <div className="my-16 space-y-6">
           <div>
-            <span className="text-[11px] font-semibold tracking-[0.2em] text-[#7C726E] uppercase">
+            <span className="text-[10px] font-semibold tracking-[0.2em] text-[#666666] uppercase">
               THE FOUNDER&apos;S STORY
             </span>
-            <h3 className="mt-1 font-sans text-xl font-normal tracking-wide text-[#141312] sm:text-2xl">
+            <h3 className="mt-1 font-sans text-sm font-normal tracking-wide text-[#000000] sm:text-lg">
               A Personal Journey, Woven into Every Piece.
             </h3>
           </div>
 
-          <div className="relative aspect-[16/8] w-full overflow-hidden rounded-xl bg-[#F3EFEA] shadow-xs">
+          <div className="relative aspect-[16/8] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
             <Image
               src="/images/figma_about_1.png"
               alt="Founder Story"
@@ -121,15 +117,18 @@ export default function AboutPage() {
             />
           </div>
 
-          <div className="space-y-4 text-xs leading-relaxed text-[#554C48] sm:text-sm">
+          <div className="space-y-4 text-[10px] leading-relaxed text-[#333333] sm:text-xs">
             <p>
-              My years living in Spain shaped the way I see design—not only as something beautiful, but as something deeply connected to culture, everyday rituals, and the way we experience the world. With a background in architecture and design, I have always been drawn to thoughtful proportions, timeless materials, and the beauty of things made with intention.
+              My years living in Spain shaped the way I see design. I learned to appreciate not only the beauty of architecture, but also the culture, rituals, and everyday experiences that give meaning to the things we create. With a background in architecture and design, I have always believed that good design should be thoughtful, purposeful, and made to serve the people who experience it.
             </p>
             <p>
-              SEVAYA brings these influences into a more personal expression: modestwear that reflects my love for design while accompanying my own journey toward dressing more intentionally. As a growing brand, we are still learning, exploring, and finding better ways to do things. And that is part of our story, too.
+              SEVAYA grew from that belief, alongside my own personal journey toward dressing more intentionally and deepening my understanding of modesty. I wanted to create clothing that reflected my love for design while supporting the woman I aspire to become: a woman who can pursue her ambitions, embrace her individuality, and remain grounded in her faith.
             </p>
-            <p className="font-medium text-[#141312]">
-              Thank you for being here and growing with us.
+            <p>
+              SEVAYA is still growing, learning, and discovering better ways to create. We are committed to making more thoughtful choices in our materials, our production, and the way we approach fashion. Every piece is part of that ongoing journey.
+            </p>
+            <p className="font-medium text-[#000000]">
+              Thank you for being here, and for growing with us.
             </p>
           </div>
         </div>

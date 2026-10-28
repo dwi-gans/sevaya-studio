@@ -1,74 +1,90 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+@import url('https://fonts.cdnfonts.com/css/avenir');
+@import url('https://fonts.cdnfonts.com/css/avenir-next-lt-pro');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 @import 'tailwindcss';
 
+:root {
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --text-muted-on-light: rgba(0, 0, 0, 0.64);
+  --text-muted-on-dark: rgba(255, 255, 255, 0.72);
+  --line-on-light: rgba(0, 0, 0, 0.12);
+  --line-on-dark: rgba(255, 255, 255, 0.16);
+}
+
 @theme {
-  --color-primary: #141312;
-  --color-primary-container: #2b2826;
-  --color-primary-fixed: #e8e2dc;
-  --color-primary-fixed-dim: #cdc4bc;
-  --color-on-primary: #faf8f5;
-  --color-on-primary-container: #d6cecb;
-  --color-inverse-primary: #e8e2dc;
+  --color-primary: #000000;
+  --color-primary-container: #1A1A1A;
+  --color-primary-fixed: #E5E5E5;
+  --color-primary-fixed-dim: #CCCCCC;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #FFFFFF;
+  --color-inverse-primary: #E5E5E5;
 
   --color-wine-rich: #000000;
 
-  --color-secondary: #72594f;
-  --color-secondary-container: #fbd8cc;
-  --color-secondary-fixed: #fedbcf;
-  --color-secondary-fixed-dim: #e1bfb4;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-fixed: #251911;
-  --color-on-secondary-container: #775d54;
+  --color-secondary: #000000;
+  --color-secondary-container: #1A1A1A;
+  --color-secondary-fixed: #E5E5E5;
+  --color-secondary-fixed-dim: #CCCCCC;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-fixed: #000000;
+  --color-on-secondary-container: #FFFFFF;
 
-  --color-tertiary: #29241f;
-  --color-tertiary-container: #3f3934;
-  --color-tertiary-fixed: #eee0d5;
-  --color-tertiary-fixed-dim: #cfc4be;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #aca29c;
+  --color-tertiary: #000000;
+  --color-tertiary-container: #1A1A1A;
+  --color-tertiary-fixed: #E5E5E5;
+  --color-tertiary-fixed-dim: #CCCCCC;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #FFFFFF;
 
-  --color-background: #faf8f5;
-  --color-surface: #faf8f5;
-  --color-surface-cream: #faf8f5;
-  --color-surface-ivory: #f4efeb;
-  --color-surface-sand: #f3efea;
-  --color-linen-tint: #efece6;
-  --color-warm-champagne: #efe6dd;
-  --color-surface-bright: #fcf9f8;
-  --color-surface-dim: #dcd9d9;
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-cream: #FFFFFF;
+  --color-surface-ivory: #FFFFFF;
+  --color-surface-sand: #FFFFFF;
+  --color-linen-tint: #FFFFFF;
+  --color-warm-champagne: #FFFFFF;
+  --color-surface-bright: #FFFFFF;
+  --color-surface-dim: #E5E5E5;
 
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f5f3f0;
-  --color-surface-container: #f0ece8;
-  --color-surface-container-high: #ebe6e1;
-  --color-surface-container-highest: #e6e0da;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F5F5F5;
+  --color-surface-container: #EAEAEA;
+  --color-surface-container-high: #D4D4D4;
+  --color-surface-container-highest: #CCCCCC;
 
-  --color-on-surface: #141312;
-  --color-on-surface-variant: #4a4645;
-  --color-inverse-surface: #141312;
-  --color-inverse-on-surface: #faf8f5;
+  --color-on-surface: #000000;
+  --color-on-surface-variant: rgba(0, 0, 0, 0.64);
+  --color-inverse-surface: #000000;
+  --color-inverse-on-surface: #FFFFFF;
 
-  --color-text-charcoal: #141312;
-  --color-text-muted: #685e5a;
-  --color-text-subtle: #6e6760;
+  --color-text-charcoal: #000000;
+  --color-text-muted: rgba(0, 0, 0, 0.64);
+  --color-text-subtle: rgba(0, 0, 0, 0.48);
 
-  --color-border-delicate: #e5ddd5;
-  --color-rose-taupe: #9b7e74;
-  --color-outline: #877274;
-  --color-outline-variant: #d6cecb;
+  --color-border-delicate: rgba(0, 0, 0, 0.12);
+  --color-rose-taupe: #000000;
+  --color-outline: rgba(0, 0, 0, 0.24);
+  --color-outline-variant: rgba(0, 0, 0, 0.12);
 
-  --font-headline: var(--font-dm-sans), 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-headline: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer base {
+  html {
+    scroll-behavior: auto;
+  }
+
   html,
   body {
     width: 100%;
     margin: 0;
     padding: 0;
-    background-color: var(--color-surface-cream);
-    color: var(--color-text-charcoal);
+    background-color: var(--color-white);
+    color: var(--color-black);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
@@ -85,6 +101,33 @@
   h6 {
     font-family: var(--font-headline);
   }
+}
+
+/* Section Contrast Utilities (Pure Monochrome) */
+.section--light {
+  background-color: var(--color-white) !important;
+  color: var(--color-black) !important;
+}
+
+.section--dark {
+  background-color: var(--color-black) !important;
+  color: var(--color-white) !important;
+}
+
+.border-line-light {
+  border-color: var(--line-on-light) !important;
+}
+
+.border-line-dark {
+  border-color: var(--line-on-dark) !important;
+}
+
+.text-muted-light {
+  color: var(--text-muted-on-light) !important;
+}
+
+.text-muted-dark {
+  color: var(--text-muted-on-dark) !important;
 }
 
 /* Custom Spacing & Utilities for Sevaya Design System */
@@ -227,8 +270,6 @@
   animation: drawerSlideIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Sembunyikan Atelier Studio di seluruh tampilan - scoped lebih spesifik */
-
 /* Typography styles matching DESIGN.md */
 .font-headline-xl {
   font-family: var(--font-headline);
@@ -329,17 +370,17 @@
 }
 
 .font-display-brand {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', sans-serif;
 }
 
 .font-label-caps {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', sans-serif;
   letter-spacing: 0.12em;
   font-weight: 700;
 }
 
 .font-label-mono-num {
-  font-family: 'Plus Jakarta Sans', monospace;
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', monospace;
   font-variant-numeric: tabular-nums;
 }
 
@@ -357,34 +398,37 @@
   padding-bottom: 1.5rem;
 }
 
-.gap-space-xs {
-  gap: 0.25rem;
+
+/* ── Hero Ken Burns & Fade-up Animations ── */
+@keyframes kenburns {
+  0% {
+    transform: scale(1.06) translate(1%, 0.8%);
+  }
+  100% {
+    transform: scale(1) translate(0%, 0%);
+  }
 }
 
-.gap-space-sm {
-  gap: 0.5rem;
+.animate-kenburns {
+  animation: kenburns 6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
 }
 
-.gap-space-md {
-  gap: 0.75rem;
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.gap-space-lg {
-  gap: 1.25rem;
+.animate-hero-fadeup-title {
+  animation: heroFadeUp 0.8s ease-out 0.2s both;
 }
 
-.space-y-space-lg > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 1.25rem;
-}
-
-.space-y-space-md > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.75rem;
-}
-
-.space-y-space-sm > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.5rem;
-}
-
-.space-y-space-xs > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.25rem;
+.animate-hero-fadeup-link {
+  animation: heroFadeUp 0.8s ease-out 0.5s both;
 }
