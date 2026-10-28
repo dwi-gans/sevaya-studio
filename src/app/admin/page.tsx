@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -1103,6 +1103,19 @@ export default function AdminPage() {
   };
 
   // ── Save Sections Handler ──
+    // Auto-save sections whenever user edits text or config
+  const isFirstSectionsRender = useRef(true);
+  useEffect(() => {
+    if (isFirstSectionsRender.current) {
+      isFirstSectionsRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      saveSiteSections(sections);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [sections]);
+
   const handleSaveSections = async (sectionName = 'Section') => {
     setIsLoading(true);
     try {
@@ -1625,250 +1638,16 @@ export default function AdminPage() {
         {activeTab === 'catalog' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-                  Koleksi &amp; Inventori
-                </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Manajemen Katalog Produk
-                </h2>
-                <p className="hidden sm:block text-[11px] text-black/60">
-                  1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-                >
-                  <Icon name="add" size={16} />
-                  <span>Tambah Produk Baru</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Search & Stats Card */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari berdasarkan nama abaya, edisi, atau warna..."
-                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-black/20 bg-white pr-4 pl-9 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:bg-white focus:outline-none"
-                />
-                <Icon
-                  name="search"
-                  size={16}
-                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-black/70"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-black/70 shrink-0">
-                <span className="rounded-full bg-black/5 px-3 py-1.5 border border-black/15">
-                  Total: <strong className="text-black">{products.length}</strong> produk
-                </span>
-                <span className="rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200/60 text-emerald-800">
-                  Tersedia: <strong className="font-bold">{products.filter((p) => p.inStock !== false).length}</strong>
-                </span>
-              </div>
-            </div>
-
-            {/* Product Grid */}
-            {isLoading && products.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-2xl border border-black/15 bg-white">
-                <span className="text-xs tracking-wider text-black/70 uppercase">
-                  Memuat data produk...
-                </span>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-black/15 bg-white p-6 text-center">
-                <Icon name="shopping_bag" size={28} className="text-black/70" />
-                <p className="text-xs text-black/70">
-                  Tidak ada produk yang cocok dengan pencarian.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white uppercase"
-                >
-                  Tambah Produk Pertama
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/20"
-                  >
-                    {/* Thumbnail Image */}
-                    <div className="relative aspect-[3/4] w-full bg-black/5">
-                      <Image
-                        src={product.image || '/images/catalog/catalog-01.jpg'}
-                        alt={product.title}
-                        fill
-                        className={`object-cover transition-opacity ${product.hidden ? 'opacity-40' : 'opacity-100'}`}
-                      />
-                      {product.hidden && (
-                        <div className="absolute inset-0 flex items-center justify-center p-2">
-                          <span className="rounded-full bg-black/80 px-2 py-0.5 text-center text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-xs sm:text-[10px]">
-                            Disembunyikan
-                          </span>
-                        </div>
-                      )}
-                      {product.badge && (
-                        <span className="absolute top-2 left-2 rounded-full bg-black px-2 py-0.5 text-[9px] font-semibold tracking-wider text-white uppercase sm:text-[10px]">
-                          {product.badge}
-                        </span>
-                      )}
-                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false ? 'bg-emerald-500' : 'bg-red-500'}`}
-                        />
-                        <span className="xs:inline hidden">
-                          {product.inStock !== false ? 'In Stock' : 'Habis'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="flex flex-1 flex-col p-2.5 sm:p-4">
-                      {product.edition && (
-                        <span className="font-headline truncate text-[10px] tracking-widest text-black/50 uppercase">
-                          {product.edition}
-                        </span>
-                      )}
-                      <h3 className="font-headline line-clamp-1 text-xs font-semibold text-black sm:text-sm">
-                        {product.title}
-                      </h3>
-                      <span className="truncate text-[10px] font-mono text-black/50 sm:text-xs">
-                        /{product.slug}
-                      </span>
-
-                      {/* Pricing */}
-                      <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
-                        <span className="text-xs font-bold text-black sm:text-sm">
-                          Rp {product.price.toLocaleString('id-ID')}
-                        </span>
-                        {product.original_price && product.original_price > product.price && (
-                          <span className="text-[10px] text-black/50 line-through sm:text-[11px]">
-                            Rp {product.original_price.toLocaleString('id-ID')}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Swatches preview with photo indicator */}
-                      {product.swatches && product.swatches.length > 0 && (
-                        <div className="mt-2 flex flex-col gap-1 rounded-xl bg-black/5 p-2 text-xs">
-                          <span className="text-[9px] font-semibold tracking-wider text-black/70 uppercase">
-                            {product.swatches.length} Varian:
-                          </span>
-                          <div className="flex flex-wrap items-center gap-1">
-                            {product.swatches.map((sw, idx) => (
-                              <div
-                                key={idx}
-                                title={`${sw.name} - ${sw.image ? 'Ada Foto' : 'Foto Utama'}`}
-                                className="flex items-center gap-1 rounded-full border border-black/15 bg-white px-1.5 py-0.5 shadow-2xs"
-                              >
-                                <span
-                                  style={{ backgroundColor: sw.color }}
-                                  className="h-2.5 w-2.5 rounded-full border border-black/15"
-                                />
-                                <span className="hidden text-[9px] font-medium text-black sm:inline">
-                                  {sw.name.split(' ')[0]}
-                                </span>
-                                {sw.image && (
-                                  <Icon name="image" size={9} className="text-emerald-700" />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="mt-3 flex items-center gap-1.5 border-t border-black/15/60 pt-2.5 sm:gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(product)}
-                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
-                        >
-                          <Icon name="edit" size={13} />
-                          <span className="truncate">Edit</span>
-                        </button>
-                        {/* Hide / Show quick toggle */}
-                        <button
-                          type="button"
-                          title={product.hidden ? 'Tampilkan di Toko' : 'Sembunyikan dari Toko'}
-                          onClick={async () => {
-                            const updated = await updateDbProduct(product.id, {
-                              hidden: !product.hidden,
-                            });
-                            if (updated) {
-                              setProducts((prev) =>
-                                prev.map((p) => (p.id === product.id ? updated : p)),
-                              );
-                              showToast(
-                                updated.hidden
-                                  ? `"${updated.title}" disembunyikan dari toko.`
-                                  : `"${updated.title}" ditampilkan kembali di toko.`,
-                              );
-                            }
-                          }}
-                          className={`flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95 ${
-                            product.hidden
-                              ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                              : 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100'
-                          }`}
-                        >
-                          <Icon name={product.hidden ? 'visibility' : 'visibility_off'} size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteProduct(product.id, product.title)}
-                          className="flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 active:scale-95"
-                          title="Hapus Produk"
-                        >
-                          <Icon name="delete" size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ──────────────────────────────────────────────────────────
-            SECTION 2: BERANDA (HOMEPAGE SECTIONS)
-        ────────────────────────────────────────────────────────── */}
-        {activeTab === 'section-home' && (
-          <div className="mx-auto w-full max-w-5xl space-y-4">
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-                  Editorial &amp; Storefront
-                </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Kelola Section Beranda (Homepage)
-                </h2>
-                <p className="hidden sm:block text-[11px] text-black/60">
-                  Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleSaveSections('Beranda')}
-                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-              >
-                <Icon name="check" size={16} />
-                <span>Simpan</span>
-              </button>
+            <div className="pb-2">
+              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                Editorial &amp; Storefront
+              </span>
+              <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
+                Kelola Section Beranda (Homepage)
+              </h2>
+              <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
+                Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal. Tersimpan otomatis.
+              </p>
             </div>
 
             {/* 1. HERO SECTION */}
@@ -2159,38 +1938,16 @@ export default function AdminPage() {
         {activeTab === 'section-news' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-                  Editorial &amp; Storefront
-                </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Manajemen News &amp; Editorial (Jurnal)
-                </h2>
-                <p className="hidden sm:block text-[11px] text-black/60">
-                  Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-black bg-black/5 px-1 py-0.5 rounded">/news</code>.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2.5">
-                <Link
-                  href="/news"
-                  target="_blank"
-                  className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-black/5 transition active:scale-95"
-                >
-                  <Icon name="storefront" size={14} />
-                  <span>Lihat Halaman /news</span>
-                  <Icon name="north_east" size={13} />
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleOpenCreateArticleModal}
-                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-                >
-                  <Icon name="add" size={16} />
-                  <span>Tulis Artikel Baru</span>
-                </button>
-              </div>
+            <div className="pb-2">
+              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                Editorial &amp; Storefront
+              </span>
+              <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
+                Manajemen News &amp; Editorial (Jurnal)
+              </h2>
+              <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
+                Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest.
+              </p>
             </div>
 
             {/* Telemetry Summary Card */}
@@ -2402,27 +2159,16 @@ export default function AdminPage() {
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-lookbook' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-                  Editorial &amp; Storefront
-                </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Manajemen Lookbook &amp; Galeri Editorial
-                </h2>
-                <p className="hidden sm:block text-[11px] text-black/60">
-                  Sesuaikan seluruh foto yang tampil di halaman Lookbook publik (/lookbook) dan bab koleksi aktif.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleSaveSections('Lookbook')}
-                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-              >
-                <Icon name="check" size={16} />
-                <span>Simpan</span>
-              </button>
+            <div className="pb-2">
+              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                Editorial &amp; Storefront
+              </span>
+              <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
+                Manajemen Lookbook &amp; Galeri Editorial
+              </h2>
+              <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
+                Sesuaikan seluruh foto halaman Lookbook publik (/lookbook). Setiap foto yang dipilih otomatis tersimpan.
+              </p>
             </div>
 
             {/* ══ BAGIAN A: SEMUA FOTO HALAMAN LOOKBOOK PUBLIK (/lookbook) ══ */}
@@ -2977,27 +2723,16 @@ export default function AdminPage() {
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-conscious' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
-                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-                  Editorial &amp; Storefront
-                </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Halaman Tentang Toko (About)
-                </h2>
-                <p className="hidden sm:block text-[11px] text-black/60">
-                  Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleSaveSections('Tentang Toko')}
-                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-              >
-                <Icon name="check" size={16} />
-                <span className="hidden sm:inline">Simpan Perubahan</span>
-              </button>
+            <div className="pb-2">
+              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
+                Editorial &amp; Storefront
+              </span>
+              <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
+                Halaman Tentang Toko (About)
+              </h2>
+              <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
+                Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya. Tersimpan otomatis.
+              </p>
             </div>
 
             {/* Manifesto Hero Banner */}
