@@ -189,7 +189,30 @@ export async function POST(req: NextRequest) {
 
     (async () => {
       try {
-        if (biteshipKey) {
+        // Send order pending payment email to customer
+        try {
+          await sendOrderPendingPaymentEmail({
+            orderNumber,
+            customerName,
+            customerEmail: email,
+            customerPhone: String(phone || ''),
+            customerAddress,
+            items: verifiedItems,
+            subtotal: serverSubtotal,
+            discount: safeDiscount,
+            shippingCost: safeShipping,
+            grandTotal: serverGrandTotal,
+            paymentMethod,
+            courierName: selectedRate ? `${selectedRate.courier_name} ${selectedRate.courier_service_name}` : undefined,
+            createdAt: new Date().toISOString(),
+          });
+        } catch (emailErr) {
+          console.warn('[Checkout Pending Email Error]:', emailErr);
+        }
+
+        // Only book courier in Biteship immediately if COD (Cash On Delivery)
+        // For online payment (Midtrans, Transfer, etc.), courier is booked once payment is confirmed or manually via Admin.
+        if (biteshipKey && paymentMethod === 'cod') {
           let courierCompany = (selectedRate?.courier_code || selectedRate?.company || 'jne').toLowerCase();
           let rawService = (selectedRate?.type || selectedRate?.courier_service_code || selectedRate?.courier_service_name || 'reg').toLowerCase();
           let courierService = 'reg';

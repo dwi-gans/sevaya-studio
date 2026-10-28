@@ -81,6 +81,20 @@ export async function GET(req: NextRequest) {
               return;
             }
 
+            // CRITICAL: Prevent auto-sync from advancing an order awaiting payment
+            if (ord.status === 'pending_payment') {
+              // An order waiting for payment must NEVER be automatically advanced to 'processing' by Biteship!
+              // Only sync waybill/tracking number if found.
+              if (waybillId && waybillId !== ord.tracking_number) {
+                ord.tracking_number = waybillId;
+                await supabaseAdmin
+                  .from('orders')
+                  .update({ tracking_number: waybillId, updated_at: new Date().toISOString() })
+                  .eq('id', ord.id);
+              }
+              return;
+            }
+
             // CRITICAL: Prevent auto-sync from downgrading an order that was marked 'shipped' or 'delivered' by Admin
             if (ord.status === 'shipped' || ord.status === 'delivered') {
               if (['confirmed', 'allocated', 'picking_up', 'picked'].includes(bsStatus)) {
@@ -208,6 +222,8 @@ export async function PATCH(req: NextRequest) {
         updatePayload.biteship_status = 'picking_up';
       } else if (status === 'cancelled') {
         updatePayload.biteship_status = 'cancelled';
+      } else if (status === 'pending_payment') {
+        updatePayload.biteship_status = 'confirmed';
       }
     }
 
