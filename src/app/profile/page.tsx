@@ -579,7 +579,7 @@ export default function ProfilePage() {
                         month: 'short',
                         year: 'numeric',
                       })
-                    : '—';
+                    : 'â€”';
 
                   return (
                     <div
@@ -702,7 +702,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
                   <span className="text-xs text-black/70">Email</span>
                   <span className="text-sm font-medium text-black underline underline-offset-4">
-                    {user?.email || '—'}
+                    {user?.email || 'â€”'}
                   </span>
                 </div>
               </section>
@@ -818,7 +818,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <span className="text-xs text-black/70 block">{t('profile.password')}</span>
-                      <span className="text-xs font-semibold text-black">••••••••••••</span>
+                      <span className="text-xs font-semibold text-black">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
                     </div>
                   </div>
                   <span className="text-[11px] text-black/50">{t('profile.encrypted')}</span>
