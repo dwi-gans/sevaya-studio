@@ -1,0 +1,434 @@
+@import url('https://fonts.cdnfonts.com/css/avenir');
+@import url('https://fonts.cdnfonts.com/css/avenir-next-lt-pro');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --text-muted-on-light: rgba(0, 0, 0, 0.64);
+  --text-muted-on-dark: rgba(255, 255, 255, 0.72);
+  --line-on-light: rgba(0, 0, 0, 0.12);
+  --line-on-dark: rgba(255, 255, 255, 0.16);
+}
+
+@theme {
+  --color-primary: #000000;
+  --color-primary-container: #1A1A1A;
+  --color-primary-fixed: #E5E5E5;
+  --color-primary-fixed-dim: #CCCCCC;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #FFFFFF;
+  --color-inverse-primary: #E5E5E5;
+
+  --color-wine-rich: #000000;
+
+  --color-secondary: #000000;
+  --color-secondary-container: #1A1A1A;
+  --color-secondary-fixed: #E5E5E5;
+  --color-secondary-fixed-dim: #CCCCCC;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-fixed: #000000;
+  --color-on-secondary-container: #FFFFFF;
+
+  --color-tertiary: #000000;
+  --color-tertiary-container: #1A1A1A;
+  --color-tertiary-fixed: #E5E5E5;
+  --color-tertiary-fixed-dim: #CCCCCC;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #FFFFFF;
+
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-cream: #FFFFFF;
+  --color-surface-ivory: #FFFFFF;
+  --color-surface-sand: #FFFFFF;
+  --color-linen-tint: #FFFFFF;
+  --color-warm-champagne: #FFFFFF;
+  --color-surface-bright: #FFFFFF;
+  --color-surface-dim: #E5E5E5;
+
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F5F5F5;
+  --color-surface-container: #EAEAEA;
+  --color-surface-container-high: #D4D4D4;
+  --color-surface-container-highest: #CCCCCC;
+
+  --color-on-surface: #000000;
+  --color-on-surface-variant: rgba(0, 0, 0, 0.64);
+  --color-inverse-surface: #000000;
+  --color-inverse-on-surface: #FFFFFF;
+
+  --color-text-charcoal: #000000;
+  --color-text-muted: rgba(0, 0, 0, 0.64);
+  --color-text-subtle: rgba(0, 0, 0, 0.48);
+
+  --color-border-delicate: rgba(0, 0, 0, 0.12);
+  --color-rose-taupe: #000000;
+  --color-outline: rgba(0, 0, 0, 0.24);
+  --color-outline-variant: rgba(0, 0, 0, 0.12);
+
+  --font-headline: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-white);
+    color: var(--color-black);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-headline);
+  }
+}
+
+/* Section Contrast Utilities (Pure Monochrome) */
+.section--light {
+  background-color: var(--color-white) !important;
+  color: var(--color-black) !important;
+}
+
+.section--dark {
+  background-color: var(--color-black) !important;
+  color: var(--color-white) !important;
+}
+
+.border-line-light {
+  border-color: var(--line-on-light) !important;
+}
+
+.border-line-dark {
+  border-color: var(--line-on-dark) !important;
+}
+
+.text-muted-light {
+  color: var(--text-muted-on-light) !important;
+}
+
+.text-muted-dark {
+  color: var(--text-muted-on-dark) !important;
+}
+
+/* Custom Spacing & Utilities for Sevaya Design System */
+.px-gutter-mobile {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.p-gutter-mobile {
+  padding: 0.75rem;
+}
+
+.px-margin-mobile {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.py-margin-mobile {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.gap-space-xs {
+  gap: 0.25rem;
+}
+
+.gap-space-sm {
+  gap: 0.5rem;
+}
+
+.gap-space-md {
+  gap: 1rem;
+}
+
+.gap-space-lg {
+  gap: 1.5rem;
+}
+
+.gap-space-xl {
+  gap: 2.5rem;
+}
+
+.pt-space-sm {
+  padding-top: 0.5rem;
+}
+
+.pb-space-sm {
+  padding-bottom: 0.5rem;
+}
+
+.pt-space-md {
+  padding-top: 1rem;
+}
+
+.pb-space-md {
+  padding-bottom: 1rem;
+}
+
+.pt-space-lg {
+  padding-top: 1.5rem;
+}
+
+.pb-space-lg {
+  padding-bottom: 1.5rem;
+}
+
+.pt-space-xl {
+  padding-top: 2.5rem;
+}
+
+.pb-space-xl {
+  padding-bottom: 2.5rem;
+}
+
+.mb-space-xs {
+  margin-bottom: 0.25rem;
+}
+
+.mb-space-sm {
+  margin-bottom: 0.5rem;
+}
+
+.mb-space-md {
+  margin-bottom: 1rem;
+}
+
+.mb-space-lg {
+  margin-bottom: 1.5rem;
+}
+
+.mb-space-xl {
+  margin-bottom: 2.5rem;
+}
+
+/* Safe area insets */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+/* Hide scrollbars — scoped to .no-scrollbar only */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Luxury Drawer & Menu Entrance Animations */
+@keyframes luxuryFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-luxury-fade-up {
+  animation: luxuryFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drawerSlideIn {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-drawer-slide-in {
+  animation: drawerSlideIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Typography styles matching DESIGN.md */
+.font-headline-xl {
+  font-family: var(--font-headline);
+  font-size: 40px;
+  line-height: 48px;
+  letter-spacing: -0.02em;
+}
+
+.font-headline-xl-mobile {
+  font-family: var(--font-headline);
+  font-size: clamp(20px, 6vw, 26px);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.font-headline-lg {
+  font-family: var(--font-headline);
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 0.01em;
+}
+
+.font-headline-lg-mobile {
+  font-family: var(--font-headline);
+  font-size: clamp(16px, 4.5vw, 20px);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.font-headline-md {
+  font-family: var(--font-headline);
+  font-size: clamp(15px, 4vw, 18px);
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+}
+
+.font-headline-sm {
+  font-family: var(--font-headline);
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1em;
+}
+
+.font-body-lg {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 26px;
+}
+
+.font-body-md {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.font-body-sm {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.font-label-lg {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.04em;
+}
+
+.font-label-md {
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+}
+
+.font-label-sm {
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+}
+
+/* Material Symbols for Executive Studio Console */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.font-display-brand {
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', sans-serif;
+}
+
+.font-label-caps {
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', sans-serif;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.font-label-mono-num {
+  font-family: 'Avenir', 'Avenir Next', 'Avenir Next LT Pro', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.p-margin {
+  padding: 1.5rem;
+}
+
+.px-margin {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-margin {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+
+/* ── Hero Ken Burns & Fade-up Animations ── */
+@keyframes kenburns {
+  0% {
+    transform: scale(1.06) translate(1%, 0.8%);
+  }
+  100% {
+    transform: scale(1) translate(0%, 0%);
+  }
+}
+
+.animate-kenburns {
+  animation: kenburns 6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-fadeup-title {
+  animation: heroFadeUp 0.8s ease-out 0.2s both;
+}
+
+.animate-hero-fadeup-link {
+  animation: heroFadeUp 0.8s ease-out 0.5s both;
+}
