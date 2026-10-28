@@ -1303,12 +1303,6 @@ export default function AdminPage() {
     );
   }
 
-  const activeTabMeta =
-    ADMIN_NAV_ITEMS.find((item) => item.id === activeTab) ?? {
-      id: 'orders' as AdminTab,
-      label: 'Pesanan & Resi',
-      icon: 'receipt_long',
-    };
 
   // ──────────────────────────────────────────────────────────
   // 2. ADMIN STUDIO DASHBOARD (EXECUTIVE BACK-OFFICE CONSOLE)
@@ -1589,20 +1583,6 @@ export default function AdminPage() {
               />
             </div>
           </button>
-
-          {/* Logo Brand SEVAYA (Tampil di Mobile & Desktop) */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/admin" className="flex items-center" aria-label="Admin Home">
-              <Logo className="h-4 sm:h-5 w-auto text-black" />
-            </Link>
-            <span className="text-[#d5c2c5] font-light text-xs">|</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[#514346] text-[12px] font-sans min-w-0">
-            <span className="hover:text-[#1a1c1c] cursor-pointer hidden xs:inline shrink-0">Studio</span>
-            <Icon name="chevron_right" size={14} className="text-[#837376] hidden xs:inline shrink-0" />
-            <span className="font-semibold text-[#1a1c1c] truncate">{activeTabMeta.label}</span>
-          </div>
 
           {(activeTab === 'orders' || activeTab === 'catalog' || activeTab === 'media') && (
             <div className="relative flex-1 max-w-xs hidden sm:block">
