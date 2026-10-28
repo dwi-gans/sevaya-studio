@@ -195,8 +195,9 @@ export function Header() {
                   onMouseEnter={() => setLookbookOpen(true)}
                   onMouseLeave={() => setLookbookOpen(false)}
                 >
-                  <Link
-                    href="/lookbook"
+                  <button
+                    type="button"
+                    onClick={() => setLookbookOpen((prev) => !prev)}
                     className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
                       pathname.startsWith("/lookbook")
                         ? "font-medium text-black"
@@ -211,7 +212,7 @@ export function Header() {
                           : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
                       }`}
                     />
-                  </Link>
+                  </button>
 
                   {lookbookOpen && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 z-50 pt-px">

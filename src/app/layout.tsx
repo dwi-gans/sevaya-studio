@@ -48,6 +48,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="id" className={`${dmSans.variable} ${inter.variable}`}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.cdnfonts.com" />
         <link
           rel="stylesheet"
           href="https://fonts.cdnfonts.com/css/avenir"

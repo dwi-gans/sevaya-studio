@@ -547,16 +547,21 @@ export default function AdminPage() {
     // Immediately load cached sections so there is 0ms delay / zero flash of old default images
     setSections(getCachedSiteSections());
 
-    Promise.all([getDbProducts(), getSiteSections(), listUploadedFiles()])
-      .then(([dbProds, siteSections, storageFiles]) => {
+    Promise.all([getDbProducts(), getSiteSections()])
+      .then(([dbProds, siteSections]) => {
         if (!isMounted) return;
         setProducts(dbProds);
         setSections(siteSections);
-        setMediaFiles(storageFiles);
       })
       .catch(() => {
         showToast('Gagal memuat data dari Supabase');
       });
+
+    listUploadedFiles()
+      .then((storageFiles) => {
+        if (isMounted) setMediaFiles(storageFiles);
+      })
+      .catch(() => {});
 
     // Load articles from Supabase
     fetch('/api/articles?admin=true')

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -182,11 +182,16 @@ export default function ProfilePage() {
     }
   }, [getAccessToken]);
 
+  // Lazy non-blocking data loading for smoother profile navigation
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchOrders();
+    if (!isAuthenticated) return;
+    fetchOrders();
+
+    // Fetch addresses with a tiny idle delay so orders render immediately
+    const timer = setTimeout(() => {
       fetchAddresses();
-    }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [isAuthenticated, fetchOrders, fetchAddresses]);
 
   // Initialize edit profile form fields
@@ -464,7 +469,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-white font-body text-black selection:bg-black/5 flex flex-col justify-between">
-      {/* ── STORE HEADER: MATCHING HOME LOGO SIZE & PLACEMENT ── */}
+      {/* -- STORE HEADER: MATCHING HOME LOGO SIZE & PLACEMENT -- */}
       <header className="sticky top-0 z-30 border-b border-black/15 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           {/* Desktop Left Logo (matching Home layout & size) */}
@@ -491,7 +496,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* ── MAIN CONTENT CONTAINER (Responsive: mobile-friendly & desktop spacious) ── */}
+      {/* -- MAIN CONTENT CONTAINER (Responsive: mobile-friendly & desktop spacious) -- */}
       <main className="mx-auto w-full max-w-4xl lg:max-w-5xl flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         {/* Tab Switcher: Orders | Profile */}
         <div className="flex items-center gap-6 sm:gap-8 pb-8">
@@ -515,9 +520,9 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* --------------------------------------------------------------- */}
         {/* TAB 1: ORDERS (Responsive layout)                               */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* --------------------------------------------------------------- */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
             {/* Welcome banner card */}
@@ -574,7 +579,7 @@ export default function ProfilePage() {
                         month: 'short',
                         year: 'numeric',
                       })
-                    : '—';
+                    : '�';
 
                   return (
                     <div
@@ -671,12 +676,12 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* --------------------------------------------------------------- */}
         {/* TAB 2: PROFILE (Desktop 2-column grid / Mobile stacked)         */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* --------------------------------------------------------------- */}
         {activeTab === 'profile' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* ── LEFT COLUMN (Profile Info & Addresses) ── */}
+            {/* -- LEFT COLUMN (Profile Info & Addresses) -- */}
             <div className="lg:col-span-7 space-y-6">
               {/* 1. Name & Email Section */}
               <section className="space-y-2">
@@ -697,7 +702,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">
                   <span className="text-xs text-black/70">Email</span>
                   <span className="text-sm font-medium text-black underline underline-offset-4">
-                    {user?.email || '—'}
+                    {user?.email || '�'}
                   </span>
                 </div>
               </section>
@@ -791,7 +796,7 @@ export default function ProfilePage() {
               </section>
             </div>
 
-            {/* ── RIGHT COLUMN (Security, Preferences, Sign Out) ── */}
+            {/* -- RIGHT COLUMN (Security, Preferences, Sign Out) -- */}
             <div className="lg:col-span-5 space-y-6">
               {/* 3. Security (Ganti Kata Sandi) */}
               <section className="space-y-2">
@@ -813,7 +818,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <span className="text-xs text-black/70 block">{t('profile.password')}</span>
-                      <span className="text-xs font-semibold text-black">••••••••••••</span>
+                      <span className="text-xs font-semibold text-black">������������</span>
                     </div>
                   </div>
                   <span className="text-[11px] text-black/50">{t('profile.encrypted')}</span>
@@ -921,7 +926,7 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* ── MINIMAL FOOTER LINKS (Matching Screenshot 1 & 2) ── */}
+      {/* -- MINIMAL FOOTER LINKS (Matching Screenshot 1 & 2) -- */}
       <footer className="border-t border-black/15 py-6 text-center text-xs text-black/70">
         <div className="mx-auto w-full max-w-4xl lg:max-w-5xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <span className="flex items-center gap-1 cursor-pointer hover:text-black">
@@ -946,9 +951,9 @@ export default function ProfilePage() {
         </div>
       </footer>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {/* MODAL 1: EDIT PROFILE                                           */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {isEditProfileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4">
@@ -1007,9 +1012,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {/* MODAL 2: ADD / EDIT ADDRESS                                     */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {isAddressModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1129,9 +1134,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {/* MODAL 3: CHANGE PASSWORD                                        */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* --------------------------------------------------------------- */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-none bg-white border border-black/15 p-6 space-y-4">
