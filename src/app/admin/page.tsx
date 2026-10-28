@@ -1626,27 +1626,6 @@ export default function AdminPage() {
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
-        {/* Mobile Quick Horizontal Navigation Pills (Sleek 1-Tap Switching) */}
-        <div className="md:hidden -mx-3 mb-4 px-3 sticky top-14 z-20 bg-[#f9f9f8]/95 backdrop-blur-md py-2 border-b border-black/10 overflow-x-auto no-scrollbar flex items-center gap-1.5 touch-pan-x">
-          {ADMIN_NAV_ITEMS.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all active:scale-95 ${
-                  isActive
-                    ? 'bg-black text-white shadow-xs font-semibold'
-                    : 'bg-white text-black/70 hover:bg-black/5 hover:text-black border border-black/15'
-                }`}
-              >
-                <Icon name={item.icon} size={12} className={isActive ? 'text-white' : 'text-black/60'} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
         {/* ──────────────────────────────────────────────────────────
             SECTION 0: DASHBOARD PESANAN & PENGIRIMAN (REAL SUPABASE + BITESHIP)
         ────────────────────────────────────────────────────────── */}
