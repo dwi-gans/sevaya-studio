@@ -26,33 +26,18 @@ export function NavigationDrawer() {
 
   const collectionItems = [
     {
-      label: isId ? 'Lihat Semua' : 'All Collections',
+      label: isId ? 'Semua Koleksi' : 'All Collections',
       href: '/shop',
       tag: null,
     },
     {
-      label: isId ? 'Terbaru' : 'New Arrivals',
-      href: '/shop?category=bestseller',
-      tag: isId ? 'BARU' : 'NEW',
-    },
-    {
-      label: isId ? 'Abaya' : 'Abaya',
+      label: 'Abaya',
       href: '/shop?category=abaya',
       tag: null,
     },
     {
-      label: isId ? 'Khimar & Veil' : 'Khimar & Veil',
+      label: 'Khimar',
       href: '/shop?category=khimar',
-      tag: null,
-    },
-    {
-      label: isId ? 'Kaftan' : 'Kaftan',
-      href: '/shop?category=kaftan',
-      tag: null,
-    },
-    {
-      label: isId ? 'Sets Modest' : 'Modest Sets',
-      href: '/shop?category=sets',
       tag: null,
     },
   ];
