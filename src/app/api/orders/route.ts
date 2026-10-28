@@ -107,15 +107,20 @@ export async function POST(req: NextRequest) {
       const productId = String(rawItem.id || rawItem.slug || 'abaya');
       const verifiedPrice = await getVerifiedProductPrice(productId, Number(rawItem.price) || 0);
 
+      let resolvedImage = rawItem.image ? String(rawItem.image).trim() : '';
+      if (!resolvedImage || resolvedImage === 'undefined' || resolvedImage === 'null') {
+        resolvedImage = '/images/catalog/catalog-01.jpg';
+      }
+
       verifiedItems.push({
         id: productId,
-        title: String(rawItem.title || rawItem.name || 'Busana Muslimah SEVAYA').slice(0, 100),
+        title: String(rawItem.title || rawItem.name || rawItem.productTitle || 'Busana Muslimah SEVAYA').slice(0, 100),
         edition: rawItem.edition ? String(rawItem.edition).slice(0, 50) : undefined,
         price: verifiedPrice,
         quantity: qty,
         color: rawItem.color ? String(rawItem.color).slice(0, 50) : undefined,
         size: rawItem.size ? String(rawItem.size).slice(0, 30) : undefined,
-        image: rawItem.image ? String(rawItem.image).slice(0, 200) : undefined,
+        image: resolvedImage,
       });
 
       serverSubtotal += verifiedPrice * qty;

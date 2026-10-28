@@ -228,11 +228,16 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     try {
       const orderItems = (items.length > 0 ? items : displayItems).map((it) => ({
+        id: it.id,
+        title: it.title,
         productTitle: it.title,
+        edition: it.edition,
         color: it.color,
         size: it.size,
         qty: it.quantity,
+        quantity: it.quantity,
         price: it.price,
+        image: it.image,
       }));
 
       const payload = {

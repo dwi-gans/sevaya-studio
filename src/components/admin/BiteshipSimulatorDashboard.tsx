@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -271,11 +272,22 @@ function OrderDetailModal({
                   Produk
                 </h4>
                 <div className="rounded-xl border border-black/15 bg-white p-3 space-y-2">
-                  {parsedItems.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center text-xs py-1 border-b border-black/15/50 last:border-0">
-                      <div>
-                        <p className="font-semibold text-black">{item.productTitle || item.name}</p>
-                        <p className="text-black/70">{item.color} · ×{item.qty || 1}</p>
+                  {parsedItems.map((item: any, i) => (
+                    <div key={i} className="flex justify-between items-center text-xs py-2 border-b border-black/15/50 last:border-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded border border-black/15 bg-black/5">
+                          <Image
+                            src={item.image || '/images/catalog/catalog-01.jpg'}
+                            alt={item.productTitle || item.name || 'Produk'}
+                            fill
+                            className="object-cover"
+                            unoptimized={Boolean(item.image && item.image.startsWith('http'))}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-black">{item.productTitle || item.name || item.title}</p>
+                          <p className="text-black/70">{item.color || 'Standar'} · ×{item.qty || item.quantity || 1}</p>
+                        </div>
                       </div>
                       <span className="font-bold text-black">{formatIDR(item.price || 0)}</span>
                     </div>

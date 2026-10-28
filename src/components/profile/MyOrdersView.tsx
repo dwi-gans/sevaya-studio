@@ -281,18 +281,13 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                   {firstItem ? (
                     <div className="flex items-center gap-4">
                       <div className="relative h-18 w-14 shrink-0 overflow-hidden bg-white border border-black/15">
-                        {firstItem.image ? (
-                          <Image
-                            src={firstItem.image}
-                            alt={firstItem.title || firstItem.name || 'Produk'}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-black/50">
-                            <Icon name="shopping_bag" size={18} />
-                          </div>
-                        )}
+                        <Image
+                          src={firstItem.image || '/images/catalog/catalog-01.jpg'}
+                          alt={firstItem.title || firstItem.name || 'Produk'}
+                          fill
+                          className="object-cover"
+                          unoptimized={Boolean(firstItem.image && firstItem.image.startsWith('http'))}
+                        />
                       </div>
 
                       <div className="flex-1 min-w-0">

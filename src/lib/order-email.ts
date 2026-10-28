@@ -7,6 +7,7 @@ export interface OrderEmailItem {
   quantity?: number;
   color?: string;
   size?: string;
+  image?: string;
 }
 
 export interface OrderEmailData {
@@ -46,9 +47,17 @@ const buildItemsHtml = (items: OrderEmailItem[]) => {
       const qty = item.quantity || 1;
       const variant = [escapeHtml(item.color), escapeHtml(item.size)].filter(Boolean).join(' &bull; ') || 'Standar';
 
+      let rawImg = item.image || '/images/catalog/catalog-01.jpg';
+      let fullImageUrl = rawImg.startsWith('http')
+        ? rawImg
+        : `https://sevaya-studio.com${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+
       return `
         <tr>
-          <td style="padding: 14px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top;">
+          <td style="padding: 12px 14px 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; width: 56px;">
+            <img src="${escapeHtml(fullImageUrl)}" alt="${title}" width="52" height="70" style="display: block; width: 52px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #EAE5DE; background-color: #F8F6F4;" />
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top;">
             <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #000000; line-height: 1.4;">
               ${title}
             </p>
@@ -56,10 +65,10 @@ const buildItemsHtml = (items: OrderEmailItem[]) => {
               ${variant}
             </p>
           </td>
-          <td style="padding: 14px 12px; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: center; font-family: monospace; font-size: 12px; color: #7A706A;">
+          <td style="padding: 12px 10px; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: center; font-family: monospace; font-size: 12px; color: #7A706A; white-space: nowrap;">
             &times; ${qty}
           </td>
-          <td style="padding: 14px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: right; white-space: nowrap;">
+          <td style="padding: 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: right; white-space: nowrap;">
             <p style="margin: 0; font-family: monospace; font-size: 13px; font-weight: 600; color: #000000;">
               ${formatIDR(price * qty)}
             </p>
@@ -210,9 +219,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <thead>
               <tr style="border-bottom: 1px solid #000000;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;">
-                  Item
-                </th>
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;" colspan="2">Item &bull; Produk</th>
                 <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
                   Qty
                 </th>
@@ -464,9 +471,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <thead>
               <tr style="border-bottom: 1px solid #000000;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;">
-                  Item
-                </th>
+                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;" colspan="2">Item &bull; Produk</th>
                 <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
                   Qty
                 </th>

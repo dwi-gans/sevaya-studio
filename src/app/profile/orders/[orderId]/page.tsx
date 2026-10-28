@@ -543,13 +543,13 @@ export default function OrderDetailPage({
                   <div key={idx} className="flex items-center justify-between py-4 first:pt-1 last:pb-1">
                     <div className="flex items-center gap-3.5">
                       <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-none border border-black/15 bg-black/5">
-                        {item.image ? (
-                          <Image src={item.image} alt={title} fill className="object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-black/50">
-                            <Icon name="shopping_bag" size={18} />
-                          </div>
-                        )}
+                        <Image
+                          src={item.image || '/images/catalog/catalog-01.jpg'}
+                          alt={title}
+                          fill
+                          className="object-cover"
+                          unoptimized={Boolean(item.image && item.image.startsWith('http'))}
+                        />
                       </div>
                       <div>
                         <h3 className="font-headline text-xs font-semibold text-black">
