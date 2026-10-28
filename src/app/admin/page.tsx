@@ -1661,54 +1661,54 @@ export default function AdminPage() {
             SECTION 1: KATALOG PRODUK (MULTI-FOTO PER WARNA)
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'catalog' && (
-          <div className="mx-auto w-full max-w-5xl space-y-4">
+          <div className="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4">
             {/* Top Toolbar */}
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <div>
+            <div className="flex items-center justify-between gap-2 pb-1 sm:pb-2">
+              <div className="min-w-0">
                 <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Koleksi &amp; Inventori
                 </span>
-                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-                  Manajemen Katalog Produk
+                <h2 className="text-sm sm:text-base font-bold tracking-tight text-black truncate">
+                  Manajemen Katalog
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="text-[11px] text-black/50 mt-0 hidden sm:block">
                   1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleOpenCreateModal}
-                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95"
                 >
-                  <Icon name="add" size={16} />
-                  <span>Tambah Produk Baru</span>
+                  <Icon name="add" size={14} />
+                  <span>Tambah Produk</span>
                 </button>
               </div>
             </div>
 
             {/* Search & Stats Card */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-black/15 bg-white p-2.5 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="relative flex-1 min-w-0">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari berdasarkan nama abaya, edisi, atau warna..."
-                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-none border border-black/20 bg-white pr-4 pl-9 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:bg-white focus:outline-none"
+                  placeholder="Cari nama abaya, edisi, warna..."
+                  className="w-full h-8 sm:h-9 rounded-lg border border-black/20 bg-white pr-3 pl-8 py-1 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none transition-colors"
                 />
                 <Icon
                   name="search"
-                  size={16}
-                  className="pointer-events-none absolute top-3 sm:top-2.5 left-3 text-black/70"
+                  size={14}
+                  className="pointer-events-none absolute top-2 sm:top-2.5 left-2.5 text-black/50"
                 />
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 text-xs font-medium text-black/70 shrink-0">
-                <span className="rounded-full bg-black/5 px-3 py-1.5 border border-black/15">
-                  Total: <strong className="text-black">{products.length}</strong> produk
+              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-medium text-black/70 shrink-0">
+                <span className="rounded-full bg-black/5 px-2.5 py-1 border border-black/10">
+                  Total: <strong className="text-black">{products.length}</strong>
                 </span>
-                <span className="rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200/60 text-emerald-800">
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 border border-emerald-200/60 text-emerald-800">
                   Tersedia: <strong className="font-bold">{products.filter((p) => p.inStock !== false).length}</strong>
                 </span>
               </div>
@@ -1736,11 +1736,11 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/20"
+                    className="group flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/30"
                   >
                     {/* Thumbnail Image */}
                     <div className="relative aspect-[3/4] w-full bg-black/5">
@@ -1828,13 +1828,13 @@ export default function AdminPage() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className="mt-3 flex items-center gap-1.5 border-t border-black/15/60 pt-2.5 sm:gap-2">
+                      <div className="mt-2.5 flex items-center gap-1 border-t border-black/10 pt-2 sm:gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(product)}
-                          className="flex min-h-[38px] flex-1 items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
+                          className="flex h-7 sm:h-8 flex-1 items-center justify-center gap-1 rounded-full border border-black/20 bg-white px-1.5 text-[10px] sm:text-xs font-medium text-black transition hover:bg-black/5 active:scale-95"
                         >
-                          <Icon name="edit" size={13} />
+                          <Icon name="edit" size={11} />
                           <span className="truncate">Edit</span>
                         </button>
                         {/* Hide / Show quick toggle */}
@@ -1856,21 +1856,21 @@ export default function AdminPage() {
                               );
                             }
                           }}
-                          className={`flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95 ${
+                          className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border transition-colors active:scale-95 ${
                             product.hidden
                               ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                               : 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100'
                           }`}
                         >
-                          <Icon name={product.hidden ? 'visibility' : 'visibility_off'} size={14} />
+                          <Icon name={product.hidden ? 'visibility' : 'visibility_off'} size={12} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteProduct(product.id, product.title)}
-                          className="flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 active:scale-95"
+                          className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 active:scale-95"
                           title="Hapus Produk"
                         >
-                          <Icon name="delete" size={14} />
+                          <Icon name="delete" size={12} />
                         </button>
                       </div>
                     </div>
@@ -4049,33 +4049,33 @@ export default function AdminPage() {
       ────────────────────────────────────────────────────────── */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
-          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
-              <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+          <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-full sm:max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-3.5 sm:px-6 py-2.5 sm:py-3.5 shrink-0">
+              <div className="min-w-0 pr-2">
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Katalog Koleksi
                 </span>
-                <h3 className="font-headline text-base sm:text-lg font-bold text-black">
+                <h3 className="font-headline text-sm sm:text-base font-bold text-black truncate">
                   {editingProduct ? 'Edit Produk & Varian Foto' : 'Tambah Produk Baru'}
                 </h3>
-                <p className="text-[11px] sm:text-[11px] text-black/60 mt-0">
-                  Tentukan foto utama dan foto spesifik untuk masing-masing varian warna.
+                <p className="text-[10px] sm:text-[11px] text-black/50 mt-0 truncate">
+                  Atur foto utama dan varian warna masing-masing busana.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProductModalOpen(false)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
+                className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                 aria-label="Tutup Form Produk"
               >
-                <Icon name="close" size={20} />
+                <Icon name="close" size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-3.5 sm:p-6 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+            <form onSubmit={handleSaveProduct} className="flex flex-col gap-3.5 sm:gap-4 p-3.5 sm:p-5 overflow-y-auto overflow-x-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Nama / Judul Produk *
                   </label>
                   <input
@@ -4084,12 +4084,12 @@ export default function AdminPage() {
                     value={productForm.title}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. Fina Abaya - Stripe 2.0"
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Slug URL
                   </label>
                   <input
@@ -4097,14 +4097,14 @@ export default function AdminPage() {
                     value={productForm.slug}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Edisi / Subtitle
                   </label>
                   <input
@@ -4114,12 +4114,12 @@ export default function AdminPage() {
                       setProductForm((prev) => ({ ...prev, edition: e.target.value }))
                     }
                     placeholder="cth. Edition 2.0"
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Harga (Rp) *
                   </label>
                   <input
@@ -4129,12 +4129,12 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setProductForm((prev) => ({ ...prev, price: Number(e.target.value) }))
                     }
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Harga Normal (Coret)
                   </label>
                   <input
@@ -4146,15 +4146,15 @@ export default function AdminPage() {
                         original_price: Number(e.target.value),
                       }))
                     }
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Badge & Stock & Visibility */}
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-black/70">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label className="text-[11px] font-medium text-black/70">
                     Badge Label (Opsional)
                   </label>
                   <input
@@ -4162,44 +4162,44 @@ export default function AdminPage() {
                     value={productForm.badge}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, badge: e.target.value }))}
                     placeholder="cth. Best Seller, Sale -20%"
-                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
                   />
                 </div>
 
-                <div className="flex flex-col justify-end gap-2">
-                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-black/15 bg-white p-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-black/15 bg-white p-2">
                     <input
                       type="checkbox"
                       checked={productForm.inStock}
                       onChange={(e) =>
                         setProductForm((prev) => ({ ...prev, inStock: e.target.checked }))
                       }
-                      className="h-4 w-4 accent-[#000000]"
+                      className="h-3.5 w-3.5 accent-[#000000]"
                     />
-                    <span className="text-xs font-semibold text-black">
-                      Tersedia dalam Stok (In Stock)
+                    <span className="text-[11px] font-medium text-black truncate">
+                      In Stock
                     </span>
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
                     <input
                       type="checkbox"
                       checked={productForm.hidden}
                       onChange={(e) =>
                         setProductForm((prev) => ({ ...prev, hidden: e.target.checked }))
                       }
-                      className="h-4 w-4 accent-amber-600"
+                      className="h-3.5 w-3.5 accent-amber-600"
                     />
-                    <span className="text-xs font-semibold text-amber-800">
-                      Sembunyikan dari Toko
+                    <span className="text-[11px] font-medium text-amber-800 truncate">
+                      Sembunyikan
                     </span>
                   </label>
                 </div>
               </div>
 
               {/* Product Default Image */}
-              <div className="flex flex-col gap-2 rounded-xl border border-black/15/70 bg-black/5 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-black">
+              <div className="flex flex-col gap-2 rounded-xl border border-black/10 bg-black/[0.02] p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-black">
                     Foto Sampul Utama Produk
                   </span>
                   <button
@@ -4208,15 +4208,15 @@ export default function AdminPage() {
                       setImagePickerTarget('product');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95"
                   >
-                    <Icon name="image" size={14} />
-                    <span>Pilih dari Galeri</span>
+                    <Icon name="image" size={12} />
+                    <span>Pilih Galeri</span>
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3.5">
-                  <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-black/15 bg-white">
+                <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                  <div className="relative h-16 w-12 sm:h-20 sm:w-16 shrink-0 overflow-hidden rounded-lg border border-black/15 bg-white">
                     <Image
                       src={productForm.image || '/images/catalog/catalog-01.jpg'}
                       alt="Product preview"
@@ -4224,7 +4224,7 @@ export default function AdminPage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-1 flex-col gap-1.5 min-w-0">
                     <input
                       type="text"
                       value={productForm.image}
@@ -4232,11 +4232,11 @@ export default function AdminPage() {
                         setProductForm((prev) => ({ ...prev, image: e.target.value }))
                       }
                       placeholder="/images/catalog/catalog-01.jpg atau URL Supabase"
-                      className="w-full min-h-[38px] rounded-none border border-black/20 bg-white px-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
+                      className="w-full h-8 rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none"
                     />
-                    <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95">
-                      <Icon name="upload" size={14} />
-                      <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
+                    <label className="inline-flex h-7 w-fit cursor-pointer items-center gap-1 rounded-full bg-black px-3 text-[10px] font-semibold text-white transition hover:bg-black/85 active:scale-95">
+                      <Icon name="upload" size={12} />
+                      <span>{isUploading ? 'Mengunggah...' : 'Unggah File'}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -4253,62 +4253,72 @@ export default function AdminPage() {
               </div>
 
               {/* Color Swatches Builder with Multi-Photo per Color */}
-              <div className="flex flex-col gap-3 rounded-xl border border-black/15/70 bg-black/5 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-black block">
-                      Varian Warna &amp; Foto Masing-masing Warna
+              <div className="flex flex-col gap-2.5 rounded-xl border border-black/10 bg-black/[0.02] p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-semibold text-black block truncate">
+                      Varian Warna &amp; Foto Warna
                     </span>
-                    <p className="text-[11px] text-black/70">
-                      Setiap varian warna dapat dihubungkan ke foto abaya warnanya masing-masing.
+                    <p className="text-[10px] text-black/50 hidden sm:block">
+                      Setiap varian warna dapat dihubungkan ke foto busananya masing-masing.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleAddSwatch}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
+                    className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95"
                   >
-                    <Icon name="add" size={14} />
+                    <Icon name="add" size={12} />
                     <span>Tambah Warna</span>
                   </button>
                 </div>
 
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-2 min-w-0">
                   {productForm.swatches.map((sw, idx) => (
                     <div
                       key={idx}
-                      className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center"
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-black/15 bg-white p-2.5 sm:p-3 shadow-2xs min-w-0"
                     >
-                      {/* Color Preview & Native Color Picker */}
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={sw.color}
-                          onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
-                          className="h-9 w-9 cursor-pointer rounded-lg border border-black/15 p-0.5"
-                          title="Pilih Warna Hex"
-                        />
-                        <div className="flex flex-col">
+                      {/* Top Row on mobile: Color picker & name & delete */}
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <input
+                            type="color"
+                            value={sw.color}
+                            onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
+                            className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-black/15 p-0.5"
+                            title="Pilih Warna Hex"
+                          />
                           <input
                             type="text"
                             value={sw.name}
                             onChange={(e) => handleUpdateSwatch(idx, 'name', e.target.value)}
                             placeholder="Nama Warna"
-                            className="w-36 min-h-[36px] rounded-none border border-black/20 bg-white px-2 py-1 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                            className="flex-1 sm:w-28 h-7 rounded border border-black/20 bg-white px-2 py-0.5 text-xs text-black focus:border-black focus:outline-none min-w-0"
                           />
                           <input
                             type="text"
                             value={sw.color}
                             onChange={(e) => handleUpdateSwatch(idx, 'color', e.target.value)}
                             placeholder="#1A1A1A"
-                            className="mt-1 w-36 rounded-none border border-black/20 bg-white px-2 py-0.5 font-mono text-[10px] text-black/70 focus:border-black focus:outline-none"
+                            className="w-16 h-7 rounded border border-black/20 bg-white px-1.5 py-0.5 font-mono text-[10px] text-black/60 focus:border-black focus:outline-none shrink-0"
                           />
                         </div>
+
+                        {/* Delete button (visible on mobile inline) */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSwatch(idx)}
+                          className="sm:hidden h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50 active:scale-95"
+                          title="Hapus Warna Ini"
+                        >
+                          <Icon name="close" size={15} />
+                        </button>
                       </div>
 
                       {/* Photo for this specific color */}
-                      <div className="flex flex-1 items-center gap-2.5 sm:border-l sm:border-black/15 sm:pl-3">
-                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                      <div className="flex flex-1 items-center gap-2 sm:border-l sm:border-black/15 sm:pl-2.5 min-w-0">
+                        <div className="relative h-10 w-8 shrink-0 overflow-hidden rounded-md border border-black/15 bg-black/5">
                           <Image
                             src={sw.image || productForm.image || '/images/catalog/catalog-01.jpg'}
                             alt={`Foto warna ${sw.name}`}
@@ -4317,22 +4327,22 @@ export default function AdminPage() {
                           />
                         </div>
 
-                        <div className="flex flex-1 flex-col gap-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                          <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => {
                                 setImagePickerTarget(`swatch-${idx}` as ImagePickerTarget);
                                 setIsImagePickerOpen(true);
                               }}
-                              className="min-h-[34px] rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black hover:bg-black/5 active:scale-95"
+                              className="h-6 rounded-full border border-black/20 bg-white px-2 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95"
                             >
-                              <Icon name="image" size={12} className="inline mr-1" />
-                              <span>Pilih Foto</span>
+                              <Icon name="image" size={10} className="inline mr-1" />
+                              <span>Pilih</span>
                             </button>
 
-                            <label className="min-h-[34px] flex items-center cursor-pointer rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:bg-black/85 active:scale-95">
-                              <Icon name="upload" size={11} className="inline mr-1" />
+                            <label className="h-6 flex items-center cursor-pointer rounded-full bg-black px-2 text-[10px] font-semibold text-white hover:bg-black/85 active:scale-95">
+                              <Icon name="upload" size={10} className="inline mr-1" />
                               <span>Unggah</span>
                               <input
                                 type="file"
@@ -4346,41 +4356,41 @@ export default function AdminPage() {
                               />
                             </label>
                           </div>
-                          <span className="truncate font-mono text-[9px] text-black/50">
+                          <span className="truncate font-mono text-[8px] text-black/40 block min-w-0">
                             {sw.image || productForm.image}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Delete Swatch */}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSwatch(idx)}
-                        className="self-end min-h-[36px] min-w-[36px] flex items-center justify-center rounded-full p-1.5 text-red-500 hover:bg-red-50 sm:self-center active:scale-95"
-                        title="Hapus Warna Ini"
-                      >
-                        <Icon name="close" size={16} />
-                      </button>
+                        {/* Delete button (visible on desktop) */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSwatch(idx)}
+                          className="hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-full p-1 text-red-500 hover:bg-red-50 active:scale-95"
+                          title="Hapus Warna Ini"
+                        >
+                          <Icon name="close" size={15} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 border-t border-black/15/70 pt-4">
+              <div className="flex items-center justify-end gap-2 border-t border-black/15 pt-3">
                 <button
                   type="button"
                   onClick={() => setIsProductModalOpen(false)}
-                  className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black active:scale-95 transition"
+                  className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-4 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black active:scale-95 transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-6 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="h-8 sm:h-9 flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95"
                 >
-                  <Icon name="check" size={15} />
+                  <Icon name="check" size={14} />
                   <span>{isLoading ? 'Menyimpan...' : 'Simpan Produk'}</span>
                 </button>
               </div>
