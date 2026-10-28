@@ -640,10 +640,10 @@ export function BiteshipSimulatorDashboard() {
           <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
             Transaksi &amp; Logistik
           </span>
-          <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+          <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
             Pesanan &amp; Pengiriman
           </h2>
-          <p className="text-xs text-black/70 mt-0.5">
+          <p className="text-[11px] text-black/60 mt-0">
             Pantau transaksi pelanggan, status pengiriman kurir, dan nomor resi secara real-time.
           </p>
         </div>

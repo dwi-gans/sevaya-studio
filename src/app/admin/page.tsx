@@ -1635,17 +1635,17 @@ export default function AdminPage() {
             SECTION 1: KATALOG PRODUK (MULTI-FOTO PER WARNA)
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'catalog' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+            <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Koleksi &amp; Inventori
                 </span>
-                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen Katalog Produk
                 </h2>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
                 </p>
               </div>
@@ -1654,7 +1654,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateModal}
-                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tambah Produk Baru</span>
@@ -1859,16 +1859,16 @@ export default function AdminPage() {
             SECTION 2: BERANDA (HOMEPAGE SECTIONS)
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-home' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
+            <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Kelola Section Beranda (Homepage)
                 </h2>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal.
                 </p>
               </div>
@@ -1876,7 +1876,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Beranda')}
-                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Section Beranda</span>
@@ -1885,12 +1885,12 @@ export default function AdminPage() {
 
             {/* 1. HERO SECTION */}
             <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
+              <div className="border-b border-black/10 pb-2.5 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-black">
+                  <h3 className="text-xs font-bold text-black">
                     1. Hero Section (Homepage Banner Utama)
                   </h3>
-                  <p className="text-xs text-black/70 mt-0.5">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Banner utama dengan foto latar penuh dan teks tajuk toko.
                   </p>
                 </div>
@@ -1899,7 +1899,7 @@ export default function AdminPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
                 <div className="flex flex-col gap-2.5">
                   <span className="text-xs font-medium text-black/70">
                     Gambar Latar Hero
@@ -1918,7 +1918,7 @@ export default function AdminPage() {
                       setImagePickerTarget('hero');
                       setIsImagePickerOpen(true);
                     }}
-                    className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-2 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                    className="inline-flex min-h-[28px] sm:min-h-[34px] items-center justify-center gap-1 rounded-full border border-black/20 bg-white px-2 py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
                   >
                     <Icon name="image" size={14} />
                     <span>Ganti Gambar Hero</span>
@@ -1939,7 +1939,7 @@ export default function AdminPage() {
                           hero: { ...prev.hero, badge: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                      className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
@@ -1956,7 +1956,7 @@ export default function AdminPage() {
                           hero: { ...prev.hero, title: e.target.value },
                         }))
                       }
-                      className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                      className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                     />
                   </div>
 
@@ -1981,17 +1981,17 @@ export default function AdminPage() {
             </div>
 
             {/* 2. CATEGORY SPOTLIGHT */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   2. Category Spotlight (2 Kartu Sorotan)
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Dua kartu kategori utama yang ditampilkan berdampingan di beranda.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
                 {sections.spotlight.map((card, idx) => (
                   <div
                     key={card.id}
@@ -2050,17 +2050,17 @@ export default function AdminPage() {
             </div>
 
             {/* 3. SIGNATURE TEXTILES */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   3. Showcase Tekstil Berkelanjutan
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Banner narasi komitmen material premium ramah lingkungan Sevaya.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                   <Image
                     src={sections.missionTextiles.image}
@@ -2097,17 +2097,17 @@ export default function AdminPage() {
             </div>
 
             {/* 4. JOURNAL SECTION */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   4. Artikel Journal (2 Artikel)
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Artikel editorial gaya hidup dan wawasan abaya di beranda toko.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
                 {sections.journal.map((art, idx) => (
                   <div
                     key={art.id}
@@ -2169,17 +2169,17 @@ export default function AdminPage() {
             SECTION: NEWS & EDITORIAL (JURNAL PUBLIK /NEWS)
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-news' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+            <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen News &amp; Editorial (Jurnal)
                 </h2>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-black bg-black/5 px-1 py-0.5 rounded">/news</code>.
                 </p>
               </div>
@@ -2197,7 +2197,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={handleOpenCreateArticleModal}
-                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add" size={16} />
                   <span>Tulis Artikel Baru</span>
@@ -2207,7 +2207,7 @@ export default function AdminPage() {
 
             {/* Telemetry Summary Card */}
             <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/70 gap-4 sm:gap-6">
+              <div className="grid grid-cols-3 divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
                 <div className="flex flex-col justify-between space-y-1 sm:pr-4">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                     Total Artikel Terbit
@@ -2323,7 +2323,7 @@ export default function AdminPage() {
               }
 
               return (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                   {filtered.map((art) => (
                     <div
                       key={art.id}
@@ -2349,17 +2349,17 @@ export default function AdminPage() {
                       </div>
 
                       {/* Content Info */}
-                      <div className="flex flex-1 flex-col p-4 sm:p-5">
+                      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
                         <div className="flex items-center justify-between text-[11px] text-black/50">
                           <span className="font-semibold text-black/70">{art.category}</span>
                           <span>{art.date}</span>
                         </div>
 
-                        <h3 className="font-headline mt-2 text-sm sm:text-base font-bold text-black line-clamp-2">
+                        <h3 className="mt-1 text-xs font-bold text-black line-clamp-2">
                           {art.title}
                         </h3>
 
-                        <p className="mt-1.5 text-xs text-black/70 line-clamp-2 leading-relaxed flex-1">
+                        <p className="mt-1 text-[11px] text-black/70 line-clamp-2 leading-snug flex-1">
                           {art.excerpt}
                         </p>
 
@@ -2413,16 +2413,16 @@ export default function AdminPage() {
             SECTION 3: LOOKBOOK STUDIO
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-lookbook' && (
-          <div className="mx-auto w-full max-w-5xl space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
+            <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen Lookbook &amp; Galeri Editorial
                 </h2>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Sesuaikan seluruh foto yang tampil di halaman Lookbook publik (/lookbook) dan bab koleksi aktif.
                 </p>
               </div>
@@ -2430,7 +2430,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Lookbook')}
-                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan Lookbook</span>
@@ -2438,13 +2438,13 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN A: SEMUA FOTO HALAMAN LOOKBOOK PUBLIK (/lookbook) ══ */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-6">
-              <div className="border-b border-black/15/70 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="border-b border-black/10 pb-2.5 flex items-center justify-between gap-2">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-black">
+                  <h3 className="text-xs font-bold text-black">
                     1. Foto Editorial Halaman Lookbook (/lookbook)
                   </h3>
-                  <p className="text-xs text-black/70 mt-0.5">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Klik &quot;Ganti Foto&quot; pada slot foto mana saja untuk memilih foto dari galeri/unggah baru.
                   </p>
                 </div>
@@ -2454,9 +2454,9 @@ export default function AdminPage() {
               </div>
 
               {/* Grid Slot Foto Lookbook */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 items-stretch">
                 {/* 1. Hero Poster / Foto Utama */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2469,7 +2469,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: sevaya_first_chapter.jpg
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.heroImage || '/images/sevaya_first_chapter.jpg'}
                         alt="Hero Lookbook"
@@ -2494,7 +2494,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 2. Kolase Kiri (Portrait) */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2507,7 +2507,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_0.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collagePortrait || '/images/lookbook_figma_0.png'}
                         alt="Kolase Portrait"
@@ -2532,7 +2532,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 3. Kolase Kanan Atas */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2545,7 +2545,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: figma_about_1.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collageDetail1 || '/images/figma_about_1.png'}
                         alt="Kolase Detail 1"
@@ -2570,7 +2570,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 4. Kolase Kanan Bawah */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2583,7 +2583,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: figma_about_2.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.collageDetail2 || '/images/figma_about_2.png'}
                         alt="Kolase Detail 2"
@@ -2608,7 +2608,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 5. Panorama Lebar 1 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2621,7 +2621,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: figma_hero.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.panorama1 || '/images/figma_hero.png'}
                         alt="Panorama 1"
@@ -2646,7 +2646,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 6. Panorama Lebar 2 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2659,7 +2659,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_1.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.panorama2 || '/images/lookbook_figma_1.png'}
                         alt="Panorama 2"
@@ -2684,7 +2684,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 7. Triptych Foto 1 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2697,7 +2697,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_2.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych1 || '/images/lookbook_figma_2.png'}
                         alt="Triptych 1"
@@ -2722,7 +2722,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 8. Triptych Foto 2 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2735,7 +2735,7 @@ export default function AdminPage() {
                     <p className="text-[10px] text-black/50 truncate">
                       Default: lookbook_figma_3.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych2 || '/images/lookbook_figma_3.png'}
                         alt="Triptych 2"
@@ -2760,7 +2760,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* 9. Triptych Foto 3 */}
-                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-3.5 shadow-xs">
+                <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-black uppercase tracking-wide">
@@ -2773,7 +2773,7 @@ export default function AdminPage() {
                     <p className="text-[10px] font-semibold text-black truncate">
                       Default: lookbook_figma_4.png
                     </p>
-                    <div className="relative h-44 sm:h-48 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                       <Image
                         src={sections.lookbookPage?.triptych3 || '/images/lookbook_figma_4.png'}
                         alt="Triptych 3"
@@ -2838,13 +2838,13 @@ export default function AdminPage() {
             </div>
 
             {/* ══ BAGIAN B: BAB LOOKBOOK (Koleksi / Chapter) ══ */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2.5 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-black">
+                  <h3 className="text-xs font-bold text-black">
                     2. Bab / Chapter Lookbook Aktif
                   </h3>
-                  <p className="text-xs text-black/70 mt-0.5">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Hanya bab aktif yang ditampilkan (saat ini Chapter 1 / Season 1). Tambah bab baru jika merilis season berikutnya.
                   </p>
                 </div>
@@ -2988,16 +2988,16 @@ export default function AdminPage() {
             SECTION 4: TENTANG TOKO (ABOUT & MANIFESTO)
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'section-conscious' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-2">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
+            <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial &amp; Storefront
                 </span>
-                <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Halaman Tentang Toko (About)
                 </h2>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya.
                 </p>
               </div>
@@ -3005,7 +3005,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSaveSections('Tentang Toko')}
-                className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan</span>
@@ -3013,17 +3013,17 @@ export default function AdminPage() {
             </div>
 
             {/* Manifesto Hero Banner */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   1. Banner Utama Halaman About
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
                   <Image
                     src={sections.conscious?.heroImage || '/images/catalog/catalog-11.jpg'}
@@ -3052,12 +3052,12 @@ export default function AdminPage() {
             </div>
 
             {/* 4 Textile Archives */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   2. Foto 4 Arsip Tekstil Berkelanjutan
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
                 </p>
               </div>
@@ -3171,22 +3171,22 @@ export default function AdminPage() {
             SECTION 5: GALERI CLOUD MEDIA & MASTER STORAGE
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'media' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Aset Digital &amp; Master Storage
                 </span>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+                  <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                     Galeri Cloud Media
                   </h2>
                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-800 border border-emerald-200/60">
                     CDN ACTIVE
                   </span>
                 </div>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Pusat aset master fotografi editorial resolusi tinggi dan integrasi CDN Supabase Storage.
                 </p>
               </div>
@@ -3195,7 +3195,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setIsUploadModalOpen(true)}
-                  className="w-full sm:w-auto min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 sm:px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                  className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
                 >
                   <Icon name="add_photo_alternate" size={16} />
                   <span>Unggah Master Foto</span>
@@ -3205,7 +3205,7 @@ export default function AdminPage() {
 
             {/* Telemetry Summary Card */}
             <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/70 gap-4 sm:gap-6">
+              <div className="grid grid-cols-3 divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
                 {/* Metric 1: Kapasitas Bucket */}
                 <div className="flex flex-col justify-between space-y-2 sm:pr-4">
                   <div className="flex items-center justify-between">
@@ -3709,32 +3709,32 @@ export default function AdminPage() {
             SECTION 7: PENGATURAN STUDIO INTERNAL & CDN
         ────────────────────────────────────────────────────────── */}
         {activeTab === 'settings' && (
-          <div className="mx-auto w-full max-w-5xl space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex flex-col gap-1 pb-2">
-              <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+              <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                 Sistem &amp; Konfigurasi
               </span>
-              <h2 className="font-headline text-lg sm:text-2xl font-bold tracking-tight text-black">
+              <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                 Pengaturan Studio &amp; Infrastruktur CDN
               </h2>
-              <p className="text-xs text-black/70 mt-0.5">
+              <p className="text-[11px] text-black/60 mt-0">
                 Konfigurasi operasional Sevaya, kredensial integrasi pengiriman, payment gateway, dan status Supabase Cloud CDN.
               </p>
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
 
               <div className="divide-y divide-[rgba(0,0,0,0.12)]/60">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                <div className="flex items-center justify-between py-2.5 gap-2">
                   <span className="text-xs font-medium text-black/70">Nama Brand</span>
                   <div className="w-full sm:w-80">
                     <input
@@ -3746,7 +3746,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                <div className="flex items-center justify-between py-2.5 gap-2">
                   <span className="text-xs font-medium text-black/70">Domain Resmi</span>
                   <div className="w-full sm:w-80">
                     <input
@@ -3761,17 +3761,17 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm text-black">Biteship Logistics</span>
@@ -3807,13 +3807,13 @@ export default function AdminPage() {
             </div>
 
             {/* Card 3: Infrastruktur Cloud & Status CDN (Supabase Storage - Merged) */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3 flex items-center justify-between">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2.5 flex items-center justify-between">
                 <div>
-                  <h3 className="font-headline text-sm font-semibold text-black">
+                  <h3 className="text-xs font-bold text-black">
                     Infrastruktur Cloud &amp; Status CDN (Supabase)
                   </h3>
-                  <p className="text-xs text-black/70 mt-0.5">
+                  <p className="text-[11px] text-black/60 mt-0">
                     Monitoring bucket Supabase cloud storage, integrasi edge CDN Anycast global, dan latensi node.
                   </p>
                 </div>
@@ -3822,7 +3822,7 @@ export default function AdminPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2.5">
                   <div className="flex items-center justify-between pb-2 border-b border-black/15/70">
                     <span className="font-semibold text-black">Bucket S3 Production</span>
@@ -3881,18 +3881,18 @@ export default function AdminPage() {
             </div>
 
             {/* Card 1: Identitas Brand & Toko */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
 
               <div className="divide-y divide-[rgba(0,0,0,0.12)]/60">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                <div className="flex items-center justify-between py-2.5 gap-2">
                   <span className="text-xs font-medium text-black/70">Nama Brand</span>
                   <div className="w-full sm:w-80">
                     <input
@@ -3904,7 +3904,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3.5 gap-2">
+                <div className="flex items-center justify-between py-2.5 gap-2">
                   <span className="text-xs font-medium text-black/70">Domain Resmi</span>
                   <div className="w-full sm:w-80">
                     <input
@@ -3919,17 +3919,17 @@ export default function AdminPage() {
             </div>
 
             {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
-            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
-              <div className="border-b border-black/15/70 pb-3">
-                <h3 className="font-headline text-sm font-semibold text-black">
+            <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+              <div className="border-b border-black/10 pb-2">
+                <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] text-black/60 mt-0">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm text-black">Biteship Logistics</span>
@@ -4071,13 +4071,13 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Katalog Koleksi
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
                   {editingProduct ? 'Edit Produk & Varian Foto' : 'Tambah Produk Baru'}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] sm:text-[11px] text-black/60 mt-0">
                   Tentukan foto utama dan foto spesifik untuk masing-masing varian warna.
                 </p>
               </div>
@@ -4092,7 +4092,7 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="flex flex-col gap-4.5 p-3.5 sm:p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-black/70">
                     Nama / Judul Produk *
@@ -4103,7 +4103,7 @@ export default function AdminPage() {
                     value={productForm.title}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. Fina Abaya - Stripe 2.0"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4116,7 +4116,7 @@ export default function AdminPage() {
                     value={productForm.slug}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4133,7 +4133,7 @@ export default function AdminPage() {
                       setProductForm((prev) => ({ ...prev, edition: e.target.value }))
                     }
                     placeholder="cth. Edition 2.0"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4148,7 +4148,7 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setProductForm((prev) => ({ ...prev, price: Number(e.target.value) }))
                     }
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4165,13 +4165,13 @@ export default function AdminPage() {
                         original_price: Number(e.target.value),
                       }))
                     }
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Badge & Stock & Visibility */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-black/70">
                     Badge Label (Opsional)
@@ -4181,7 +4181,7 @@ export default function AdminPage() {
                     value={productForm.badge}
                     onChange={(e) => setProductForm((prev) => ({ ...prev, badge: e.target.value }))}
                     placeholder="cth. Best Seller, Sale -20%"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4417,13 +4417,13 @@ export default function AdminPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Editorial Journal
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
                   {editingArticle ? 'Edit Artikel Berita' : 'Tulis Artikel Berita Baru'}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
+                <p className="text-[11px] sm:text-[11px] text-black/60 mt-0">
                   Publikasikan wawasan busana, filosofi tekstil, atau rilis studio ke /news.
                 </p>
               </div>
@@ -4439,7 +4439,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleSaveArticle} className="flex flex-col gap-4.5 p-3.5 sm:p-6 overflow-y-auto">
               {/* Title & Slug */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-black/70">
                     Judul Artikel *
@@ -4450,7 +4450,7 @@ export default function AdminPage() {
                     value={articleForm.title}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="cth. The Art of Fewer, Better Choices"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4463,7 +4463,7 @@ export default function AdminPage() {
                     value={articleForm.slug}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, slug: e.target.value }))}
                     placeholder="otomatis dibuat dari judul"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4494,7 +4494,7 @@ export default function AdminPage() {
                     value={articleForm.date}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, date: e.target.value }))}
                     placeholder="cth. Oct 18, 2026"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
 
@@ -4507,7 +4507,7 @@ export default function AdminPage() {
                     value={articleForm.readTime}
                     onChange={(e) => setArticleForm((prev) => ({ ...prev, readTime: e.target.value }))}
                     placeholder="cth. 4 min read"
-                    className="w-full min-h-[38px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs h-9 text-black focus:border-black focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -4790,7 +4790,7 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
                   Galeri Media
                 </span>
                 <h3 className="font-headline text-base font-bold text-black sm:text-lg">
