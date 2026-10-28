@@ -2199,48 +2199,48 @@ export default function AdminPage() {
             </div>
 
             {/* Telemetry Summary Card */}
-            <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
               <div className="grid grid-cols-3 divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
-                <div className="flex flex-col justify-between space-y-1 sm:pr-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
-                    Total Artikel Terbit
+                <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
+                    Total Terbit
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-black">{articles.length}</span>
-                    <span className="text-xs text-black/70">artikel aktif</span>
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <span className="text-base sm:text-2xl font-bold text-black">{articles.length}</span>
+                    <span className="text-[10px] text-black/60">artikel</span>
                   </div>
-                  <span className="text-[11px] text-black/70">
-                    Tersinkronisasi otomatis dengan /news
+                  <span className="hidden sm:block text-[11px] text-black/50">
+                    Tersinkronisasi otomatis
                   </span>
                 </div>
 
-                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
-                    Artikel Utama (Featured)
+                <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
+                    Featured
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-amber-600">
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <span className="text-base sm:text-2xl font-bold text-amber-600">
                       {articles.filter((a) => a.featured).length}
                     </span>
-                    <span className="text-xs text-black/70">sorotan beranda</span>
+                    <span className="text-[10px] text-black/60">sorotan</span>
                   </div>
-                  <span className="text-[11px] text-black/70">
-                    Tampil sebagai banner hero editorial
+                  <span className="hidden sm:block text-[11px] text-black/50">
+                    Banner hero editorial
                   </span>
                 </div>
 
-                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
-                    Kategori Topik
+                <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4">
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
+                    Kategori
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-black">
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <span className="text-base sm:text-2xl font-bold text-black">
                       {ARTICLE_CATEGORIES.filter((c) => c !== 'All Stories').length}
                     </span>
-                    <span className="text-xs text-black/70">kategori aktif</span>
+                    <span className="text-[10px] text-black/60">topik</span>
                   </div>
-                  <span className="text-[11px] text-black/70">
-                    Journal, Event
+                  <span className="hidden sm:block text-[11px] text-black/50">
+                    Journal &amp; Event
                   </span>
                 </div>
               </div>
@@ -3185,10 +3185,10 @@ export default function AdminPage() {
             </div>
 
             {/* Telemetry Summary Card */}
-            <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-              <div className="grid grid-cols-3 divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
+            <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/50 gap-3.5 sm:gap-0">
                 {/* Metric 1: Kapasitas Bucket */}
-                <div className="flex flex-col justify-between space-y-2 sm:pr-4">
+                <div className="flex flex-col justify-between space-y-2 pb-3.5 sm:pb-0 sm:pr-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Kapasitas Bucket
@@ -3207,7 +3207,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Metric 2: CDN Edge Caching */}
-                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:px-4">
+                <div className="flex flex-col justify-between space-y-1 py-3.5 sm:py-0 sm:px-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Status Edge CDN
@@ -3227,7 +3227,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Metric 3: Sinkronisasi Katalog */}
-                <div className="flex flex-col justify-between space-y-1 pt-3 sm:pt-0 sm:pl-4">
+                <div className="flex flex-col justify-between space-y-1 pt-3.5 sm:pt-0 sm:pl-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
                       Koneksi Storefront
