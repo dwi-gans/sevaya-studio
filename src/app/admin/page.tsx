@@ -1564,19 +1564,7 @@ export default function AdminPage() {
             </div>
           </button>
 
-          {/* Logo Brand SEVAYA (Tampil di Mobile & Desktop) */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/admin" className="flex items-center" aria-label="Admin Home">
-              <Logo className="h-4 sm:h-5 w-auto text-black" />
-            </Link>
-            <span className="text-[#d5c2c5] font-light text-xs">|</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[#514346] text-[12px] font-sans min-w-0">
-            <span className="hover:text-[#1a1c1c] cursor-pointer hidden xs:inline shrink-0">Studio</span>
-            <Icon name="chevron_right" size={14} className="text-[#837376] hidden xs:inline shrink-0" />
-            <span className="font-semibold text-[#1a1c1c] truncate">{activeTabMeta.label}</span>
-          </div>
+          
 
           {(activeTab === 'orders' || activeTab === 'catalog' || activeTab === 'media') && (
             <div className="relative flex-1 max-w-xs hidden sm:block">
@@ -1639,13 +1627,13 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Koleksi &amp; Inventori
                 </span>
                 <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen Katalog Produk
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   1 produk mendukung banyak foto untuk setiap varian warna yang dipilih pembeli.
                 </p>
               </div>
@@ -1862,13 +1850,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Editorial &amp; Storefront
                 </span>
                 <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Kelola Section Beranda (Homepage)
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Hero Banner, Category Spotlight, Signature Textiles, dan Editorial Journal.
                 </p>
               </div>
@@ -1879,7 +1867,7 @@ export default function AdminPage() {
                 className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
-                <span>Simpan Section Beranda</span>
+                <span>Simpan</span>
               </button>
             </div>
 
@@ -1890,7 +1878,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     1. Hero Section (Homepage Banner Utama)
                   </h3>
-                  <p className="text-[11px] text-black/60 mt-0">
+                  <p className="hidden sm:block text-[11px] text-black/60">
                     Banner utama dengan foto latar penuh dan teks tajuk toko.
                   </p>
                 </div>
@@ -1986,7 +1974,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   2. Category Spotlight (2 Kartu Sorotan)
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Dua kartu kategori utama yang ditampilkan berdampingan di beranda.
                 </p>
               </div>
@@ -2055,7 +2043,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   3. Showcase Tekstil Berkelanjutan
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Banner narasi komitmen material premium ramah lingkungan Sevaya.
                 </p>
               </div>
@@ -2102,7 +2090,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   4. Artikel Journal (2 Artikel)
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Artikel editorial gaya hidup dan wawasan abaya di beranda toko.
                 </p>
               </div>
@@ -2173,13 +2161,13 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Editorial &amp; Storefront
                 </span>
                 <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen News &amp; Editorial (Jurnal)
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest untuk halaman publik <code className="font-mono text-black bg-black/5 px-1 py-0.5 rounded">/news</code>.
                 </p>
               </div>
@@ -2416,13 +2404,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Editorial &amp; Storefront
                 </span>
                 <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Manajemen Lookbook &amp; Galeri Editorial
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Sesuaikan seluruh foto yang tampil di halaman Lookbook publik (/lookbook) dan bab koleksi aktif.
                 </p>
               </div>
@@ -2433,7 +2421,7 @@ export default function AdminPage() {
                 className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
-                <span>Simpan Perubahan Lookbook</span>
+                <span>Simpan</span>
               </button>
             </div>
 
@@ -2444,7 +2432,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     1. Foto Editorial Halaman Lookbook (/lookbook)
                   </h3>
-                  <p className="text-[11px] text-black/60 mt-0">
+                  <p className="hidden sm:block text-[11px] text-black/60">
                     Klik &quot;Ganti Foto&quot; pada slot foto mana saja untuk memilih foto dari galeri/unggah baru.
                   </p>
                 </div>
@@ -2844,7 +2832,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     2. Bab / Chapter Lookbook Aktif
                   </h3>
-                  <p className="text-[11px] text-black/60 mt-0">
+                  <p className="hidden sm:block text-[11px] text-black/60">
                     Hanya bab aktif yang ditampilkan (saat ini Chapter 1 / Season 1). Tambah bab baru jika merilis season berikutnya.
                   </p>
                 </div>
@@ -2991,13 +2979,13 @@ export default function AdminPage() {
           <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex items-center justify-between gap-2 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Editorial &amp; Storefront
                 </span>
                 <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                   Halaman Tentang Toko (About)
                 </h2>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya.
                 </p>
               </div>
@@ -3008,7 +2996,7 @@ export default function AdminPage() {
                 className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
               >
                 <Icon name="check" size={16} />
-                <span>Simpan Perubahan</span>
+                <span className="hidden sm:inline">Simpan Perubahan</span>
               </button>
             </div>
 
@@ -3018,7 +3006,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   1. Banner Utama Halaman About
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
                 </p>
               </div>
@@ -3057,7 +3045,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   2. Foto 4 Arsip Tekstil Berkelanjutan
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
                 </p>
               </div>
@@ -3175,7 +3163,7 @@ export default function AdminPage() {
             {/* Top Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Aset Digital &amp; Master Storage
                 </span>
                 <div className="flex items-center gap-2.5">
@@ -3186,7 +3174,7 @@ export default function AdminPage() {
                     CDN ACTIVE
                   </span>
                 </div>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Pusat aset master fotografi editorial resolusi tinggi dan integrasi CDN Supabase Storage.
                 </p>
               </div>
@@ -3711,13 +3699,13 @@ export default function AdminPage() {
         {activeTab === 'settings' && (
           <div className="mx-auto w-full max-w-5xl space-y-4">
             <div className="flex flex-col gap-1 pb-2">
-              <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+              <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                 Sistem &amp; Konfigurasi
               </span>
               <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
                 Pengaturan Studio &amp; Infrastruktur CDN
               </h2>
-              <p className="text-[11px] text-black/60 mt-0">
+              <p className="hidden sm:block text-[11px] text-black/60">
                 Konfigurasi operasional Sevaya, kredensial integrasi pengiriman, payment gateway, dan status Supabase Cloud CDN.
               </p>
             </div>
@@ -3728,7 +3716,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
@@ -3766,7 +3754,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
@@ -3813,7 +3801,7 @@ export default function AdminPage() {
                   <h3 className="text-xs font-bold text-black">
                     Infrastruktur Cloud &amp; Status CDN (Supabase)
                   </h3>
-                  <p className="text-[11px] text-black/60 mt-0">
+                  <p className="hidden sm:block text-[11px] text-black/60">
                     Monitoring bucket Supabase cloud storage, integrasi edge CDN Anycast global, dan latensi node.
                   </p>
                 </div>
@@ -3886,7 +3874,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Identitas Brand &amp; Toko
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
                 </p>
               </div>
@@ -3924,7 +3912,7 @@ export default function AdminPage() {
                 <h3 className="text-xs font-bold text-black">
                   Status Integrasi Logistik &amp; Payment Gateway
                 </h3>
-                <p className="text-[11px] text-black/60 mt-0">
+                <p className="hidden sm:block text-[11px] text-black/60">
                   Layanan pihak ketiga yang aktif dan tersambung dengan sistem e-commerce Sevaya.
                 </p>
               </div>
@@ -4071,7 +4059,7 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[90vh] w-full max-w-2xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Katalog Koleksi
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
@@ -4417,7 +4405,7 @@ export default function AdminPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Editorial Journal
                 </span>
                 <h3 className="font-headline text-base sm:text-lg font-bold text-black">
@@ -4790,7 +4778,7 @@ export default function AdminPage() {
           <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-black/15/70 bg-white px-4 sm:px-6 py-3 sm:py-4 shrink-0">
               <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
                   Galeri Media
                 </span>
                 <h3 className="font-headline text-base font-bold text-black sm:text-lg">
