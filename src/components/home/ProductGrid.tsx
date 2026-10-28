@@ -240,13 +240,14 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onClickCapture={handleClickCapture}
-          className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[10vw] pb-4 touch-pan-y select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+          className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[10vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
             isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
           }`}
           style={{
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
             scrollSnapType: isDown ? 'none' : 'x mandatory',
+            overscrollBehaviorX: 'contain',
           }}
         >
           {displayList.map((p, i) => (
