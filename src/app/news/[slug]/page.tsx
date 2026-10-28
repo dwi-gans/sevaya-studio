@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
-import { Article, loadArticles, INITIAL_ARTICLES } from '@/data/newsArticles';
+import { Article } from '@/integrations/supabase/articles';
+import { INITIAL_ARTICLES } from '@/data/newsArticles';
 
 export default function NewsDetailPage({
   params,
@@ -16,30 +17,78 @@ export default function NewsDetailPage({
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
 
+  // Immediate 0ms initial state from INITIAL_ARTICLES so there's zero flash or empty screen
   const [article, setArticle] = useState<Article | null>(() => {
-    return INITIAL_ARTICLES.find((a) => a.slug === slug) || null;
+    const found = INITIAL_ARTICLES.find((a) => a.slug === slug);
+    if (!found) return null;
+    return {
+      id: found.id,
+      slug: found.slug,
+      title: found.title,
+      category: found.category,
+      date: found.date,
+      read_time: found.readTime,
+      excerpt: found.excerpt,
+      content: found.content,
+      image: found.image,
+      images: ['/images/catalog/catalog-12.jpg'],
+      featured: Boolean(found.featured),
+      published: true,
+    };
   });
-  const [allArticles, setAllArticles] = useState<Article[]>(INITIAL_ARTICLES);
+
+  const [allArticles, setAllArticles] = useState<Article[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const list = loadArticles();
-    setAllArticles(list);
-    const found = list.find((a) => a.slug === slug);
-    if (found) {
-      setArticle(found);
-    }
-    setLoaded(true);
+    // 1. Fetch current dynamic article from API
+    fetch(`/api/articles/${encodeURIComponent(slug)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.article) {
+          setArticle(data.article);
+        }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+
+    // 2. Fetch all articles for related stories section
+    fetch('/api/articles')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.articles)) {
+          setAllArticles(data.articles);
+        }
+      })
+      .catch(() => {});
   }, [slug]);
 
   if (loaded && !article) {
     notFound();
   }
 
-  const currentArticle = article || INITIAL_ARTICLES[0]!;
+  const currentArticle = article || {
+    id: 'default',
+    slug,
+    title: 'SEVAYA Editorial Note',
+    category: 'Journal',
+    date: 'Oct 2026',
+    read_time: '4 min read',
+    excerpt: '',
+    content: [],
+    image: '/images/catalog/catalog-11.jpg',
+    images: ['/images/catalog/catalog-12.jpg'],
+    featured: false,
+    published: true,
+  };
+
   const relatedArticles = allArticles
     .filter((a) => a.slug !== currentArticle.slug)
     .slice(0, 3);
+
+  // Tengah image (default catalog-12.jpg if not set from admin)
+  const middleImage = currentArticle.images?.[0] || '/images/catalog/catalog-12.jpg';
+  const extraImages = currentArticle.images?.slice(1) || [];
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] font-body text-[#000000] selection:bg-black/5 flex flex-col justify-between">
@@ -96,11 +145,11 @@ export default function NewsDetailPage({
               </p>
 
               {/* Injeksi Foto Editorial Tengah (Seperti Layout Majalah / Foto Referensi Pengguna) */}
-              {index === 0 && (
+              {index === 0 && middleImage && (
                 <div className="my-8 space-y-3">
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
                     <Image
-                      src="/images/catalog/catalog-12.jpg"
+                      src={middleImage}
                       alt="SEVAYA Studio Detail"
                       fill
                       className="object-cover"
@@ -112,8 +161,48 @@ export default function NewsDetailPage({
                   </p>
                 </div>
               )}
+
+              {/* Foto tambahan berikutnya jika disisipkan di antara paragraf */}
+              {index > 0 && extraImages[index - 1] && (
+                <div className="my-8 space-y-3">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
+                    <Image
+                      src={extraImages[index - 1]!}
+                      alt={`${currentArticle.title} — foto ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                    />
+                  </div>
+                  <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                    Atelier notes — {currentArticle.title}
+                  </p>
+                </div>
+              )}
             </React.Fragment>
           ))}
+
+          {/* Sisa foto jika jumlah foto melebihi jumlah paragraf */}
+          {extraImages.length >= (currentArticle.content?.length || 1) && (
+            <div className="mt-8 space-y-6">
+              {extraImages.slice((currentArticle.content?.length || 1) - 1).map((img, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
+                    <Image
+                      src={img}
+                      alt={`${currentArticle.title} — foto ${i + 2}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                    />
+                  </div>
+                  <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                    Atelier notes — {currentArticle.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </article>
 
         {/* Category Tag */}

@@ -23,7 +23,7 @@ import {
   listUploadedFiles,
   StorageFile,
 } from '@/integrations/supabase';
-import { Article, ARTICLE_CATEGORIES, loadArticles, saveArticles } from '@/data/newsArticles';
+import { Article, ARTICLE_CATEGORIES } from '@/integrations/supabase/articles';
 
 // Available built-in high-resolution catalog photos for quick picking
 const AVAILABLE_CATALOG_IMAGES = Array.from({ length: 18 }, (_, i) => {
@@ -292,6 +292,8 @@ type ImagePickerTarget =
   | 'conscious-linen'
   | 'conscious-modal'
   | 'article'
+  | 'article-add-image'
+  | `article-image-${number}`
   | null;
 
 interface AdminNavItem {
@@ -422,7 +424,6 @@ export default function AdminPage() {
         'media',
         'settings',
       ];
-      setArticles(loadArticles());
       if (tabParam === 'storage') {
         setActiveTabState('settings');
         return;
@@ -478,6 +479,7 @@ export default function AdminPage() {
     excerpt: string;
     content: string;
     image: string;
+    images: string[];
     featured: boolean;
   }>({
     title: '',
@@ -488,6 +490,7 @@ export default function AdminPage() {
     excerpt: '',
     content: '',
     image: '/images/catalog/catalog-11.jpg',
+    images: [],
     featured: false,
   });
 
@@ -554,6 +557,16 @@ export default function AdminPage() {
       .catch(() => {
         showToast('Gagal memuat data dari Supabase');
       });
+
+    // Load articles from Supabase
+    fetch('/api/articles?admin=true')
+      .then((r) => r.json())
+      .then((data) => {
+        if (isMounted && Array.isArray(data.articles)) {
+          setArticles(data.articles);
+        }
+      })
+      .catch(() => {});
 
     return () => {
       isMounted = false;
@@ -882,6 +895,19 @@ export default function AdminPage() {
       });
     } else if (target === 'article') {
       setArticleForm((prev) => ({ ...prev, image: urlOrPath }));
+    } else if (target === 'article-add-image') {
+      setArticleForm((prev) => ({ ...prev, images: [...prev.images, urlOrPath] }));
+      showToast('Foto isi artikel ditambahkan!');
+    } else if (target.startsWith('article-image-')) {
+      const idx = parseInt(target.replace('article-image-', ''), 10);
+      setArticleForm((prev) => {
+        const next = [...prev.images];
+        if (next[idx] !== undefined) {
+          next[idx] = urlOrPath;
+        }
+        return { ...prev, images: next };
+      });
+      showToast('Foto isi artikel diperbarui!');
     }
   };
 
@@ -902,6 +928,7 @@ export default function AdminPage() {
       excerpt: '',
       content: '',
       image: '/images/catalog/catalog-11.jpg',
+      images: [],
       featured: false,
     });
     setIsArticleModalOpen(true);
@@ -914,105 +941,130 @@ export default function AdminPage() {
       slug: art.slug,
       category: art.category,
       date: art.date,
-      readTime: art.readTime,
+      readTime: art.read_time,
       excerpt: art.excerpt,
       content: Array.isArray(art.content) ? art.content.join('\n\n') : ((art.content as unknown as string) || ''),
       image: art.image || '/images/catalog/catalog-11.jpg',
       featured: Boolean(art.featured),
+      images:
+        Array.isArray(art.images) && art.images.length > 0
+          ? art.images
+          : ['/images/catalog/catalog-12.jpg'],
     });
     setIsArticleModalOpen(true);
   };
 
-  const handleSaveArticle = (e: React.FormEvent) => {
+  const handleSaveArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!articleForm.title.trim()) {
       showToast('Judul artikel wajib diisi!');
       return;
     }
-
-    const slug =
-      articleForm.slug.trim() ||
-      articleForm.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
     const paragraphs = articleForm.content
       .split('\n\n')
       .map((p) => p.trim())
       .filter(Boolean);
-
-    let updatedArticles: Article[];
-    if (editingArticle) {
-      updatedArticles = articles.map((art) => {
-        if (art.id === editingArticle.id) {
-          return {
-            ...art,
+    setIsLoading(true);
+    try {
+      if (editingArticle) {
+        const res = await fetch(`/api/articles/${editingArticle.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             title: articleForm.title.trim(),
-            slug,
+            slug: articleForm.slug.trim() || editingArticle.slug,
             category: articleForm.category,
-            date: articleForm.date || art.date,
-            readTime: articleForm.readTime || '3 min read',
+            date: articleForm.date || editingArticle.date,
+            read_time: articleForm.readTime || '3 min read',
             excerpt: articleForm.excerpt.trim(),
-            content: paragraphs.length > 0 ? paragraphs : art.content,
+            content: paragraphs.length > 0 ? paragraphs : editingArticle.content,
             image: articleForm.image,
+            images: articleForm.images,
             featured: articleForm.featured,
-          };
-        }
-        if (articleForm.featured && art.id !== editingArticle.id) {
-          return { ...art, featured: false };
-        }
-        return art;
-      });
-      showToast(`Artikel "${articleForm.title}" berhasil diperbarui!`);
-    } else {
-      const newArticle: Article = {
-        id: crypto.randomUUID(),
-        title: articleForm.title.trim(),
-        slug,
-        category: articleForm.category,
-        date:
-          articleForm.date ||
-          new Date().toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
           }),
-        readTime: articleForm.readTime || '4 min read',
-        excerpt: articleForm.excerpt.trim(),
-        content: paragraphs.length > 0 ? paragraphs : [articleForm.excerpt.trim()],
-        image: articleForm.image,
-        featured: articleForm.featured,
-      };
-
-      updatedArticles = articleForm.featured
-        ? [newArticle, ...articles.map((a) => ({ ...a, featured: false }))]
-        : [newArticle, ...articles];
-
-      showToast(`Artikel baru "${newArticle.title}" berhasil ditambahkan!`);
+        });
+        const data = await res.json();
+        if (res.ok && data.article) {
+          setArticles((prev) => prev.map((a) => (a.id === editingArticle.id ? data.article : a)));
+          showToast(`Artikel "${articleForm.title}" berhasil diperbarui!`);
+        } else {
+          showToast(data.error || 'Gagal memperbarui artikel');
+        }
+      } else {
+        const res = await fetch('/api/articles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: articleForm.title.trim(),
+            slug: articleForm.slug.trim(),
+            category: articleForm.category,
+            date: articleForm.date,
+            read_time: articleForm.readTime || '4 min read',
+            excerpt: articleForm.excerpt.trim(),
+            content: paragraphs.length > 0 ? paragraphs : [articleForm.excerpt.trim()],
+            image: articleForm.image,
+            images: articleForm.images,
+            featured: articleForm.featured,
+            published: true,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.article) {
+          setArticles((prev) =>
+            articleForm.featured
+              ? [data.article, ...prev.map((a) => ({ ...a, featured: false }))]
+              : [data.article, ...prev]
+          );
+          showToast(`Artikel baru "${articleForm.title}" berhasil diterbitkan!`);
+        } else {
+          showToast(data.error || 'Gagal membuat artikel');
+        }
+      }
+      setIsArticleModalOpen(false);
+    } catch {
+      showToast('Gagal menyimpan artikel ke Supabase');
+    } finally {
+      setIsLoading(false);
     }
-
-    setArticles(updatedArticles);
-    saveArticles(updatedArticles);
-    setIsArticleModalOpen(false);
   };
 
-  const handleDeleteArticle = (id: string, title: string) => {
+  const handleDeleteArticle = async (id: string, title: string) => {
     if (!window.confirm(`Yakin ingin menghapus artikel "${title}"?`)) return;
-    const remaining = articles.filter((a) => a.id !== id);
-    setArticles(remaining);
-    saveArticles(remaining);
-    showToast(`Artikel "${title}" telah dihapus.`);
+    try {
+      const res = await fetch(`/api/articles/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setArticles((prev) => prev.filter((a) => a.id !== id));
+        showToast(`Artikel "${title}" telah dihapus.`);
+      } else {
+        showToast('Gagal menghapus artikel');
+      }
+    } catch {
+      showToast('Gagal menghapus artikel');
+    }
   };
 
-  const handleToggleFeaturedArticle = (id: string) => {
-    const updated = articles.map((a) => ({
-      ...a,
-      featured: a.id === id ? !a.featured : false,
-    }));
-    setArticles(updated);
-    saveArticles(updated);
-    showToast('Status Featured artikel diperbarui!');
+  const handleToggleFeaturedArticle = async (id: string) => {
+    const article = articles.find((a) => a.id === id);
+    if (!article) return;
+    const newFeatured = !article.featured;
+    try {
+      const res = await fetch(`/api/articles/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: newFeatured }),
+      });
+      if (res.ok) {
+        setArticles((prev) =>
+          prev.map((a) => ({
+            ...a,
+            featured: a.id === id ? newFeatured : newFeatured ? false : a.featured,
+          }))
+        );
+        showToast('Status Featured artikel diperbarui!');
+      }
+    } catch {
+      showToast('Gagal memperbarui status featured');
+    }
   };
 
   // ── Direct Image Upload Handler ──
@@ -2274,7 +2326,7 @@ export default function AdminPage() {
                           </div>
                         )}
                         <div className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-mono text-white backdrop-blur-xs">
-                          {art.readTime}
+                          {art.read_time}
                         </div>
                       </div>
 
@@ -4477,18 +4529,13 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Cover Image & Featured Toggle */}
-              <div className="flex flex-col gap-3 rounded-xl border border-black/15/70 bg-black/5 p-4">
+              {/* -- FOTO SAMPUL ARTIKEL -- */}
+              <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/5 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-black">
-                    Foto Sampul Artikel
-                  </span>
+                  <span className="text-xs font-semibold text-black">Foto Sampul Artikel</span>
                   <button
                     type="button"
-                    onClick={() => {
-                      setImagePickerTarget('article');
-                      setIsImagePickerOpen(true);
-                    }}
+                    onClick={() => { setImagePickerTarget('article'); setIsImagePickerOpen(true); }}
                     className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-white active:scale-95"
                   >
                     <Icon name="image" size={14} />
@@ -4498,36 +4545,20 @@ export default function AdminPage() {
 
                 <div className="flex items-center gap-3.5">
                   <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border border-black/15 bg-white">
-                    <Image
-                      src={articleForm.image || '/images/catalog/catalog-11.jpg'}
-                      alt="Article preview"
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={articleForm.image || '/images/catalog/catalog-11.jpg'} alt="cover" fill className="object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col gap-2">
                     <input
                       type="text"
                       value={articleForm.image}
-                      onChange={(e) =>
-                        setArticleForm((prev) => ({ ...prev, image: e.target.value }))
-                      }
+                      onChange={(e) => setArticleForm((prev) => ({ ...prev, image: e.target.value }))}
                       placeholder="/images/catalog/catalog-11.jpg atau URL Supabase"
-                      className="w-full min-h-[38px] rounded-none border border-black/20 bg-white px-3 py-1.5 text-base sm:text-xs text-black focus:border-black focus:outline-none"
+                      className="w-full min-h-[38px] rounded-none border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                     />
                     <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95">
                       <Icon name="upload" size={14} />
                       <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={isUploading}
-                        onChange={(e) => {
-                          setImagePickerTarget('article');
-                          handleFileUpload(e);
-                        }}
-                        className="hidden"
-                      />
+                      <input type="file" accept="image/*" disabled={isUploading} onChange={(e) => { setImagePickerTarget('article'); handleFileUpload(e); }} className="hidden" />
                     </label>
                   </div>
                 </div>
@@ -4537,22 +4568,180 @@ export default function AdminPage() {
                   <input
                     type="checkbox"
                     checked={articleForm.featured}
-                    onChange={(e) =>
-                      setArticleForm((prev) => ({ ...prev, featured: e.target.checked }))
-                    }
+                    onChange={(e) => setArticleForm((prev) => ({ ...prev, featured: e.target.checked }))}
                     className="h-4 w-4 accent-amber-600"
                   />
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-amber-900">
-                      Jadikan Artikel Pilihan Utama (Featured Story)
-                    </span>
-                    <span className="text-[11px] text-amber-700">
-                      Artikel ini akan tampil pada banner hero besar di bagian atas halaman /news.
-                    </span>
+                    <span className="text-xs font-bold text-amber-900">Jadikan Artikel Pilihan Utama (Featured Story)</span>
+                    <span className="text-[11px] text-amber-700">Artikel ini akan tampil pada banner hero besar di bagian atas halaman /news.</span>
                   </div>
                 </label>
               </div>
 
+              {/* -- FOTO ISI ARTIKEL (MULTI-IMAGE) -- */}
+              <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/5 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div>
+                    <span className="text-xs font-semibold text-black">Foto Isi Artikel (Editorial Gallery)</span>
+                    <p className="text-[10px] text-black/50 mt-0.5">Foto-foto ini akan disisipkan di antara narasi paragraf artikel seperti majalah.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePickerTarget('article-add-image');
+                        setIsImagePickerOpen(true);
+                      }}
+                      className="inline-flex min-h-[34px] items-center gap-1 rounded-full border border-black/20 bg-black text-white px-3 py-1 text-xs font-medium hover:bg-black/85 active:scale-95 transition"
+                    >
+                      <Icon name="image" size={13} />
+                      <span>Pilih dari Galeri</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArticleForm((prev) => ({ ...prev, images: [...prev.images, ''] }))}
+                      className="inline-flex min-h-[34px] items-center gap-1 rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black hover:bg-black/5 active:scale-95 transition"
+                    >
+                      <Icon name="add" size={13} />
+                      <span>Slot Baru</span>
+                    </button>
+                  </div>
+                </div>
+
+                {articleForm.images.length === 0 && (
+                  <div className="text-center py-5 border border-dashed border-black/15 rounded-xl bg-white/50 space-y-2">
+                    <p className="text-xs text-black/60 font-medium">Belum ada foto isi artikel tambahan.</p>
+                    <p className="text-[11px] text-black/40 max-w-sm mx-auto">
+                      Klik <strong>&quot;Pilih dari Galeri&quot;</strong> di atas untuk memasukkan foto katalog studio ke dalam artikel.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  {articleForm.images.map((img, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2.5 rounded-xl border border-black/10 bg-white p-3 shadow-xs">
+                      {/* Preview Image */}
+                      <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-black/5">
+                        {img ? (
+                          <Image src={img} alt={`foto-${idx + 1}`} fill className="object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-black/25">
+                            <Icon name="image" size={20} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Input & Ganti Galeri */}
+                      <div className="flex flex-1 flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-black/60 uppercase tracking-wider">
+                            Foto #{idx + 1} {idx === 0 ? '(Tampil setelah Paragraf 1)' : `(Paragraf ${idx + 1})`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagePickerTarget(`article-image-${idx}` as ImagePickerTarget);
+                              setIsImagePickerOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-black hover:underline"
+                          >
+                            <Icon name="image" size={12} />
+                            <span>Ganti dari Galeri</span>
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={img}
+                          onChange={(e) => {
+                            const next = [...articleForm.images];
+                            next[idx] = e.target.value;
+                            setArticleForm((prev) => ({ ...prev, images: next }));
+                          }}
+                          placeholder="/images/catalog/catalog-12.jpg atau URL Supabase"
+                          className="w-full min-h-[34px] rounded-none border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Urutan & Hapus */}
+                      <div className="flex items-center sm:flex-col gap-1.5 self-end sm:self-center shrink-0">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            title="Geser ke atas"
+                            onClick={() => {
+                              const next = [...articleForm.images];
+                              [next[idx - 1], next[idx]] = [next[idx]!, next[idx - 1]!];
+                              setArticleForm((prev) => ({ ...prev, images: next }));
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-black/15 bg-white text-black/50 hover:text-black disabled:opacity-20 transition"
+                          >
+                            <Icon name="expand_less" size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === articleForm.images.length - 1}
+                            title="Geser ke bawah"
+                            onClick={() => {
+                              const next = [...articleForm.images];
+                              [next[idx + 1], next[idx]] = [next[idx]!, next[idx + 1]!];
+                              setArticleForm((prev) => ({ ...prev, images: next }));
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-black/15 bg-white text-black/50 hover:text-black disabled:opacity-20 transition"
+                          >
+                            <Icon name="expand_more" size={14} />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          title="Hapus foto"
+                          onClick={() => {
+                            setArticleForm((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== idx),
+                            }));
+                          }}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition"
+                        >
+                          <Icon name="delete" size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Upload foto langsung */}
+                <div className="pt-1">
+                  <label className="inline-flex min-h-[36px] w-fit cursor-pointer items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black hover:bg-black hover:text-white transition active:scale-95">
+                    <Icon name="upload" size={14} />
+                    <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto Baru'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsUploading(true);
+                        try {
+                          const { uploadFileToStorage } = await import('@/integrations/supabase/storage');
+                          const url = await uploadFileToStorage(file, 'articles');
+                          if (url) {
+                            setArticleForm((prev) => ({ ...prev, images: [...prev.images, url] }));
+                            showToast('Foto berhasil diunggah dan ditambahkan!');
+                          }
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : 'Gagal mengunggah foto';
+                          showToast(`Upload gagal: ${msg}. Anda juga bisa memilih dari Galeri.`);
+                        } finally {
+                          setIsUploading(false);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-2.5 border-t border-black/15/70 pt-4">
                 <button
@@ -4575,9 +4764,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ──────────────────────────────────────────────────────────
+      {/* ----------------------------------------------------------
           MODAL: UNIVERSAL IMAGE PICKER & UPLOADER
-      ────────────────────────────────────────────────────────── */}
+      ---------------------------------------------------------- */}
       {isImagePickerOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
           <div className="max-h-[92vh] sm:max-h-[85vh] w-full max-w-3xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden">
@@ -4586,81 +4775,26 @@ export default function AdminPage() {
                 <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
                   Galeri Media
                 </span>
-                <h3 className="font-headline text-base sm:text-lg font-bold text-black">
-                  Pilih Gambar untuk Website
+                <h3 className="font-headline text-base font-bold text-black sm:text-lg">
+                  Pilih atau Unggah Foto
                 </h3>
-                <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">
-                  Target:{' '}
-                  <span className="font-mono font-semibold text-black">
-                    {imagePickerTarget || 'Universal'}
-                  </span>
-                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsImagePickerOpen(false)}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
-                aria-label="Tutup Pemilih Gambar"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-black/40 hover:bg-black/5 hover:text-black transition"
               >
                 <Icon name="close" size={20} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-4 p-4 sm:p-6 overflow-y-auto">
-              {/* Direct Upload in picker */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-black/20 bg-white p-3.5 sm:p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0">
-                    <Icon name="upload" size={16} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold text-black block">
-                      Unggah Foto Baru ke Supabase
-                    </span>
-                    <p className="text-[11px] text-black/70">
-                      JPG, PNG, atau WEBP resolusi tinggi
-                    </p>
-                  </div>
-                </div>
-                <label className="min-h-[40px] inline-flex items-center justify-center cursor-pointer rounded-full bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-black/85 active:scale-95 transition">
-                  <span>{isUploading ? 'Mengunggah...' : 'Pilih File'}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={isUploading}
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              {/* Uploaded Media */}
-              {mediaFiles.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-black/70">
-                    Foto Upload Supabase ({mediaFiles.length})
-                  </span>
-                  <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
-                    {mediaFiles.map((file) => (
-                      <button
-                        key={file.name}
-                        type="button"
-                        onClick={() => handleSelectPredefinedImage(file.url)}
-                        className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-black/15 bg-black/5 transition-all hover:scale-105 hover:ring-2 hover:ring-[#000000]"
-                      >
-                        <Image src={file.url} alt={file.name} fill className="object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Catalog Photos */}
-              <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-black/70">
-                  Foto Katalog Resolusi Tinggi ({AVAILABLE_CATALOG_IMAGES.length} Foto)
-                </span>
-                <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+              {/* Predefined catalog images */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-black/60 mb-3">
+                  Pustaka Foto Bawaan Studio
+                </h4>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
                   {AVAILABLE_CATALOG_IMAGES.map((img) => (
                     <button
                       key={img}

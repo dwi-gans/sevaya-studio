@@ -370,10 +370,13 @@ export function NavigationDrawer() {
               </div>
 
               {/* 3. Lookbook */}
-              <div className="animate-luxury-fade-up" style={{ animationDelay: '190ms' }}>
-                <Link
-                  href="/lookbook"
-                  onClick={handleClose}
+              <div
+                className="animate-luxury-fade-up flex items-center justify-between"
+                style={{ animationDelay: '190ms' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveSubmenu('lookbook')}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/lookbook')
                       ? 'font-semibold text-white'
@@ -388,9 +391,16 @@ export function NavigationDrawer() {
                         : 'scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100'
                     }`}
                   />
-                </Link>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Expand Lookbook chapters"
+                  onClick={() => setActiveSubmenu('lookbook')}
+                  className="p-1 text-[#877274] hover:text-white"
+                >
+                  <Icon name="arrow_forward" size={16} />
+                </button>
               </div>
-
               {/* 4. Tentang / About */}
               <div className="animate-luxury-fade-up" style={{ animationDelay: '250ms' }}>
                 <Link

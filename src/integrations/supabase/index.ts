@@ -1,5 +1,18 @@
 export { supabase } from './client';
 export {
+  getArticles,
+  getArticleBySlug,
+  getAllArticlesAdmin,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  generateSlug,
+  ARTICLE_CATEGORIES,
+  type Article,
+  type ArticleInsert,
+  type ArticleUpdate,
+} from './articles';
+export {
   getDbProducts,
   createDbProduct,
   updateDbProduct,

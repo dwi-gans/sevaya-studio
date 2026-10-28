@@ -5,17 +5,41 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
-import { Article, ARTICLE_CATEGORIES, INITIAL_ARTICLES, loadArticles } from '@/data/newsArticles';
+import { Article, ARTICLE_CATEGORIES } from '@/integrations/supabase/articles';
+import { INITIAL_ARTICLES } from '@/data/newsArticles';
 
 export default function NewsIndexPage() {
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  // 0ms instant display from INITIAL_ARTICLES so there's zero flash
+  const [articles, setArticles] = useState<Article[]>(() => {
+    return INITIAL_ARTICLES.map((a) => ({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      category: a.category,
+      date: a.date,
+      read_time: a.readTime,
+      excerpt: a.excerpt,
+      content: a.content,
+      image: a.image,
+      images: ['/images/catalog/catalog-12.jpg'],
+      featured: Boolean(a.featured),
+      published: true,
+    }));
+  });
+
   const [selectedCategory, setSelectedCategory] = useState<string>('All Stories');
 
   useEffect(() => {
-    setArticles(loadArticles());
+    fetch('/api/articles')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          setArticles(data.articles);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  // Filter articles according to category
   const filteredArticles =
     selectedCategory.toLowerCase() === 'all stories'
       ? articles
