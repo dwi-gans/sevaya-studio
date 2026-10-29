@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from 'react';
 import { useToast } from '@/context/ToastContext';
 import {
   getDbProducts,
@@ -793,6 +793,23 @@ export default function AdminPage() {
     }
   };
 
+  const currentPickerImage = useMemo(() => {
+    if (!imagePickerTarget) return undefined;
+    if (imagePickerTarget === 'product') return productForm.image;
+    if (imagePickerTarget.startsWith('swatch-')) {
+      const idx = parseInt(imagePickerTarget.replace('swatch-', ''), 10);
+      return productForm.swatches[idx]?.image;
+    }
+    if (imagePickerTarget === 'hero') return sections.hero.image;
+    if (imagePickerTarget === 'spotlight-0') return sections.spotlight[0]?.image;
+    if (imagePickerTarget === 'spotlight-1') return sections.spotlight[1]?.image;
+    if (imagePickerTarget === 'textiles') return sections.missionTextiles.image;
+    if (imagePickerTarget === 'journal-0') return sections.journal[0]?.image;
+    if (imagePickerTarget === 'journal-1') return sections.journal[1]?.image;
+    if (imagePickerTarget === 'article') return articleForm.image;
+    return undefined;
+  }, [imagePickerTarget, productForm, sections, articleForm]);
+
   const handleSelectPredefinedImage = (imagePath: string) => {
     applyImageToTarget(imagePickerTarget, imagePath);
     setIsImagePickerOpen(false);
@@ -996,6 +1013,7 @@ export default function AdminPage() {
         isOpen={isImagePickerOpen}
         onClose={() => setIsImagePickerOpen(false)}
         onSelectImage={handleSelectPredefinedImage}
+        currentImage={currentPickerImage}
       />
     </div>
   );
