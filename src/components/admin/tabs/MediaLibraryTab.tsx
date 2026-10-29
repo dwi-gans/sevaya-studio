@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { MASTER_CATALOG_ASSETS, MasterAsset } from '../adminTypes';
@@ -52,16 +52,33 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
     };
   }, []);
 
-  // Filter assets
-  const filteredAssets = assets.filter((asset) => {
-    const matchesCategory = mediaCategory === 'all' || asset.category === mediaCategory;
-    const matchesSearch =
-      mediaSearchQuery.trim() === '' ||
-      asset.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase()) ||
-      asset.collection.toLowerCase().includes(mediaSearchQuery.toLowerCase()) ||
-      asset.badge.toLowerCase().includes(mediaSearchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Pagination state (prevents UI freeze when loading dozens of 4K photos)
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 16;
+
+  // Filter assets with useMemo
+  const filteredAssets = useMemo(() => {
+    return assets.filter((asset) => {
+      const matchesCategory = mediaCategory === 'all' || asset.category === mediaCategory;
+      const q = mediaSearchQuery.toLowerCase().trim();
+      const matchesSearch =
+        q === '' ||
+        asset.filename.toLowerCase().includes(q) ||
+        asset.collection.toLowerCase().includes(q) ||
+        asset.badge.toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+  }, [assets, mediaCategory, mediaSearchQuery]);
+
+  const totalPages = Math.ceil(filteredAssets.length / ITEMS_PER_PAGE) || 1;
+  const paginatedAssets = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAssets.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAssets, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mediaCategory, mediaSearchQuery]);
 
   // Staging handlers
   const handleAddFiles = (files: FileList | File[] | null) => {
@@ -362,7 +379,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
             </div>
           ) : mediaViewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
-              {filteredAssets.map((asset) => {
+              {paginatedAssets.map((asset) => {
                 const isSelected = selectedAsset.filename === asset.filename;
                 return (
                   <div
@@ -382,9 +399,10 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                         src={asset.src}
                         alt={asset.collection}
                         fill
-                        unoptimized={asset.src.startsWith('http')}
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        quality={70}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+                        className="object-cover transition-opacity duration-200"
                       />
                       <div className="absolute top-2 left-2">
                         <span
@@ -460,7 +478,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgba(0,0,0,0.12)]/60 text-xs">
-                    {filteredAssets.map((asset) => {
+                    {paginatedAssets.map((asset) => {
                       const isSelected = selectedAsset.filename === asset.filename;
                       return (
                         <tr
@@ -481,7 +499,8 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                                 src={asset.src}
                                 alt={asset.filename}
                                 fill
-                                unoptimized={asset.src.startsWith('http')}
+                                loading="lazy"
+                                quality={50}
                                 sizes="32px"
                                 className="object-cover"
                               />
@@ -563,6 +582,36 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
               </div>
             </div>
           )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-black/10 pt-4 mt-4">
+              <span className="text-xs text-black/60 font-medium">
+                Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredAssets.length)} dari {filteredAssets.length} foto
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className="min-h-[32px] px-3.5 rounded-full border border-black/20 text-xs font-semibold text-black hover:bg-black hover:text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                >
+                  ← Sebelumnya
+                </button>
+                <span className="px-3 py-1 rounded-full bg-black/5 font-mono text-xs text-black font-semibold">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className="min-h-[32px] px-3.5 rounded-full border border-black/20 text-xs font-semibold text-black hover:bg-black hover:text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                >
+                  Selanjutnya →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Asset Inspector */}
@@ -608,8 +657,9 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                   src={selectedAsset.src}
                   alt={selectedAsset.collection}
                   fill
-                  unoptimized={selectedAsset.src.startsWith('http')}
-                  sizes="350px"
+                  loading="lazy"
+                  quality={75}
+                  sizes="(max-width: 768px) 100vw, 350px"
                   className="object-cover"
                 />
                 <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-black/80 backdrop-blur-md px-2.5 py-1 text-white text-[10px] font-mono flex items-center justify-between">
