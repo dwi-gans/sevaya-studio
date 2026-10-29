@@ -29,25 +29,46 @@ export default function RegisterPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get('redirect');
-      if (redirect) {
-        setRedirectUrl(redirect);
+      const leakedName = params.get('fullName');
+      const leakedEmail = params.get('email');
+      const leakedPhone = params.get('phone');
+      const leakedPass = params.get('password');
+
+      if (redirect) setRedirectUrl(redirect);
+      if (leakedName) setFullName(decodeURIComponent(leakedName));
+      if (leakedEmail) setEmail(decodeURIComponent(leakedEmail));
+      if (leakedPhone) setPhone(decodeURIComponent(leakedPhone));
+      if (leakedPass) setPassword(decodeURIComponent(leakedPass));
+
+      // PURGE credentials immediately from browser address bar & history!
+      if (leakedName || leakedEmail || leakedPass || params.has('password') || params.has('email')) {
+        const cleanUrl =
+          window.location.pathname +
+          (redirect ? `?redirect=${encodeURIComponent(redirect)}` : '');
+        window.history.replaceState({}, document.title, cleanUrl);
       }
     } catch {
       // ignore
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     setErrorMsg(null);
 
-    if (!fullName.trim() || fullName.trim().length < 2) {
+    const cleanName = fullName.trim();
+    const cleanEmail = email.trim();
+    const cleanPhone = phone.trim();
+
+    if (!cleanName || cleanName.length < 2) {
       setErrorMsg('Nama lengkap wajib diisi minimal 2 karakter.');
       showToast('Nama lengkap wajib diisi');
       return;
     }
 
-    if (!email.trim() || !email.includes('@')) {
+    if (!cleanEmail || !cleanEmail.includes('@')) {
       setErrorMsg('Format alamat email tidak valid.');
       showToast('Format email tidak valid');
       return;
@@ -68,7 +89,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await register(fullName.trim(), email.trim(), password, phone.trim());
+      const res = await register(cleanName, cleanEmail, password, cleanPhone);
       setIsLoading(false);
 
       if (res.error) {
@@ -114,12 +135,12 @@ export default function RegisterPage() {
           {/* Heading & Subtitle */}
           <div className="text-center mb-8">
             <h1 className="font-sans text-2xl sm:text-3xl font-medium tracking-tight text-black">
-              {isId ? 'Buat Akun Baru' : 'Create an account'}
+              {isId ? 'Daftar Akun Baru' : 'Create an Account'}
             </h1>
             <p className="mt-2 text-xs sm:text-sm text-black/60 leading-relaxed max-w-xs mx-auto">
               {isId
-                ? 'Daftar untuk menikmati kurasi siluet modestwear dan kemudahan pelacakan pesanan.'
-                : 'Create an account to curate your modest wardrobe and track orders effortlessly.'}
+                ? 'Bergabunglah untuk menikmati akses pesanan, katalog eksklusif, dan penawaran khusus Sevaya.'
+                : 'Join us to access personalized silhouettes, bespoke orders, and private releases.'}
             </p>
           </div>
 
@@ -181,14 +202,22 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {/* Full Name Field (Square / Kotak) */}
+          {/* Form: Enforced POST and action="" so native submits NEVER append inputs to URL */}
+          <form
+            method="POST"
+            action=""
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(e);
+            }}
+            className="space-y-3.5"
+          >
+            {/* Full Name Field (No name attribute to prevent native query string leakage) */}
             <div>
               <input
                 id="fullName"
-                name="fullName"
                 type="text"
+                autoComplete="name"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -197,12 +226,12 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Email Field (Square / Kotak) */}
+            {/* Email Field (No name attribute to prevent native query string leakage) */}
             <div>
               <input
                 id="email"
-                name="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -211,12 +240,12 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Phone Number Field (Square / Kotak) */}
+            {/* Phone Number Field (No name attribute to prevent native query string leakage) */}
             <div>
               <input
                 id="phone"
-                name="phone"
                 type="tel"
+                autoComplete="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Phone number (optional)"
@@ -224,12 +253,12 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Password Field (Square / Kotak) */}
+            {/* Password Field (No name attribute to prevent native query string leakage) */}
             <div className="relative">
               <input
                 id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -267,6 +296,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
+              onClick={(e) => e.stopPropagation()}
               className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-none bg-black text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (

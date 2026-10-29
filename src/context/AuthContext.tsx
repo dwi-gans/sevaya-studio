@@ -111,9 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         let friendlyMsg = error.message;
         if (friendlyMsg.includes('Invalid login credentials')) {
-          friendlyMsg = 'Email atau kata sandi tidak cocok. Silakan periksa kembali.';
+          friendlyMsg = 'Email atau kata sandi tidak cocok. Pastikan Anda sudah mendaftar terlebih dahulu.';
         } else if (friendlyMsg.includes('Email not confirmed')) {
-          friendlyMsg = 'Email Anda belum terkonfirmasi. Silakan hubungi admin atau daftar ulang.';
+          friendlyMsg = 'Email Anda belum terkonfirmasi. Silakan periksa inbox email Anda.';
         }
         return { error: friendlyMsg };
       }
@@ -145,6 +145,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: 'Kata sandi minimal 6 karakter.' };
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+
     try {
       // Call our secure backend register route which handles validation,
       // duplicate checks, and instant verified creation via Supabase Admin
@@ -152,35 +155,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName: name.trim(),
-          email: email.trim().toLowerCase(),
+          fullName: cleanName,
+          email: cleanEmail,
           password,
           phone: phone || '',
         }),
       });
 
-      const resJson = await res.json();
+      const resJson = await res.json().catch(() => ({}));
 
       if (!res.ok || !resJson.success) {
+        // Fallback: try client-side Supabase signUp directly if server route has issues
+        try {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password,
+            options: {
+              data: {
+                name: cleanName,
+                full_name: cleanName,
+                phone: phone || '',
+              },
+            },
+          });
+
+          if (!signUpError && signUpData.user) {
+            syncUserFromSession(signUpData.user);
+            return { error: null };
+          }
+        } catch {
+          // fallback failed, return original error
+        }
+
         return { error: resJson.error || 'Pendaftaran akun gagal.' };
       }
 
       // Automatically sign in the user now that the account is created
-      const loginRes = await login(email, password);
+      const loginRes = await login(cleanEmail, password);
       if (loginRes.error) {
-        // If automatic login had an issue, fallback to state
+        // If automatic login had an issue, fallback to session state
         setUser({
           id: resJson.user?.id,
-          name: name.trim(),
-          email: email.trim(),
+          name: cleanName,
+          email: cleanEmail,
           phone: phone || '',
         });
       }
 
       return { error: null };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Pendaftaran gagal';
-      return { error: msg };
+    } catch {
+      // Fallback to client-side Supabase signUp if backend fetch fails
+      try {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            data: {
+              name: cleanName,
+              full_name: cleanName,
+              phone: phone || '',
+            },
+          },
+        });
+
+        if (!signUpError && signUpData.user) {
+          syncUserFromSession(signUpData.user);
+          return { error: null };
+        }
+        if (signUpError) {
+          return { error: signUpError.message };
+        }
+      } catch (clientErr) {
+        const msg = clientErr instanceof Error ? clientErr.message : 'Pendaftaran gagal';
+        return { error: msg };
+      }
+      return { error: 'Terjadi kesalahan saat pendaftaran akun.' };
     }
   };
 

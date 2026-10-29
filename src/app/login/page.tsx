@@ -26,19 +26,39 @@ export default function LoginPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get('redirect');
+      const leakedId = params.get('identifier');
+      const leakedPass = params.get('password');
+
       if (redirect) {
         setRedirectUrl(redirect);
+      }
+      if (leakedId) {
+        setIdentifier(decodeURIComponent(leakedId));
+      }
+      if (leakedPass) {
+        setPassword(decodeURIComponent(leakedPass));
+      }
+
+      // PURGE credentials immediately from browser address bar & history!
+      if (leakedId || leakedPass || params.has('password') || params.has('identifier')) {
+        const cleanUrl =
+          window.location.pathname +
+          (redirect ? `?redirect=${encodeURIComponent(redirect)}` : '');
+        window.history.replaceState({}, document.title, cleanUrl);
       }
     } catch {
       // ignore
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     setErrorMsg(null);
 
-    if (!identifier || !password) {
+    const cleanEmail = identifier.trim();
+    if (!cleanEmail || !password) {
       setErrorMsg('Harap masukkan alamat email dan kata sandi Anda.');
       showToast('Harap isi email dan kata sandi');
       return;
@@ -47,7 +67,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await login(identifier, password);
+      const res = await login(cleanEmail, password);
       setIsLoading(false);
 
       if (res.error) {
@@ -160,14 +180,22 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field (Square / Kotak) */}
+          {/* Form: Enforced POST and action="" so native submits NEVER append inputs to URL */}
+          <form
+            method="POST"
+            action=""
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(e);
+            }}
+            className="space-y-4"
+          >
+            {/* Email Field (No name attribute to prevent native query string leakage) */}
             <div>
               <input
                 id="identifier"
-                name="identifier"
                 type="email"
+                autoComplete="username"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -176,12 +204,12 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password Field (Square / Kotak) */}
+            {/* Password Field (No name attribute to prevent native query string leakage) */}
             <div className="relative">
               <input
                 id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -222,6 +250,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
+              onClick={(e) => e.stopPropagation()}
               className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-none bg-black text-xs font-semibold tracking-wider text-white uppercase transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (

@@ -33,6 +33,19 @@ export function checkRateLimit(
   limit: number = 10,
   windowMs: number = 15 * 60 * 1000 // 15 minutes default
 ): RateLimitResult {
+  // Relax rate limit in development or for local network/unknown internal IPs
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    identifier.includes('unknown') ||
+    identifier.includes('127.0.0.1') ||
+    identifier.includes('::1') ||
+    identifier.includes('192.168.') ||
+    identifier.includes('10.') ||
+    identifier.includes('172.')
+  ) {
+    limit = Math.max(limit, 100);
+  }
+
   const now = Date.now();
   let record = rateLimitStore.get(identifier);
 
