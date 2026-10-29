@@ -15,45 +15,7 @@ export const SettingsTab: React.FC = () => {
         </p>
       </div>
 
-      {/* Card 1: Identitas Brand & Toko */}
-      <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
-        <div className="border-b border-black/10 pb-2">
-          <h3 className="text-xs font-bold text-black">
-            Identitas Brand &amp; Toko
-          </h3>
-          <p className="text-[11px] text-black/60 mt-0">
-            Informasi merek resmi yang digunakan pada antarmuka publik dan struk pesanan.
-          </p>
-        </div>
-
-        <div className="divide-y divide-[rgba(0,0,0,0.12)]/60">
-          <div className="flex items-center justify-between py-2.5 gap-2">
-            <span className="text-xs font-medium text-black/70">Nama Brand</span>
-            <div className="w-full sm:w-80">
-              <input
-                type="text"
-                readOnly
-                value="SEVAYA"
-                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-semibold text-black focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5 gap-2">
-            <span className="text-xs font-medium text-black/70">Domain Resmi</span>
-            <div className="w-full sm:w-80">
-              <input
-                type="text"
-                readOnly
-                value="https://sevaya.id"
-                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-black/5 px-3.5 py-2 text-base sm:text-xs font-mono text-black focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Card 2: Status Integrasi Logistik & Payment Gateway */}
+      {/* Card 1: Status Integrasi Logistik & Payment Gateway */}
       <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
         <div className="border-b border-black/10 pb-2">
           <h3 className="text-xs font-bold text-black">
@@ -99,7 +61,7 @@ export const SettingsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Card 3: Infrastruktur Cloud & Status CDN (Supabase Storage) */}
+      {/* Card 2: Infrastruktur Cloud & Status CDN (Supabase Storage) */}
       <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
         <div className="border-b border-black/10 pb-2.5 flex items-center justify-between">
           <div>
