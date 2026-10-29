@@ -9,13 +9,60 @@ interface MediaLibraryTabProps {
   showToast: (msg: string) => void;
 }
 
+const CLOUD_MEDIA_CACHE_KEY = 'sevaya_cloud_media_assets';
+
+const getCachedMediaAssets = (): MasterAsset[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const cached = localStorage.getItem(CLOUD_MEDIA_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+};
+
 export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) => {
-  const [assets, setAssets] = useState<MasterAsset[]>(MASTER_CATALOG_ASSETS);
+  const [assets, setAssets] = useState<MasterAsset[]>(getCachedMediaAssets);
+  const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(CLOUD_MEDIA_CACHE_KEY);
+        if (cached && JSON.parse(cached)?.length > 0) {
+          return false;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return true;
+  });
   const [mediaCategory, setMediaCategory] = useState<'all' | 'plum' | 'cuff' | 'outdoor'>('all');
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
   const [mediaViewMode, setMediaViewMode] = useState<'grid' | 'table'>('grid');
-  const [selectedAsset, setSelectedAsset] = useState<MasterAsset>(MASTER_CATALOG_ASSETS[0]!);
+  const [selectedAsset, setSelectedAsset] = useState<MasterAsset>(() => {
+    const cached = getCachedMediaAssets();
+    return cached[0] || MASTER_CATALOG_ASSETS[0]!;
+  });
   const [inspectorOpen, setInspectorOpen] = useState(false);
+
+  // Helper to keep state and localStorage cache in sync
+  const updateAssetsWithCache = (updater: (prev: MasterAsset[]) => MasterAsset[]) => {
+    setAssets((prev) => {
+      const next = updater(prev);
+      try {
+        localStorage.setItem(CLOUD_MEDIA_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -34,16 +81,29 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
         const res = await fetch('/api/admin/upload?folder=uploads');
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && data.success && Array.isArray(data.files) && data.files.length > 0) {
-            setAssets((prev) => {
-              const existingNames = new Set(prev.map((a) => a.filename));
-              const newFiles = data.files.filter((f: MasterAsset) => !existingNames.has(f.filename));
-              return [...newFiles, ...prev];
+          if (isMounted) {
+            const cloudFiles: MasterAsset[] = data.success && Array.isArray(data.files) ? data.files : [];
+            updateAssetsWithCache((prev) => {
+              const cloudNames = new Set(cloudFiles.map((f) => f.filename));
+              const nonCloudAssets = prev.filter(
+                (a) => !cloudNames.has(a.filename) && !a.src.includes('/storage/v1/object/public/')
+              );
+              const catalogFallback =
+                nonCloudAssets.length > 0
+                  ? nonCloudAssets
+                  : MASTER_CATALOG_ASSETS.filter((c) => !cloudNames.has(c.filename));
+              return [...cloudFiles, ...catalogFallback];
             });
           }
         }
       } catch {
-        // ignore
+        if (isMounted) {
+          updateAssetsWithCache((prev) => (prev.length > 0 ? prev : MASTER_CATALOG_ASSETS));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCloud(false);
+        }
       }
     }
     loadCloudFiles();
@@ -136,7 +196,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
     try {
       const res = await uploadMultipleFilesToStorage(stagedFiles, 'uploads', uploadCollection);
       if (res.success && res.files && res.files.length > 0) {
-        setAssets((prev) => [...res.files, ...prev]);
+        updateAssetsWithCache((prev) => [...res.files, ...prev]);
         setSelectedAsset(res.files[0]);
         setInspectorOpen(true);
         showToast(`${res.files.length} master foto berhasil diunggah ke CDN!`);
@@ -164,7 +224,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
       showToast(`Menghapus ${asset.filename}...`);
       const success = await deleteFileFromStorage(asset.src);
       if (success) {
-        setAssets((prev) => prev.filter((a) => a.filename !== asset.filename && a.src !== asset.src));
+        updateAssetsWithCache((prev) => prev.filter((a) => a.filename !== asset.filename && a.src !== asset.src));
         if (selectedAsset.filename === asset.filename) {
           setInspectorOpen(false);
         }
@@ -187,7 +247,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
       const res = await uploadMultipleFilesToStorage([file], 'uploads', selectedAsset.collection);
       if (res.success && res.files && res.files.length > 0) {
         const newAsset = res.files[0];
-        setAssets((prev) => [newAsset, ...prev]);
+        updateAssetsWithCache((prev) => [newAsset, ...prev]);
         setSelectedAsset(newAsset);
         showToast(`Versi baru "${file.name}" berhasil diunggah ke CDN!`);
       }
@@ -369,7 +429,20 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Left Column: Asset Grid or Table */}
         <div className="flex-1 min-w-0 w-full">
-          {filteredAssets.length === 0 ? (
+          {isLoadingCloud && assets.length === 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-black/10 bg-white overflow-hidden p-3 space-y-2.5 animate-pulse"
+                >
+                  <div className="aspect-[3/4] w-full rounded-xl bg-black/5" />
+                  <div className="h-3.5 bg-black/10 rounded-sm w-3/4" />
+                  <div className="h-2.5 bg-black/5 rounded-sm w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : filteredAssets.length === 0 ? (
             <div className="rounded-2xl border border-black/15 bg-white p-12 text-center text-black/70">
               <Icon name="search_off" size={36} className="mb-2 text-black/50 mx-auto block" />
               <p className="font-semibold text-sm text-black">Tidak ada foto yang cocok</p>
