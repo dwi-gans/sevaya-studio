@@ -134,9 +134,25 @@ export async function listUploadedFiles(folder = 'uploads'): Promise<StorageFile
 }
 
 /**
- * Deletes a file from Supabase storage by path.
+ * Deletes a file from Supabase storage by path or URL.
+ * Uses secure server admin endpoint to bypass storage RLS.
  */
 export async function deleteFileFromStorage(filePath: string): Promise<boolean> {
+  // Try secure server-side admin delete first
+  try {
+    const res = await fetch(`/api/admin/upload?path=${encodeURIComponent(filePath)}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return true;
+      }
+    }
+  } catch {
+    // fallback
+  }
+
   try {
     const cleanPath = filePath.includes('/catalog/')
       ? filePath.split('/catalog/')[1] || filePath

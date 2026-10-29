@@ -137,6 +137,30 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
     }
   };
 
+  // Delete asset handler
+  const handleDeleteAsset = async (asset: MasterAsset) => {
+    if (!window.confirm(`Yakin ingin menghapus foto "${asset.filename}" dari Cloud Storage?`)) {
+      return;
+    }
+
+    try {
+      showToast(`Menghapus ${asset.filename}...`);
+      const success = await deleteFileFromStorage(asset.src);
+      if (success) {
+        setAssets((prev) => prev.filter((a) => a.filename !== asset.filename && a.src !== asset.src));
+        if (selectedAsset.filename === asset.filename) {
+          setInspectorOpen(false);
+        }
+        showToast(`Foto "${asset.filename}" berhasil dihapus dari Cloud Storage!`);
+      } else {
+        showToast(`Gagal menghapus "${asset.filename}".`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menghapus foto';
+      showToast(msg);
+    }
+  };
+
   // Quick single-file replace from inspector
   const handleSingleFileReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -377,7 +401,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                           {asset.badge}
                         </span>
                       </div>
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -389,6 +413,17 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                           title="Salin Path CDN"
                         >
                           <Icon name="content_copy" size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAsset(asset);
+                          }}
+                          className="w-7 h-7 rounded-full bg-red-600/90 backdrop-blur-xs text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+                          title="Hapus Foto dari Storage"
+                        >
+                          <Icon name="delete" size={13} />
                         </button>
                       </div>
                     </div>
@@ -507,6 +542,17 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                               >
                                 <Icon name="open_in_new" size={15} />
                               </a>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAsset(asset);
+                                }}
+                                className="rounded-full p-1 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                title="Hapus Foto"
+                              >
+                                <Icon name="delete" size={15} />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -659,19 +705,8 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
 
                 <button
                   type="button"
-                  className="w-full py-1 text-red-600 hover:bg-red-50 text-xs rounded-full flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                  onClick={async () => {
-                    if (
-                      confirm(
-                        `Apakah Anda yakin ingin menghapus berkas ${selectedAsset.filename} dari master bucket?`
-                      )
-                    ) {
-                      await deleteFileFromStorage(selectedAsset.src);
-                      setAssets((prev) => prev.filter((a) => a.filename !== selectedAsset.filename));
-                      setInspectorOpen(false);
-                      showToast(`Aset ${selectedAsset.filename} berhasil dihapus dari bucket.`);
-                    }
-                  }}
+                  className="w-full py-2 text-red-600 hover:bg-red-50 text-xs rounded-full flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-red-200"
+                  onClick={() => handleDeleteAsset(selectedAsset)}
                 >
                   <Icon name="delete" size={14} />
                   <span>Hapus Aset dari Bucket</span>

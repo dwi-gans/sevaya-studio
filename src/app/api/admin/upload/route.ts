@@ -173,3 +173,71 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/admin/upload — Delete a file from Supabase Storage using admin privileges
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = verifyAdminSession(req);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Sesi admin tidak valid. Silakan login kembali.' },
+        { status: 401 }
+      );
+    }
+
+    let filePath = req.nextUrl.searchParams.get('path');
+    if (!filePath) {
+      try {
+        const body = await req.json();
+        filePath = body.path || body.url || body.filename;
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!filePath) {
+      return NextResponse.json(
+        { success: false, error: 'Path atau URL berkas tidak diberikan.' },
+        { status: 400 }
+      );
+    }
+
+    // Clean path to extract relative path within 'catalog' bucket
+    // e.g. https://.../storage/v1/object/public/catalog/uploads/xxx.jpg -> uploads/xxx.jpg
+    let cleanPath = filePath;
+    if (cleanPath.includes('/catalog/')) {
+      cleanPath = cleanPath.split('/catalog/')[1] || cleanPath;
+    }
+    // Remove query params or leading slashes
+    cleanPath = (cleanPath.split('?')[0] || cleanPath).replace(/^\/+/, '');
+
+    // If it's just a filename with no folder, assume 'uploads/'
+    if (!cleanPath.includes('/')) {
+      cleanPath = `uploads/${cleanPath}`;
+    }
+
+    const { data, error } = await supabaseAdmin.storage
+      .from('catalog')
+      .remove([cleanPath]);
+
+    if (error) {
+      console.error('Supabase admin delete error:', error);
+      return NextResponse.json(
+        { success: false, error: `Gagal menghapus dari storage: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Berkas berhasil dihapus dari Cloud Storage.',
+      deleted: data,
+    });
+  } catch (err: unknown) {
+    console.error('Admin delete handler error:', err);
+    const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat menghapus berkas.';
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
