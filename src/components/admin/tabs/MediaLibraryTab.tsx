@@ -1,26 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { MASTER_CATALOG_ASSETS, MasterAsset } from '../adminTypes';
+import { uploadMultipleFilesToStorage, deleteFileFromStorage } from '@/integrations/supabase/storage';
 
 interface MediaLibraryTabProps {
-  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void> | void;
+  onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void> | void;
   showToast: (msg: string) => void;
 }
 
-export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
-  onFileUpload,
-  showToast,
-}) => {
+export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) => {
+  const [assets, setAssets] = useState<MasterAsset[]>(MASTER_CATALOG_ASSETS);
   const [mediaCategory, setMediaCategory] = useState<'all' | 'plum' | 'cuff' | 'outdoor'>('all');
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
   const [mediaViewMode, setMediaViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedAsset, setSelectedAsset] = useState<MasterAsset>(MASTER_CATALOG_ASSETS[0]!);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+
+  // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadCollection, setUploadCollection] = useState('Abaya Plum Riverside Silk (Spring 2025)');
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredAssets = MASTER_CATALOG_ASSETS.filter((asset) => {
+  // Load uploaded files from Supabase on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCloudFiles() {
+      try {
+        const res = await fetch('/api/admin/upload?folder=uploads');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && Array.isArray(data.files) && data.files.length > 0) {
+            setAssets((prev) => {
+              const existingNames = new Set(prev.map((a) => a.filename));
+              const newFiles = data.files.filter((f: MasterAsset) => !existingNames.has(f.filename));
+              return [...newFiles, ...prev];
+            });
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadCloudFiles();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Filter assets
+  const filteredAssets = assets.filter((asset) => {
     const matchesCategory = mediaCategory === 'all' || asset.category === mediaCategory;
     const matchesSearch =
       mediaSearchQuery.trim() === '' ||
@@ -29,6 +62,99 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
       asset.badge.toLowerCase().includes(mediaSearchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Staging handlers
+  const handleAddFiles = (files: FileList | File[] | null) => {
+    if (!files || files.length === 0) return;
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file && file.type.startsWith('image/')) {
+        validFiles.push(file);
+      }
+    }
+    if (validFiles.length === 0) {
+      showToast('Harap pilih berkas gambar (JPG, PNG, WebP, dsb).');
+      return;
+    }
+    setStagedFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const handleRemoveStagedFile = (idx: number) => {
+    setStagedFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Drag & drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleAddFiles(e.dataTransfer.files);
+    }
+  };
+
+  // Upload staged files to Supabase Cloud
+  const handleStartUpload = async () => {
+    if (stagedFiles.length === 0) {
+      showToast('Pilih atau tarik foto terlebih dahulu sebelum memulai proses.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgressText(`Mengunggah ${stagedFiles.length} foto ke Supabase Cloud...`);
+
+    try {
+      const res = await uploadMultipleFilesToStorage(stagedFiles, 'uploads', uploadCollection);
+      if (res.success && res.files && res.files.length > 0) {
+        setAssets((prev) => [...res.files, ...prev]);
+        setSelectedAsset(res.files[0]);
+        setInspectorOpen(true);
+        showToast(`${res.files.length} master foto berhasil diunggah ke CDN!`);
+        setStagedFiles([]);
+        setIsUploadModalOpen(false);
+      } else {
+        showToast('Gagal mengunggah foto.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat mengunggah berkas.';
+      showToast(`Upload gagal: ${msg}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgressText('');
+    }
+  };
+
+  // Quick single-file replace from inspector
+  const handleSingleFileReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      showToast('Mengunggah versi baru berkas...');
+      const res = await uploadMultipleFilesToStorage([file], 'uploads', selectedAsset.collection);
+      if (res.success && res.files && res.files.length > 0) {
+        const newAsset = res.files[0];
+        setAssets((prev) => [newAsset, ...prev]);
+        setSelectedAsset(newAsset);
+        showToast(`Versi baru "${file.name}" berhasil diunggah ke CDN!`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah';
+      showToast(msg);
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4">
@@ -54,8 +180,11 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+            onClick={() => {
+              setStagedFiles([]);
+              setIsUploadModalOpen(true);
+            }}
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99] shadow-xs cursor-pointer"
           >
             <Icon name="add_photo_alternate" size={16} />
             <span>Unggah Master Foto</span>
@@ -80,7 +209,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
               <div className="bg-black h-full rounded-full" style={{ width: '36.8%' }} />
             </div>
             <div className="flex items-center justify-between text-[11px] text-black/70">
-              <span>{MASTER_CATALOG_ASSETS.length} Foto Abaya Aktif</span>
+              <span>{assets.length} Foto Abaya Aktif</span>
               <span className="text-emerald-700 font-medium">36.8% terpakai</span>
             </div>
           </div>
@@ -116,11 +245,11 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
               </span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-black">18 / 18</span>
-              <span className="text-[11px] text-black/70">PDP Terkoneksi</span>
+              <span className="text-xl font-bold text-black">{assets.length} Aktif</span>
+              <span className="text-[11px] text-black/70">PDP &amp; Lookbook Terkoneksi</span>
             </div>
             <div className="text-[11px] text-black/70">
-              Bucket: <code className="font-mono text-[10px] text-black">production-katalog</code>
+              Bucket: <code className="font-mono text-[10px] text-black">catalog / uploads</code>
             </div>
           </div>
         </div>
@@ -130,10 +259,10 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-black/15 bg-white p-3 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 touch-pan-x">
           {[
-            { id: 'all', label: `Semua (${MASTER_CATALOG_ASSETS.length})` },
-            { id: 'plum', label: 'Siluet Plum (8)' },
-            { id: 'cuff', label: 'Manset & Hijab (5)' },
-            { id: 'outdoor', label: 'Editorial Outdoor (5)' },
+            { id: 'all', label: `Semua (${assets.length})` },
+            { id: 'plum', label: 'Siluet Plum' },
+            { id: 'cuff', label: 'Manset & Hijab' },
+            { id: 'outdoor', label: 'Editorial Outdoor' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -229,6 +358,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                         src={asset.src}
                         alt={asset.collection}
                         fill
+                        unoptimized={asset.src.startsWith('http')}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -316,6 +446,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                                 src={asset.src}
                                 alt={asset.filename}
                                 fill
+                                unoptimized={asset.src.startsWith('http')}
                                 sizes="32px"
                                 className="object-cover"
                               />
@@ -431,6 +562,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                   src={selectedAsset.src}
                   alt={selectedAsset.collection}
                   fill
+                  unoptimized={selectedAsset.src.startsWith('http')}
                   sizes="350px"
                   className="object-cover"
                 />
@@ -471,7 +603,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                     />
                     <button
                       type="button"
-                      className="rounded-full p-1.5 bg-black/5 hover:bg-[#EAE4DD] text-black transition-colors shrink-0"
+                      className="rounded-full p-1.5 bg-black/5 hover:bg-[#EAE4DD] text-black transition-colors shrink-0 cursor-pointer"
                       onClick={() => {
                         navigator.clipboard.writeText(selectedAsset.cdnUrl);
                         showToast('Path Supabase CDN berhasil disalin!');
@@ -521,19 +653,22 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={onFileUpload}
+                    onChange={handleSingleFileReplace}
                   />
                 </label>
 
                 <button
                   type="button"
-                  className="w-full py-1 text-red-600 hover:bg-red-50 text-xs rounded-full flex items-center justify-center gap-1 transition-colors"
-                  onClick={() => {
+                  className="w-full py-1 text-red-600 hover:bg-red-50 text-xs rounded-full flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  onClick={async () => {
                     if (
                       confirm(
                         `Apakah Anda yakin ingin menghapus berkas ${selectedAsset.filename} dari master bucket?`
                       )
                     ) {
+                      await deleteFileFromStorage(selectedAsset.src);
+                      setAssets((prev) => prev.filter((a) => a.filename !== selectedAsset.filename));
+                      setInspectorOpen(false);
                       showToast(`Aset ${selectedAsset.filename} berhasil dihapus dari bucket.`);
                     }
                   }}
@@ -547,10 +682,11 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
         )}
       </div>
 
-      {/* Upload Master Modal */}
+      {/* Upload Master Modal (Supports Drag & Drop + Multiple Files) */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center z-50 sm:p-4">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-black/15 shadow-2xl w-full max-w-lg p-5 sm:p-7 flex flex-col gap-4 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-black/15/70">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center shrink-0">
@@ -561,17 +697,20 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                     Unggah Master Foto Katalog
                   </h3>
                   <p className="text-[11px] text-black/70">
-                    Bucket:{' '}
-                    <code className="bg-black/5 px-1.5 py-0.5 rounded font-mono text-[10px] text-black">
-                      production-katalog-sevaya
-                    </code>
+                    Supabase Storage: <code className="bg-black/5 px-1.5 py-0.5 rounded font-mono text-[10px] text-black">catalog / uploads</code>
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full text-black/70 hover:bg-black/5 hover:text-black transition-colors"
-                onClick={() => setIsUploadModalOpen(false)}
+                onClick={() => {
+                  if (!isUploading) {
+                    setIsUploadModalOpen(false);
+                    setStagedFiles([]);
+                  }
+                }}
+                disabled={isUploading}
                 aria-label="Tutup Unggah"
               >
                 <Icon name="close" size={20} />
@@ -579,36 +718,110 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
             </div>
 
             {/* Drag & Drop Zone */}
-            <label className="rounded-xl border-2 border-dashed border-black/20 p-5 sm:p-6 flex flex-col items-center justify-center text-center bg-white hover:bg-black/5 transition-colors cursor-pointer">
-              <Icon name="add_photo_alternate" size={36} className="text-black mb-2" />
-              <p className="font-semibold text-xs text-black">
-                Tarik &amp; lepas berkas master di sini
+            <div
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`rounded-2xl border-2 border-dashed p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
+                isDragging
+                  ? 'border-black bg-black/5 scale-[1.01]'
+                  : 'border-black/20 bg-[#faf9f8] hover:border-black/40 hover:bg-white'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-full bg-white border border-black/10 flex items-center justify-center text-black mb-3 shadow-2xs">
+                <Icon name="add_photo_alternate" size={24} />
+              </div>
+              <p className="font-semibold text-xs sm:text-sm text-black">
+                {isDragging ? 'Lepaskan foto di sini...' : 'Geser & Lepaskan Foto ke Sini'}
               </p>
-              <p className="text-[11px] text-black/70 mt-1 max-w-sm">
-                RAW, TIFF, PNG, atau JPG hingga 25 MB per berkas. Sistem mengonversi otomatis ke WebP 4K untuk edge CDN.
+              <p className="text-[11px] text-black/60 mt-1 max-w-xs">
+                Bisa pilih <strong>satu atau banyak foto sekaligus</strong> (JPG, PNG, WebP).
               </p>
-              <span className="mt-4 min-h-[40px] inline-flex items-center rounded-full px-5 py-2 bg-white border border-black/20 text-xs font-semibold text-black hover:bg-black/5 shadow-xs active:scale-95 transition">
-                Pilih dari Komputer
-              </span>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="mt-3.5 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 bg-white border border-black/20 text-xs font-semibold text-black hover:bg-black hover:text-white shadow-2xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Icon name="upload" size={14} />
+                <span>Pilih dari Komputer</span>
+              </button>
+
               <input
+                ref={fileInputRef}
                 type="file"
+                multiple
                 accept="image/*"
                 className="hidden"
                 onChange={(e) => {
-                  onFileUpload(e);
-                  setIsUploadModalOpen(false);
+                  handleAddFiles(e.target.files);
+                  e.target.value = '';
                 }}
               />
-            </label>
+            </div>
 
+            {/* Staged Files Preview List */}
+            {stagedFiles.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-black">
+                    {stagedFiles.length} foto siap diunggah:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStagedFiles([])}
+                    className="text-[11px] text-red-600 hover:underline"
+                    disabled={isUploading}
+                  >
+                    Hapus Semua
+                  </button>
+                </div>
+
+                <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 border border-black/10 rounded-xl p-2 bg-[#fdfdfd]">
+                  {stagedFiles.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-black/5 text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon name="image" size={16} className="text-black/60 shrink-0" />
+                        <span className="font-medium text-black truncate max-w-[220px]">
+                          {file.name}
+                        </span>
+                        <span className="font-mono text-[10px] text-black/50 shrink-0">
+                          ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStagedFile(idx)}
+                        disabled={isUploading}
+                        className="text-black/40 hover:text-red-600 transition-colors p-1"
+                        title="Hapus berkas ini"
+                      >
+                        <Icon name="close" size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Collection assignment */}
             <div className="space-y-1.5 text-xs">
               <label className="font-semibold uppercase tracking-wider text-black/70 text-[10px] block">
                 Koleksi Terhubung
               </label>
               <select
-                className="w-full min-h-[42px] sm:min-h-[36px] rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
+                className="w-full min-h-[42px] sm:min-h-[36px] rounded-lg border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black focus:border-black focus:bg-white focus:outline-none"
                 value={uploadCollection}
                 onChange={(e) => setUploadCollection(e.target.value)}
+                disabled={isUploading}
               >
                 <option>Abaya Plum Riverside Silk (Spring 2025)</option>
                 <option>Koleksi Manset Monogram Emas</option>
@@ -617,24 +830,40 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
               </select>
             </div>
 
+            {/* Progress / Actions */}
+            {isUploading && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200/60 rounded-xl text-xs text-amber-900">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-800 border-t-transparent shrink-0" />
+                <span className="font-medium">{uploadProgressText}</span>
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/15/70">
               <button
                 type="button"
-                className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black transition-colors active:scale-95"
-                onClick={() => setIsUploadModalOpen(false)}
+                className="min-h-[44px] flex-1 sm:flex-initial rounded-full border border-black/20 bg-white px-5 py-2 text-xs font-medium text-black/70 hover:bg-black/5 hover:text-black transition-colors active:scale-95 disabled:opacity-50"
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setStagedFiles([]);
+                }}
+                disabled={isUploading}
               >
                 Batal
               </button>
               <button
                 type="button"
-                className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  showToast('Aset master berhasil diproses ke CDN!');
-                }}
+                className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-full bg-black px-6 py-2 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-xs"
+                onClick={handleStartUpload}
+                disabled={isUploading || stagedFiles.length === 0}
               >
-                <Icon name="done" size={15} />
-                <span>Mulai Proses CDN</span>
+                <Icon name="cloud_upload" size={16} />
+                <span>
+                  {isUploading
+                    ? 'Sedang Mengunggah...'
+                    : stagedFiles.length > 0
+                    ? `Mulai Unggah (${stagedFiles.length} Foto)`
+                    : 'Pilih Foto Terlebih Dahulu'}
+                </span>
               </button>
             </div>
           </div>
