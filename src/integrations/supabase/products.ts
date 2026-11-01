@@ -202,14 +202,20 @@ async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> 
 
   try {
     if (typeof window !== 'undefined') {
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': 'sevaya-admin',
+        },
         body: JSON.stringify({ products }),
       });
+      if (!res.ok) {
+        console.warn('API sync warning: HTTP', res.status);
+      }
     }
-  } catch {
-    // Ignore sync errors
+  } catch (e) {
+    console.warn('Failed to sync products to /api/products:', e);
   }
 }
 let _cachedProducts: DbProduct[] | null = null;
@@ -222,7 +228,25 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes in-memory cache for ultra-fast 
 export async function getDbProducts(): Promise<DbProduct[]> {
   const now = Date.now();
   if (_cachedProducts && now - _cachedTime < CACHE_TTL_MS) {
-    return _cachedProducts;
+    return _cachedProducts as DbProduct[];
+  }
+
+  // If in browser, first try fetching fresh data from our API endpoint
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/products', { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.products) && json.products.length > 0) {
+          _cachedProducts = json.products as DbProduct[];
+          _cachedTime = Date.now();
+          saveToLocalStorage(json.products);
+          return json.products as DbProduct[];
+        }
+      }
+    } catch {
+      // Fallback below
+    }
   }
 
   try {

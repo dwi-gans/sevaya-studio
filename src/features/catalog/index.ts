@@ -35,7 +35,6 @@ export function mapDbProductToProduct(item: DbProduct): Product {
 
 export async function fetchCatalogProducts(): Promise<Product[]> {
   const dbItems = await getDbProducts();
-  // Filter out products that are explicitly hidden from the storefront
   return dbItems.filter((p) => !p.hidden).map(mapDbProductToProduct);
 }
 
