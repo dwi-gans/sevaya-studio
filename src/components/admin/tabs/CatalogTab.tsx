@@ -156,11 +156,11 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                 {/* Pricing */}
                 <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
                   <span className="text-xs font-bold text-black sm:text-sm">
-                    Rp {product.price.toLocaleString('id-ID')}
+                    Rp {Number(product.price || 0).toLocaleString('id-ID')}
                   </span>
-                  {product.original_price && product.original_price > product.price && (
+                  {product.original_price != null && Number(product.original_price) > Number(product.price || 0) && (
                     <span className="text-[10px] text-black/50 line-through sm:text-[11px]">
-                      Rp {product.original_price.toLocaleString('id-ID')}
+                      Rp {Number(product.original_price).toLocaleString('id-ID')}
                     </span>
                   )}
                 </div>
