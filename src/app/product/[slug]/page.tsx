@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { getDbProducts, DEFAULT_DB_PRODUCTS, DbProduct } from '@/integrations/supabase';
+import { getDbProducts, DEFAULT_DB_PRODUCTS, DbProduct, loadFromLocalStorage } from '@/integrations/supabase';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { DEFAULT_BEST_SELLERS } from '@/components/home/ProductGrid';
 import { ProductCard, Product } from '@/components/home/ProductCard';

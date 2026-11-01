@@ -18,6 +18,7 @@ export {
   updateDbProduct,
   deleteDbProduct,
   DEFAULT_DB_PRODUCTS,
+  loadFromLocalStorage,
   type DbProduct,
   type ProductSwatch,
 } from './products';

@@ -179,7 +179,7 @@ function saveToLocalStorage(products: DbProduct[]): void {
 /**
  * Load products from localStorage.
  */
-function loadFromLocalStorage(): DbProduct[] | null {
+export function loadFromLocalStorage(): DbProduct[] | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(LS_KEY);
