@@ -21,6 +21,7 @@ export interface OrderAdminNotificationData {
   subtotal?: number;
   shippingCost?: number;
   discount?: number;
+  giftFee?: number;
   grandTotal?: number;
   paymentMethod?: string;
   courierName?: string;

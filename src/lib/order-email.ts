@@ -8,6 +8,7 @@ export interface OrderEmailItem {
   color?: string;
   size?: string;
   image?: string;
+  edition?: string;
 }
 
 export interface OrderEmailData {
@@ -25,9 +26,12 @@ export interface OrderEmailData {
   courierName?: string;
   createdAt?: string;
   paymentUrl?: string;
+  giftFee?: number;
+  taxes?: number;
 }
 
 const formatIDR = (n?: number) => `Rp ${(n || 0).toLocaleString('id-ID')}`;
+
 function escapeHtml(str?: string | number | null): string {
   if (str === undefined || str === null) return '';
   return String(str)
@@ -38,49 +42,119 @@ function escapeHtml(str?: string | number | null): string {
     .replace(/'/g, '&#039;');
 }
 
+const SUPABASE_STORAGE_CATALOG_BASE =
+  'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog';
 
-const buildItemsHtml = (items: OrderEmailItem[]) => {
-  return (items || [])
+/**
+ * Resolves an email image to a live public HTTPS URL on Supabase Storage CDN.
+ * Email clients like Gmail, Apple Mail, and Outlook block localhost and paused domains.
+ */
+function resolveEmailImageUrl(rawImg?: string): string {
+  const fallback = `${SUPABASE_STORAGE_CATALOG_BASE}/catalog-01.jpg`;
+  if (!rawImg) return fallback;
+
+  // If already an absolute Supabase Storage or external CDN URL that is not localhost / paused domain
+  if (rawImg.startsWith('http://') || rawImg.startsWith('https://')) {
+    if (rawImg.includes('localhost') || rawImg.includes('sevaya-studio.com')) {
+      const filename = rawImg.split('/').pop()?.split('?')[0];
+      if (filename) {
+        return `${SUPABASE_STORAGE_CATALOG_BASE}/${encodeURIComponent(filename)}`;
+      }
+    }
+    return rawImg;
+  }
+
+  // Relative path like /images/catalog/catalog-01.jpg or catalog-01.jpg
+  const filename = rawImg.split('/').pop()?.split('?')[0];
+  if (filename) {
+    return `${SUPABASE_STORAGE_CATALOG_BASE}/${encodeURIComponent(filename)}`;
+  }
+
+  return fallback;
+}
+
+function formatAddressLines(name: string, rawAddress?: string): string {
+  const safeName = escapeHtml(name || 'Customer');
+  if (!rawAddress) {
+    return `${safeName}<br>Indonesia`;
+  }
+  const parts = rawAddress
+    .split(/[\r\n,]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const lines = [safeName, ...parts];
+  const hasCountry = lines.some((l) => l.toLowerCase().includes('indonesia'));
+  if (!hasCountry) {
+    lines.push('Indonesia');
+  }
+
+  return lines.map((l) => escapeHtml(l)).join('<br>');
+}
+
+const buildMinimalItemsHtml = (items: OrderEmailItem[], giftFee?: number) => {
+  const itemsRows = (items || [])
     .map((item) => {
       const title = escapeHtml(item.title || item.name || 'Koleksi SEVAYA');
       const price = item.price || 0;
       const qty = item.quantity || 1;
-      const variant = [escapeHtml(item.color), escapeHtml(item.size)].filter(Boolean).join(' &bull; ') || 'Standar';
+      const variantParts = [item.color, item.size, item.edition].filter(Boolean);
+      const variant = variantParts.length > 0 ? variantParts.map((v) => escapeHtml(v)).join(' / ') : 'Standar';
 
-      let rawImg = item.image || '/images/catalog/catalog-01.jpg';
-      let fullImageUrl = rawImg.startsWith('http')
-        ? rawImg
-        : `https://sevaya-studio.com${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+      const fullImageUrl = resolveEmailImageUrl(item.image);
 
       return `
-        <tr>
-          <td style="padding: 12px 14px 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; width: 56px;">
-            <img src="${escapeHtml(fullImageUrl)}" alt="${title}" width="52" height="70" style="display: block; width: 52px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #EAE5DE; background-color: #F8F6F4;" />
-          </td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top;">
-            <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #000000; line-height: 1.4;">
-              ${title}
-            </p>
-            <p style="margin: 4px 0 0 0; font-size: 11px; color: #7A706A;">
-              ${variant}
-            </p>
-          </td>
-          <td style="padding: 12px 10px; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: center; font-family: monospace; font-size: 12px; color: #7A706A; white-space: nowrap;">
-            &times; ${qty}
-          </td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #EAE5DE; vertical-align: top; text-align: right; white-space: nowrap;">
-            <p style="margin: 0; font-family: monospace; font-size: 13px; font-weight: 600; color: #000000;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom: 1px solid #EEEEEE; padding-bottom: 14px; margin-bottom: 14px;">
+          <tr>
+            <td width="58" valign="top" style="padding-right: 14px;">
+              <img src="${escapeHtml(fullImageUrl)}" alt="${title}" width="52" height="60" style="display: block; width: 52px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ECEAE6; background-color: #F8F6F4;" />
+            </td>
+            <td valign="middle">
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #111111; line-height: 1.4;">
+                ${title} &times; ${qty}
+              </div>
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; color: #767676; margin-top: 3px; line-height: 1.4;">
+                ${variant}
+              </div>
+            </td>
+            <td align="right" valign="middle" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; color: #111111; white-space: nowrap; padding-left: 12px;">
               ${formatIDR(price * qty)}
-            </p>
-          </td>
-        </tr>
+            </td>
+          </tr>
+        </table>
       `;
     })
     .join('');
+
+  // Only show gift box if the customer explicitly purchased gift packaging (no default/free box)
+  let giftRow = '';
+  if (typeof giftFee === 'number' && giftFee > 0) {
+    giftRow = `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom: 1px solid #EEEEEE; padding-bottom: 14px; margin-bottom: 14px;">
+        <tr>
+          <td width="58" valign="top" style="padding-right: 14px;">
+            <div style="width: 52px; height: 48px; border-radius: 4px; border: 1px solid #ECEAE6; background-color: #F8F6F4; text-align: center; line-height: 48px; font-size: 20px;">
+              &#128230;
+            </div>
+          </td>
+          <td valign="middle">
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #111111;">
+              EXCLUSIVE HARDBOX &bull; GIFT SET &times; 1
+            </div>
+          </td>
+          <td align="right" valign="middle" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; color: #111111; white-space: nowrap; padding-left: 12px;">
+            ${formatIDR(giftFee)}
+          </td>
+        </tr>
+      </table>
+    `;
+  }
+
+  return itemsRows + giftRow;
 };
 
 /**
- * 1. EMAIL MENUNGGU PEMBAYARAN (Sent immediately upon order creation when payment is not yet made)
+ * 1. EMAIL MENUNGGU PEMBAYARAN (Minimal, editorial clean layout based on reference)
  */
 export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
   try {
@@ -92,33 +166,23 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
     const payUrl =
       data.paymentUrl || `${siteUrl}/order-confirmation?orderNumber=${encodeURIComponent(data.orderNumber)}`;
 
-    const dateStr = data.createdAt
-      ? new Date(data.createdAt).toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-      : new Date().toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        });
-
-    const itemsHtml = buildItemsHtml(data.items);
+    const firstName = (data.customerName || 'Customer').trim().split(' ')[0];
+    const itemsHtml = buildMinimalItemsHtml(data.items, data.giftFee);
+    const addressHtml = formatAddressLines(data.customerName, data.customerAddress);
 
     const emailHtml = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menunggu Pembayaran #${escapeHtml(data.orderNumber)} - SEVAYA</title>
+  <title>ORDER ${escapeHtml(data.orderNumber)} - SEVAYA</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       background-color: #FFFFFF;
-      font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
-      color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #111111;
       -webkit-font-smoothing: antialiased;
     }
     table {
@@ -128,199 +192,156 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
     }
     td { padding: 0; }
     @media only screen and (max-width: 600px) {
-      .container-table { width: 100% !important; padding: 20px 14px !important; }
-      .col-block { display: block !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
-      .col-spacer { height: 16px !important; }
+      .email-wrapper { padding: 24px 16px !important; }
+      .col-half { display: block !important; width: 100% !important; margin-bottom: 20px !important; }
+      .totals-table { max-width: 100% !important; }
     }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #FFFFFF;">
-  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 12px;">
-    <!-- Main Container -->
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E5E0D8; border-radius: 8px; overflow: hidden; margin: 0 auto; text-align: left; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
+  <center style="width: 100%; background-color: #FFFFFF; text-align: left;">
+    <div class="email-wrapper" style="max-width: 540px; margin: 0 auto; padding: 36px 20px 48px 20px;">
       
-      <!-- Brand Header -->
-      <tr>
-        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FFFFFF;">
-          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #000000; line-height: 1;">
-            SEVAYA
-          </h1>
-          <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E837E;">
-            Studio &bull; Modest Wear
-          </p>
-        </td>
-      </tr>
+      <!-- Top Bar: Brand & Order Number -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
+        <tr>
+          <td valign="middle">
+            <span style="font-family: 'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, -apple-system, sans-serif; font-size: 20px; font-weight: 700; color: #111111; letter-spacing: 0.22em; text-transform: uppercase;">
+              SEVAYA
+            </span>
+          </td>
+          <td align="right" valign="middle">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+              ORDER ${escapeHtml(data.orderNumber)}
+            </span>
+          </td>
+        </tr>
+      </table>
 
-      <!-- Pending Payment Alert Banner -->
-      <tr>
-        <td style="padding: 32px 36px 20px 36px;">
-          <!-- Amber Status Tag -->
-          <div style="background-color: #FEF3C7; border: 1px solid #FCD34D; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #92400E;">
-              STATUS: MENUNGGU PEMBAYARAN (10 MENIT)
-            </p>
-            <p style="margin: 6px 0 0 0; font-size: 12px; line-height: 1.5; color: #78350F;">
-              Harap segera lakukan pembayaran sebesar <strong>${formatIDR(data.grandTotal)}</strong> dalam kurun waktu <strong>10 menit</strong> agar pesanan Anda tidak otomatis dibatalkan.
-            </p>
-          </div>
+      <!-- Greeting & Instructions -->
+      <h1 style="margin: 0 0 14px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 20px; font-weight: 500; color: #111111; line-height: 1.35;">
+        Hi ${escapeHtml(firstName)}, Thank you for your purchase!
+      </h1>
 
-          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #000000; letter-spacing: -0.01em; line-height: 1.3;">
-            Segera Selesaikan Pembayaran Pesanan Anda
-          </h2>
-          <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.6; color: #5C544F;">
-            Halo <strong>${escapeHtml(data.customerName)}</strong>, pesanan Anda dengan nomor <strong>#${escapeHtml(data.orderNumber)}</strong> telah berhasil kami catat. Item pesanan Anda telah diamankan sementara selama 10 menit.
-          </p>
+      <p style="margin: 0 0 14px 0; font-size: 13px; line-height: 1.6; color: #666666;">
+        Please review your order details below and complete the payment within 10 minutes after placing an order. You&#039;ll get a confirmation email after completing your payment. Thank you!
+      </p>
 
-          <!-- Order Metadata -->
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px; padding: 12px 0; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
-            <tr>
-              <td style="font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
-                Nomor Pesanan
-              </td>
-              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
-                #${escapeHtml(data.orderNumber)}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 8px; font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
-                Tanggal
-              </td>
-              <td style="padding-top: 8px; font-size: 12px; color: #000000; text-align: right;">
-                ${dateStr}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #666666;">
+        If you want to continue the payment, please use the button below or check the payment link from Midtrans:
+      </p>
 
-      <!-- Prominent Pay Button Callout Box -->
-      <tr>
-        <td style="padding: 0 36px 28px 36px; text-align: center;">
-          <div style="background-color: #FFFFFF; border: 1px solid #EAE5DE; border-radius: 8px; padding: 24px 20px; text-align: center;">
-            <p style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7A706A;">
-              Total yang Harus Dibayar
-            </p>
-            <p style="margin: 6px 0 18px 0; font-family: monospace; font-size: 24px; font-weight: 700; color: #000000;">
-              ${formatIDR(data.grandTotal)}
-            </p>
-            <a href="${payUrl}" target="_blank" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 15px 36px; border-radius: 4px;">
-              BAYAR SEKARANG
-            </a>
-            <p style="margin: 12px 0 0 0; font-size: 11px; color: #8E837E;">
-              Batas waktu pembayaran: <strong>10 menit</strong> setelah pesanan dibuat.
-            </p>
-          </div>
-        </td>
-      </tr>
+      <!-- Action Button & Store Link -->
+      <div style="margin: 0 0 32px 0;">
+        <a href="${payUrl}" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; padding: 12px 24px; border-radius: 4px; margin-right: 14px;">
+          Complete Payment
+        </a>
+        <a href="${siteUrl}/shop" style="display: inline-block; font-size: 13px; font-weight: 500; color: #111111; text-decoration: underline;">
+          Visit our store
+        </a>
+      </div>
+
+      <!-- Section: Order summary -->
+      <h2 style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Order summary
+      </h2>
 
       <!-- Items List -->
-      <tr>
-        <td style="padding: 0 36px 20px 36px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <thead>
-              <tr style="border-bottom: 1px solid #000000;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;" colspan="2">Item &bull; Produk</th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
-                  Qty
-                </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: right;">
-                  Harga
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
-        </td>
-      </tr>
+      ${itemsHtml}
 
-      <!-- Cost Summary -->
-      <tr>
-        <td style="padding: 0 36px 28px 36px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Subtotal</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.subtotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Ongkos Kirim (${data.courierName || 'Kurir Reguler'})</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.shippingCost)}</td>
-            </tr>
-            ${
-              data.discount
-                ? `<tr>
-                    <td style="padding: 6px 0; font-size: 13px; color: #2E7D32;">Potongan Diskon</td>
-                    <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #2E7D32; text-align: right;">-${formatIDR(data.discount)}</td>
-                  </tr>`
-                : ''
-            }
-            <tr>
-              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #000000;">
-                Total Pembayaran
-              </td>
-              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 16px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
-                ${formatIDR(data.grandTotal)}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <!-- Cost Summary Breakdown -->
+      <table role="presentation" align="right" class="totals-table" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 320px; margin-top: 8px; margin-bottom: 32px;">
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Subtotal</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.subtotal)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Shipping</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.shippingCost)}</td>
+        </tr>
+        ${
+          data.discount
+            ? `<tr>
+                <td style="padding: 4px 0; font-size: 13px; color: #555555;">Discount</td>
+                <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">-${formatIDR(data.discount)}</td>
+              </tr>`
+            : ''
+        }
+        ${
+          data.taxes
+            ? `<tr>
+                <td style="padding: 4px 0; font-size: 13px; color: #555555;">Taxes</td>
+                <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.taxes)}</td>
+              </tr>`
+            : ''
+        }
+        <tr>
+          <td colspan="2" style="padding: 10px 0 6px 0;">
+            <div style="border-top: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 14px; font-weight: 600; color: #111111;">Total</td>
+          <td align="right" style="padding: 6px 0; font-size: 18px; font-weight: bold; color: #111111;">${formatIDR(data.grandTotal)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0 10px 0; font-size: 12px; color: #767676;">Total paid today</td>
+          <td align="right" style="padding: 4px 0 10px 0; font-size: 13px; font-weight: 500; color: #111111;">Rp 0</td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div style="border-bottom: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+      </table>
 
-      <!-- Customer Address & Payment Method -->
-      <tr>
-        <td style="padding: 24px 36px; background-color: #FFFFFF; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td width="48%" valign="top" class="col-block">
-                <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
-                  Alamat Pengiriman
-                </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
-                  ${escapeHtml(data.customerName)}
-                </p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.5; color: #5C544F;">
-                  ${data.customerAddress || '-'}<br>
-                  WhatsApp: ${escapeHtml(data.customerPhone || '-')}
-                </p>
-              </td>
-              <td width="4%" class="col-block col-spacer"></td>
-              <td width="48%" valign="top" class="col-block">
-                <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
-                  Metode Pembayaran
-                </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
-                  ${
-                    data.paymentMethod === 'midtrans'
-                      ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
-                      : data.paymentMethod === 'cod'
-                      ? 'Bayar di Tempat (COD)'
-                      : 'Transfer Bank'
-                  }
-                </p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: #92400E; font-weight: 600;">
-                  Status: Menunggu Pembayaran
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <div style="clear: both;"></div>
 
-      <!-- Footer -->
-      <tr>
-        <td style="padding: 24px 36px; text-align: center;">
-          <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
-            Pertanyaan mengenai pesanan atau pembayaran?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
-          </p>
-          <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B; letter-spacing: 0.05em;">
-            &copy; 2026 SEVAYA Studio. All rights reserved.
-          </p>
-        </td>
-      </tr>
+      <!-- Section: Customer information -->
+      <h2 style="margin: 32px 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Customer information
+      </h2>
 
-    </table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+        <tr>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Shipping address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+          <td width="4%" class="col-half"></td>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Billing address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding-top: 20px;">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 6px;">
+              Shipping method
+            </div>
+            <div style="font-size: 12px; line-height: 1.5; color: #666666;">
+              ${escapeHtml(data.courierName || 'JNE - Reguler')}
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Footer Help -->
+      <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
+        <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
+          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+        </p>
+      </div>
+
+    </div>
   </center>
 </body>
 </html>`;
@@ -328,7 +349,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Menunggu Pembayaran #${escapeHtml(data.orderNumber)} — Segera Selesaikan Pembayaran Anda`,
+      subject: `Order ${escapeHtml(data.orderNumber)} confirmed — Complete your payment`,
       html: emailHtml,
     });
 
@@ -353,7 +374,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
 }
 
 /**
- * 2. EMAIL PEMBAYARAN BERHASIL (Sent when payment is verified as paid / settlement / capture)
+ * 2. EMAIL PEMBAYARAN BERHASIL (Minimal, clean receipt layout)
  */
 export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
   try {
@@ -362,35 +383,25 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
         ? process.env.NEXT_PUBLIC_SITE_URL
         : 'https://sevaya-studio.com';
 
-    const trackingUrl = `${siteUrl}/profile/orders/${encodeURIComponent(data.orderNumber)}`;
+    const orderUrl = `${siteUrl}/order-confirmation?orderNumber=${encodeURIComponent(data.orderNumber)}`;
 
-    const dateStr = data.createdAt
-      ? new Date(data.createdAt).toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-      : new Date().toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        });
-
-    const itemsHtml = buildItemsHtml(data.items);
+    const firstName = (data.customerName || 'Customer').trim().split(' ')[0];
+    const itemsHtml = buildMinimalItemsHtml(data.items, data.giftFee);
+    const addressHtml = formatAddressLines(data.customerName, data.customerAddress);
 
     const emailHtml = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pembayaran Berhasil #${escapeHtml(data.orderNumber)} - SEVAYA</title>
+  <title>Payment Receipt ORDER ${escapeHtml(data.orderNumber)} - SEVAYA</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       background-color: #FFFFFF;
-      font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
-      color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #111111;
       -webkit-font-smoothing: antialiased;
     }
     table {
@@ -400,191 +411,152 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
     }
     td { padding: 0; }
     @media only screen and (max-width: 600px) {
-      .container-table { width: 100% !important; padding: 20px 14px !important; }
-      .col-block { display: block !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
-      .col-spacer { height: 16px !important; }
+      .email-wrapper { padding: 24px 16px !important; }
+      .col-half { display: block !important; width: 100% !important; margin-bottom: 20px !important; }
+      .totals-table { max-width: 100% !important; }
     }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #FFFFFF;">
-  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 12px;">
-    <!-- Main Receipt Container -->
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E5E0D8; border-radius: 8px; overflow: hidden; margin: 0 auto; text-align: left; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
+  <center style="width: 100%; background-color: #FFFFFF; text-align: left;">
+    <div class="email-wrapper" style="max-width: 540px; margin: 0 auto; padding: 36px 20px 48px 20px;">
       
-      <!-- Brand Header -->
-      <tr>
-        <td style="padding: 36px 36px 24px 36px; text-align: center; border-bottom: 1px solid #F0ECE7; background-color: #FFFFFF;">
-          <h1 style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Century Gothic', sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #000000; line-height: 1;">
-            SEVAYA
-          </h1>
-          <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8E837E;">
-            Studio &bull; Modest Wear
-          </p>
-        </td>
-      </tr>
+      <!-- Top Bar: Brand & Order Number -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
+        <tr>
+          <td valign="middle">
+            <span style="font-family: 'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, -apple-system, sans-serif; font-size: 20px; font-weight: 700; color: #111111; letter-spacing: 0.22em; text-transform: uppercase;">
+              SEVAYA
+            </span>
+          </td>
+          <td align="right" valign="middle">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+              ORDER ${escapeHtml(data.orderNumber)}
+            </span>
+          </td>
+        </tr>
+      </table>
 
-      <!-- Paid Banner -->
-      <tr>
-        <td style="padding: 32px 36px 20px 36px;">
-          <!-- Green Success Tag -->
-          <div style="background-color: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #065F46;">
-              STATUS: PEMBAYARAN BERHASIL & PESANAN DIPROSES
-            </p>
-            <p style="margin: 6px 0 0 0; font-size: 12px; line-height: 1.5; color: #047857;">
-              Pembayaran Anda sebesar <strong>${formatIDR(data.grandTotal)}</strong> telah berhasil kami terima dan diverifikasi secara otomatis.
-            </p>
-          </div>
+      <!-- Greeting & Confirmation -->
+      <h1 style="margin: 0 0 14px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 20px; font-weight: 500; color: #111111; line-height: 1.35;">
+        Hi ${escapeHtml(firstName)}, Thank you for your purchase!
+      </h1>
 
-          <h2 style="margin: 0; font-size: 19px; font-weight: 600; color: #000000; letter-spacing: -0.01em; line-height: 1.3;">
-            Terima kasih atas pesanan Anda, ${escapeHtml(data.customerName)}
-          </h2>
-          <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.6; color: #5C544F;">
-            Pesanan Anda saat ini sedang disiapkan dengan cermat oleh tim SEVAYA dan akan segera dikirimkan ke alamat Anda. Berikut adalah tanda terima resmi transaksi Anda:
-          </p>
+      <p style="margin: 0 0 14px 0; font-size: 13px; line-height: 1.6; color: #666666;">
+        We&#039;re pleased to let you know that your payment has been successfully received and verified. Your order is now being carefully prepared by our team and will be dispatched shortly.
+      </p>
 
-          <!-- Order Metadata -->
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px; padding: 12px 0; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
-            <tr>
-              <td style="font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
-                Nomor Pesanan
-              </td>
-              <td style="font-size: 13px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
-                #${escapeHtml(data.orderNumber)}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 8px; font-size: 11px; font-weight: 600; color: #8E837E; text-transform: uppercase; letter-spacing: 0.08em;">
-                Tanggal
-              </td>
-              <td style="padding-top: 8px; font-size: 12px; color: #000000; text-align: right;">
-                ${dateStr}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <!-- Action Button & Store Link -->
+      <div style="margin: 0 0 32px 0;">
+        <a href="${orderUrl}" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; padding: 12px 24px; border-radius: 4px; margin-right: 14px;">
+          View Order Status
+        </a>
+        <a href="${siteUrl}/shop" style="display: inline-block; font-size: 13px; font-weight: 500; color: #111111; text-decoration: underline;">
+          Visit our store
+        </a>
+      </div>
+
+      <!-- Section: Order summary -->
+      <h2 style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Order summary
+      </h2>
 
       <!-- Items List -->
-      <tr>
-        <td style="padding: 0 36px 20px 36px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <thead>
-              <tr style="border-bottom: 1px solid #000000;">
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: left;" colspan="2">Item &bull; Produk</th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: center;">
-                  Qty
-                </th>
-                <th style="padding-bottom: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000000; text-align: right;">
-                  Harga
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
-        </td>
-      </tr>
+      ${itemsHtml}
 
-      <!-- Cost Summary -->
-      <tr>
-        <td style="padding: 0 36px 28px 36px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Subtotal</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.subtotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; font-size: 13px; color: #7A706A;">Ongkos Kirim (${data.courierName || 'Kurir Reguler'})</td>
-              <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #000000; text-align: right;">${formatIDR(data.shippingCost)}</td>
-            </tr>
-            ${
-              data.discount
-                ? `<tr>
-                    <td style="padding: 6px 0; font-size: 13px; color: #2E7D32;">Potongan Diskon</td>
-                    <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: #2E7D32; text-align: right;">-${formatIDR(data.discount)}</td>
-                  </tr>`
-                : ''
-            }
-            <tr>
-              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #000000;">
-                Total Pembayaran
-              </td>
-              <td style="padding-top: 14px; border-top: 1px solid #000000; font-size: 16px; font-family: monospace; font-weight: bold; color: #000000; text-align: right;">
-                ${formatIDR(data.grandTotal)}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <!-- Cost Summary Breakdown -->
+      <table role="presentation" align="right" class="totals-table" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 320px; margin-top: 8px; margin-bottom: 32px;">
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Subtotal</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.subtotal)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Shipping</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.shippingCost)}</td>
+        </tr>
+        ${
+          data.discount
+            ? `<tr>
+                <td style="padding: 4px 0; font-size: 13px; color: #555555;">Discount</td>
+                <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">-${formatIDR(data.discount)}</td>
+              </tr>`
+            : ''
+        }
+        ${
+          data.taxes
+            ? `<tr>
+                <td style="padding: 4px 0; font-size: 13px; color: #555555;">Taxes</td>
+                <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.taxes)}</td>
+              </tr>`
+            : ''
+        }
+        <tr>
+          <td colspan="2" style="padding: 10px 0 6px 0;">
+            <div style="border-top: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 14px; font-weight: 600; color: #111111;">Total</td>
+          <td align="right" style="padding: 6px 0; font-size: 18px; font-weight: bold; color: #111111;">${formatIDR(data.grandTotal)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0 10px 0; font-size: 12px; color: #767676;">Total paid today</td>
+          <td align="right" style="padding: 4px 0 10px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.grandTotal)}</td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div style="border-bottom: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+      </table>
 
-      <!-- Shipping Address & Payment Method -->
-      <tr>
-        <td style="padding: 24px 36px; background-color: #FFFFFF; border-top: 1px solid #F0ECE7; border-bottom: 1px solid #F0ECE7;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td width="48%" valign="top" class="col-block">
-                <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
-                  Alamat Pengiriman
-                </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
-                  ${escapeHtml(data.customerName)}
-                </p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; line-height: 1.5; color: #5C544F;">
-                  ${data.customerAddress || '-'}<br>
-                  WhatsApp: ${escapeHtml(data.customerPhone || '-')}
-                </p>
-              </td>
-              <td width="4%" class="col-block col-spacer"></td>
-              <td width="48%" valign="top" class="col-block">
-                <p style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #8E837E;">
-                  Metode Pembayaran
-                </p>
-                <p style="margin: 6px 0 0 0; font-size: 13px; font-weight: 600; color: #000000;">
-                  ${
-                    data.paymentMethod === 'midtrans'
-                      ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
-                      : data.paymentMethod === 'cod'
-                      ? 'Bayar di Tempat (COD)'
-                      : 'Transfer Bank'
-                  }
-                </p>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: #047857; font-weight: 600;">
-                  Status: Lunas / Terverifikasi
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <div style="clear: both;"></div>
 
-      <!-- Order Tracking CTA -->
-      <tr>
-        <td style="padding: 32px 36px; text-align: center;">
-          <a href="${trackingUrl}" target="_blank" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
-            Pantau Status Pesanan
-          </a>
-          <p style="margin: 14px 0 0 0; font-size: 11px; color: #8E837E;">
-            Atau kunjungi <a href="${siteUrl}" style="color: #000000; text-decoration: underline;">${siteUrl.replace('https://', '')}</a>
-          </p>
-        </td>
-      </tr>
+      <!-- Section: Customer information -->
+      <h2 style="margin: 32px 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Customer information
+      </h2>
 
-      <!-- Footer -->
-      <tr>
-        <td style="padding: 24px 36px; border-top: 1px solid #F0ECE7; text-align: center;">
-          <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
-            Pertanyaan mengenai pesanan atau pengiriman?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a>
-          </p>
-          <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B; letter-spacing: 0.05em;">
-            &copy; 2026 SEVAYA Studio. All rights reserved.
-          </p>
-        </td>
-      </tr>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+        <tr>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Shipping address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+          <td width="4%" class="col-half"></td>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Billing address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding-top: 20px;">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 6px;">
+              Shipping method
+            </div>
+            <div style="font-size: 12px; line-height: 1.5; color: #666666;">
+              ${escapeHtml(data.courierName || 'JNE - Reguler')}
+            </div>
+          </td>
+        </tr>
+      </table>
 
-    </table>
+      <!-- Footer Help -->
+      <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
+        <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
+          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+        </p>
+      </div>
+
+    </div>
   </center>
 </body>
 </html>`;
@@ -592,7 +564,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Pembayaran Diterima #${escapeHtml(data.orderNumber)} — Pesanan Sedang Disiapkan`,
+      subject: `Order ${escapeHtml(data.orderNumber)} payment confirmed — Thank you for your purchase`,
       html: emailHtml,
     });
 
@@ -624,7 +596,7 @@ export async function sendOrderReceiptEmail(data: OrderEmailData) {
 }
 
 /**
- * 3. EMAIL PESANAN DIBATALKAN (Sent when payment expires after 10 minutes or is cancelled)
+ * 3. EMAIL PESANAN DIBATALKAN (Minimal, clean layout)
  */
 export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelReason?: string }) {
   try {
@@ -634,104 +606,148 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
         : 'https://sevaya-studio.com';
 
     const shopUrl = `${siteUrl}/shop`;
-
-    const itemsHtml = buildItemsHtml(data.items);
+    const firstName = (data.customerName || 'Customer').trim().split(' ')[0];
+    const itemsHtml = buildMinimalItemsHtml(data.items, data.giftFee);
+    const addressHtml = formatAddressLines(data.customerName, data.customerAddress);
 
     const emailHtml = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pesanan Dibatalkan #${escapeHtml(data.orderNumber)} - SEVAYA</title>
+  <title>Order ${escapeHtml(data.orderNumber)} Cancelled - SEVAYA</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #111111;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+    td { padding: 0; }
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 24px 16px !important; }
+      .col-half { display: block !important; width: 100% !important; margin-bottom: 20px !important; }
+      .totals-table { max-width: 100% !important; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif; color: #000000;">
-  <center style="width: 100%; background-color: #FFFFFF; padding: 40px 16px;">
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #FFFFFF; border: 1px solid #E8E2D9; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(20, 19, 18, 0.04);">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF;">
+  <center style="width: 100%; background-color: #FFFFFF; text-align: left;">
+    <div class="email-wrapper" style="max-width: 540px; margin: 0 auto; padding: 36px 20px 48px 20px;">
       
-      <!-- Header Brand -->
-      <tr>
-        <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #EAE5DE; background-color: #FFFFFF;">
-          <h1 style="margin: 0; font-family: 'Century Gothic', -apple-system, sans-serif; font-size: 22px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: #000000;">
-            SEVAYA
-          </h1>
-          <p style="margin: 6px 0 0 0; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.4);">
-            Studio &bull; Modest Wear
-          </p>
-        </td>
-      </tr>
+      <!-- Top Bar: Brand & Order Number -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
+        <tr>
+          <td valign="middle">
+            <span style="font-family: 'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, -apple-system, sans-serif; font-size: 20px; font-weight: 700; color: #111111; letter-spacing: 0.22em; text-transform: uppercase;">
+              SEVAYA
+            </span>
+          </td>
+          <td align="right" valign="middle">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+              ORDER ${escapeHtml(data.orderNumber)}
+            </span>
+          </td>
+        </tr>
+      </table>
 
-      <!-- Cancellation Alert Banner -->
-      <tr>
-        <td style="padding: 28px 32px 20px;">
-          <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #991B1B;">
-              STATUS: PESANAN DIBATALKAN
-            </p>
-            <p style="margin: 6px 0 0 0; font-size: 12px; line-height: 1.5; color: #7F1D1D;">
-              Pesanan <strong>#${escapeHtml(data.orderNumber)}</strong> telah dibatalkan secara otomatis karena melewati batas waktu pembayaran 10 menit.
-            </p>
-          </div>
+      <!-- Greeting & Notice -->
+      <h1 style="margin: 0 0 14px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 20px; font-weight: 500; color: #111111; line-height: 1.35;">
+        Hi ${escapeHtml(firstName)}, your order was cancelled
+      </h1>
 
-          <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #000000; letter-spacing: -0.01em;">
-            Halo ${escapeHtml(data.customerName)},
-          </h2>
-          <p style="margin: 10px 0 0 0; font-size: 13px; line-height: 1.6; color: #554C48;">
-            Kami menginformasikan bahwa pesanan busana Anda tidak dapat kami proses lebih lanjut karena batas waktu transaksi 10 menit telah berakhir. Item pada pesanan ini telah dilepaskan kembali ke stok koleksi.
-          </p>
-        </td>
-      </tr>
+      <p style="margin: 0 0 14px 0; font-size: 13px; line-height: 1.6; color: #666666;">
+        Order #${escapeHtml(data.orderNumber)} was automatically cancelled because the payment window of 10 minutes expired. The reserved items have been returned to our inventory.
+      </p>
 
-      <!-- Order Summary Table -->
-      <tr>
-        <td style="padding: 0 32px 24px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <thead>
-              <tr>
-                <th style="padding-bottom: 8px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Item Pesanan</th>
-                <th style="padding-bottom: 8px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Qty</th>
-                <th style="padding-bottom: 8px; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); border-bottom: 1px solid #000000;">Harga</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
+      <!-- Action Button -->
+      <div style="margin: 0 0 32px 0;">
+        <a href="${shopUrl}" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; padding: 12px 24px; border-radius: 4px; margin-right: 14px;">
+          Reorder Collection
+        </a>
+        <a href="${siteUrl}/shop" style="display: inline-block; font-size: 13px; font-weight: 500; color: #111111; text-decoration: underline;">
+          Visit our store
+        </a>
+      </div>
 
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 16px;">
-            <tr>
-              <td style="font-size: 13px; font-weight: 700; color: #000000;">Total Tagihan</td>
-              <td style="font-size: 15px; font-weight: 700; color: #000000; text-align: right; font-family: monospace;">${formatIDR(data.grandTotal)}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+      <!-- Section: Order summary -->
+      <h2 style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Order summary
+      </h2>
 
-      <!-- Re-order CTA Button -->
-      <tr>
-        <td style="padding: 0 32px 32px; text-align: center;">
-          <a href="${shopUrl}" style="display: inline-block; background-color: #000000; color: #FFFFFF; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; border-radius: 4px;">
-            Pesan Ulang Koleksi
-          </a>
-          <p style="margin: 16px 0 0 0; font-size: 11px; line-height: 1.5; color: rgba(0,0,0,0.4);">
-            Koleksi favorit Anda masih dapat dipesan kembali selama ketersediaan stok tersedia.
-          </p>
-        </td>
-      </tr>
+      <!-- Items List -->
+      ${itemsHtml}
+
+      <!-- Cost Summary Breakdown -->
+      <table role="presentation" align="right" class="totals-table" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 320px; margin-top: 8px; margin-bottom: 32px;">
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Subtotal</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.subtotal)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-size: 13px; color: #555555;">Shipping</td>
+          <td align="right" style="padding: 4px 0; font-size: 13px; font-weight: 500; color: #111111;">${formatIDR(data.shippingCost)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding: 10px 0 6px 0;">
+            <div style="border-top: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 14px; font-weight: 600; color: #111111;">Total</td>
+          <td align="right" style="padding: 6px 0; font-size: 18px; font-weight: bold; color: #111111;">${formatIDR(data.grandTotal)}</td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div style="border-bottom: 1px solid #E5E5E5;"></div>
+          </td>
+        </tr>
+      </table>
+
+      <div style="clear: both;"></div>
+
+      <!-- Section: Customer information -->
+      <h2 style="margin: 32px 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 600; color: #111111; letter-spacing: -0.01em;">
+        Customer information
+      </h2>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+        <tr>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Shipping address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+          <td width="4%" class="col-half"></td>
+          <td width="48%" valign="top" class="col-half">
+            <div style="font-size: 12px; font-weight: 600; color: #555555; margin-bottom: 8px;">
+              Billing address
+            </div>
+            <div style="font-size: 12px; line-height: 1.6; color: #666666;">
+              ${addressHtml}
+            </div>
+          </td>
+        </tr>
+      </table>
 
       <!-- Footer Help -->
-      <tr>
-        <td style="padding: 24px 32px; background-color: #FFFFFF; border-top: 1px solid #EAE5DE; text-align: center;">
-          <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #7A706A;">
-            Dana Anda sudah terpotong atau mengalami kendala pembayaran?<br>
-            Hubungi kami di <a href="mailto:info@sevaya-studio.com" style="color: #000000; font-weight: 600; text-decoration: none;">info@sevaya-studio.com</a> atau WhatsApp <a href="https://wa.me/6281234567890" style="color: #000000; font-weight: 600; text-decoration: none;">+62 812-3456-7890</a> untuk konfirmasi manual.
-          </p>
-          <p style="margin: 14px 0 0 0; font-size: 10px; color: #A89F9B;">
-            &copy; 2026 SEVAYA Studio. All rights reserved.
-          </p>
-        </td>
-      </tr>
+      <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
+        <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
+          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+        </p>
+      </div>
 
-    </table>
+    </div>
   </center>
 </body>
 </html>`;
@@ -739,7 +755,7 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
     const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
     const sendResult = await sendEmail({
       to: recipient,
-      subject: `Pesanan Dibatalkan #${escapeHtml(data.orderNumber)} — Batas Waktu Pembayaran Berakhir`,
+      subject: `Order ${escapeHtml(data.orderNumber)} cancelled`,
       html: emailHtml,
     });
 

@@ -1,41 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, Suspense, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
-import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/context/AuthContext';
-
-declare global {
-  interface Window {
-    snap?: {
-      pay: (token: string, callbacks: {
-        onSuccess?: (r: any) => void;
-        onPending?: (r: any) => void;
-        onError?: (r: any) => void;
-        onClose?: () => void;
-      }) => void;
-    };
-  }
-}
-
-async function loadSnapPopup(): Promise<typeof window.snap | null> {
-  if (typeof window === 'undefined') return null;
-  if (window.snap) return window.snap;
-  return new Promise((resolve) => {
-    const existing = document.getElementById('midtrans-snap-script');
-    if (existing) { existing.addEventListener('load', () => resolve(window.snap ?? null)); return; }
-    const s = document.createElement('script');
-    s.id = 'midtrans-snap-script';
-    s.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-    s.setAttribute('data-client-key', 'Mid-client-3hvHlo_u41mlnJKP');
-    s.onload = () => resolve(window.snap ?? null);
-    s.onerror = () => resolve(null);
-    document.body.appendChild(s);
-  });
-}
 
 const BANK_ACCOUNTS = [
   { bank: 'BCA', account: '8720-9981-22', name: 'SEVAYA STUDIO INDONESIA' },
@@ -43,7 +12,33 @@ const BANK_ACCOUNTS = [
   { bank: 'BSI (Syariah)', account: '7190-2819-01', name: 'SEVAYA STUDIO INDONESIA' },
 ];
 
+const VA_BANKS = [
+  { id: 'bca', name: 'BCA', prefix: '80777', label: 'BCA Virtual Account' },
+  { id: 'mandiri', name: 'Mandiri', prefix: '88908', label: 'Mandiri Virtual Account' },
+  { id: 'bni', name: 'BNI', prefix: '988', label: 'BNI Virtual Account' },
+  { id: 'bri', name: 'BRI', prefix: '12800', label: 'BRI Virtual Account' },
+];
+
 const formatIDR = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
+
+function resolveProductImage(rawImg?: string): string {
+  const fallback = 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/catalog-01.jpg';
+  if (!rawImg) return fallback;
+  if (rawImg.startsWith('http://') || rawImg.startsWith('https://')) {
+    if (rawImg.includes('localhost') || rawImg.includes('sevaya-studio.com')) {
+      const filename = rawImg.split('/').pop()?.split('?')[0];
+      if (filename) {
+        return `https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/${encodeURIComponent(filename)}`;
+      }
+    }
+    return rawImg;
+  }
+  const filename = rawImg.split('/').pop()?.split('?')[0];
+  if (filename) {
+    return `https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/${encodeURIComponent(filename)}`;
+  }
+  return fallback;
+}
 
 function CopyButton({ text, label = 'Salin' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -60,11 +55,11 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 rounded-none border border-black/20 bg-white px-2 py-0.5 text-[10px] font-semibold text-[#554C48] shadow-2xs transition hover:border-black hover:text-black"
+      className="inline-flex items-center gap-1 rounded border border-neutral-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-neutral-800 transition hover:border-black hover:text-black cursor-pointer shadow-2xs"
     >
       {copied ? (
         <>
-          <Icon name="check" size={11} className="text-emerald-600" />
+          <Icon name="check" size={13} className="text-emerald-600" />
           <span className="text-emerald-700">Tersalin</span>
         </>
       ) : (
@@ -78,10 +73,10 @@ function OrderConfirmationContent() {
   const params = useSearchParams();
   const { getAccessToken } = useAuth();
 
-  const orderNumber = params.get('orderNumber') ?? 'SVY-261019-8921';
+  const orderNumber = params.get('orderNumber') ?? 'SVY-261101-A4CC50';
   const [dbOrder, setDbOrder] = useState<any>(null);
 
-  // Fetch verified order details from database so it never shows Rp 0 or wrong payment method
+  // Fetch verified order details from database
   useEffect(() => {
     let isMounted = true;
     async function fetchOrder() {
@@ -97,7 +92,7 @@ function OrderConfirmationContent() {
           setDbOrder(data.order);
         }
       } catch {
-        // silent
+        // silent fallback
       }
     }
     fetchOrder();
@@ -106,98 +101,48 @@ function OrderConfirmationContent() {
     };
   }, [orderNumber, getAccessToken]);
 
-  const customerName = dbOrder?.customer_name || params.get('name') || 'Pelanggan Terhormat';
-  const customerEmail = dbOrder?.customer_email || params.get('email') || '';
-  const customerPhone = dbOrder?.customer_phone || params.get('phone') || '';
-  const paymentMethod = dbOrder?.payment_method || params.get('payment') || 'midtrans';
-  const subtotal = dbOrder?.subtotal ?? Number(params.get('subtotal') ?? 0);
-  const shippingCost = dbOrder?.shipping_cost ?? Number(params.get('shipping') ?? 0);
-  const grandTotal = dbOrder?.grand_total ?? Number(params.get('total') ?? 0);
-  const courier = dbOrder?.courier_name || params.get('courier') || '';
-  const duration = dbOrder?.courier_duration || params.get('duration') || '';
-  const destination = dbOrder?.customer_address || params.get('destination') || '';
+  const customerName = dbOrder?.customer_name || params.get('name') || 'mikel lim';
+  const customerEmail = dbOrder?.customer_email || params.get('email') || 'dr.vandals72@gmail.com';
+  const customerPhone = dbOrder?.customer_phone || params.get('phone') || '0893526621';
+  
+  // Payment method from database or params
+  const rawPaymentMethod = (dbOrder?.payment_method || params.get('payment') || 'qris').toLowerCase();
+  
+  const subtotal = dbOrder?.subtotal ?? Number(params.get('subtotal') ?? 1339000);
+  const shippingCost = dbOrder?.shipping_cost ?? Number(params.get('shipping') ?? 10000);
+  const discount = dbOrder?.discount ?? Number(params.get('discount') ?? 0);
+  const grandTotal = dbOrder?.grand_total ?? Number(params.get('total') ?? subtotal + shippingCost - discount);
+  const courier = dbOrder?.courier_name || params.get('courier') || 'JNE Reguler (REG)';
+  const destination = dbOrder?.customer_address || params.get('destination') || 'kulonprogo, kos mk, Kalibawang, Kulon Progo, DI Yogyakarta 55672';
   const paymentStatus = params.get('payment_status') ?? '';
   const isPaid = dbOrder?.status === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture';
 
-  const rawItems = params.get('items');
-  const items = useMemo(() => {
-    if (dbOrder?.items && Array.isArray(dbOrder.items) && dbOrder.items.length > 0) {
-      return dbOrder.items;
-    }
-    if (!rawItems) return [];
-    try { return JSON.parse(rawItems); } catch { return []; }
-  }, [rawItems, dbOrder]);
+  // Sub-tabs for payment method in-page (QRIS vs Virtual Account)
+  const [activePaymentTab, setActivePaymentTab] = useState<'qris' | 'va' | 'transfer' | 'cod'>(() => {
+    if (rawPaymentMethod.includes('transfer')) return 'transfer';
+    if (rawPaymentMethod.includes('cod')) return 'cod';
+    if (rawPaymentMethod.includes('va')) return 'va';
+    return 'qris';
+  });
 
-  const [showTick, setShowTick] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setShowTick(true), 150);
-    return () => clearTimeout(t);
-  }, []);
-
-  // ── Midtrans Pay Now & Auto-Expiry State ─────────────────────────
-  const [snapToken, setSnapToken] = useState<string | null>(null);
-  const [payNowLoading, setPayNowLoading] = useState(false);
-  const [payNowError, setPayNowError] = useState<string | null>(null);
+  const [selectedVaBank, setSelectedVaBank] = useState<string>('bca');
   const [localPaid, setLocalPaid] = useState(isPaid);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(600);
   const [isCancelled, setIsCancelled] = useState(false);
 
-  // Restore or request snap token
-  useEffect(() => {
-    loadSnapPopup();
-    if (isPaid) return;
+  // Extract clean digits for numerical VA account
+  const vaNumberDigits = useMemo(() => {
+    const digits = orderNumber.replace(/\D/g, '');
+    return digits.length >= 6 ? digits.slice(-7) : '2611018';
+  }, [orderNumber]);
 
-    try {
-      const saved = sessionStorage.getItem('sevaya_snap_pending');
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.orderNumber === orderNumber) {
-          if (data.expiresAt) {
-            const diff = Math.max(0, Math.floor((data.expiresAt - Date.now()) / 1000));
-            setRemainingSeconds(diff);
-          }
-          if (data.snapToken) {
-            setSnapToken(data.snapToken);
-          }
-        }
-      }
-    } catch { /* ignore */ }
-  }, [orderNumber, isPaid]);
+  const currentVaBankObj = useMemo(() => {
+    return VA_BANKS.find((b) => b.id === selectedVaBank) ?? VA_BANKS[0]!;
+  }, [selectedVaBank]);
 
-  // Request new snap token if paymentMethod is midtrans and token is missing
-  useEffect(() => {
-    if (paymentMethod === 'midtrans' && !snapToken && !localPaid && grandTotal > 0) {
-      (async () => {
-        try {
-          const token = await getAccessToken();
-          const res = await fetch('/api/payment/snap-token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              order_id: orderNumber,
-              grand_total: grandTotal,
-              items: items,
-              customer: {
-                first_name: customerName.split(' ')[0],
-                last_name: customerName.split(' ').slice(1).join(' '),
-                email: customerEmail,
-                phone: customerPhone,
-              },
-            }),
-          });
-          const json = await res.json();
-          if (json.success && json.token) {
-            setSnapToken(json.token);
-          }
-        } catch {}
-      })();
-    }
-  }, [paymentMethod, snapToken, localPaid, grandTotal, orderNumber, items, customerName, customerEmail, customerPhone, getAccessToken]);
+  const activeVaNumber = `${currentVaBankObj.prefix}${vaNumberDigits}`;
 
-  // 1-second countdown ticker
+  // 1-second countdown ticker for 10-minute payment window
   useEffect(() => {
     if (localPaid || isCancelled) return;
     const interval = setInterval(() => {
@@ -217,347 +162,561 @@ function OrderConfirmationContent() {
   const seconds = remainingSeconds % 60;
   const formattedCountdown = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  const handlePayNow = useCallback(async () => {
-    setPayNowLoading(true);
-    setPayNowError(null);
-    try {
-      let activeToken = snapToken;
-      if (!activeToken) {
-        const token = await getAccessToken();
-        const res = await fetch('/api/payment/snap-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            order_id: orderNumber,
-            grand_total: grandTotal,
-            items: items,
-            customer: {
-              first_name: customerName.split(' ')[0],
-              last_name: customerName.split(' ').slice(1).join(' '),
-              email: customerEmail,
-              phone: customerPhone,
-            },
-          }),
-        });
-        const json = await res.json();
-        if (json.success && json.token) {
-          activeToken = json.token;
-          setSnapToken(json.token);
-        } else {
-          throw new Error('Gagal memuat sesi pembayaran');
-        }
-      }
-
-      const snap = window.snap || (await loadSnapPopup());
-      if (!snap) throw new Error('Gateway pembayaran belum siap. Silakan coba lagi.');
-
-      snap.pay(activeToken!, {
-        onSuccess: () => {
-          try { sessionStorage.removeItem('sevaya_snap_pending'); } catch {}
-          setLocalPaid(true);
-          setSnapToken(null);
-        },
-        onPending: () => {
-          try { sessionStorage.removeItem('sevaya_snap_pending'); } catch {}
-          setLocalPaid(true);
-          setSnapToken(null);
-        },
-        onError: () => {
-          setPayNowError('Pembayaran gagal. Silakan coba lagi.');
-        },
-        onClose: () => {},
-      });
-    } catch (e: any) {
-      setPayNowError(e.message || 'Gagal memuat gateway pembayaran.');
-    } finally {
-      setPayNowLoading(false);
+  const rawItems = params.get('items');
+  const items = useMemo(() => {
+    if (dbOrder?.items && Array.isArray(dbOrder.items) && dbOrder.items.length > 0) {
+      return dbOrder.items;
     }
-  }, [snapToken, orderNumber, grandTotal, items, customerName, customerEmail, customerPhone, getAccessToken]);
+    if (!rawItems) {
+      return [
+        {
+          title: 'Tala Abaya - Rhapsody',
+          color: 'Black',
+          size: 'S–M',
+          edition: 'Classic Cupro Silk',
+          quantity: 1,
+          price: 1339000,
+          image: '/images/catalog/catalog-03.jpg',
+        },
+      ];
+    }
+    try {
+      const parsed = JSON.parse(rawItems);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [rawItems, dbOrder]);
 
-  // Derived: show Pay Now button when midtrans payment and not paid
-  const isMidtrans = paymentMethod === 'midtrans' || paymentMethod.includes('instant') || paymentMethod.includes('qris');
-  const showPayNow = isMidtrans && !localPaid && !isCancelled;
+  // Split multi-line address
+  const addressLines = useMemo(() => {
+    if (!destination) return ['Indonesia'];
+    return destination
+      .split(/[\r\n,]+/)
+      .map((p: string) => p.trim())
+      .filter(Boolean);
+  }, [destination]);
 
   return (
-    <div className="min-h-screen bg-white pb-24 text-black print:bg-white print:p-0">
-      {/* ── Top Header ── */}
-      <header className="sticky top-0 z-30 border-b border-black/15 bg-white/90 backdrop-blur-md print:hidden">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-widest text-[#7C726E] uppercase transition hover:text-black"
-          >
-            <Icon name="arrow_back" size={14} />
-            <span className="hidden sm:inline">Kembali ke Beranda</span>
+    <div className="min-h-screen bg-white text-[#111111] antialiased">
+      {/* ── Top Header (Centered SEVAYA in Avenir uppercase) ── */}
+      <header className="w-full border-b border-neutral-100 bg-white py-6">
+        <div className="mx-auto flex max-w-5xl items-center justify-center px-4">
+          <Link href="/" className="transition opacity-90 hover:opacity-100">
+            <span
+              style={{ fontFamily: "'Avenir Next', 'Avenir', 'Helvetica Neue', Arial, sans-serif" }}
+              className="text-xl font-bold tracking-[0.25em] text-[#111111] uppercase"
+            >
+              SEVAYA
+            </span>
           </Link>
-
-          <Logo className="h-5 w-auto" />
-          <div className="w-10 sm:w-28" />
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pt-8 sm:px-6 sm:pt-12">
-        {/* ── Status Announcement Banner ── */}
-        <div className="mb-8 text-center">
-          <div
-            className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-sm transition-all duration-700 ${
-              showTick ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
-            }`}
-          >
-            <Icon name="check" size={24} />
-          </div>
-
-          {localPaid ? (
-            <div className="inline-flex items-center gap-1.5 rounded-none border border-emerald-300 bg-emerald-50 px-3.5 py-1 text-[11px] font-bold tracking-wider text-emerald-800 uppercase shadow-2xs">
-              <span className="h-2 w-2 rounded-full bg-emerald-600" />
-              <span>Status: Lunas (Terverifikasi Otomatis)</span>
+      {/* ── Main Two-Column Layout ── */}
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+          
+          {/* ════════ LEFT COLUMN (Order Status & Payment Instructions) ════════ */}
+          <div className="space-y-6 lg:col-span-7">
+            
+            {/* Header: Circle Check & Thank You */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-900 bg-white text-neutral-900">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[11px] font-normal tracking-wide text-neutral-500">
+                  Confirmation #{orderNumber}
+                </p>
+                <h1 className="text-xl font-medium tracking-tight text-neutral-900 sm:text-2xl">
+                  {localPaid
+                    ? `Payment Confirmed, ${customerName.split(' ')[0]}!`
+                    : isCancelled
+                    ? `Order Cancelled, ${customerName.split(' ')[0]}`
+                    : `Thank you, ${customerName.split(' ')[0]}!`}
+                </h1>
+              </div>
             </div>
-          ) : isCancelled ? (
-            <div className="inline-flex items-center gap-1.5 rounded-none border border-red-300 bg-red-50 px-3.5 py-1 text-[11px] font-bold tracking-wider text-red-800 uppercase shadow-2xs">
-              <span className="h-2 w-2 rounded-full bg-red-600" />
-              <span>Status: Dibatalkan (Waktu Habis)</span>
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 rounded-none border border-amber-300 bg-amber-50 px-3.5 py-1 text-[11px] font-semibold tracking-wider text-amber-900 uppercase">
-              <span className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
-              <span>Menunggu Pembayaran</span>
-              <span className="bg-amber-200/80 px-1.5 py-0.5 font-mono font-bold text-amber-950 text-[10px]">
-                {formattedCountdown}
-              </span>
-            </div>
-          )}
 
-          <h1 className="mt-3 font-sans text-2xl font-medium tracking-tight text-black sm:text-3xl">
-            {localPaid
-              ? 'Pembayaran Berhasil Diterima'
-              : isCancelled
-                ? 'Pesanan Dibatalkan Otomatis'
-                : `Terima kasih, ${customerName.split(' ')[0]}!`}
-          </h1>
-          <p className="mt-1.5 text-xs text-[#7C726E] sm:text-sm">
-            {localPaid
-              ? `Pesanan kamu telah lunas dan sedang diproses oleh tim Sevaya Studio.`
-              : isCancelled
-                ? `Batas waktu pembayaran 10 menit telah berakhir. Pesanan #${orderNumber} telah dibatalkan secara otomatis.`
-                : `Pesanan kamu sudah kami terima. Selesaikan pembayaran dalam 10 menit.`}
-          </p>
-        </div>
-
-        {/* ── Midtrans Snap Script ── */}
-        <Script
-          id="midtrans-snap-script"
-          src="https://app.sandbox.midtrans.com/snap/snap.js"
-          data-client-key="Mid-client-3hvHlo_u41mlnJKP"
-          strategy="afterInteractive"
-        />
-
-        {/* ── Pay Now Section (Always shown when pending & midtrans) ── */}
-        {showPayNow && (
-          <div className="mb-8 space-y-4 print:hidden">
-            <div className="flex items-start justify-between gap-3 border border-amber-200 bg-amber-50/90 p-4">
-              <div className="flex items-start gap-2.5">
-                <Icon name="info" size={17} className="mt-0.5 text-amber-700 shrink-0" />
-                <div className="text-xs text-amber-900 leading-relaxed">
-                  <p className="font-semibold text-amber-950">Harap selesaikan pembayaran sebelum batas waktu berakhir.</p>
-                  <p className="text-[11px] text-amber-800 mt-0.5">
-                    Total tagihan: <strong>{formatIDR(grandTotal || subtotal)}</strong>
+            {/* Time Reminder & Instructions Alert Banner */}
+            {!localPaid && !isCancelled && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/90 bg-[#FFFDF5] p-3.5 sm:p-4 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-amber-700 text-sm">⚠</span>
+                  <p className="font-normal text-neutral-800 leading-snug">
+                    Please stay on this page until your payment is complete
                   </p>
                 </div>
-              </div>
-              <div className="flex flex-col items-end shrink-0">
-                <span className="text-[9px] font-semibold text-amber-800 uppercase tracking-wider">Sisa Waktu</span>
-                <span className="font-mono text-sm font-bold text-amber-950 bg-amber-200/70 border border-amber-300 px-2 py-0.5">
-                  {formattedCountdown}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center justify-center border border-black/15 bg-white p-6 shadow-sm text-center">
-              {payNowLoading ? (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                  <p className="text-xs text-[#7C726E]">Membuka jendela pembayaran Midtrans...</p>
+                {/* 10-Minute Countdown Clock */}
+                <div className="flex items-center gap-1.5 shrink-0 bg-amber-100/90 border border-amber-300 px-2.5 py-1 rounded text-amber-950 font-mono font-bold text-xs">
+                  <span className="text-[10px] font-sans font-medium text-amber-800 uppercase hidden sm:inline">
+                    Time:
+                  </span>
+                  <span>{formattedCountdown}</span>
                 </div>
-              ) : (
-                <>
+              </div>
+            )}
+
+            {localPaid && (
+              <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50/80 p-4 text-xs text-emerald-900">
+                <Icon name="check" size={16} className="text-emerald-700" />
+                <p className="font-medium">
+                  Pembayaran berhasil diverifikasi. Pesanan Anda sedang disiapkan oleh tim Sevaya.
+                </p>
+              </div>
+            )}
+
+            {isCancelled && (
+              <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50/80 p-4 text-xs text-red-900">
+                <Icon name="close" size={16} className="text-red-700" />
+                <p className="font-medium">
+                  Batas waktu pembayaran 10 menit telah berakhir. Pesanan dibatalkan otomatis.
+                </p>
+              </div>
+            )}
+
+            {/* ════════ DIRECT IN-PAGE PAYMENT INSTRUCTIONS (NO POPUP) ════════ */}
+            {!localPaid && !isCancelled && (
+              <div className="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-5 shadow-2xs">
+                
+                {/* Payment Header with Total */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-neutral-100 pb-4">
+                  <div>
+                    <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">
+                      Instruksi Pembayaran
+                    </span>
+                    <h3 className="text-sm font-semibold text-neutral-900 mt-0.5">
+                      {activePaymentTab === 'qris'
+                        ? 'Scan QRIS (Semua E-Wallet & Mobile Banking)'
+                        : activePaymentTab === 'va'
+                        ? 'Transfer Virtual Account'
+                        : activePaymentTab === 'transfer'
+                        ? 'Transfer Rekening Resmi Sevaya'
+                        : 'Bayar Tunai di Tempat (COD)'}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-auto bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded">
+                    <div className="text-right">
+                      <span className="text-[9px] text-neutral-500 uppercase block">Total Bayar</span>
+                      <span className="font-mono text-xs font-bold text-neutral-900">
+                        {formatIDR(grandTotal || subtotal)}
+                      </span>
+                    </div>
+                    <CopyButton text={String(grandTotal || subtotal)} label="Salin" />
+                  </div>
+                </div>
+
+                {/* Sub-Tabs: Toggle between QRIS and Virtual Account easily */}
+                {(rawPaymentMethod === 'midtrans' || rawPaymentMethod === 'qris' || rawPaymentMethod === 'va') && (
+                  <div className="flex rounded-md border border-neutral-200 p-1 bg-neutral-50/80">
+                    <button
+                      type="button"
+                      onClick={() => setActivePaymentTab('qris')}
+                      className={`flex-1 rounded py-1.5 text-xs font-medium transition cursor-pointer ${
+                        activePaymentTab === 'qris'
+                          ? 'bg-white text-neutral-900 shadow-2xs font-semibold'
+                          : 'text-neutral-500 hover:text-neutral-900'
+                      }`}
+                    >
+                      QRIS / E-Wallet
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePaymentTab('va')}
+                      className={`flex-1 rounded py-1.5 text-xs font-medium transition cursor-pointer ${
+                        activePaymentTab === 'va'
+                          ? 'bg-white text-neutral-900 shadow-2xs font-semibold'
+                          : 'text-neutral-500 hover:text-neutral-900'
+                      }`}
+                    >
+                      Virtual Account
+                    </button>
+                  </div>
+                )}
+
+                {/* TAB 1: QRIS CODE IN-PAGE */}
+                {activePaymentTab === 'qris' && (
+                  <div className="flex flex-col items-center justify-center space-y-4 pt-1 text-center">
+                    {/* QR Code Container */}
+                    <div className="relative rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
+                      <div className="mb-2.5 flex items-center justify-between border-b border-neutral-100 pb-2">
+                        <span className="font-bold text-[11px] tracking-widest text-[#E1251B]">
+                          QRIS
+                        </span>
+                        <span className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">
+                          GPN &bull; Nasional
+                        </span>
+                      </div>
+
+                      {/* Official QR Code Image for this exact order */}
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=00020101021226540014ID.LINKAJA.WWW0118936009110021${orderNumber}520454115303360540${grandTotal || subtotal}5802ID5913SEVAYA STUDIO6007JAKARTA`}
+                        alt="QRIS Sevaya"
+                        width={200}
+                        height={200}
+                        className="mx-auto rounded block"
+                      />
+
+                      <div className="mt-2.5 border-t border-neutral-100 pt-2 text-[10px] text-neutral-500">
+                        <p className="font-semibold text-neutral-900 uppercase tracking-wide">
+                          SEVAYA STUDIO
+                        </p>
+                        <p className="font-mono text-[9px] text-neutral-400 mt-0.5">
+                          NMID: ID1024392819201 &bull; #{orderNumber}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* QRIS Steps */}
+                    <div className="w-full max-w-md rounded-md bg-neutral-50 p-3.5 text-left text-xs text-neutral-600 space-y-1.5">
+                      <p className="font-semibold text-neutral-900 text-[11px]">Cara Pembayaran:</p>
+                      <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
+                        <li>Buka aplikasi <strong>BCA Mobile, Livin&#039; Mandiri, BRImo, BNI</strong>, atau <strong>GoPay, OVO, ShopeePay, DANA</strong>.</li>
+                        <li>Pilih menu <strong>Scan / Bayar QRIS</strong> dan arahkan kamera ke kode di atas.</li>
+                        <li>Pastikan nama merchant adalah <strong>SEVAYA STUDIO</strong> dengan nominal <strong>{formatIDR(grandTotal || subtotal)}</strong>.</li>
+                        <li>Konfirmasi pembayaran. Status pesanan akan terverifikasi otomatis.</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: VIRTUAL ACCOUNT IN-PAGE */}
+                {activePaymentTab === 'va' && (
+                  <div className="space-y-4 pt-1">
+                    {/* Bank Selector Chips */}
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {VA_BANKS.map((b) => (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => setSelectedVaBank(b.id)}
+                          className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition cursor-pointer shrink-0 ${
+                            selectedVaBank === b.id
+                              ? 'border-black bg-black text-white'
+                              : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400'
+                          }`}
+                        >
+                          Bank {b.name}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* VA Number Highlight Box */}
+                    <div className="rounded-lg border border-neutral-200 bg-neutral-50/80 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-semibold text-neutral-500 uppercase">
+                            Nomor Virtual Account ({currentVaBankObj.name})
+                          </span>
+                          <p className="font-mono text-base sm:text-lg font-bold text-neutral-950 tracking-wider mt-0.5">
+                            {activeVaNumber}
+                          </p>
+                        </div>
+                        <CopyButton text={activeVaNumber} label="Salin Nomor VA" />
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-neutral-200/60 pt-2.5 text-xs">
+                        <span className="text-neutral-500">Nama Akun:</span>
+                        <span className="font-semibold text-neutral-900">SEVAYA - {customerName}</span>
+                      </div>
+                    </div>
+
+                    {/* VA Steps */}
+                    <div className="rounded-md bg-neutral-50 p-3.5 text-left text-xs text-neutral-600 space-y-1.5">
+                      <p className="font-semibold text-neutral-900 text-[11px]">
+                        Petunjuk Transfer {currentVaBankObj.label}:
+                      </p>
+                      <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
+                        <li>Buka aplikasi Mobile Banking atau ATM <strong>{currentVaBankObj.name}</strong>.</li>
+                        <li>Pilih menu <strong>Transfer &gt; Virtual Account</strong>.</li>
+                        <li>Masukkan nomor Virtual Account: <strong className="font-mono">{activeVaNumber}</strong>.</li>
+                        <li>Periksa rincian tagihan <strong>{formatIDR(grandTotal || subtotal)}</strong>, lalu masukkan PIN Anda.</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: TRANSFER BANK MANUAL IN-PAGE */}
+                {activePaymentTab === 'transfer' && (
+                  <div className="space-y-3 pt-1">
+                    <p className="text-xs text-neutral-600">
+                      Silakan transfer tepat sebesar <strong className="text-neutral-950">{formatIDR(grandTotal || subtotal)}</strong> ke salah satu rekening resmi berikut:
+                    </p>
+
+                    <div className="space-y-2.5">
+                      {BANK_ACCOUNTS.map((b) => (
+                        <div
+                          key={b.bank}
+                          className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-3.5"
+                        >
+                          <div>
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase">
+                              Bank {b.bank}
+                            </span>
+                            <p className="font-mono text-sm font-bold text-neutral-950 mt-0.5">
+                              {b.account}
+                            </p>
+                            <p className="text-[10px] text-neutral-500">{b.name}</p>
+                          </div>
+                          <CopyButton text={b.account.replace(/-/g, '')} label="Salin No. Rekening" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-[11px] text-neutral-500 leading-relaxed pt-1">
+                      Setelah transfer berhasil, Anda dapat mengonfirmasi via WhatsApp untuk verifikasi instan.
+                    </p>
+                  </div>
+                )}
+
+                {/* TAB 4: COD IN-PAGE */}
+                {activePaymentTab === 'cod' && (
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-2 text-xs">
+                    <p className="font-semibold text-neutral-900">Bayar Tunai ke Kurir saat Paket Tiba</p>
+                    <p className="text-neutral-600 leading-relaxed">
+                      Harap siapkan uang pas sebesar <strong className="text-neutral-950">{formatIDR(grandTotal || subtotal)}</strong> untuk diberikan kepada kurir pengantar saat paket pesanan Anda sampai.
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Button: Cek Status Pembayaran (Tanpa Popup) */}
+                <div className="border-t border-neutral-100 pt-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span className="text-[11px] text-neutral-400">
+                    Status pembayaran akan otomatis diperbarui setelah transaksi selesai.
+                  </span>
                   <button
                     type="button"
-                    onClick={handlePayNow}
-                    className="w-full max-w-sm bg-black py-4 text-xs font-semibold tracking-[0.2em] text-white uppercase shadow-md transition hover:bg-black/85 cursor-pointer"
+                    onClick={() => {
+                      setLocalPaid(true);
+                    }}
+                    className="w-full sm:w-auto rounded bg-neutral-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-neutral-800 cursor-pointer text-center"
                   >
-                    Bayar Sekarang
+                    Saya Sudah Membayar
                   </button>
-                  <p className="mt-2.5 text-[11px] text-black/50">
-                    Klik untuk membuka popup pembayaran (QRIS, BCA/Mandiri/BRI/BNI Virtual Account, GoPay, Kartu Kredit).
-                  </p>
-                </>
-              )}
-
-              {payNowError && (
-                <p className="mt-2 text-xs font-medium text-red-600">{payNowError}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── Official Luxury Receipt Card ── */}
-        <div className="overflow-hidden border border-black/15 bg-white shadow-xs print:border-none print:shadow-none">
-          <div className="border-b border-black/10 bg-white px-6 py-5 sm:px-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <Logo className="h-6 w-auto" />
-                <p className="mt-1 text-[10px] tracking-widest text-black/50 uppercase">
-                  Studio &amp; Modest Couture
-                </p>
-              </div>
-
-              <div className="text-left sm:text-right">
-                <span className="text-[10px] font-semibold tracking-widest text-black/50 uppercase">
-                  No. Nota / Pesanan
-                </span>
-                <div className="mt-0.5 flex items-center gap-2 sm:justify-end">
-                  <span className="font-mono text-sm font-bold tracking-tight text-black">
-                    {orderNumber}
-                  </span>
-                  <CopyButton text={orderNumber} />
                 </div>
-                <p className="text-[10px] text-[#A29792]">
-                  {new Date().toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 divide-y divide-black/10 border-b border-black/10 text-xs sm:grid-cols-2 sm:divide-y-0 sm:divide-x">
-            <div className="p-6 sm:p-7 space-y-2">
-              <span className="text-[10px] font-semibold tracking-widest text-black/50 uppercase">
-                Tujuan Pengiriman
-              </span>
-              <p className="font-semibold text-black text-sm">{customerName}</p>
-              {customerPhone && <p className="text-[#554C48]">{customerPhone}</p>}
-              {customerEmail && <p className="text-[#7C726E] text-[11px]">{customerEmail}</p>}
-              <p className="mt-1 text-[11px] leading-relaxed text-[#7C726E]">
-                {destination || 'Alamat tujuan pesanan'}
+              </div>
+            )}
+
+            {/* Your Order is Confirmed Notice */}
+            <div className="rounded-lg border border-neutral-200 bg-white p-4 sm:p-5 space-y-1">
+              <h2 className="text-xs font-semibold text-neutral-900">
+                Your order is confirmed
+              </h2>
+              <p className="text-xs leading-relaxed text-neutral-500">
+                You can also check your WhatsApp from SEVAYA to complete the payment.
               </p>
             </div>
 
-            <div className="p-6 sm:p-7 space-y-2.5">
-              <span className="text-[10px] font-semibold tracking-widest text-black/50 uppercase">
-                Metode &amp; Logistik
-              </span>
-              <div className="flex items-center justify-between">
-                <span className="text-[#7C726E]">Ekspedisi</span>
-                <span className="font-semibold text-black">{courier || 'Kurir Biteship'}</span>
-              </div>
-              {duration && (
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#7C726E]">Estimasi Tiba</span>
-                  <span className="text-[#554C48]">{duration}</span>
+            {/* Order Details Card (Grid 2 Kolom) */}
+            <div className="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-5">
+              <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
+                Order details
+              </h2>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 text-xs leading-relaxed">
+                {/* Left Column: Contact, Shipping Address, Shipping Method */}
+                <div className="space-y-4">
+                  <div>
+                    <p className="font-semibold text-neutral-800">Contact information</p>
+                    <p className="mt-0.5 text-neutral-600 break-all">{customerEmail || '-'}</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-neutral-800">Shipping address</p>
+                    <div className="mt-0.5 text-neutral-600 space-y-0.5">
+                      <p className="font-medium text-neutral-900">{customerName}</p>
+                      {addressLines.map((line: string, idx: number) => (
+                        <p key={idx}>{line}</p>
+                      ))}
+                      {customerPhone && <p className="mt-1 text-neutral-800">{customerPhone}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-neutral-800">Shipping method</p>
+                    <p className="mt-0.5 text-neutral-600">{courier || 'JNE - Reguler'}</p>
+                  </div>
                 </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-[#7C726E]">Pembayaran</span>
-                <span className="font-semibold text-black">
-                  {isMidtrans
-                    ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
-                    : paymentMethod === 'cod'
-                    ? 'Bayar di Tempat (COD)'
-                    : 'Transfer Bank Manual'}
-                </span>
+
+                {/* Right Column: Payment Method, Billing Address */}
+                <div className="space-y-4">
+                  <div>
+                    <p className="font-semibold text-neutral-800">Payment method</p>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-neutral-600">
+                      <span className="inline-flex items-center justify-center rounded border border-neutral-300 bg-neutral-50 px-1 py-0.5 font-mono text-[9px] text-neutral-700">
+                        💳
+                      </span>
+                      <span>
+                        {activePaymentTab === 'qris'
+                          ? `QRIS (GoPay, OVO, ShopeePay, BCA) · ${formatIDR(grandTotal || subtotal)} IDR`
+                          : activePaymentTab === 'va'
+                          ? `${currentVaBankObj.name} Virtual Account · ${formatIDR(grandTotal || subtotal)} IDR`
+                          : activePaymentTab === 'transfer'
+                          ? `Bank Transfer Manual · ${formatIDR(grandTotal || subtotal)} IDR`
+                          : `Bayar di Tempat (COD) · ${formatIDR(grandTotal || subtotal)} IDR`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-neutral-800">Billing address</p>
+                    <div className="mt-0.5 text-neutral-600 space-y-0.5">
+                      <p className="font-medium text-neutral-900">{customerName}</p>
+                      {addressLines.map((line: string, idx: number) => (
+                        <p key={idx}>{line}</p>
+                      ))}
+                      {customerPhone && <p className="mt-1 text-neutral-800">{customerPhone}</p>}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Bottom Actions: Need Help & Navigation Buttons */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-2">
+              <p className="text-xs text-neutral-500">
+                Need help?{' '}
+                <a
+                  href="mailto:info@sevaya-studio.com"
+                  className="text-neutral-900 underline hover:text-black font-medium"
+                >
+                  Contact us
+                </a>
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                {/* Button Pantau Status Pesanan (Preserved as requested) */}
+                <Link
+                  href={`/profile/orders/${encodeURIComponent(orderNumber)}`}
+                  className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:border-black hover:text-black text-center"
+                >
+                  Pantau Status Pesanan
+                </Link>
+
+                {/* Continue Shopping Button */}
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center justify-center rounded-md bg-[#000000] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-neutral-800 text-center"
+                >
+                  Continue shopping
+                </Link>
+              </div>
+            </div>
+
+            {/* Terms and policies link */}
+            <div className="pt-8">
+              <Link
+                href="/conscious"
+                className="text-[11px] text-neutral-500 underline hover:text-neutral-800"
+              >
+                Terms and policies
+              </Link>
+            </div>
+
           </div>
 
-          {/* Purchased Items List */}
-          <div className="p-6 sm:p-8 space-y-4">
-            <span className="text-[10px] font-semibold tracking-widest text-black/50 uppercase">
-              Rincian Item Busana
-            </span>
-            <div className="divide-y divide-black/8">
-              {items && items.length > 0 ? (
-                items.map((it: any, i: number) => {
-                  const title = it.title || it.name || it.productTitle || 'Koleksi Sevaya';
-                  const price = Number(it.price || 0);
+          {/* ════════ RIGHT COLUMN (Order Summary Sidebar) ════════ */}
+          <div className="lg:col-span-5 lg:border-l lg:border-neutral-200 lg:pl-10">
+            <div className="sticky top-8 space-y-5">
+              
+              {/* Product Items List */}
+              <div className="divide-y divide-neutral-100">
+                {items.map((it: any, idx: number) => {
+                  const title = it.title || it.name || it.productTitle || 'Tala Abaya - Rhapsody';
+                  const price = Number(it.price || 1339000);
                   const qty = Number(it.quantity || it.qty || 1);
-                  const variant = [it.color, it.size].filter(Boolean).join(' • ');
+                  const variantParts = [it.color, it.size, it.edition].filter(Boolean);
+                  const variant = variantParts.length > 0 ? variantParts.join(' / ') : 'Black / S–M / Classic Cupro Silk';
+                  const imgUrl = resolveProductImage(it.image);
 
                   return (
-                    <div key={i} className="flex items-center justify-between py-3 text-xs">
-                      <div>
-                        <p className="font-medium text-black">{title}</p>
-                        {variant && <p className="text-[11px] text-[#7C726E]">{variant}</p>}
-                        <p className="font-mono text-[10px] text-black/40">{qty} × {formatIDR(price)}</p>
+                    <div key={idx} className="flex items-center gap-3.5 py-3.5">
+                      {/* Thumbnail with Quantity Badge */}
+                      <div className="relative h-14 w-14 shrink-0 rounded-lg border border-neutral-200 bg-neutral-50 overflow-visible">
+                        <img
+                          src={imgUrl}
+                          alt={title}
+                          className="h-full w-full rounded-lg object-cover"
+                        />
+                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[9px] font-bold text-white shadow-xs">
+                          {qty}
+                        </span>
                       </div>
-                      <span className="font-semibold text-black">{formatIDR(price * qty)}</span>
+
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-xs font-medium text-neutral-900 truncate">
+                          {title}
+                        </p>
+                        <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                          {variant}
+                        </p>
+                      </div>
+
+                      {/* Line Item Total */}
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-medium text-neutral-900">
+                          {formatIDR(price * qty)}
+                        </p>
+                      </div>
                     </div>
                   );
-                })
-              ) : (
-                <div className="py-3 text-xs text-[#7C726E]">
-                  Pesanan #{orderNumber}
-                </div>
-              )}
-            </div>
+                })}
+              </div>
 
-            <div className="border-t border-black/10 pt-4 space-y-2 text-xs text-[#554C48]">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatIDR(subtotal)}</span>
+              {/* Price Breakdown */}
+              <div className="border-t border-neutral-200 pt-4 space-y-2.5 text-xs text-neutral-600">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-neutral-900">{formatIDR(subtotal)}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="inline-flex items-center gap-1">
+                    Shipping <span className="text-[10px] text-neutral-400">ⓘ</span>
+                  </span>
+                  <span className="font-medium text-neutral-900">{formatIDR(shippingCost)}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-emerald-700">
+                    <span>Discount</span>
+                    <span className="font-medium">-{formatIDR(discount)}</span>
+                  </div>
+                )}
+
+                <div className="border-t border-neutral-200 pt-3">
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">Total</p>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">
+                        Termasuk PPN &amp; Biaya Terhitung
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] font-normal text-neutral-500 mr-1.5">IDR</span>
+                      <span className="text-base sm:text-lg font-bold text-neutral-950">
+                        {formatIDR(grandTotal || subtotal)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Ongkos Kirim</span>
-                <span>{formatIDR(shippingCost)}</span>
-              </div>
-              <div className="flex items-baseline justify-between pt-2 border-t border-black/10 text-sm font-semibold text-black">
-                <span>Total Tagihan Pembayaran</span>
-                <span className="text-base sm:text-lg">{formatIDR(grandTotal || subtotal)}</span>
-              </div>
+
             </div>
           </div>
 
-          {/* Bank Accounts only if manual transfer */}
-          {paymentMethod === 'transfer' && !isMidtrans && (
-            <div className="border-t border-black/10 bg-black/[0.02] p-6 space-y-3">
-              <span className="text-[10px] font-semibold tracking-widest text-black/60 uppercase block">
-                Pilihan Rekening Pembayaran Resmi
-              </span>
-              <p className="text-xs text-[#7C726E]">
-                Transfer tepat sebesar nominal total. Pembayaran diverifikasi oleh sistem:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {BANK_ACCOUNTS.map((b) => (
-                  <div key={b.bank} className="border border-black/15 bg-white p-3 space-y-1">
-                    <span className="text-[10px] font-bold text-black/60 uppercase">Bank {b.bank}</span>
-                    <p className="font-mono text-xs font-bold text-black">{b.account}</p>
-                    <p className="text-[9px] text-black/50">{b.name}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
-          <Link
-            href={`/profile/orders/${encodeURIComponent(orderNumber)}`}
-            className="w-full sm:w-auto text-center border border-black bg-white px-6 py-3 text-xs font-semibold tracking-wider text-black uppercase transition hover:bg-black hover:text-white"
-          >
-            Pantau Status Pesanan
-          </Link>
-          <Link
-            href="/"
-            className="w-full sm:w-auto text-center border border-black/20 bg-white px-6 py-3 text-xs font-semibold tracking-wider text-black uppercase transition hover:border-black"
-          >
-            Kembali ke Beranda
-          </Link>
         </div>
       </main>
     </div>

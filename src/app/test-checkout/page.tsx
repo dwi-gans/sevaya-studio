@@ -12,6 +12,12 @@ import { useAuth } from '@/context/AuthContext';
 import type { BiteshipArea, BiteshipRateOption } from '@/integrations/biteship';
 import type { IconName } from '@/components/ui/Icon';
 
+declare global {
+  interface Window {
+    snap?: any;
+  }
+}
+
 function loadSnapScript(): Promise<any> {
   if (typeof window !== 'undefined' && window.snap) {
     return Promise.resolve(window.snap);
@@ -45,22 +51,29 @@ const INDONESIA_PROVINCES = [
 
 const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string; icon: IconName }[] = [
   {
-    id: 'midtrans',
-    label: 'Bayar Otomatis',
-    desc: 'QRIS, Virtual Account, E-Wallet, Kartu Kredit. Terverifikasi instan.',
-    badge: 'Rekomendasi',
+    id: 'qris',
+    label: 'QRIS (GoPay, OVO, ShopeePay, BCA, DANA)',
+    desc: 'Scan kode QRIS instan dari semua e-wallet & mobile banking.',
+    badge: 'Instan',
     icon: 'payments',
   },
   {
+    id: 'va',
+    label: 'Virtual Account (BCA, Mandiri, BNI, BRI)',
+    desc: 'Transfer via Virtual Account dengan verifikasi otomatis.',
+    badge: 'Otomatis',
+    icon: 'receipt_long' as IconName,
+  },
+  {
     id: 'transfer',
-    label: 'Transfer Bank',
-    desc: 'Transfer manual ke rekening resmi Sevaya.',
+    label: 'Transfer Bank Manual',
+    desc: 'Transfer ke rekening resmi Sevaya Studio (BCA, Mandiri, BSI).',
     icon: 'receipt_long' as IconName,
   },
   {
     id: 'cod',
-    label: 'Bayar di Tempat',
-    desc: 'Bayar tunai ke kurir saat paket tiba.',
+    label: 'Bayar di Tempat (COD)',
+    desc: 'Bayar tunai kepada kurir saat paket tiba di alamat Anda.',
     icon: 'local_shipping',
   },
 ];
@@ -91,7 +104,7 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState('');
   const [phone, setPhone] = useState('');
   const [saveInfo, setSaveInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('midtrans');
+  const [paymentMethod, setPaymentMethod] = useState('qris');
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
@@ -294,7 +307,7 @@ export default function CheckoutPage() {
 
       // If Midtrans is selected, request Snap Token then redirect to order-confirmation
       // The confirmation page will show "Pay Now" → opens Midtrans popup there
-      if (paymentMethod === 'midtrans') {
+      if (paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
         const snapRes = await fetch('/api/payment/snap-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1124,7 +1137,7 @@ export default function CheckoutPage() {
 
               {/* KONTEN METODE TERPILIH */}
               {/* Option 1: Bayar Otomatis (Midtrans) */}
-              {paymentMethod === 'midtrans' && (
+              {(paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
                 <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48]">
                   {!snapToken ? (
                     <div className="flex items-center gap-2">
