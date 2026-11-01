@@ -8,25 +8,6 @@ import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/context/AuthContext';
 
-function loadDokuScript(): Promise<any> {
-  if (typeof window !== 'undefined' && (window as any).loadJokulCheckout) {
-    return Promise.resolve((window as any).loadJokulCheckout);
-  }
-  return new Promise((resolve, reject) => {
-    const existing = document.getElementById('doku-checkout-script');
-    if (existing) {
-      existing.onload = () => resolve((window as any).loadJokulCheckout);
-      return;
-    }
-    const script = document.createElement('script');
-    script.id = 'doku-checkout-script';
-    script.src = 'https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
-    script.onload = () => resolve((window as any).loadJokulCheckout);
-    script.onerror = () => reject(new Error('Gagal memuat gateway pembayaran DOKU'));
-    document.body.appendChild(script);
-  });
-}
-
 function loadSnapScript(): Promise<any> {
   if (typeof window !== 'undefined' && window.snap) {
     return Promise.resolve(window.snap);
@@ -145,67 +126,47 @@ export default function SimplePaymentPage({
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  // Open Midtrans Snap Popup
+  // Open Payment Gateway
   const handlePayNow = async () => {
     setIsOpeningSnap(true);
     setErrorMessage(null);
     try {
-      let snapToken: string | null = null;
-
-      // 1. Instant retrieve from sessionStorage
-      try {
-        const saved = sessionStorage.getItem('sevaya_snap_pending');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.orderNumber === orderNumber && parsed.snapToken) {
-            snapToken = parsed.snapToken;
-          }
-        }
-      } catch {}
-
-      // 2. Fallback request to API if not cached
-      if (!snapToken) {
-        const token = await getAccessToken();
-        const res = await fetch('/api/payment/snap-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Request payment session from API
+      const token = await getAccessToken();
+      const res = await fetch('/api/payment/snap-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          order_id: orderNumber,
+          grand_total: order?.grand_total || paramTotal || 100000,
+          items: order?.items || [],
+          customer: {
+            first_name: order?.customer_name?.split(' ')[0] || searchParams.get('name') || '',
+            last_name: order?.customer_name?.split(' ').slice(1).join(' ') || '',
+            email: order?.customer_email || searchParams.get('email') || '',
+            phone: order?.customer_phone || searchParams.get('phone') || '',
           },
-          body: JSON.stringify({
-            order_id: orderNumber,
-            grand_total: order?.grand_total || paramTotal || 100000,
-            items: order?.items || [],
-            customer: {
-              first_name: order?.customer_name?.split(' ')[0] || searchParams.get('name') || '',
-              last_name: order?.customer_name?.split(' ').slice(1).join(' ') || '',
-              email: order?.customer_email || searchParams.get('email') || '',
-              phone: order?.customer_phone || searchParams.get('phone') || '',
-            },
-          }),
-        });
+        }),
+      });
 
-        const snapData = await res.json();
-        if (!snapData.success) {
-          throw new Error(snapData.error || 'Gagal memuat sesi pembayaran');
-        }
+      const snapData = await res.json();
+      if (!snapData.success) {
+        throw new Error(snapData.error || 'Gagal memuat sesi pembayaran');
+      }
 
-        // If DOKU Gateway is active
-        if (snapData.gateway === 'doku' && snapData.payment_url) {
-          try {
-            const dokuCheckout = await loadDokuScript();
-            if (typeof dokuCheckout === 'function') {
-              dokuCheckout(snapData.payment_url);
-              return;
-            }
-          } catch (e) {
-            console.warn('[DOKU Popup fallback to redirect]:', e);
-          }
-          window.location.href = snapData.payment_url;
-          return;
-        }
+      // DOKU Gateway — redirect to DOKU payment page
+      if (snapData.gateway === 'doku' && snapData.payment_url) {
+        window.location.href = snapData.payment_url;
+        return;
+      }
 
-        snapToken = snapData.token;
+      // Midtrans Snap fallback
+      const snapToken = snapData.token;
+      if (!snapToken) {
+        throw new Error('Token pembayaran tidak ditemukan');
       }
 
       const snapInstance = await loadSnapScript();
