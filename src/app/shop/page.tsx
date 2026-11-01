@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ProductCard, Product } from '@/components/home/ProductCard';
-import { getDbProducts } from '@/integrations/supabase';
+import { getDbProducts, DEFAULT_DB_PRODUCTS } from '@/integrations/supabase';
 import { mapDbProductToProduct } from '@/features/catalog';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { Icon } from '@/components/ui/Icon';
@@ -48,12 +48,16 @@ function ShopContent() {
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(() => DEFAULT_DB_PRODUCTS.filter((p) => !p.hidden).map(mapDbProductToProduct));
 
   useEffect(() => {
     let isMounted = true;
     getDbProducts().then((dbItems) => {
       if (!isMounted) return;
+      const itemsToUse = Array.isArray(dbItems) && dbItems.length > 0 ? dbItems : DEFAULT_DB_PRODUCTS;
+      const mapped = itemsToUse.filter((p) => !p.hidden).map(mapDbProductToProduct);
+      setCatalogProducts(mapped);
+      return;
       if (Array.isArray(dbItems) && dbItems.length > 0) {
         const mapped = dbItems.filter((p) => !p.hidden).map(mapDbProductToProduct);
         if (mapped.length > 0) {
