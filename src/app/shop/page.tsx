@@ -4,7 +4,8 @@ import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ProductCard, Product } from '@/components/home/ProductCard';
-import { DEFAULT_DB_PRODUCTS, ProductSwatch } from '@/integrations/supabase';
+import { getDbProducts } from '@/integrations/supabase';
+import { mapDbProductToProduct } from '@/features/catalog';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { Icon } from '@/components/ui/Icon';
 import { Footer } from '@/components/layout/Footer';
@@ -47,6 +48,23 @@ function ShopContent() {
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    let isMounted = true;
+    getDbProducts().then((dbItems) => {
+      if (!isMounted) return;
+      if (Array.isArray(dbItems) && dbItems.length > 0) {
+        const mapped = dbItems.filter((p) => !p.hidden).map(mapDbProductToProduct);
+        if (mapped.length > 0) {
+          setCatalogProducts(mapped);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const q = searchParams.get('q') || searchParams.get('search') || '';
@@ -68,7 +86,7 @@ function ShopContent() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    let list = [...INITIAL_PRODUCTS];
+    let list = [...catalogProducts];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();

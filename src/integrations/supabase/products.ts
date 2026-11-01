@@ -120,20 +120,23 @@ function loadFromLocalStorage(): DbProduct[] | null {
 
 /**
  * Saves current products list to Supabase Storage JSON cloud sync.
+ * Writes via API endpoint (/api/products) to leverage privileged service role,
+ * and saves to localStorage for instant local preview.
  */
 async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> {
-  // Always save to localStorage first (instant, reliable)
+  // Always save to localStorage first (instant, reliable fallback)
   saveToLocalStorage(products);
 
   try {
-    const jsonStr = JSON.stringify(products, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    await supabase.storage.from('catalog').upload(PRODUCTS_FILE, blob, {
-      contentType: 'application/json',
-      upsert: true,
-    });
+    if (typeof window !== 'undefined') {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products }),
+      });
+    }
   } catch {
-    // Ignore storage sync errors
+    // Ignore sync errors
   }
 }
 let _cachedProducts: DbProduct[] | null = null;
