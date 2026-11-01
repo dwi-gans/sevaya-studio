@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSnapTransaction } from '@/integrations/midtrans';
+import { createDokuCheckoutSession } from '@/integrations/doku';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } catch (dbErr) {
-      console.warn('[Snap Token DB Lookup Warning]:', dbErr);
+      console.warn('[Payment Token DB Lookup Warning]:', dbErr);
     }
 
     if (!finalGrandTotal || finalGrandTotal <= 0) {
@@ -72,6 +73,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 2. Try DOKU Payment Gateway first if credentials are configured
+    const dokuClientId = process.env.DOKU_CLIENT_ID;
+    const dokuSecretKey = process.env.DOKU_SECRET_KEY;
+
+    if (dokuClientId && dokuSecretKey) {
+      try {
+        const customerFullName =
+          [finalCustomer?.first_name, finalCustomer?.last_name].filter(Boolean).join(' ') ||
+          'Pelanggan SEVAYA';
+
+        const dokuSession = await createDokuCheckoutSession({
+          order_id,
+          amount: finalGrandTotal,
+          items: finalItems?.map((it: any) => ({
+            name: it.name || it.title || 'Produk SEVAYA',
+            price: Math.round(Number(it.price) || finalGrandTotal),
+            quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
+          })),
+          customer: {
+            name: customerFullName,
+            email: finalCustomer?.email || 'customer@sevaya.id',
+            phone: finalCustomer?.phone || '',
+          },
+        });
+
+        console.log(`[DOKU Session Created] Order: ${order_id}, URL: ${dokuSession.payment_url}`);
+
+        return NextResponse.json({
+          success: true,
+          gateway: 'doku',
+          payment_url: dokuSession.payment_url,
+          redirect_url: dokuSession.payment_url,
+          token: dokuSession.token || dokuSession.payment_url,
+          gross_amount: finalGrandTotal,
+        });
+      } catch (dokuErr: any) {
+        console.warn('[DOKU Checkout Fallback to Midtrans]:', dokuErr.message);
+        // If DOKU payment channels are inactive, gracefully fallback to Midtrans
+      }
+    }
+
+    // 3. Midtrans Gateway Fallback
     const { token, redirect_url } = await createSnapTransaction({
       order_id,
       gross_amount: finalGrandTotal,
@@ -81,6 +124,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      gateway: 'midtrans',
       token,
       redirect_url,
       gross_amount: finalGrandTotal,

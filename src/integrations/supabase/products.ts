@@ -89,11 +89,42 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
 ];
 
 const PRODUCTS_FILE = 'products.json';
+const LS_KEY = 'sevaya_products_v1';
+
+/**
+ * Save products to localStorage (client-side persistent fallback).
+ */
+function saveToLocalStorage(products: DbProduct[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(products));
+  } catch {
+    // quota exceeded or SSR — ignore
+  }
+}
+
+/**
+ * Load products from localStorage.
+ */
+function loadFromLocalStorage(): DbProduct[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DbProduct[];
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Saves current products list to Supabase Storage JSON cloud sync.
  */
 async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> {
+  // Always save to localStorage first (instant, reliable)
+  saveToLocalStorage(products);
+
   try {
     const jsonStr = JSON.stringify(products, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -170,10 +201,25 @@ export async function getDbProducts(): Promise<DbProduct[]> {
       }
     }
 
+    // 3. Try localStorage (client-side persistent fallback)
+    const lsData = loadFromLocalStorage();
+    if (lsData) {
+      _cachedProducts = lsData;
+      _cachedTime = Date.now();
+      return _cachedProducts;
+    }
+
     _cachedProducts = DEFAULT_DB_PRODUCTS;
     _cachedTime = Date.now();
     return DEFAULT_DB_PRODUCTS;
   } catch {
+    // Try localStorage before giving up
+    const lsData = loadFromLocalStorage();
+    if (lsData) {
+      _cachedProducts = lsData;
+      _cachedTime = Date.now();
+      return _cachedProducts;
+    }
     _cachedProducts = DEFAULT_DB_PRODUCTS;
     _cachedTime = Date.now();
     return DEFAULT_DB_PRODUCTS;
@@ -198,8 +244,10 @@ export async function createDbProduct(product: Omit<DbProduct, 'id'>): Promise<D
     // Table might not exist yet
   }
 
-  // 2. Save to Cloud Storage JSON
+  // 2. Save to Cloud Storage JSON + localStorage
   const updated = [newProduct, ...current];
+  _cachedProducts = updated;
+  _cachedTime = Date.now();
   await syncProductsToCloudStorage(updated);
 
   return newProduct;
@@ -230,7 +278,9 @@ export async function updateDbProduct(
     // Table might not exist yet
   }
 
-  // 2. Save to Cloud Storage JSON
+  // 2. Save to Cloud Storage JSON + localStorage, update cache immediately
+  _cachedProducts = current;
+  _cachedTime = Date.now();
   await syncProductsToCloudStorage(current);
 
   return updatedProduct;
@@ -250,7 +300,9 @@ export async function deleteDbProduct(id: string | number): Promise<boolean> {
     // Table might not exist yet
   }
 
-  // 2. Save to Cloud Storage JSON
+  // 2. Save to Cloud Storage JSON + localStorage, update cache immediately
+  _cachedProducts = filtered;
+  _cachedTime = Date.now();
   await syncProductsToCloudStorage(filtered);
 
   return true;
