@@ -23,7 +23,7 @@ export function HeroSection() {
     });
   }, []);
 
-  const heroImageSrc = hero.image || '/images/hero_optimized.jpg';
+  const heroImageSrc = (hero?.image && hero.image.trim()) || '/images/hero_optimized.jpg';
 
   return (
     <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">

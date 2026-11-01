@@ -244,6 +244,7 @@ export function getCachedSiteSections(): SiteSectionsConfig {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
+        if (parsed.hero && !parsed.hero.image) { parsed.hero.image = DEFAULT_SITE_SECTIONS.hero.image; }
         const merged = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
