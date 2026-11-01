@@ -54,9 +54,9 @@ export function JournalSection() {
   };
 
   return (
-    <section className="w-full bg-black text-white section--dark py-8 sm:py-12 text-white overflow-hidden" id="journal">
+    <section className="w-full bg-black text-white section--dark py-8 sm:py-12 overflow-hidden" id="journal">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Top Header Layout matching Figma: Left is Manifesto, Right is Prestigious Journals */}
+        {/* Top Header Layout: Left is Manifesto, Right is Prestigious Journals */}
         <div className="mb-6 sm:mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-end">
           {/* Left Column: The Art of Fewer, Better Choices */}
           <div className="space-y-3">
@@ -69,31 +69,31 @@ export function JournalSection() {
               The Art of Fewer, Better Choices
             </h2>
             <p className="max-w-xl text-[11px] leading-relaxed text-white/60">
-              Opting for quality over quantity means selecting timeless, durable, and responsibly made items. This approach simplifies our lives and fosters a deeper appreciation for our surroundings. Emphasizing longevity and responsible production resonates with a more sustainable and mindful lifestyle.
+              {t('home.journal.manifesto_desc') || 'Opting for quality over quantity means selecting timeless, durable, and responsibly made items. This approach simplifies our lives and fosters a deeper appreciation for our surroundings. Emphasizing longevity and responsible production resonates with a more sustainable and mindful lifestyle.'}
             </p>
           </div>
 
           {/* Right Column: PRESTIGIOUS JOURNALS / OUR READING CORNER */}
           <div className="flex flex-col md:items-end md:text-right">
             <span className="text-[9px] font-medium tracking-[0.25em] text-white/60 uppercase">
-              {t('journal.badge') || 'PRESTIGIOUS JOURNALS'}
+              {t('home.journal.badge')}
             </span>
             <h3 className="mt-1 font-sans text-sm font-normal tracking-wide text-white uppercase">
-              {t('journal.title') || 'OUR READING CORNER'}
+              OUR READING CORNER
             </h3>
             <div className="mt-4 flex items-center gap-4 md:justify-end">
               <Link
                 href="/news"
                 className="group inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-white uppercase transition-colors hover:text-white/70"
               >
-                <span>{t('journal.explore') || 'Explore All Stories'}</span>
+                <span>{t('home.journal.explore')}</span>
                 <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Mobile Layout Switcher Bar (Only on mobile viewport) */}
+        {/* Mobile Layout Switcher Bar */}
         <div className="mb-6 flex items-center justify-between border-b border-white/15 pb-3 md:hidden">
           <div className="flex items-center gap-2 text-xs text-white/60">
             <span className="font-mono text-[11px] text-white">0{activeIndex + 1}</span>
@@ -111,7 +111,7 @@ export function JournalSection() {
               onClick={() => setMobileLayout('slider')}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wider transition-all ${
                 mobileLayout === 'slider'
-                  ? 'bg-white text-white shadow-xs'
+                  ? 'bg-white text-black shadow-xs'
                   : 'text-white/60 hover:text-white'
               }`}
             >
@@ -122,7 +122,7 @@ export function JournalSection() {
               onClick={() => setMobileLayout('grid')}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wider transition-all ${
                 mobileLayout === 'grid'
-                  ? 'bg-white text-white shadow-xs'
+                  ? 'bg-white text-black shadow-xs'
                   : 'text-white/60 hover:text-white'
               }`}
             >
@@ -133,7 +133,6 @@ export function JournalSection() {
 
         {/* ── CARD BOXES CONTAINER ── */}
         {mobileLayout === 'slider' ? (
-          /* Option 1 (Default): Horizontal Snap-Scroll Slider with Peek Preview */
           <div className="relative">
             <div
               ref={scrollRef}
@@ -145,9 +144,7 @@ export function JournalSection() {
                   key={`${item.id}-${idx}`}
                   className="w-[82vw] shrink-0 snap-center sm:w-[360px] md:w-auto md:shrink"
                 >
-                  {/* Framed White Cardbox matching Figma node_8_682 */}
                   <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-4 sm:p-5 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                    {/* Inner Framed Photo */}
                     <div className="relative aspect-[16/11] w-full overflow-hidden bg-black/5">
                       <Image
                         src={item.image}
@@ -158,7 +155,6 @@ export function JournalSection() {
                       />
                     </div>
 
-                    {/* Text Details */}
                     <div className="flex flex-1 flex-col justify-between pt-4">
                       <div>
                         <span className="text-[11px] font-medium tracking-wide text-black/60">
@@ -177,7 +173,7 @@ export function JournalSection() {
                           href="/news"
                           className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
                         >
-                          {t('journal.read_article') || 'Read more'}
+                          {t('home.journal.read_article')}
                         </Link>
                       </div>
                     </div>
@@ -188,7 +184,6 @@ export function JournalSection() {
 
             {/* Mobile Carousel Controls & Dots Indicator */}
             <div className="mt-4 flex items-center justify-between md:hidden">
-              {/* Pagination Dots */}
               <div className="flex items-center gap-2">
                 {articles.map((_, dotIdx) => (
                   <button
@@ -205,7 +200,6 @@ export function JournalSection() {
                 ))}
               </div>
 
-              {/* Prev / Next Chevrons for Mobile */}
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -229,7 +223,6 @@ export function JournalSection() {
             </div>
           </div>
         ) : (
-          /* Option 2: Compact Bento / 2-Column Grid on Mobile (No tall 1-column stack) */
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-6 lg:gap-8">
             {articles.map((item, idx) => (
               <article
@@ -267,7 +260,7 @@ export function JournalSection() {
                       href="/news"
                       className="inline-block text-[11px] sm:text-xs font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
                     >
-                      {t('journal.read_article') || 'Read more'}
+                      {t('home.journal.read_article')}
                     </Link>
                   </div>
                 </div>

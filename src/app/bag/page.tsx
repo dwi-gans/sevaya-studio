@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ShoppingBagPage() {
   const {
@@ -17,12 +18,11 @@ export default function ShoppingBagPage() {
     subtotal,
   } = useCart();
 
+  const { t, formatPrice } = useLanguage();
   const { showToast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-
-  const formatIDR = (val: number) => `Rp ${val.toLocaleString('id-ID')}`;
 
   // Estimasi berat paket: 500g per abaya/item
   const totalWeightGrams = items.reduce((sum, item) => sum + (item.quantity * 500), 0);
@@ -31,7 +31,7 @@ export default function ShoppingBagPage() {
     if (items.length === 0) return;
 
     if (!isAuthenticated && !user) {
-      showToast('Silakan masuk terlebih dahulu untuk melanjutkan pesanan.');
+      showToast(t('bag.loading') || 'Please sign in to proceed.');
       router.push('/login?redirect=/test-checkout');
       return;
     }
@@ -47,19 +47,19 @@ export default function ShoppingBagPage() {
         {!isLoaded ? (
           <div className="py-24 text-center">
             <p className="text-[10px] uppercase tracking-[0.2em] text-black/60">
-              Loading cart...
+              {t('bag.loading')}
             </p>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
             <p className="mb-6 font-serif text-xs tracking-wide text-black/64">
-              Your cart is currently empty.
+              {t('bag.empty_title')}
             </p>
             <Link
               href="/shop"
               className="inline-block bg-[#000000] px-8 py-3.5 text-[10px] font-medium tracking-[0.2em] text-white uppercase transition-colors hover:bg-[#1A1A1A]"
             >
-              Continue Shopping
+              {t('bag.continue_shopping')}
             </Link>
           </div>
         ) : (
@@ -68,12 +68,12 @@ export default function ShoppingBagPage() {
             <div className="flex flex-col">
               {/* Header Kolom Desktop */}
               <div className="hidden border-b border-black/15 pb-3 text-[10px] tracking-[0.18em] text-black/60 uppercase sm:grid sm:grid-cols-12 sm:gap-6">
-                <div className="col-span-7">Product</div>
-                <div className="col-span-3 text-center">Quantity</div>
-                <div className="col-span-2 text-right">Total</div>
+                <div className="col-span-7">{t('bag.col_product')}</div>
+                <div className="col-span-3 text-center">{t('bag.col_qty')}</div>
+                <div className="col-span-2 text-right">{t('bag.col_total')}</div>
               </div>
 
-              {/* List Item Cart (Bisa di-scroll jika item sangat banyak) */}
+              {/* List Item Cart */}
               <div className="divide-y divide-[#E5E5E5] max-h-[50vh] overflow-y-auto pr-1 sm:pr-2">
                 {items.map((item) => {
                   const itemTotal = item.price * item.quantity;
@@ -86,7 +86,7 @@ export default function ShoppingBagPage() {
                       key={`${item.id}-${item.size}-${item.color}`}
                       className="py-5 sm:py-6 sm:grid sm:grid-cols-12 sm:items-center sm:gap-6"
                     >
-                      {/* Info Produk (Desktop: col-span-7, Mobile: flex) */}
+                      {/* Info Produk */}
                       <div className="flex items-start space-x-4 sm:col-span-7">
                         <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden bg-[#F0F0F0] sm:h-32 sm:w-24">
                           {item.image ? (
@@ -109,7 +109,7 @@ export default function ShoppingBagPage() {
                             {item.title}
                           </h2>
                           <p className="mt-1 text-[10px] text-black/64">
-                            {formatIDR(item.price)}
+                            {formatPrice(item.price)}
                           </p>
                           {variantDetails && (
                             <p className="mt-1 text-[10px] tracking-wide text-black/60 uppercase">
@@ -146,13 +146,13 @@ export default function ShoppingBagPage() {
                                 onClick={() => removeFromCart(item.id)}
                                 className="text-[10px] text-black/64 underline underline-offset-2 transition-colors hover:text-black"
                               >
-                                Remove
+                                {t('bag.remove')}
                               </button>
                             </div>
 
                             <div className="text-right">
                               <p className="text-[10px] font-medium text-black">
-                                {formatIDR(itemTotal)}
+                                {formatPrice(itemTotal)}
                               </p>
                             </div>
                           </div>
@@ -188,13 +188,13 @@ export default function ShoppingBagPage() {
                           onClick={() => removeFromCart(item.id)}
                           className="text-[10px] text-black/64 underline underline-offset-2 transition-colors hover:text-black"
                         >
-                          Remove
+                          {t('bag.remove')}
                         </button>
                       </div>
 
                       {/* Total Kolom Desktop */}
                       <div className="hidden text-right text-[10px] font-medium tracking-wide text-black sm:col-span-2 sm:block sm:text-xs">
-                        {formatIDR(itemTotal)}
+                        {formatPrice(itemTotal)}
                       </div>
                     </div>
                   );
@@ -202,33 +202,29 @@ export default function ShoppingBagPage() {
               </div>
             </div>
 
-            {/* Bagian Bawah: Total & Checkout selalu di dasar bawah halaman kanan (mt-auto) */}
+            {/* Bagian Bawah: Total & Checkout */}
             <div className="mt-auto border-t border-black/15 pt-6 pb-2">
               <div className="flex flex-col items-end text-right">
                 {/* Weight */}
                 {totalWeightGrams > 0 && (
                   <p className="text-[10px] tracking-wider text-black/60">
-                    Weight: {totalWeightGrams.toLocaleString('id-ID')} g
+                    {t('bag.weight')}: {totalWeightGrams.toLocaleString('id-ID')} g
                   </p>
                 )}
 
                 {/* Total */}
                 <div className="mt-2 flex items-baseline space-x-2">
                   <span className="text-[11px] font-medium tracking-wider text-black">
-                    Total:
+                    {t('bag.total')}:
                   </span>
                   <span className="font-serif text-sm font-medium text-black sm:text-base">
-                    {formatIDR(subtotal)}
+                    {formatPrice(subtotal)}
                   </span>
                 </div>
 
                 {/* Tax & Shipping Note */}
                 <p className="mt-1.5 text-[10px] text-black/60">
-                  Tax included.{' '}
-                  <span className="underline underline-offset-2">
-                    Shipping
-                  </span>{' '}
-                  calculated at checkout.
+                  {t('bag.tax_note')}
                 </p>
 
                 {/* Tombol Checkout */}
@@ -238,7 +234,7 @@ export default function ShoppingBagPage() {
                   disabled={isCheckingOut || items.length === 0}
                   className="mt-5 w-full bg-[#000000] px-10 py-3.5 text-center text-[10px] font-medium tracking-[0.2em] text-white uppercase transition-colors hover:bg-[#1A1A1A] disabled:opacity-50 sm:w-auto"
                 >
-                  {isCheckingOut ? 'Loading...' : 'Checkout'}
+                  {isCheckingOut ? t('common.loading') : t('bag.checkout_btn')}
                 </button>
               </div>
             </div>

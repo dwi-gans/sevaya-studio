@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendOrderCancelledEmail } from '@/lib/order-email';
+import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { getAuthenticatedUser } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 

@@ -46,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="id" className={`${dmSans.variable} ${inter.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${inter.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -73,3 +73,4 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     </html>
   );
 }
+

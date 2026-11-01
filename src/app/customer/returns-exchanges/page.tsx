@@ -48,7 +48,7 @@ export default function ReturnsExchangesPage() {
             <h2 className="text-[10px] font-semibold tracking-[0.2em] text-[#000000] uppercase">How to Request a Return or Exchange</h2>
             <ol className="space-y-2 list-none">
               {[
-                <>Contact our customer service via WhatsApp at{' '}<a href="https://wa.me/6285190993087" target="_blank" rel="noopener noreferrer" className="border-b border-black pb-0.5 font-medium hover:text-black/60 transition-colors">0851-9099-3087</a>.</>,
+                <>Contact our customer service via WhatsApp at{' '}<a href="https://wa.me/6282266316206" target="_blank" rel="noopener noreferrer" className="border-b border-black pb-0.5 font-medium hover:text-black/60 transition-colors">0822-6631-6206</a>.</>,
                 'Provide your order number and supporting photos or videos.',
                 'Wait for our team to review your request and provide further instructions.',
               ].map((step, i) => (

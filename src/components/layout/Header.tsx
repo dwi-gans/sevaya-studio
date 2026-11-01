@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
 import { getCachedSiteSections } from '@/integrations/supabase';
@@ -113,13 +114,16 @@ export function Header() {
                 <Logo className="h-7 w-auto text-black" />
               </Link>
 
-              <Link
-                href="/"
-                aria-label="Close to Home"
-                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-black/60 transition-colors hover:bg-black/8 hover:text-black"
-              >
-                <Icon name="close" size={20} />
-              </Link>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <LanguageSwitcher />
+                <Link
+                  href="/"
+                  aria-label="Close to Home"
+                  className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-black/60 transition-colors hover:bg-black/8 hover:text-black"
+                >
+                  <Icon name="close" size={20} />
+                </Link>
+              </div>
             </div>
           ) : isBagPage ? (
             /* Bag Page Variant: Back Button + Centered Logo */
@@ -140,8 +144,10 @@ export function Header() {
                 <Logo className="h-7 w-auto sm:h-8 text-black" />
               </Link>
 
-              {/* Spacer balance to keep logo centered */}
-              <div className="w-10 sm:w-20" aria-hidden="true" />
+              {/* Language Switcher + Balance Spacer */}
+              <div className="flex items-center justify-end">
+                <LanguageSwitcher />
+              </div>
             </div>
           ) : (
             /* Standard Storefront Header */
@@ -188,7 +194,7 @@ export function Header() {
                       : "text-black/60 hover:text-black"
                   }`}
                 >
-                  <span>{t("nav.home") || "Home"}</span>
+                  <span>Home</span>
                   <span
                     className={`absolute bottom-0 left-0 h-[2px] w-full bg-black transition-all duration-300 origin-left ${
                       pathname === "/"
@@ -213,7 +219,7 @@ export function Header() {
                         : "text-black/60 hover:text-black"
                     }`}
                   >
-                    <span>{t("nav.lookbook") || "Lookbook"}</span>
+                    <span>Lookbook</span>
                     <span
                       className={`absolute bottom-0 left-0 h-[2px] w-full bg-black transition-all duration-300 origin-left ${
                         pathname.startsWith("/lookbook")
@@ -248,11 +254,11 @@ export function Header() {
                   )}
                 </div>
 
-                {/* 3. Shop, About, News */}
+                {/* 3. Shop, About, News (Selalu English sesuai permintaan pengguna) */}
                 {[
-                  { key: "nav.shop", label: t("nav.shop") || "Shop", href: "/shop" },
-                  { key: "nav.about", label: t("nav.about") || "About", href: "/conscious" },
-                  { key: "nav.news", label: t("nav.news") || "News", href: "/news" },
+                  { label: "Shop", href: "/shop" },
+                  { label: "About", href: "/conscious" },
+                  { label: "Journal", href: "/news" },
                 ].map((item) => {
                   const isActive = pathname.startsWith(item.href);
                   return (
@@ -277,7 +283,7 @@ export function Header() {
                   );
                 })}
 
-                {/* 4. Customer Dropdown */}
+                {/* 4. Customer Dropdown (Selalu English) */}
                 <div
                   className="relative"
                   onMouseEnter={() => setCustomerOpen(true)}
@@ -323,7 +329,9 @@ export function Header() {
               </nav>
 
               {/* Right: Actions — smaller refined icons hugged to right */}
-              <div className="flex items-center gap-0.5 sm:gap-1.5 -mr-1">
+              <div className="flex items-center gap-1 sm:gap-2 -mr-1">
+                <LanguageSwitcher />
+
                 <button
                   type="button"
                   aria-label="Search Catalog"
@@ -560,3 +568,4 @@ export function Header() {
     </>
   );
 }
+

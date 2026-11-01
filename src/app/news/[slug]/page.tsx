@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
 import { Article } from '@/integrations/supabase/articles';
 import { INITIAL_ARTICLES } from '@/data/newsArticles';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function NewsDetailPage({
   params,
@@ -16,6 +17,7 @@ export default function NewsDetailPage({
 }) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
+  const { t } = useLanguage();
 
   // Immediate 0ms initial state from INITIAL_ARTICLES so there's zero flash or empty screen
   const [article, setArticle] = useState<Article | null>(() => {
@@ -67,20 +69,31 @@ export default function NewsDetailPage({
     notFound();
   }
 
-  const currentArticle = article || {
-    id: 'default',
-    slug,
-    title: 'SEVAYA Editorial Note',
-    category: 'Journal',
-    date: 'Oct 2026',
-    read_time: '4 min read',
-    excerpt: '',
-    content: [],
-    image: '/images/catalog/catalog-11.jpg',
-    images: ['/images/catalog/catalog-12.jpg'],
-    featured: false,
-    published: true,
-  };
+  // If article not yet loaded from API and not in INITIAL_ARTICLES, show editorial skeleton loader
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-[#FFFFFF] font-body text-[#000000] selection:bg-black/5 flex flex-col justify-between">
+        <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-20 animate-pulse">
+          <div className="mb-8">
+            <div className="h-3 w-32 bg-black/10 rounded" />
+          </div>
+          <div className="text-center mb-8 sm:mb-10 space-y-3">
+            <div className="mx-auto h-3 w-20 bg-black/10 rounded" />
+            <div className="mx-auto h-7 sm:h-9 w-3/4 max-w-md bg-black/10 rounded" />
+          </div>
+          <div className="aspect-[16/10] sm:aspect-[16/9] w-full bg-black/5 mb-8 rounded" />
+          <div className="space-y-4">
+            <div className="h-4 w-full bg-black/10 rounded" />
+            <div className="h-4 w-5/6 bg-black/10 rounded" />
+            <div className="h-4 w-4/6 bg-black/10 rounded" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const currentArticle = article;
 
   const relatedArticles = allArticles
     .filter((a) => a.slug !== currentArticle.slug)
@@ -102,7 +115,7 @@ export default function NewsDetailPage({
             className="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-widest text-[#777777] uppercase transition hover:text-black"
           >
             <Icon name="arrow_back" size={14} />
-            <span>Semua Cerita &amp; Jurnal</span>
+            <span>{t('news.back_to_news')}</span>
           </Link>
         </div>
 
@@ -157,7 +170,7 @@ export default function NewsDetailPage({
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    Atelier notes — an intimate gathering and honest reflections on modest grace.
+                    {t('news.atelier_caption')}
                   </p>
                 </div>
               )}
@@ -175,7 +188,7 @@ export default function NewsDetailPage({
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    Atelier notes — {currentArticle.title}
+                    {t('news.atelier_caption')}
                   </p>
                 </div>
               )}
@@ -197,7 +210,7 @@ export default function NewsDetailPage({
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    Atelier notes — {currentArticle.title}
+                    {t('news.atelier_caption')}
                   </p>
                 </div>
               ))}
@@ -208,7 +221,7 @@ export default function NewsDetailPage({
         {/* Category Tag */}
         <div className="mt-12 pt-6 border-t border-black/10 flex items-center justify-between text-xs text-[#666666]">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider">
-            <span>Kategori:</span>
+            <span>{t('news.category_label')}:</span>
             <span className="font-semibold text-black">{currentArticle.category}</span>
           </div>
         </div>
@@ -217,7 +230,7 @@ export default function NewsDetailPage({
         {relatedArticles.length > 0 && (
           <section className="mt-16 pt-10 border-t border-black/15">
             <h2 className="text-[11px] font-semibold tracking-[0.2em] text-[#888888] uppercase mb-6 text-center">
-              Cerita Terkait Lainnya
+              {t('news.related_title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {relatedArticles.map((rel) => (

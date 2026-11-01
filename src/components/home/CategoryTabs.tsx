@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { useLanguage } from '@/context/LanguageContext';
 
 export function CategoryTabs({ onSelect }: { onSelect?: (tab: string) => void }) {
@@ -9,12 +8,12 @@ export function CategoryTabs({ onSelect }: { onSelect?: (tab: string) => void })
   const [activeTab, setActiveTab] = useState('all');
 
   const tabs = [
-    { key: 'all', label: t('tab.all') },
-    { key: 'new', label: t('tab.new_arrivals') },
-    { key: 'abayas', label: t('tab.abayas') },
-    { key: 'kaftans', label: t('tab.kaftans') },
-    { key: 'scarves', label: t('tab.scarves') },
-    { key: 'materials', label: t('tab.materials') },
+    { key: 'all', label: t('home.tabs.all') },
+    { key: 'new', label: t('home.tabs.new_arrivals') },
+    { key: 'abayas', label: t('home.tabs.abayas') },
+    { key: 'kaftans', label: t('home.tabs.kaftans') },
+    { key: 'scarves', label: t('home.tabs.scarves') },
+    { key: 'materials', label: t('home.tabs.materials') },
   ];
 
   const handleClick = (tabKey: string, label: string) => {
@@ -25,7 +24,7 @@ export function CategoryTabs({ onSelect }: { onSelect?: (tab: string) => void })
   return (
     <nav
       aria-label="Quick Category Filters"
-      className="px-gutter-mobile no-scrollbar flex w-full items-center gap-2 overflow-x-auto border-b border-black/15/50 bg-white py-3.5"
+      className="px-gutter-mobile no-scrollbar flex w-full items-center gap-2 overflow-x-auto border-b border-black/15 bg-white py-3.5"
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;

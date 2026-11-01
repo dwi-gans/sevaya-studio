@@ -221,13 +221,13 @@ export default function LookbookVolumePage() {
         {/* Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            &apos;26 SEVAYA EDITORIAL COLLECTION
+            {cfg.heroSubtitle || "'26 SEVAYA EDITORIAL COLLECTION"}
           </span>
           <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
-            {volTitle}
+            {cfg.heroTitle || volTitle}
           </h1>
           <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
-            {volDesc}
+            {cfg.seasonDesc || volDesc}
           </p>
         </header>
 
@@ -249,7 +249,7 @@ export default function LookbookVolumePage() {
         {/* The Seed of The Story */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            Crafted for Intimate Moments &amp; Warmth
+            {cfg.seasonTitle || 'Crafted for Intimate Moments & Warmth'}
           </h2>
           <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
             <li><span className="font-medium text-[#000000]">Refined Drapery:</span> Enhanced cupro-viscose blend tailored for cooler evenings and graceful movement.</li>

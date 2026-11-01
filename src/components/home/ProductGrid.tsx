@@ -212,10 +212,10 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
         {/* Top Header */}
         <div className="mb-5 flex flex-col gap-1 text-center sm:text-left">
         <span className="text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
-          {t('grid.tag') || 'SHOP THE COLLECTION'}
+          SHOP THE COLLECTION
         </span>
         <h2 className="font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
-          {t('grid.title') || 'BEST-LOVED COLLECTIONS'}
+          BEST-LOVED COLLECTIONS
         </h2>
       </div>
 
@@ -297,3 +297,5 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
     </section>
   );
 }
+
+

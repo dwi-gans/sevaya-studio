@@ -7,8 +7,10 @@ import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
 import { Article, ARTICLE_CATEGORIES } from '@/integrations/supabase/articles';
 import { INITIAL_ARTICLES } from '@/data/newsArticles';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function NewsIndexPage() {
+  const { t } = useLanguage();
   // 0ms instant display from INITIAL_ARTICLES so there's zero flash
   const [articles, setArticles] = useState<Article[]>(() => {
     return INITIAL_ARTICLES.map((a) => ({
@@ -57,14 +59,14 @@ export default function NewsIndexPage() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
           <div>
             <span className="text-[10px] sm:text-[10px] font-semibold tracking-widest text-[#666666] uppercase">
-              SEVAYA JOURNAL &amp; ATELIER NOTES
+              {t('news.journal_sub')}
             </span>
             <h1 className="font-headline text-base sm:text-xl lg:text-2xl font-semibold tracking-tight text-[#000000] mt-1">
-              Ruang Baca &amp; Cerita
+              {t('news.journal_title')}
             </h1>
           </div>
           <p className="text-[10px] sm:text-xs text-[#555555] max-w-sm leading-relaxed sm:text-right">
-            Refleksi tentang keanggunan modest, eksplorasi material murni, dan catatan kreatif studio.
+            {t('news.journal_desc')}
           </p>
         </div>
 
@@ -131,10 +133,10 @@ export default function NewsIndexPage() {
 
                   <div className="mt-5 flex items-center justify-between">
                     <span className="inline-block text-[10px] sm:text-xs font-normal text-[#000000] border-b border-[#000000] pb-0.5 transition group-hover:text-[#555555] group-hover:border-[#555555]">
-                      Read more
+                      {t('news.read_more')}
                     </span>
                     <span className="text-[10px] text-[#666666] font-medium hidden sm:inline">
-                      Editorial Series
+                      {t('news.editorial_series')}
                     </span>
                   </div>
                 </div>
@@ -150,16 +152,16 @@ export default function NewsIndexPage() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-black/5 border border-[#E5E5E5] text-[#666666]">
                 <Icon name="newspaper" size={24} />
               </div>
-              <h3 className="mt-4 text-[11px] font-semibold text-[#000000]">Belum Ada Jurnal</h3>
+              <h3 className="mt-4 text-[11px] font-semibold text-[#000000]">{t('news.no_journal')}</h3>
               <p className="mt-1 text-[10px] text-[#555555] max-w-sm mx-auto">
-                Belum ada tulisan di bawah topik &ldquo;{selectedCategory}&rdquo;.
+                {t('news.no_journal_sub', { category: selectedCategory })}
               </p>
               <button
                 type="button"
                 onClick={() => setSelectedCategory('All Stories')}
                 className="mt-5 inline-flex items-center gap-1.5 rounded-none bg-[#000000] px-5 py-2 text-[10px] font-semibold tracking-wider text-[#FFFFFF] uppercase transition hover:bg-[#1A1A1A]"
               >
-                Lihat Semua Cerita
+                {t('news.view_all_stories')}
               </button>
             </div>
           ) : (
@@ -197,7 +199,7 @@ export default function NewsIndexPage() {
                       </div>
                       <div className="mt-2 pt-0.5">
                         <span className="inline-block text-[10px] sm:text-[10px] font-normal text-[#000000] border-b border-[#000000] pb-0.5 transition group-hover:text-[#555555] group-hover:border-[#555555]">
-                          Read more
+                          {t('news.read_more')}
                         </span>
                       </div>
                     </div>

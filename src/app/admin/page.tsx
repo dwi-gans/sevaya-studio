@@ -160,7 +160,8 @@ export default function AdminPage() {
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [sections, setSections] = useState<SiteSectionsConfig>(getCachedSiteSections);
   const [selectedLookbookVolId, setSelectedLookbookVolId] = useState('vol-1');
-  const [, setMediaFiles] = useState<StorageFile[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<StorageFile[]>([]);
+  const [ordersCount, setOrdersCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -235,6 +236,15 @@ export default function AdminPage() {
       .then((data) => {
         if (isMounted && Array.isArray(data.articles)) {
           setArticles(data.articles);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/admin/orders')
+      .then((r) => r.json())
+      .then((data) => {
+        if (isMounted && Array.isArray(data.data)) {
+          setOrdersCount(data.data.length);
         }
       })
       .catch(() => {});
@@ -447,153 +457,127 @@ export default function AdminPage() {
       const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
       handleUpdateSwatch(swatchIdx, 'image', urlOrPath);
     } else if (target === 'hero') {
-      setSections((prev) => {
-        const next = { ...prev, hero: { ...prev.hero, image: urlOrPath } };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = { ...sections, hero: { ...sections.hero, image: urlOrPath } };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'spotlight-0') {
-      setSections((prev) => {
-        const nextSpotlight = [...prev.spotlight];
-        if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
-        const next = { ...prev, spotlight: nextSpotlight };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const nextSpotlight = [...sections.spotlight];
+      if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
+      const next = { ...sections, spotlight: nextSpotlight };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'spotlight-1') {
-      setSections((prev) => {
-        const nextSpotlight = [...prev.spotlight];
-        if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
-        const next = { ...prev, spotlight: nextSpotlight };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const nextSpotlight = [...sections.spotlight];
+      if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
+      const next = { ...sections, spotlight: nextSpotlight };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'textiles') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          missionTextiles: { ...prev.missionTextiles, image: urlOrPath },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        missionTextiles: { ...sections.missionTextiles, image: urlOrPath },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'journal-0') {
-      setSections((prev) => {
-        const nextJournal = [...prev.journal];
-        if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
-        const next = { ...prev, journal: nextJournal };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const nextJournal = [...sections.journal];
+      if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
+      const next = { ...sections, journal: nextJournal };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'journal-1') {
-      setSections((prev) => {
-        const nextJournal = [...prev.journal];
-        if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
-        const next = { ...prev, journal: nextJournal };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const nextJournal = [...sections.journal];
+      if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
+      const next = { ...sections, journal: nextJournal };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target.startsWith('lookbook-')) {
       const idx = parseInt(target.replace('lookbook-', ''), 10);
-      setSections((prev) => {
-        const nextLb = [...prev.lookbook];
-        if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
-        const next = { ...prev, lookbook: nextLb };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const nextLb = [...sections.lookbook];
+      if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
+      const next = { ...sections, lookbook: nextLb };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target.startsWith('lbpage-')) {
       const key = target.replace('lbpage-', '');
-      setSections((prev) => {
-        const currentVolConfig =
-          prev.lookbookVolumesConfig?.[selectedLookbookVolId] ||
-          prev.lookbookPage ||
-          DEFAULT_SITE_SECTIONS.lookbookPage!;
-        const updatedVolConfig = { ...currentVolConfig, [key]: urlOrPath };
-        const next = {
-          ...prev,
-          lookbookVolumesConfig: {
-            ...(prev.lookbookVolumesConfig || {}),
-            [selectedLookbookVolId]: updatedVolConfig,
-          },
-          lookbookPage: selectedLookbookVolId === 'vol-1' ? updatedVolConfig : prev.lookbookPage,
-        };
-        saveSiteSections(next);
-        showToast(`Foto tersimpan otomatis untuk ${selectedLookbookVolId.toUpperCase()}!`);
-        return next;
-      });
+      const currentVolConfig =
+        sections.lookbookVolumesConfig?.[selectedLookbookVolId] ||
+        sections.lookbookPage ||
+        DEFAULT_SITE_SECTIONS.lookbookPage!;
+      const updatedVolConfig = { ...currentVolConfig, [key]: urlOrPath };
+      const next = {
+        ...sections,
+        lookbookVolumesConfig: {
+          ...(sections.lookbookVolumesConfig || {}),
+          [selectedLookbookVolId]: updatedVolConfig,
+        },
+        lookbookPage: selectedLookbookVolId === 'vol-1' ? updatedVolConfig : sections.lookbookPage,
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast(`Foto tersimpan otomatis untuk ${selectedLookbookVolId.toUpperCase()}!`);
     } else if (target === 'conscious-hero') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          conscious: {
-            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-            heroImage: urlOrPath,
-          },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        conscious: {
+          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+          heroImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'conscious-bemberg') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          conscious: {
-            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-            bembergImage: urlOrPath,
-          },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        conscious: {
+          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+          bembergImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'conscious-tencel') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          conscious: {
-            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-            tencelImage: urlOrPath,
-          },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        conscious: {
+          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+          tencelImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'conscious-linen') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          conscious: {
-            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-            linenImage: urlOrPath,
-          },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        conscious: {
+          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+          linenImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'conscious-modal') {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          conscious: {
-            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-            modalImage: urlOrPath,
-          },
-        };
-        saveSiteSections(next);
-        showToast('Foto tersimpan otomatis!');
-        return next;
-      });
+      const next = {
+        ...sections,
+        conscious: {
+          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+          modalImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto tersimpan otomatis!');
     } else if (target === 'article') {
       setArticleForm((prev) => ({ ...prev, image: urlOrPath }));
     } else if (target === 'article-add-image') {
@@ -875,8 +859,10 @@ export default function AdminPage() {
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        ordersCount={ordersCount}
         productsCount={products.length}
         articlesCount={articles.length}
+        mediaCount={mediaFiles.length || 18}
         onLogout={handleAdminLogout}
       />
 
@@ -896,7 +882,7 @@ export default function AdminPage() {
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
-        {activeTab === 'orders' && <BiteshipSimulatorDashboard />}
+        {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
 
         {activeTab === 'catalog' && (
           <CatalogTab

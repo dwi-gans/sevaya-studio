@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Icon } from '@/components/ui/Icon';
 
 export interface Product {
@@ -24,11 +25,11 @@ export interface Product {
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { t, formatPrice } = useLanguage();
   const [selectedSwatch, setSelectedSwatch] = useState(product.swatches[0]?.name || '');
 
   const activeSwatch = product.swatches.find((s) => s.name === selectedSwatch);
   const displayImage = activeSwatch?.image || product.image;
-  // If product has multiple images, use the secondary image on hover (Tazalabel style)
   const secondaryImage =
     product.images && product.images.length > 1
       ? product.images[1]
@@ -50,14 +51,12 @@ export function ProductCard({ product }: { product: Product }) {
       image: displayImage,
       quantity: 1,
     });
-    showToast(`Ditambahkan ${product.title} (${selectedSwatch}) ke tas`);
+    showToast(t('product.added_to_bag', { title: product.title, color: selectedSwatch }));
   };
-
-  const formatPrice = (val: number) => `Rp ${val.toLocaleString('id-ID')}`;
 
   return (
     <article className="group relative flex flex-col bg-transparent">
-      {/* Product Image Frame: 2:3 Portrait Aspect Ratio (Tazalabel abaya silhouette standard) */}
+      {/* Product Image Frame: 2:3 Portrait Aspect Ratio */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/5">
         <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
           {/* Badge */}
@@ -81,7 +80,7 @@ export function ProductCard({ product }: { product: Product }) {
             draggable={false}
           />
 
-          {/* Secondary Image on Hover (Tazalabel luxury flip effect) */}
+          {/* Secondary Image on Hover */}
           {secondaryImage && (
             <Image
               src={secondaryImage}
@@ -94,19 +93,19 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </Link>
 
-        {/* Floating Quick Buy Circle Button (Tazalabel signature) */}
+        {/* Floating Quick Buy Circle Button */}
         <button
           type="button"
-          aria-label={`Tambah ${product.title} ke tas`}
+          aria-label={t('product.quick_add')}
           onClick={handleQuickAdd}
           className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
-          title="Quick Add"
+          title={t('product.quick_add')}
         >
           <Icon name="add" size={18} />
         </button>
       </div>
 
-      {/* Typography & Price below image (Tazalabel centered layout) */}
+      {/* Typography & Price below image */}
       <div className="flex flex-col items-center pt-3.5 pb-2 text-center">
         <Link href={`/product/${product.slug}`} className="w-full">
           <h3 className="line-clamp-1 font-sans text-[9px] font-medium tracking-[0.14em] text-black uppercase transition-colors hover:opacity-70 sm:text-[10px]">
@@ -124,7 +123,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Color Swatches below price (Tazalabel centered swatches) */}
+        {/* Color Swatches below price */}
         {product.swatches && product.swatches.length > 0 && (
           <div className="mt-2.5 flex items-center justify-center gap-1.5">
             {product.swatches.map((swatch) => (

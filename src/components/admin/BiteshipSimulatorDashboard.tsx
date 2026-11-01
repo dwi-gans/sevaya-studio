@@ -467,7 +467,11 @@ function OrderDetailModal({
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function BiteshipSimulatorDashboard() {
+interface BiteshipSimulatorDashboardProps {
+  onOrdersCountChange?: (count: number) => void;
+}
+
+export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimulatorDashboardProps = {}) {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -501,6 +505,7 @@ export function BiteshipSimulatorDashboard() {
       const data = await res.json();
       if (data.success) {
         setOrders(data.data);
+        if (onOrdersCountChange) onOrdersCountChange(data.data.length);
         setLastRefresh(new Date());
       } else {
         setError(data.error || 'Gagal memuat orders');
@@ -529,7 +534,11 @@ export function BiteshipSimulatorDashboard() {
       const res = await fetch(`/api/admin/orders?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setOrders((prev) => prev.filter((o) => o.id !== id));
+        setOrders((prev) => {
+          const updated = prev.filter((o) => o.id !== id);
+          if (onOrdersCountChange) onOrdersCountChange(updated.length);
+          return updated;
+        });
         if (selectedOrder?.id === id) setSelectedOrder(null);
       } else {
         alert(data.error || 'Gagal menghapus order');

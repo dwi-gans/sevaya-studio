@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyMidtransSignature } from '@/integrations/midtrans';
 import { sendOrderCancelledEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
+import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

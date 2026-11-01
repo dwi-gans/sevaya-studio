@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: 'Do you accept returns or exchanges?',
-    a: 'Returns and exchanges are subject to our Returns & Exchanges Policy. If your item arrives damaged, defective, or incorrect, please contact us as soon as possible via WhatsApp at 0851-9099-3087.',
+    a: 'Returns and exchanges are subject to our Returns & Exchanges Policy. If your item arrives damaged, defective, or incorrect, please contact us as soon as possible via WhatsApp at 0822-6631-6206.',
   },
   {
     q: 'How long will my order take to arrive?',
@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: 'How can I contact SEVAYA?',
-    a: 'You can reach us through our official WhatsApp (0851-9099-3087) or Instagram account for product enquiries, sizing assistance, and order support.',
+    a: 'You can reach us through our official WhatsApp (0822-6631-6206) or Instagram account for product enquiries, sizing assistance, and order support.',
   },
 ];
 
@@ -75,7 +75,7 @@ export default function FAQPage() {
         <div className="mt-7 border-t border-black/10 pt-5 text-center">
           <p className="text-[11px] text-[#555555]">Still have questions? We would be happy to hear from you.</p>
           <a
-            href="https://wa.me/6285190993087"
+            href="https://wa.me/6282266316206"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block text-[10px] font-medium text-black border-b border-black pb-0.5 transition hover:text-black/60"

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import Link from 'next/link';
@@ -27,15 +27,14 @@ export function NarrativeSection() {
       {/* 1. Elegance in Simplicity Narrative */}
       <section className="mx-auto max-w-4xl px-4 py-8 text-center sm:px-6">
         <h2 className="font-sans text-xs font-normal tracking-wide text-black sm:text-sm">
-          {t('narrative.elegance_title') || 'Elegance in Simplicity'}
+          Elegance in Simplicity
         </h2>
         <div className="mx-auto mt-3 max-w-2xl space-y-2 text-[10px] leading-relaxed text-black/70">
           <p>
-            {t('narrative.elegance_p') ||
-              'At SEVAYA, we believe the most beautiful pieces are often the ones we return to, again and again. We create thoughtfully designed modestwear that brings together comfort, versatility, and understated elegance, pieces to accompany you through everyday moments and the occasions that matter.'}
+            {t('home.narrative.elegance_p')}
           </p>
           <p className="font-medium text-black">
-            {t('narrative.less_more') || 'Less, but more meaningful'}
+            {t('home.narrative.less_more')}
           </p>
         </div>
         <div className="mt-6">
@@ -43,7 +42,7 @@ export function NarrativeSection() {
             href="/conscious"
             className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
           >
-            {t('narrative.read_more') || 'Read more'}
+            {t('common.read_more')}
           </Link>
         </div>
       </section>
@@ -71,7 +70,7 @@ export function NarrativeSection() {
               Timeless
             </h3>
             <p className="mt-2.5 max-w-sm text-[10px] leading-relaxed text-black/60">
-              Designed beyond fleeting trends, with silhouettes and colours you&apos;ll want to wear season after season.
+              {t('home.narrative.pillar1_desc') || "Designed beyond fleeting trends, with silhouettes and colours you'll want to wear season after season."}
             </p>
           </div>
 
@@ -82,7 +81,7 @@ export function NarrativeSection() {
               Intentional
             </h3>
             <p className="mt-2 text-[10px] leading-relaxed text-black/60">
-              From fabric selection to details, every decision creates meaning.
+              {t('home.narrative.pillar2_desc') || 'From fabric selection to details, every decision creates meaning.'}
             </p>
           </div>
 
@@ -93,7 +92,7 @@ export function NarrativeSection() {
               Effortless
             </h3>
             <p className="mt-2 text-[10px] leading-relaxed text-black/60">
-              Modest silhouettes made for ease, comfort, and quiet confidence.
+              {t('home.narrative.pillar3_desc') || 'Modest silhouettes made for ease, comfort, and quiet confidence.'}
             </p>
           </div>
         </div>
@@ -140,16 +139,7 @@ export function NarrativeSection() {
             </div>
 
             <p className="text-[10px] leading-relaxed text-black/70">
-              SEVAYA was born from a love for timeless design, the beauty of modest dressing, and the belief that modesty should never limit the way a woman lives, dreams, or expresses herself. We believe a woman can be graceful and bold, gentle and ambitious, grounded in her faith and confident in her own direction. She can lead a room, build something meaningful, explore the world, and pursue her aspirations while staying true to what she believes in.
-            </p>
-            <p className="text-[10px] leading-relaxed text-black/70">
-              Modest dressing should move with her life, not hold her back. It should offer the freedom to show up as herself, with comfort, confidence, and a sense of ease in every moment.
-            </p>
-            <p className="text-[10px] leading-relaxed text-black/70">
-              Inspired by the architectural heritage of Andalusia, particularly the enduring beauty of Sevilla and Granada, SEVAYA brings together thoughtful design, understated elegance, and everyday functionality to create modestwear that feels as good to live in as it is beautiful to look at.
-            </p>
-            <p className="text-[10px] leading-relaxed text-black/70">
-              SEVAYA is an invitation to embrace modesty on your own terms, with intention, confidence, and no limits on who you can become.
+              {t('home.narrative.about_p')}
             </p>
             <p className="text-[9px] font-medium tracking-[0.28em] text-black/35 uppercase mt-4">
               TIMELESS • INTENTIONAL • EFFORTLESS
@@ -160,7 +150,7 @@ export function NarrativeSection() {
                 href="/conscious"
                 className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
               >
-                Read more
+                {t('common.read_more')}
               </Link>
             </div>
           </div>

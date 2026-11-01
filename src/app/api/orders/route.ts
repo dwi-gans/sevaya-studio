@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { sendOrderPendingPaymentEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
+import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { getVerifiedProductPrice } from '@/lib/catalog-prices';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -318,6 +319,23 @@ export async function POST(req: NextRequest) {
         } else {
           sendOrderPendingPaymentEmail(emailPayload).catch(() => {});
         }
+
+        // Notify admin at sevayaofficial@gmail.com
+        sendAdminOrderNotification({
+          orderNumber,
+          status: paymentMethod === 'cod' ? 'processing' : 'created',
+          customerName,
+          customerEmail: email,
+          customerPhone: String(phone || ''),
+          customerAddress,
+          items: verifiedItems,
+          subtotal: serverSubtotal,
+          discount: safeDiscount,
+          shippingCost: safeShipping,
+          grandTotal: serverGrandTotal,
+          paymentMethod,
+          courierName: selectedRate ? `${selectedRate.courier_name} ${selectedRate.courier_service_name}` : undefined,
+        }).catch((err) => console.warn('[Admin Notification Email Error]:', err));
       } catch (mailErr) {
         console.warn('Background email warning:', mailErr);
       }

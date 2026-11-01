@@ -65,12 +65,12 @@ export default function ShippingInformationPage() {
           <p className="text-[11px] text-[#333333]">
             For shipping enquiries, please contact us via WhatsApp at{' '}
             <a
-              href="https://wa.me/6285190993087"
+              href="https://wa.me/6282266316206"
               target="_blank"
               rel="noopener noreferrer"
               className="border-b border-black pb-0.5 font-medium hover:text-black/60 transition-colors"
             >
-              0851-9099-3087
+              0822-6631-6206
             </a>
             .
           </p>

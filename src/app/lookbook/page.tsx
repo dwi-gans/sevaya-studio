@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
+import { useLanguage } from '@/context/LanguageContext';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, LookbookPageConfig } from '@/integrations/supabase';
 
 const LOOKBOOK_PRODUCTS: Product[] = [
@@ -157,6 +158,7 @@ function EditorialImage({
 }
 
 export default function LookbookPage() {
+  const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDown, setIsDown] = useState(false);
@@ -254,7 +256,7 @@ export default function LookbookPage() {
             {cfg.heroTitle && cfg.heroTitle !== '26°RHAPSODY' ? cfg.heroTitle : 'VOL 1: INTO A NEW SEASON'}
           </h1>
           <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
-            Effortless elegance, made practical. Meet Sevilla, a thoughtfully designed abaya that combines timeless style with details that make everyday life easier. Made from a blend of 60% cupro and 40% viscose, the fabric feels soft and smooth, with a beautiful drape that moves naturally with you.
+            {cfg.seasonDesc || t('lookbook.hero_desc')}
           </p>
         </header>
 
@@ -279,9 +281,9 @@ export default function LookbookPage() {
             Every detail is designed with purpose
           </h2>
           <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
-            <li><span className="font-medium text-[#000000]">Two looks in one:</span> A beautiful abstract button detail lets you style your abaya in two different ways, giving you more versatility in one piece.</li>
-            <li><span className="font-medium text-[#000000]">40 cm front zipper:</span> Designed for extra convenience, making everyday activities and mealtimes easier.</li>
-            <li><span className="font-medium text-[#000000]">Two side pockets:</span> Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.</li>
+            <li><span className="font-medium text-[#000000]">Two looks in one:</span> {t('lookbook.purpose_desc1')}</li>
+            <li><span className="font-medium text-[#000000]">40 cm front zipper:</span> {t('lookbook.purpose_desc2')}</li>
+            <li><span className="font-medium text-[#000000]">Two side pockets:</span> {t('lookbook.purpose_desc3')}</li>
           </ul>
         </section>
 
@@ -317,7 +319,7 @@ export default function LookbookPage() {
             Practical for everyday moments
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            Thoughtfully designed to make daily activities—including eating and enjoying a bowl of soup—feel more comfortable and effortless. Sevilla has a timeless silhouette: an elegant, flowing shape that balances comfort, simplicity, and modern femininity.
+            {t('lookbook.practical_desc')}
           </p>
         </section>
 

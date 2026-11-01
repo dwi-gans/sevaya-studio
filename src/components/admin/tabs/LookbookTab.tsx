@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
-import { SiteSectionsConfig, DEFAULT_SITE_SECTIONS } from '@/integrations/supabase';
+import { SiteSectionsConfig, DEFAULT_SITE_SECTIONS, saveSiteSections } from '@/integrations/supabase';
 import type { ImagePickerTarget } from '../adminTypes';
 
 interface LookbookTabProps {
@@ -26,11 +26,6 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
     sections.lookbookPage ||
     DEFAULT_SITE_SECTIONS.lookbookPage!;
 
-  const activeVolLabel =
-    (sections.lookbookLinks || []).find(
-      (l) => l.id === selectedLookbookVolId || l.href.includes(selectedLookbookVolId),
-    )?.label || selectedLookbookVolId.toUpperCase();
-
   const currentLinks =
     sections.lookbookLinks && sections.lookbookLinks.length > 0
       ? sections.lookbookLinks
@@ -38,6 +33,29 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           { id: 'vol-1', label: 'Vol 1: Into a New Season', season: "'26", href: '/lookbook', badge: 'NEW' },
           { id: 'vol-2', label: 'Vol 2: Autumn Serenade', season: "'26", href: '/lookbook/vol-2', badge: 'VOL 2' },
         ];
+
+  const activeVolIndex = currentLinks.findIndex(
+    (l) => l.id === selectedLookbookVolId || l.href.includes(selectedLookbookVolId),
+  );
+  const activeLink = activeVolIndex >= 0 ? currentLinks[activeVolIndex] : currentLinks[0];
+
+  const activeVolLabel = activeLink?.label || selectedLookbookVolId.toUpperCase();
+
+  const handleSaveTextAndNavbar = () => {
+    const updatedConfig = { ...activeVolConfig };
+    const next: SiteSectionsConfig = {
+      ...sections,
+      lookbookLinks: currentLinks,
+      lookbookVolumesConfig: {
+        ...(sections.lookbookVolumesConfig || {}),
+        [selectedLookbookVolId]: updatedConfig,
+      },
+      lookbookPage: selectedLookbookVolId === 'vol-1' ? updatedConfig : sections.lookbookPage,
+    };
+    setSections(next);
+    saveSiteSections(next);
+    showToast('Pengaturan volume & teks lookbook berhasil disimpan!');
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">
@@ -49,19 +67,19 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           Manajemen Lookbook &amp; Galeri Editorial Per Volume
         </h2>
         <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-          Pilih volume lookbook terlebih dahulu, lalu sesuaikan foto dan deskripsi khusus untuk volume tersebut.
+          Pilih volume lookbook, sesuaikan pengaturan navbar &amp; URL di bagian atas, lalu edit foto dan deskripsinya.
         </p>
       </div>
 
-      {/* ══ STEP 1: PEMILIHAN VOLUME LOOKBOOK & TAMBAH VOLUME ══ */}
+      {/* ══ STEP 1: PEMILIHAN VOLUME & PENGATURAN NAVBAR ATAS PER VOLUME ══ */}
       <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
         <div className="border-b border-black/10 pb-2.5 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h3 className="text-xs font-bold text-black">
-              1. Pilih Volume Lookbook yang Ingin Diedit
+            <h3 className="text-xs font-bold text-black uppercase">
+              1. Pilih Volume Lookbook &amp; Pengaturan Navbar
             </h3>
             <p className="text-[11px] text-black/60 mt-0">
-              Klik salah satu volume di bawah untuk memuat foto dan konten khususnya.
+              Pilih volume di bawah untuk mengedit foto, konten teks, serta label &amp; tautan navbarnya.
             </p>
           </div>
           <button
@@ -84,11 +102,13 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 ...(sections.lookbookVolumesConfig || {}),
                 [newId]: { ...DEFAULT_SITE_SECTIONS.lookbookPage!, heroTitle: `VOL ${nextNum}: NEW COLLECTION` },
               };
-              setSections((prev) => ({
-                ...prev,
+              const next: SiteSectionsConfig = {
+                ...sections,
                 lookbookLinks: newLinks,
                 lookbookVolumesConfig: newVolumesConfig,
-              }));
+              };
+              setSections(next);
+              saveSiteSections(next);
               setSelectedLookbookVolId(newId);
               showToast(`Volume baru "${newId}" berhasil ditambahkan & dipilih!`);
             }}
@@ -141,6 +161,108 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
             );
           })}
         </div>
+
+        {/* Form Pengaturan Navbar Khusus Volume yang Dipilih (Tampil di atas) */}
+        {activeLink && activeVolIndex >= 0 && (
+          <div className="mt-4 rounded-xl border border-black/10 bg-[#f9f9f8] p-3.5 sm:p-4 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-black/50">
+                  Pengaturan Menu Dropdown Navbar
+                </span>
+                <h4 className="text-xs font-bold text-black">
+                  Pengaturan Navbar untuk: <span className="underline">{activeLink.label}</span> ({selectedLookbookVolId})
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveTextAndNavbar}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-black/85 active:scale-95 shrink-0"
+              >
+                <Icon name="check" size={13} />
+                <span>Simpan Navbar</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold text-black/60 uppercase">Label Menu Navbar</label>
+                <input
+                  type="text"
+                  value={activeLink.label}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSections((prev) => {
+                      const cur = prev.lookbookLinks || [];
+                      const next = [...cur];
+                      if (next[activeVolIndex]) next[activeVolIndex] = { ...next[activeVolIndex]!, label: val };
+                      return { ...prev, lookbookLinks: next };
+                    });
+                  }}
+                  className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+                  placeholder="e.g. Vol 1: Into a New Season"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold text-black/60 uppercase">Season / Tahun</label>
+                <input
+                  type="text"
+                  value={activeLink.season || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSections((prev) => {
+                      const cur = prev.lookbookLinks || [];
+                      const next = [...cur];
+                      if (next[activeVolIndex]) next[activeVolIndex] = { ...next[activeVolIndex]!, season: val };
+                      return { ...prev, lookbookLinks: next };
+                    });
+                  }}
+                  className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+                  placeholder="e.g. '26"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold text-black/60 uppercase">URL / Href</label>
+                <input
+                  type="text"
+                  value={activeLink.href}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSections((prev) => {
+                      const cur = prev.lookbookLinks || [];
+                      const next = [...cur];
+                      if (next[activeVolIndex]) next[activeVolIndex] = { ...next[activeVolIndex]!, href: val };
+                      return { ...prev, lookbookLinks: next };
+                    });
+                  }}
+                  className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+                  placeholder="e.g. /lookbook"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold text-black/60 uppercase">Badge</label>
+                <input
+                  type="text"
+                  value={activeLink.badge || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSections((prev) => {
+                      const cur = prev.lookbookLinks || [];
+                      const next = [...cur];
+                      if (next[activeVolIndex]) next[activeVolIndex] = { ...next[activeVolIndex]!, badge: val };
+                      return { ...prev, lookbookLinks: next };
+                    });
+                  }}
+                  className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+                  placeholder="e.g. NEW atau VOL 2"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══ STEP 2: EDITOR FOTO EDITORIAL UNTUK VOLUME YANG DIPILIH ══ */}
@@ -151,7 +273,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               2. Editor Foto &amp; Konten Editorial — [{activeVolLabel}]
             </h3>
             <p className="text-[11px] text-black/60 mt-0">
-              Setiap foto atau teks yang diganti akan khusus berlaku untuk volume ini dan tersimpan otomatis ke Cloud.
+              Setiap foto yang diganti khusus berlaku untuk volume ini dan tersimpan otomatis ke Cloud.
             </p>
           </div>
           <span className="rounded-full bg-black px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
@@ -393,114 +515,315 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
         </div>
       </div>
 
-      {/* ══ STEP 3: PENGATURAN DROPDOWN NAVBAR LOOKBOOK ══ */}
-      <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
-        <div className="border-b border-black/10 pb-2.5 flex items-center justify-between">
+      {/* ══ STEP 3: EDITOR TEKS KONTEN LOOKBOOK ══ */}
+      <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+        <div className="border-b border-black/10 pb-2.5 flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h3 className="text-xs font-bold text-black">
-              3. Pengaturan Label &amp; URL Dropdown Navbar
+            <h3 className="text-xs font-bold text-black uppercase">
+              3. Edit Teks Konten — [{activeVolLabel}]
             </h3>
             <p className="text-[11px] text-black/60 mt-0">
-              Sesuaikan nama volume, tahun/season, dan tautan halaman navbar.
+              Ubah judul dan deskripsi teks untuk volume ini. Klik &ldquo;Simpan Teks&rdquo; untuk menyimpan ke Cloud.
             </p>
           </div>
-          <span className="rounded-full bg-black px-2.5 py-0.5 text-[10px] font-bold text-white">
-            {(sections.lookbookLinks || []).length} Volume Navbar
+          <button
+            type="button"
+            onClick={handleSaveTextAndNavbar}
+            className="inline-flex items-center gap-1.5 rounded-full bg-black px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-black/85 active:scale-95 shrink-0"
+          >
+            <Icon name="check" size={13} />
+            <span>Simpan Teks</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* heroTitle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Judul Hero (heroTitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.heroTitle || ''}
+              placeholder="e.g. VOL 1: INTO A NEW SEASON"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, heroTitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+
+          {/* heroSubtitle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Subtitle Hero (heroSubtitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.heroSubtitle || ''}
+              placeholder="e.g. '26 SEVILLA CUPRO ABAYA"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, heroSubtitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+
+          {/* seasonTitle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Judul Section Pertama (seasonTitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.seasonTitle || ''}
+              placeholder="e.g. Every detail is designed with purpose"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, seasonTitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+
+          {/* panorama1Title */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Judul Section Panorama (panorama1Title)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.panorama1Title || ''}
+              placeholder="e.g. Practical for everyday moments"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, panorama1Title: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+
+          {/* triptychTitle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Judul Section Triptych (triptychTitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.triptychTitle || ''}
+              placeholder="e.g. Sevilla is more than an abaya"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, triptychTitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Text areas for longer descriptions */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* seasonDesc */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Deskripsi Hero / Opening (seasonDesc)
+            </label>
+            <textarea
+              rows={4}
+              value={activeVolConfig.seasonDesc || ''}
+              placeholder="Deskripsi pembuka lookbook ini..."
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, seasonDesc: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+            />
+          </div>
+
+          {/* panorama1Desc */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Deskripsi Section Panorama (panorama1Desc)
+            </label>
+            <textarea
+              rows={4}
+              value={activeVolConfig.panorama1Desc || ''}
+              placeholder="Deskripsi untuk section panorama tengah..."
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, panorama1Desc: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+            />
+          </div>
+
+          {/* triptychDesc */}
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
+              Deskripsi Section Triptych / Penutup (triptychDesc)
+            </label>
+            <textarea
+              rows={4}
+              value={activeVolConfig.triptychDesc || ''}
+              placeholder="Deskripsi penutup / pesan brand di section triptych..."
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, triptychDesc: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Save button bottom */}
+        <div className="flex justify-end pt-2 border-t border-black/10">
+          <button
+            type="button"
+            onClick={handleSaveTextAndNavbar}
+            className="inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-black/85 active:scale-95"
+          >
+            <Icon name="check" size={13} />
+            <span>Simpan Teks</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ══ STEP 4: MANAJEMEN & HAPUS VOLUME (DILETAKKAN DI BAWAH) ══ */}
+      <div className="rounded-xl border border-red-200 bg-red-50/30 p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
+        <div className="border-b border-red-200/60 pb-2.5 flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-bold text-red-700">
+              4. Manajemen Hapus Volume
+            </h3>
+            <p className="text-[11px] text-red-600/80 mt-0">
+              Kelola dan hapus volume lookbook yang sudah tidak aktif atau tidak diperlukan lagi.
+            </p>
+          </div>
+          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700 border border-red-200">
+            Total: {currentLinks.length} Volume
           </span>
         </div>
 
-        <div className="space-y-3">
-          {currentLinks.map((link, idx) => (
-            <div key={link.id || idx} className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl border border-black/10 bg-[#f9f9f8]">
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-2 w-full">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-black/60 uppercase">Label Menu Navbar</label>
-                  <input
-                    type="text"
-                    value={link.label}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSections((prev) => {
-                        const cur = prev.lookbookLinks || [];
-                        const next = [...cur];
-                        if (next[idx]) next[idx] = { ...next[idx]!, label: val };
-                        return { ...prev, lookbookLinks: next };
-                      });
-                    }}
-                    className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
-                  />
+        <div className="space-y-2.5">
+          {currentLinks.map((link, idx) => {
+            const isCanDelete = currentLinks.length > 1;
+            return (
+              <div
+                key={link.id || idx}
+                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-red-100 bg-white shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-black/5 text-black/70 shrink-0">
+                    {link.badge || 'VOL'}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-black truncate">{link.label}</p>
+                    <p className="text-[10px] text-black/50 truncate">
+                      {link.season || "'26"} &bull; {link.href}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-black/60 uppercase">Season / Tahun</label>
-                  <input
-                    type="text"
-                    value={link.season || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSections((prev) => {
-                        const cur = prev.lookbookLinks || [];
-                        const next = [...cur];
-                        if (next[idx]) next[idx] = { ...next[idx]!, season: val };
-                        return { ...prev, lookbookLinks: next };
-                      });
+
+                {isCanDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!window.confirm(`Yakin ingin menghapus volume "${link.label}"?`)) return;
+                      const nextLinks = currentLinks.filter((_, i) => i !== idx);
+                      const nextVolId =
+                        selectedLookbookVolId === link.id
+                          ? nextLinks[0]?.id || 'vol-1'
+                          : selectedLookbookVolId;
+
+                      const next: SiteSectionsConfig = {
+                        ...sections,
+                        lookbookLinks: nextLinks,
+                      };
+                      setSections(next);
+                      saveSiteSections(next);
+                      setSelectedLookbookVolId(nextVolId);
+                      showToast(`Volume "${link.label}" berhasil dihapus.`);
                     }}
-                    className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-black/60 uppercase">URL / Href</label>
-                  <input
-                    type="text"
-                    value={link.href}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSections((prev) => {
-                        const cur = prev.lookbookLinks || [];
-                        const next = [...cur];
-                        if (next[idx]) next[idx] = { ...next[idx]!, href: val };
-                        return { ...prev, lookbookLinks: next };
-                      });
-                    }}
-                    className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-black/60 uppercase">Badge</label>
-                  <input
-                    type="text"
-                    value={link.badge || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSections((prev) => {
-                        const cur = prev.lookbookLinks || [];
-                        const next = [...cur];
-                        if (next[idx]) next[idx] = { ...next[idx]!, badge: val };
-                        return { ...prev, lookbookLinks: next };
-                      });
-                    }}
-                    className="w-full h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
-                  />
-                </div>
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-red-300 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition text-xs font-semibold shrink-0"
+                    title="Hapus Volume"
+                  >
+                    <Icon name="close" size={14} />
+                    <span>Hapus Volume</span>
+                  </button>
+                ) : (
+                  <span className="text-[10px] font-medium text-black/40 italic shrink-0">
+                    Volume utama (tidak dapat dihapus)
+                  </span>
+                )}
               </div>
-              {((sections.lookbookLinks || []).length > 1) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!window.confirm(`Yakin hapus volume "${link.label}"?`)) return;
-                    setSections((prev) => ({
-                      ...prev,
-                      lookbookLinks: (prev.lookbookLinks || []).filter((_, i) => i !== idx),
-                    }));
-                    showToast('Volume lookbook dihapus.');
-                  }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition shrink-0"
-                  title="Hapus Volume"
-                >
-                  <Icon name="close" size={16} />
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

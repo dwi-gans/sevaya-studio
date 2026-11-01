@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
 
 type SubmenuKey = 'collection' | 'lookbook' | 'conscious' | 'customer' | null;
@@ -118,32 +119,7 @@ export function NavigationDrawer() {
           )}
 
           <div className="flex items-center gap-2">
-            {!activeSubmenu && (
-              <div className="flex items-center rounded-full border border-white/15 bg-white/10 p-0.5 text-[11px] font-semibold tracking-wider">
-                <button
-                  type="button"
-                  onClick={() => setLanguage('id')}
-                  className={`rounded-full px-2.5 py-1 uppercase transition-all ${
-                    language === 'id'
-                      ? 'bg-white text-white shadow-xs'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  ID
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('en')}
-                  className={`rounded-full px-2.5 py-1 uppercase transition-all ${
-                    language === 'en'
-                      ? 'bg-white text-white shadow-xs'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
-            )}
+            {!activeSubmenu && <LanguageSwitcher variant="dark" />}
 
             <button
               type="button"

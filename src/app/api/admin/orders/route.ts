@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkMidtransStatus } from '@/integrations/midtrans';
 import { verifyAdminSession } from '@/lib/auth-admin';
+import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -263,6 +264,33 @@ export async function PATCH(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    // Send admin notification to sevayaofficial@gmail.com
+    if (data) {
+      let items = [];
+      try {
+        items = typeof data.items === 'string' ? JSON.parse(data.items) : data.items || [];
+      } catch {
+        items = [];
+      }
+      sendAdminOrderNotification({
+        orderNumber: data.order_number,
+        status: data.status,
+        customerName: data.customer_name || 'Pelanggan Terhormat',
+        customerEmail: data.customer_email || '-',
+        customerPhone: data.customer_phone,
+        customerAddress: data.customer_address,
+        items,
+        subtotal: Number(data.subtotal || 0),
+        discount: Number(data.discount || 0),
+        shippingCost: Number(data.shipping_cost || 0),
+        grandTotal: Number(data.grand_total || 0),
+        paymentMethod: data.payment_method,
+        courierName: data.courier_name,
+        trackingNumber: data.tracking_number,
+        cancelReason: data.status === 'cancelled' ? 'Dibatalkan oleh Admin Toko' : undefined,
+      }).catch((e: unknown) => console.warn('[Admin Order Status Notification Error]:', e));
     }
 
     return NextResponse.json({ success: true, data });

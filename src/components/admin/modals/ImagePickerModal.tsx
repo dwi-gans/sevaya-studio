@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { MASTER_CATALOG_ASSETS, MasterAsset } from '../adminTypes';
 import { uploadMultipleFilesToStorage } from '@/integrations/supabase/storage';
@@ -15,7 +15,7 @@ interface ImagePickerModalProps {
   currentImage?: string;
 }
 
-const getInitialAssets = (): MasterAsset[] => {
+const getCachedAssets = (): MasterAsset[] => {
   if (typeof window === 'undefined') return MASTER_CATALOG_ASSETS;
   try {
     const cached = localStorage.getItem(CLOUD_MEDIA_CACHE_KEY);
@@ -29,33 +29,34 @@ const getInitialAssets = (): MasterAsset[] => {
   return MASTER_CATALOG_ASSETS;
 };
 
+const ITEMS_PER_PAGE = 12;
+
 export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
   isOpen,
   onClose,
   onSelectImage,
-  availableImages,
   currentImage,
 }) => {
   const { showToast } = useToast();
-  const [assets, setAssets] = useState<MasterAsset[]>(getInitialAssets);
-  const [isLoading, setIsLoading] = useState(false);
+  const [assets, setAssets] = useState<MasterAsset[]>(getCachedAssets);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'cloud' | 'catalog'>('all');
   const [selectedSrc, setSelectedSrc] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync cache and fetch latest cloud uploads on modal open
+  // Sync cache on modal open — exactly identical to MediaLibraryTab
   useEffect(() => {
     if (!isOpen) return;
 
-    // Reset selection to currentImage if provided
+    setCurrentPage(1);
+
     if (currentImage) {
       setSelectedSrc(currentImage);
     }
 
-    // Refresh from localStorage first
     try {
       const cached = localStorage.getItem(CLOUD_MEDIA_CACHE_KEY);
       if (cached) {
@@ -68,38 +69,39 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
       // ignore
     }
 
-    // Fetch latest cloud assets in background
     let isMounted = true;
-    async function fetchLatestCloud() {
-      setIsLoading(true);
+    async function loadCloudFiles() {
       try {
         const res = await fetch('/api/admin/upload?folder=uploads');
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && data.success && Array.isArray(data.files)) {
-            const cloudFiles: MasterAsset[] = data.files;
-            const cloudNames = new Set(cloudFiles.map((f) => f.filename));
-
-            // Merge with catalog assets
-            const catalogFallback = MASTER_CATALOG_ASSETS.filter((c) => !cloudNames.has(c.filename));
-            const merged = [...cloudFiles, ...catalogFallback];
-
-            setAssets(merged);
-            try {
-              localStorage.setItem(CLOUD_MEDIA_CACHE_KEY, JSON.stringify(merged));
-            } catch {
-              // ignore
-            }
+          if (isMounted) {
+            const cloudFiles: MasterAsset[] = data.success && Array.isArray(data.files) ? data.files : [];
+            setAssets((prev) => {
+              const cloudNames = new Set(cloudFiles.map((f) => f.filename));
+              const nonCloudAssets = prev.filter(
+                (a) => !cloudNames.has(a.filename) && !a.src.includes('/storage/v1/object/public/')
+              );
+              const catalogFallback =
+                nonCloudAssets.length > 0
+                  ? nonCloudAssets
+                  : MASTER_CATALOG_ASSETS.filter((c) => !cloudNames.has(c.filename));
+              const next = [...cloudFiles, ...catalogFallback];
+              try {
+                localStorage.setItem(CLOUD_MEDIA_CACHE_KEY, JSON.stringify(next));
+              } catch {
+                // ignore
+              }
+              return next;
+            });
           }
         }
       } catch {
         // ignore
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
     }
 
-    fetchLatestCloud();
+    loadCloudFiles();
     return () => {
       isMounted = false;
     };
@@ -135,7 +137,6 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
           return updated;
         });
 
-        // Automatically select the first newly uploaded image
         const firstNew = newUploaded[0];
         if (firstNew?.src) {
           setSelectedSrc(firstNew.src);
@@ -154,7 +155,6 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     }
   };
 
-  // Drag & drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -176,23 +176,18 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     }
   };
 
-  // Helper to distinguish cloud upload vs catalog
   const isCloudAsset = (src: string) => {
     return src.startsWith('http://') || src.startsWith('https://') || src.includes('/storage/v1/object/public/');
   };
 
-  // Compute counts for tabs
   const cloudCount = useMemo(() => assets.filter((a) => isCloudAsset(a.src)).length, [assets]);
   const catalogCount = useMemo(() => assets.filter((a) => !isCloudAsset(a.src)).length, [assets]);
 
-  // Filtered list based on active tab and search query
   const filteredAssets = useMemo(() => {
     return assets.filter((asset) => {
-      // Tab filter
       if (activeFilter === 'cloud' && !isCloudAsset(asset.src)) return false;
       if (activeFilter === 'catalog' && isCloudAsset(asset.src)) return false;
 
-      // Search query filter
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
       return (
@@ -202,15 +197,25 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     });
   }, [assets, activeFilter, searchQuery]);
 
+  const totalPages = Math.ceil(filteredAssets.length / ITEMS_PER_PAGE) || 1;
+  const paginatedAssets = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAssets.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAssets, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className="relative max-h-[92vh] sm:max-h-[88vh] w-full max-w-5xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden"
+        className="relative max-h-[92vh] sm:max-h-[88vh] w-full max-w-4xl flex flex-col rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl overflow-hidden"
       >
         {/* Drag & Drop Overlay */}
         {isDragging && (
@@ -218,7 +223,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <Icon name="cloud_upload" size={48} className="animate-bounce mb-3 text-white" />
             <p className="text-base font-bold">Lepaskan Berkas Foto di Sini</p>
             <p className="text-xs text-white/70 mt-1">
-              Foto akan langsung diunggah ke Supabase CDN dan siap dipilih.
+              Foto akan langsung diunggah ke Cloud Storage CDN dan siap dipilih.
             </p>
           </div>
         )}
@@ -241,7 +246,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-black/40 hover:bg-black/5 hover:text-black transition"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-black/40 hover:bg-black/5 hover:text-black transition cursor-pointer"
             title="Tutup"
           >
             <Icon name="close" size={20} />
@@ -255,9 +260,9 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('all')}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 activeFilter === 'all'
-                  ? 'bg-black text-white'
+                  ? 'bg-black text-white shadow-xs'
                   : 'border border-black/15 bg-white text-black/70 hover:bg-black/5'
               }`}
             >
@@ -266,9 +271,9 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('cloud')}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 activeFilter === 'cloud'
-                  ? 'bg-black text-white'
+                  ? 'bg-black text-white shadow-xs'
                   : 'border border-black/15 bg-white text-black/70 hover:bg-black/5'
               }`}
             >
@@ -280,9 +285,9 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('catalog')}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 activeFilter === 'catalog'
-                  ? 'bg-black text-white'
+                  ? 'bg-black text-white shadow-xs'
                   : 'border border-black/15 bg-white text-black/70 hover:bg-black/5'
               }`}
             >
@@ -328,21 +333,9 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
           </div>
         </div>
 
-        {/* Gallery Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-h-[300px]">
-          {isLoading && assets.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-black/10 bg-white p-2 space-y-2 animate-pulse"
-                >
-                  <div className="aspect-[3/4] w-full rounded-lg bg-black/5" />
-                  <div className="h-3 bg-black/10 rounded-sm w-3/4" />
-                </div>
-              ))}
-            </div>
-          ) : filteredAssets.length === 0 ? (
+        {/* Gallery Content Area (12 items per page — lightweight and instant render) */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 min-h-[300px]">
+          {filteredAssets.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center text-black/60">
               <Icon name="search_off" size={40} className="mb-2 text-black/30" />
               <p className="font-semibold text-sm text-black">Tidak ada foto yang ditemukan</p>
@@ -354,78 +347,110 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-black/5"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-black/5 cursor-pointer"
               >
                 <Icon name="add_photo_alternate" size={16} />
                 <span>Unggah Foto Sekarang</span>
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {filteredAssets.map((asset) => {
-                const isSelected = selectedSrc === asset.src;
-                const isCloud = isCloudAsset(asset.src);
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {paginatedAssets.map((asset) => {
+                  const isSelected = selectedSrc === asset.src;
+                  const isCloud = isCloudAsset(asset.src);
 
-                return (
-                  <div
-                    key={asset.src}
-                    onClick={() => setSelectedSrc(asset.src)}
-                    onDoubleClick={() => {
-                      onSelectImage(asset.src);
-                      onClose();
-                    }}
-                    className={`group relative rounded-xl border bg-white overflow-hidden cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-black ring-2 ring-black shadow-md'
-                        : 'border-black/15 hover:border-black/60 hover:shadow-xs'
-                    }`}
-                  >
-                    <div className="relative aspect-[3/4] w-full bg-black/5 overflow-hidden">
-                      <Image
-                        src={asset.src}
-                        alt={asset.filename}
-                        fill
-                        loading="lazy"
-                        quality={70}
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 200px"
-                        className="object-cover transition-transform duration-200 group-hover:scale-105"
-                      />
+                  return (
+                    <div
+                      key={asset.src}
+                      onClick={() => setSelectedSrc(asset.src)}
+                      onDoubleClick={() => {
+                        onSelectImage(asset.src);
+                        onClose();
+                      }}
+                      className={`group relative rounded-xl border bg-white overflow-hidden cursor-pointer transition-all ${
+                        isSelected
+                          ? 'border-black ring-2 ring-black shadow-md'
+                          : 'border-black/15 hover:border-black/60 hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="relative aspect-[3/4] w-full bg-black/5 overflow-hidden">
+                        <Image
+                          src={asset.src}
+                          alt={asset.collection || asset.filename}
+                          fill
+                          loading="lazy"
+                          quality={70}
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+                          className="object-cover transition-opacity duration-200"
+                        />
 
-                      {/* Source Badge */}
-                      <div className="absolute top-1.5 left-1.5">
-                        <span
-                          className={`rounded-md px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider ${
-                            isCloud
-                              ? 'bg-emerald-950/80 text-emerald-300 backdrop-blur-xs border border-emerald-400/30'
-                              : 'bg-black/60 text-white backdrop-blur-xs'
-                          }`}
-                        >
-                          {isCloud ? 'Cloud' : 'Studio'}
-                        </span>
-                      </div>
-
-                      {/* Selection Checkmark */}
-                      {isSelected && (
-                        <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150">
-                          <Icon name="check" size={14} />
+                        {/* Source Badge */}
+                        <div className="absolute top-1.5 left-1.5">
+                          <span
+                            className={`rounded-md px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider ${
+                              isCloud
+                                ? 'bg-emerald-950/80 text-emerald-300 backdrop-blur-xs border border-emerald-400/30'
+                                : 'bg-black/60 text-white backdrop-blur-xs'
+                            }`}
+                          >
+                            {isCloud ? 'Cloud' : 'Studio'}
+                          </span>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Metadata Footer */}
-                    <div className="p-2 flex flex-col gap-0.5">
-                      <span className="font-semibold text-[11px] text-black truncate" title={asset.filename}>
-                        {asset.filename}
-                      </span>
-                      <div className="flex items-center justify-between text-[10px] text-black/50">
-                        <span className="truncate">{asset.collection || (isCloud ? 'Unggahan CDN' : 'Katalog')}</span>
-                        {asset.size && <span className="font-mono">{asset.size}</span>}
+                        {/* Selection Checkmark */}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150">
+                            <Icon name="check" size={14} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Metadata Footer */}
+                      <div className="p-2 flex flex-col gap-0.5">
+                        <span className="font-semibold text-[11px] text-black truncate" title={asset.filename}>
+                          {asset.filename}
+                        </span>
+                        <div className="flex items-center justify-between text-[10px] text-black/50">
+                          <span className="truncate">{asset.collection || (isCloud ? 'Unggahan CDN' : 'Katalog')}</span>
+                          {asset.size && <span className="font-mono">{asset.size}</span>}
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls — identical to MediaLibraryTab */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-black/10 pt-3 mt-4">
+                  <span className="text-xs text-black/60 font-medium">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredAssets.length)} dari {filteredAssets.length} foto
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="min-h-[28px] px-3 rounded-full border border-black/20 text-xs font-semibold text-black hover:bg-black hover:text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                    >
+                      ← Sebelumnya
+                    </button>
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/5 font-mono text-xs text-black font-semibold">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="min-h-[28px] px-3 rounded-full border border-black/20 text-xs font-semibold text-black hover:bg-black hover:text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                    >
+                      Berikutnya →
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -462,7 +487,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-black/20 px-4 py-2 text-xs font-semibold text-black/70 hover:bg-black/5 hover:text-black transition"
+              className="rounded-full border border-black/20 px-4 py-2 text-xs font-semibold text-black/70 hover:bg-black/5 hover:text-black transition cursor-pointer"
             >
               Batal
             </button>
