@@ -220,14 +220,14 @@ async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> 
 }
 let _cachedProducts: DbProduct[] | null = null;
 let _cachedTime = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes in-memory cache for ultra-fast navigation
+const CACHE_TTL_MS = 5 * 1000; // 5s short cache so admin updates reflect in shop immediately
 
 /**
  * Fetch products with fast in-memory cache & non-blocking timeout fallback.
  */
-export async function getDbProducts(): Promise<DbProduct[]> {
+export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> {
   const now = Date.now();
-  if (_cachedProducts && now - _cachedTime < CACHE_TTL_MS) {
+  if (!forceRefresh && _cachedProducts && now - _cachedTime < CACHE_TTL_MS) {
     return _cachedProducts as DbProduct[];
   }
 

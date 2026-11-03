@@ -41,20 +41,11 @@ function ShopContent() {
     let isMounted = true;
     async function loadFreshProducts() {
       try {
-        const items = await getDbProducts();
+        const items = await getDbProducts(true);
         if (!isMounted) return;
         if (Array.isArray(items) && items.length > 0) {
           const visible = items.filter((p) => !p.hidden).map(mapDbProductToProduct);
-          setCatalogProducts((prev) => {
-            if (
-              prev.length === visible.length &&
-              prev[0]?.price === visible[0]?.price &&
-              prev[0]?.id === visible[0]?.id
-            ) {
-              return prev;
-            }
-            return visible;
-          });
+          setCatalogProducts(visible);
         }
       } catch (e) {
         console.error('Failed to load shop products:', e);

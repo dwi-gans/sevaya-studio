@@ -452,7 +452,15 @@ export default function AdminPage() {
     if (!target) return;
 
     if (target === 'product') {
-      setProductForm((prev) => ({ ...prev, image: urlOrPath }));
+      setProductForm((prev) => ({
+        ...prev,
+        image: urlOrPath,
+        swatches: prev.swatches.map((s, idx) =>
+          idx === 0 || !s.image || s.image.startsWith('/images/catalog/')
+            ? { ...s, image: urlOrPath }
+            : s
+        ),
+      }));
     } else if (target.startsWith('swatch-')) {
       const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
       handleUpdateSwatch(swatchIdx, 'image', urlOrPath);

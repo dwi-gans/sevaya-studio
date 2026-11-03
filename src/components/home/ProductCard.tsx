@@ -26,9 +26,12 @@ export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { t, formatPrice } = useLanguage();
-  const [selectedSwatch, setSelectedSwatch] = useState(product.swatches[0]?.name || '');
+  const [selectedSwatch, setSelectedSwatch] = useState<string | null>(null);
 
-  const activeSwatch = product.swatches.find((s) => s.name === selectedSwatch);
+  const activeSwatch = selectedSwatch
+    ? product.swatches.find((s) => s.name === selectedSwatch)
+    : null;
+  // Always prioritize product.image (main cover edited by admin) unless user actively selects another swatch
   const displayImage = activeSwatch?.image || product.image;
   const secondaryImage =
     product.images && product.images.length > 1
@@ -36,6 +39,8 @@ export function ProductCard({ product }: { product: Product }) {
       : product.images && product.images[0] !== displayImage
       ? product.images[0]
       : null;
+
+  const currentSelectedColor = selectedSwatch || product.swatches[0]?.name || 'Standard';
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,12 +51,12 @@ export function ProductCard({ product }: { product: Product }) {
       edition: product.edition || 'Sevilla Cupro',
       price: product.price,
       originalPrice: product.originalPrice,
-      color: selectedSwatch,
+      color: currentSelectedColor,
       size: 'S–M',
       image: displayImage,
       quantity: 1,
     });
-    showToast(t('product.added_to_bag', { title: product.title, color: selectedSwatch }));
+    showToast(t('product.added_to_bag', { title: product.title, color: currentSelectedColor }));
   };
 
   return (
@@ -137,7 +142,7 @@ export function ProductCard({ product }: { product: Product }) {
                   setSelectedSwatch(swatch.name);
                 }}
                 className={`h-3.5 w-3.5 rounded-full transition-all ${
-                  selectedSwatch === swatch.name
+                  selectedSwatch === swatch.name || (!selectedSwatch && swatch.name === product.swatches[0]?.name)
                     ? 'scale-110 ring-1 ring-black ring-offset-1'
                     : 'opacity-70 ring-1 ring-black/10 hover:opacity-100'
                 }`}
