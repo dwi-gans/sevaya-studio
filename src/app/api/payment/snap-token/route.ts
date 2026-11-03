@@ -72,10 +72,13 @@ export async function POST(req: NextRequest) {
     // DOKU Payment Gateway
     let selectedMethodTypes = payment_method_types;
     if (!selectedMethodTypes) {
-      if (payment_method === 'va_bri') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BRI'];
-      else if (payment_method === 'va_bni') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BNI'];
-      else if (payment_method === 'va_bsi') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BSI', 'VIRTUAL_ACCOUNT_BRI'];
-      else if (payment_method === 'va_other') selectedMethodTypes = ['VIRTUAL_ACCOUNT_DOKU', 'VIRTUAL_ACCOUNT_BRI', 'VIRTUAL_ACCOUNT_BNI'];
+      if (payment_method === 'va_bri')              selectedMethodTypes = ['VIRTUAL_ACCOUNT_BRI'];
+      else if (payment_method === 'va_bni')         selectedMethodTypes = ['VIRTUAL_ACCOUNT_BNI'];
+      else if (payment_method === 'va_bsi')         selectedMethodTypes = ['VIRTUAL_ACCOUNT_BSI'];
+      else if (payment_method === 'va_mandiri')     selectedMethodTypes = ['VIRTUAL_ACCOUNT_BANK_MANDIRI'];
+      else if (payment_method === 'va_other')       selectedMethodTypes = ['VIRTUAL_ACCOUNT_DOKU'];
+      else if (payment_method === 'retail_alfamart')   selectedMethodTypes = ['ONLINE_TO_OFFLINE_ALFA'];
+      else if (payment_method === 'retail_indomaret')  selectedMethodTypes = ['ONLINE_TO_OFFLINE_INDOMARET'];
     }
 
     const customerFullName =

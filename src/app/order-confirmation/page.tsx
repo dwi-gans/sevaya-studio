@@ -56,6 +56,19 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
   );
 }
 
+function getPaymentMethodLabel(method: string) {
+  switch (method) {
+    case 'va_bri': return 'Virtual Account BRI (BRIVA)';
+    case 'va_bni': return 'Virtual Account BNI';
+    case 'va_bsi': return 'Virtual Account BSI (Syariah)';
+    case 'va_mandiri': return 'Virtual Account Mandiri';
+    case 'retail_alfamart': return 'Alfamart / Alfamidi';
+    case 'retail_indomaret': return 'Indomaret';
+    case 'va_other': return 'DOKU VA (Bank Lainnya)';
+    default: return 'DOKU Virtual Account';
+  }
+}
+
 function OrderConfirmationContent() {
   const params = useSearchParams();
   const { getAccessToken } = useAuth();
@@ -76,6 +89,7 @@ function OrderConfirmationContent() {
         body: JSON.stringify({
           order_id: orderNumber,
           grand_total: grandTotal,
+          payment_method: rawPaymentMethod,
           customer: {
             first_name: customerName.split(' ')[0] || '',
             last_name: customerName.split(' ').slice(1).join(' ') || '',
@@ -298,7 +312,7 @@ function OrderConfirmationContent() {
                       Selesaikan Pembayaran
                     </span>
                     <h3 className="text-sm font-semibold text-neutral-900 mt-0.5">
-                      Bayar via DOKU Virtual Account
+                      Bayar via {getPaymentMethodLabel(rawPaymentMethod)}
                     </h3>
                   </div>
                   <div className="flex items-center gap-2 self-start sm:self-auto bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded">
@@ -316,7 +330,7 @@ function OrderConfirmationContent() {
                 <div className="space-y-3">
                   <p className="text-xs text-neutral-600 leading-relaxed">
                     Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>DOKU</strong>.
-                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, dan DOKU VA Bank Lainnya).
+                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, Mandiri, DOKU VA) dan <strong>Gerai Ritel</strong> (Alfamart &amp; Indomaret).
                   </p>
 
                   {payError && (
@@ -393,7 +407,7 @@ function OrderConfirmationContent() {
                         💳
                       </span>
                       <span>
-                        DOKU Virtual Account · {formatIDR(grandTotal || subtotal)} IDR
+                        {getPaymentMethodLabel(rawPaymentMethod)} · {formatIDR(grandTotal || subtotal)} IDR
                       </span>
                     </div>
                   </div>

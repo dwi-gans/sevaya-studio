@@ -121,6 +121,7 @@ export default function SimplePaymentPage({
           order_id: orderNumber,
           grand_total: order?.grand_total || paramTotal || 100000,
           items: order?.items || [],
+          payment_method: paymentMethod,
           customer: {
             first_name: order?.customer_name?.split(' ')[0] || searchParams.get('name') || '',
             last_name: order?.customer_name?.split(' ').slice(1).join(' ') || '',
@@ -206,7 +207,7 @@ export default function SimplePaymentPage({
             <div className="border border-black/10 bg-[#FAFAFA] p-4 text-xs text-black/70 space-y-2">
               <p className="font-semibold text-black">Pembayaran Online (DOKU Checkout)</p>
               <p className="text-[11px] text-black/60">
-                Mendukung Virtual Account BRI, BNI, BSI, dan DOKU VA (Bank Lainnya).
+                Mendukung Virtual Account (BRI, BNI, BSI, Mandiri, DOKU VA) dan Gerai Ritel (Alfamart &amp; Indomaret).
               </p>
             </div>
 

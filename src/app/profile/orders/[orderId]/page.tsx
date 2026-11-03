@@ -167,6 +167,7 @@ export default function OrderDetailPage({
         body: JSON.stringify({
           order_id: order.order_number,
           grand_total: order.grand_total,
+          payment_method: order.payment_method,
           items: order.items.map((it: OrderItem, idx: number) => ({
             id: String(idx),
             name: String(it.title || it.name || 'Abaya SEVAYA'),
@@ -643,8 +644,16 @@ export default function OrderDetailPage({
                     ? 'Virtual Account BNI'
                     : order.payment_method === 'va_bsi'
                     ? 'Virtual Account BSI (Syariah)'
+                    : order.payment_method === 'va_mandiri'
+                    ? 'Virtual Account Mandiri'
+                    : order.payment_method === 'retail_alfamart'
+                    ? 'Alfamart / Alfamidi'
+                    : order.payment_method === 'retail_indomaret'
+                    ? 'Indomaret'
                     : order.payment_method === 'va_other'
                     ? 'DOKU VA (Bank Lainnya)'
+                    : order.payment_method?.startsWith('DOKU')
+                    ? order.payment_method
                     : 'Virtual Account (DOKU)'}
                 </p>
                 <p className="text-black/70">

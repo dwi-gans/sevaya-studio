@@ -53,30 +53,51 @@ const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string
   {
     id: 'va_bri',
     label: 'Virtual Account BRI (BRIVA)',
-    desc: 'Transfer via BRIVA dengan verifikasi otomatis 24 jam.',
+    desc: 'Transfer via BRImo, ATM BRI, atau Agen BRILink.',
     badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
   {
     id: 'va_bni',
     label: 'Virtual Account BNI',
-    desc: 'Transfer via BNI Virtual Account dengan verifikasi otomatis.',
+    desc: 'Transfer via BNI Mobile Banking, ATM BNI, atau bank lain.',
     badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
   {
     id: 'va_bsi',
-    label: 'Virtual Account BSI (Bank Syariah Indonesia)',
-    desc: 'Transfer via BSI Virtual Account Syariah resmi.',
+    label: 'Virtual Account BSI',
+    desc: 'Transfer via BSI Mobile, Net Banking BSI, atau ATM BSI.',
     badge: 'Syariah',
+    icon: 'receipt_long' as IconName,
+  },
+  {
+    id: 'va_mandiri',
+    label: 'Virtual Account Mandiri',
+    desc: 'Transfer via Livin by Mandiri, ATM Mandiri, atau internet banking.',
+    badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
   {
     id: 'va_other',
     label: 'DOKU VA (Bank Lainnya)',
-    desc: 'Bisa transfer antarbank dari Mandiri, Danamon, Permata, CIMB, dan lainnya.',
+    desc: 'Transfer dari Permata, Danamon, CIMB, dan seluruh bank Indonesia.',
     badge: 'Multi-Bank',
     icon: 'receipt_long' as IconName,
+  },
+  {
+    id: 'retail_alfamart',
+    label: 'Alfamart / Alfamidi',
+    desc: 'Bayar tunai di kasir Alfamart, Alfamidi, atau Dan+Dan terdekat.',
+    badge: 'Tunai',
+    icon: 'store' as IconName,
+  },
+  {
+    id: 'retail_indomaret',
+    label: 'Indomaret',
+    desc: 'Bayar tunai di kasir Indomaret terdekat dengan kode bayar.',
+    badge: 'Tunai',
+    icon: 'store' as IconName,
   },
 ];
 
@@ -307,8 +328,8 @@ export default function CheckoutPage() {
         items: JSON.stringify(orderItems),
       });
 
-      // If online payment (DOKU VA), request session then redirect directly
-      if (paymentMethod.startsWith('va') || paymentMethod === 'doku' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
+      // If online payment (DOKU VA / Retail), request session then redirect directly
+      if (paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'doku' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
         const snapRes = await fetch('/api/payment/snap-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1152,8 +1173,8 @@ export default function CheckoutPage() {
               </div>
 
               {/* KONTEN METODE TERPILIH */}
-              {/* Option 1: Bayar Otomatis (DOKU Virtual Account) */}
-              {(paymentMethod.startsWith('va') || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
+              {/* Bayar via DOKU (Virtual Account / Gerai Ritel) */}
+              {(paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
                 <div className="rounded-lg border border-black/15 bg-black/[0.02] p-4 text-xs text-[#554C48] space-y-2.5">
                   <div className="flex items-start gap-2.5">
                     <Icon name="verified_user" size={16} className="text-black shrink-0 mt-0.5" />
@@ -1165,6 +1186,12 @@ export default function CheckoutPage() {
                           ? 'Virtual Account BNI — Verifikasi Otomatis 24 Jam'
                           : paymentMethod === 'va_bsi'
                           ? 'Virtual Account BSI (Syariah) — Verifikasi Otomatis 24 Jam'
+                          : paymentMethod === 'va_mandiri'
+                          ? 'Virtual Account Mandiri — Verifikasi Otomatis 24 Jam'
+                          : paymentMethod === 'retail_alfamart'
+                          ? 'Alfamart / Alfamidi — Bayar Tunai di Kasir'
+                          : paymentMethod === 'retail_indomaret'
+                          ? 'Indomaret — Bayar Tunai di Kasir'
                           : 'DOKU Virtual Account (Bank Lainnya) — Verifikasi Otomatis'}
                       </p>
                       <p className="text-[11px] text-[#554C48] leading-relaxed">
@@ -1174,13 +1201,21 @@ export default function CheckoutPage() {
                           ? 'Dapat dibayar melalui BNI Mobile Banking, BNI Internet Banking, ATM BNI, atau transfer dari bank lain.'
                           : paymentMethod === 'va_bsi'
                           ? 'Dapat dibayar melalui BSI Mobile, Net Banking BSI, ATM BSI, atau transfer dari bank lain.'
+                          : paymentMethod === 'va_mandiri'
+                          ? 'Dapat dibayar melalui Livin by Mandiri, ATM Mandiri, ATM Bersama, atau internet banking Mandiri.'
+                          : paymentMethod === 'retail_alfamart'
+                          ? 'Setelah checkout, kamu akan mendapat kode bayar. Tunjukkan ke kasir Alfamart, Alfamidi, atau Dan+Dan terdekat. Berlaku 60 menit.'
+                          : paymentMethod === 'retail_indomaret'
+                          ? 'Setelah checkout, kamu akan mendapat kode bayar. Tunjukkan ke kasir Indomaret terdekat. Berlaku 60 menit.'
                           : 'Dapat dibayar dari Mandiri, Danamon, Permata, CIMB Niaga, dan seluruh rekening bank di Indonesia.'}
                       </p>
                     </div>
                   </div>
                   <div className="border-t border-black/10 pt-2 text-[10px] text-[#7C726E] flex items-center justify-between">
                     <span>Ditenagai oleh gateway pembayaran resmi <strong>DOKU</strong></span>
-                    <span className="font-medium text-emerald-700">Verifikasi Instan Tanpa Upload Bukti</span>
+                    <span className="font-medium text-emerald-700">
+                      {paymentMethod.startsWith('retail') ? 'Bayar Tunai — Tanpa Rekening Bank' : 'Verifikasi Instan Tanpa Upload Bukti'}
+                    </span>
                   </div>
                 </div>
               )}

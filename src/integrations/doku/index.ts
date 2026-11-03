@@ -136,7 +136,15 @@ export async function createDokuCheckoutSession(params: CreateDokuPaymentParams)
   const allowedChannels =
     params.payment_method_types && params.payment_method_types.length > 0
       ? params.payment_method_types
-      : ['VIRTUAL_ACCOUNT_BRI', 'VIRTUAL_ACCOUNT_BNI', 'VIRTUAL_ACCOUNT_BSI', 'VIRTUAL_ACCOUNT_DOKU'];
+      : [
+          'VIRTUAL_ACCOUNT_BRI',
+          'VIRTUAL_ACCOUNT_BNI',
+          'VIRTUAL_ACCOUNT_BSI',
+          'VIRTUAL_ACCOUNT_BANK_MANDIRI',
+          'VIRTUAL_ACCOUNT_DOKU',
+          'ONLINE_TO_OFFLINE_ALFA',
+          'ONLINE_TO_OFFLINE_INDOMARET',
+        ];
 
   const payload: Record<string, unknown> = {
     order: {
