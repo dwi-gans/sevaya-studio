@@ -56,6 +56,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar_url: meta.avatar_url || '',
       created_at: sessionUser.created_at,
     });
+
+    // Background prefetch: warm up localStorage cache so profile page loads instantly
+    const accessToken = token !== undefined ? token : tokenRef.current;
+    if (accessToken) {
+      // Only prefetch if cache is absent or stale (older than 60s)
+      const shouldPrefetch = (() => {
+        try {
+          const ts = localStorage.getItem('sevaya_profile_orders_ts');
+          if (!ts) return true;
+          return Date.now() - parseInt(ts, 10) > 60_000;
+        } catch { return true; }
+      })();
+      if (shouldPrefetch) {
+        fetch('/api/user/orders', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then((r) => r.ok ? r.json() : null)
+          .then((data) => {
+            if (data?.success && Array.isArray(data.orders)) {
+              try {
+                localStorage.setItem('sevaya_profile_orders', JSON.stringify(data.orders));
+                localStorage.setItem('sevaya_profile_orders_ts', String(Date.now()));
+              } catch {}
+            }
+          })
+          .catch(() => {});
+
+        fetch('/api/user/addresses', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then((r) => r.ok ? r.json() : null)
+          .then((data) => {
+            if (data?.success && Array.isArray(data.addresses)) {
+              try {
+                localStorage.setItem('sevaya_profile_addresses', JSON.stringify(data.addresses));
+              } catch {}
+            }
+          })
+          .catch(() => {});
+      }
+    }
   }, []);
 
   useEffect(() => {

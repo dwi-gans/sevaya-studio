@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
@@ -379,7 +379,7 @@ export default function CheckoutPage() {
         } catch { /* ignore */ }
 
         // Invalidate profile orders cache so next visit shows fresh orders
-        try { localStorage.removeItem('sevaya_profile_orders'); } catch { /* ignore */ }
+        try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
 
         // Redirect to order-confirmation — Pay Now button lives there
         router.push(`/order-confirmation?${queryParams.toString()}`);
@@ -392,7 +392,7 @@ export default function CheckoutPage() {
       }
 
       // Invalidate profile orders cache so next visit shows fresh orders
-      try { localStorage.removeItem('sevaya_profile_orders'); } catch { /* ignore */ }
+      try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
 
       router.push(`/order-confirmation?${queryParams.toString()}`);
     } catch (err: any) {

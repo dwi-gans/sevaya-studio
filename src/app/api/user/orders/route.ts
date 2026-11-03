@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     let query = supabaseAdmin
       .from('orders')
       .select('id, order_number, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at')
-      .or(`user_id.eq.${user.id},customer_email.eq.${userEmail},customer_email.ilike.${userEmail}`)
+      .ilike('customer_email', userEmail)
       .order('created_at', { ascending: false })
       .limit(50);
 

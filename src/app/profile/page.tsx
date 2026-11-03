@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -89,10 +89,14 @@ export default function ProfilePage() {
     }
     return [];
   });
+  // Skip loading state if cache is fresh (prefetched by AuthContext within last 60s)
   const [ordersLoading, setOrdersLoading] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('sevaya_profile_orders');
+        const ts = localStorage.getItem('sevaya_profile_orders_ts');
+        const isFresh = ts && Date.now() - parseInt(ts, 10) < 60_000;
+        if (stored && isFresh) return false;
         if (stored && JSON.parse(stored).length > 0) return false;
       } catch {}
     }
@@ -178,8 +182,17 @@ export default function ProfilePage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Fetch Orders
-  const fetchOrders = useCallback(async () => {
+  // Fetch Orders — skip if AuthContext prefetched fresh data (< 60s old)
+  const fetchOrders = useCallback(async (force = false) => {
+    if (!force) {
+      try {
+        const ts = localStorage.getItem('sevaya_profile_orders_ts');
+        if (ts && Date.now() - parseInt(ts, 10) < 60_000) {
+          setOrdersLoading(false);
+          return;
+        }
+      } catch {}
+    }
     setOrdersLoading(true);
     try {
       const token = await getAccessToken();
@@ -193,6 +206,7 @@ export default function ProfilePage() {
         setOrders(data.orders);
         try {
           localStorage.setItem('sevaya_profile_orders', JSON.stringify(data.orders));
+          localStorage.setItem('sevaya_profile_orders_ts', String(Date.now()));
         } catch {}
       }
     } catch {
