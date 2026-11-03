@@ -1,69 +1,46 @@
-﻿'use client';
+'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 const PRIMARY_HERO = '/images/hero_optimized.jpg';
-const SECONDARY_HERO = '/images/hero_clean.jpg';
-
-function isValidImage(url?: string | null): boolean {
-  if (!url) return false;
-  const trimmed = url.trim();
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return false;
-  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return false;
-  return true;
-}
 
 export function HeroSection() {
   const [hero, setHero] = useState<HeroSectionData>(DEFAULT_SITE_SECTIONS.hero);
-  const [imgSrc, setImgSrc] = useState<string>(() => {
-    const defaultImg = DEFAULT_SITE_SECTIONS.hero?.image;
-    return isValidImage(defaultImg) ? defaultImg!.trim() : PRIMARY_HERO;
-  });
-  const [fallbackLevel, setFallbackLevel] = useState<number>(0);
-
-  useEffect(() => {
-    // Purge corrupted / stale blob cache from localStorage in this browser profile
+  const [heroImage, setHeroImage] = useState<string>(() => {
     try {
-      const raw = localStorage.getItem('sevaya_site_sections');
-      if (raw && (raw.includes('blob:') || raw.includes('"image":""') || raw.includes('"image":"undefined"'))) {
-        localStorage.removeItem('sevaya_site_sections');
+      const cached = getCachedSiteSections();
+      const candidate = cached?.hero?.image?.trim();
+      if (candidate && !candidate.startsWith('blob:') && candidate !== 'undefined') {
+        return candidate;
       }
     } catch {
-      // ignore
+      // fallback
     }
+    return PRIMARY_HERO;
+  });
 
-    // Try localStorage cache first for instant render
-    const cached = getCachedSiteSections();
-    if (cached?.hero) {
-      setHero(cached.hero);
-      if (isValidImage(cached.hero.image)) {
-        setImgSrc(cached.hero.image.trim());
-      }
-    }
+  const currentImageRef = useRef(heroImage);
+  currentImageRef.current = heroImage;
 
+  useEffect(() => {
+    // Only update state if cloud sections actually return a different valid image
     getSiteSections().then((sections) => {
       if (sections?.hero) {
         setHero(sections.hero);
-        if (isValidImage(sections.hero.image)) {
-          setImgSrc(sections.hero.image.trim());
+        const newImg = sections.hero.image?.trim();
+        if (
+          newImg &&
+          !newImg.startsWith('blob:') &&
+          newImg !== 'undefined' &&
+          newImg !== currentImageRef.current
+        ) {
+          setHeroImage(newImg);
         }
       }
     });
   }, []);
-
-  const handleImageError = () => {
-    if (fallbackLevel === 0) {
-      setFallbackLevel(1);
-      setImgSrc(PRIMARY_HERO);
-    } else if (fallbackLevel === 1) {
-      setFallbackLevel(2);
-      setImgSrc(SECONDARY_HERO);
-    }
-  };
-
-  const currentImageSrc = isValidImage(imgSrc) ? imgSrc : PRIMARY_HERO;
 
   return (
     <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
@@ -71,18 +48,21 @@ export function HeroSection() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat"
-          style={{ backgroundImage: `url("${currentImageSrc}")` }}
+          style={{ backgroundImage: `url("${heroImage}")` }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            key={`${currentImageSrc}-${fallbackLevel}`}
-            src={currentImageSrc}
+            src={heroImage}
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
             loading="eager"
-            decoding="sync"
-            fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
-            onError={handleImageError}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== PRIMARY_HERO && !target.src.endsWith(PRIMARY_HERO)) {
+                target.src = PRIMARY_HERO;
+              }
+            }}
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
@@ -90,12 +70,12 @@ export function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 pb-24 text-center text-white sm:pb-32 md:pb-36 lg:pb-40">
-        {/* Tagline: Heading/Hero Brand Text selalu English */}
+        {/* Tagline */}
         <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
           TIMELESS • INTENTIONAL • EFFORTLESS
         </p>
 
-        {/* CTA Buttons: Selalu English */}
+        {/* CTA Buttons */}
         <div className="animate-hero-fadeup-link flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5">
           <Link
             href="/shop"
