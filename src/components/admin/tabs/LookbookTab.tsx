@@ -64,10 +64,10 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           Editorial &amp; Storefront
         </span>
         <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-          Manajemen Lookbook &amp; Galeri Editorial Per Volume
+          Manajemen Konten Lookbook
         </h2>
         <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-          Pilih volume lookbook, sesuaikan pengaturan navbar &amp; URL di bagian atas, lalu edit foto dan deskripsinya.
+          Edit foto dan teks yang tampil di halaman Lookbook. Semua perubahan tersimpan ke database.
         </p>
       </div>
 
@@ -162,7 +162,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           })}
         </div>
 
-        {/* Form Pengaturan Navbar Khusus Volume yang Dipilih (Tampil di atas) */}
+        {/* Form Pengaturan Navbar Khusus Volume yang Dipilih */}
         {activeLink && activeVolIndex >= 0 && (
           <div className="mt-4 rounded-xl border border-black/10 bg-[#f9f9f8] p-3.5 sm:p-4 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -265,265 +265,251 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
         )}
       </div>
 
-      {/* ══ STEP 2: EDITOR FOTO EDITORIAL UNTUK VOLUME YANG DIPILIH ══ */}
+      {/* ══ STEP 2: FOTO EDITORIAL (PERSIS SESUAI URUTAN HALAMAN LOOKBOOK) ══ */}
       <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
         <div className="border-b border-black/10 pb-2.5 flex items-center justify-between flex-wrap gap-2">
           <div>
             <h3 className="text-xs font-bold text-black uppercase">
-              2. Editor Foto &amp; Konten Editorial — [{activeVolLabel}]
+              2. Foto Editorial Halaman Lookbook — [{activeVolLabel}]
             </h3>
             <p className="text-[11px] text-black/60 mt-0">
-              Setiap foto yang diganti khusus berlaku untuk volume ini dan tersimpan otomatis ke Cloud.
+              8 slot foto ini tersusun persis sesuai urutan tampilan dari atas ke bawah pada halaman Lookbook.
             </p>
           </div>
           <span className="rounded-full bg-black px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-            Aktif: {selectedLookbookVolId}
+            Volume: {selectedLookbookVolId}
           </span>
         </div>
 
-        {/* Grid Slot Foto Lookbook untuk Volume Aktif */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 items-stretch">
-          {/* 1. Hero Poster */}
+        {/* 8 Slot Foto yang benar-benar ada di Lookbook */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4 items-stretch">
+          {/* 1. Foto Hero Utama */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">1. Foto Hero Utama</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">4:3</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  1. Foto Hero Utama
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Header
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
                 <Image src={activeVolConfig.heroImage || '/images/sevaya_first_chapter.jpg'} alt="Hero" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-heroImage')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Foto Hero</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Hero</span>
               </button>
             </div>
           </div>
 
-          {/* 2. Kolase Portrait */}
+          {/* 2. Kolase Kiri */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">2. Kolase Portrait</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">4:5</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  2. Kolase Kiri
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 1
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.collagePortrait || '/images/lookbook_figma_0.png'} alt="Portrait" fill className="object-cover" />
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.collagePortrait || '/images/lookbook_figma_0.png'} alt="Kolase Kiri" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-collagePortrait')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Kolase Portrait</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Kolase Kiri</span>
               </button>
             </div>
           </div>
 
-          {/* 3. Kolase Detail 1 */}
+          {/* 3. Kolase Kanan */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">3. Kolase Detail 1</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">16:10</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  3. Kolase Kanan
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 1
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.collageDetail1 || '/images/figma_about_1.png'} alt="Detail 1" fill className="object-cover" />
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.collageDetail1 || '/images/figma_about_1.png'} alt="Kolase Kanan" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-collageDetail1')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Kolase Detail 1</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Kolase Kanan</span>
               </button>
             </div>
           </div>
 
-          {/* 4. Kolase Detail 2 */}
+          {/* 4. Foto Feature Tengah */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">4. Kolase Detail 2</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">16:10</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  4. Foto Feature Tengah
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 2
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.collageDetail2 || '/images/figma_about_2.png'} alt="Detail 2" fill className="object-cover" />
-              </div>
-            </div>
-            <div className="pt-3">
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker('lbpage-collageDetail2')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-              >
-                <Icon name="image" size={14} />
-                <span>Ganti Kolase Detail 2</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 5. Panorama 1 */}
-          <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">5. Panorama 1</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">16:9</span>
-              </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.panorama1 || '/images/figma_hero.png'} alt="Panorama 1" fill className="object-cover" />
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.panorama1 || '/images/figma_hero.png'} alt="Feature Tengah" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-panorama1')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Panorama 1</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Feature</span>
               </button>
             </div>
           </div>
 
-          {/* 6. Panorama 2 */}
+          {/* 5. Galeri Siluet 1 */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">6. Panorama 2</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">16:9</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  5. Galeri 1 (Kiri)
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 3
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.panorama2 || '/images/lookbook_figma_1.png'} alt="Panorama 2" fill className="object-cover" />
-              </div>
-            </div>
-            <div className="pt-3">
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker('lbpage-panorama2')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-              >
-                <Icon name="image" size={14} />
-                <span>Ganti Panorama 2</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 7. Triptych 1 */}
-          <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">7. Triptych 1</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">3:4</span>
-              </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.triptych1 || '/images/lookbook_figma_2.png'} alt="Tryptich 1" fill className="object-cover" />
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.triptych1 || '/images/lookbook_figma_2.png'} alt="Galeri 1" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-triptych1')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Triptych 1</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Galeri 1</span>
               </button>
             </div>
           </div>
 
-          {/* 8. Triptych 2 */}
+          {/* 6. Galeri Siluet 2 */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">8. Triptych 2</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">3:4</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  6. Galeri 2 (Tengah)
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 3
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.triptych2 || '/images/lookbook_figma_3.png'} alt="Tryptich 2" fill className="object-cover" />
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.triptych2 || '/images/lookbook_figma_3.png'} alt="Galeri 2" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-triptych2')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Triptych 2</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Galeri 2</span>
               </button>
             </div>
           </div>
 
-          {/* 9. Triptych 3 */}
+          {/* 7. Galeri Siluet 3 */}
           <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">9. Triptych 3</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">3:4</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  7. Galeri 3 (Kanan)
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 3
+                </span>
               </div>
-              <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.triptych3 || '/images/lookbook_figma_4.png'} alt="Tryptich 3" fill className="object-cover" />
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.triptych3 || '/images/lookbook_figma_4.png'} alt="Galeri 3" fill className="object-cover" />
               </div>
             </div>
-            <div className="pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-triptych3')}
-                className="inline-flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Triptych 3</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Galeri 3</span>
               </button>
             </div>
           </div>
 
-          {/* 10. Full Dress / Penutup */}
-          <div className="flex flex-col justify-between rounded-xl border border-black/15 bg-white p-3.5 shadow-xs sm:col-span-2 lg:col-span-3">
+          {/* 8. Foto Penutup */}
+          <div className="flex flex-col justify-between h-full rounded-xl border border-black/15 bg-white p-2 sm:p-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-black uppercase tracking-wide">10. Foto Panorama Penutup (Full Dress Shot)</span>
-                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[9px] font-medium text-black/70">21:10</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide truncate">
+                  8. Foto Penutup
+                </span>
+                <span className="rounded bg-black/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-black/70">
+                  Section 4
+                </span>
               </div>
-              <div className="relative aspect-[21/9] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
-                <Image src={activeVolConfig.fullDress || '/images/lookbook_figma_5.png'} alt="Full Dress" fill className="object-cover" />
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-black/15 bg-black/5">
+                <Image src={activeVolConfig.fullDress || '/images/lookbook_figma_5.png'} alt="Foto Penutup" fill className="object-cover" />
               </div>
             </div>
-            <div className="flex justify-end pt-3">
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={() => onOpenImagePicker('lbpage-fullDress')}
-                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white px-5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
+                className="inline-flex w-full min-h-[32px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1 text-[10px] sm:text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95"
               >
-                <Icon name="image" size={14} />
-                <span>Ganti Foto Penutup</span>
+                <Icon name="image" size={13} />
+                <span>Ganti Penutup</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ══ STEP 3: EDITOR TEKS KONTEN LOOKBOOK ══ */}
+      {/* ══ STEP 3: EDITOR TEKS KONTEN (SESUAI SECTION DI HALAMAN LOOKBOOK) ══ */}
       <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
         <div className="border-b border-black/10 pb-2.5 flex items-center justify-between flex-wrap gap-2">
           <div>
             <h3 className="text-xs font-bold text-black uppercase">
-              3. Edit Teks Konten — [{activeVolLabel}]
+              3. Edit Teks Konten Lookbook — [{activeVolLabel}]
             </h3>
             <p className="text-[11px] text-black/60 mt-0">
-              Ubah judul dan deskripsi teks untuk volume ini. Klik &ldquo;Simpan Teks&rdquo; untuk menyimpan ke Cloud.
+              Setiap teks di bawah ini terhubung langsung ke bagian yang tampil di halaman Lookbook.
             </p>
           </div>
           <button
@@ -536,144 +522,70 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* heroTitle */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Judul Hero (heroTitle)
-            </label>
-            <input
-              type="text"
-              value={activeVolConfig.heroTitle || ''}
-              placeholder="e.g. VOL 1: INTO A NEW SEASON"
-              onChange={(e) => {
-                const val = e.target.value;
-                const updated = { ...activeVolConfig, heroTitle: val };
-                setSections((prev) => ({
-                  ...prev,
-                  lookbookVolumesConfig: {
-                    ...(prev.lookbookVolumesConfig || {}),
-                    [selectedLookbookVolId]: updated,
-                  },
-                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
-                }));
-              }}
-              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
-            />
+        {/* Section A: Header Campaign */}
+        <div className="rounded-lg border border-black/10 bg-[#fafafa] p-3.5 space-y-3">
+          <span className="text-[10px] font-bold text-black/60 uppercase tracking-wider block">
+            Bagian Header Atas (Hero Header)
+          </span>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-semibold text-black/70">
+                Label Subtitle Atas (heroSubtitle)
+              </label>
+              <input
+                type="text"
+                value={activeVolConfig.heroSubtitle || ''}
+                placeholder="'26 SEVILLA CUPRO ABAYA"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const updated = { ...activeVolConfig, heroSubtitle: val };
+                  setSections((prev) => ({
+                    ...prev,
+                    lookbookVolumesConfig: {
+                      ...(prev.lookbookVolumesConfig || {}),
+                      [selectedLookbookVolId]: updated,
+                    },
+                    lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                  }));
+                }}
+                className="w-full h-8 sm:h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-semibold text-black/70">
+                Judul Utama Lookbook (heroTitle)
+              </label>
+              <input
+                type="text"
+                value={activeVolConfig.heroTitle || ''}
+                placeholder="VOL 1: INTO A NEW SEASON"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const updated = { ...activeVolConfig, heroTitle: val };
+                  setSections((prev) => ({
+                    ...prev,
+                    lookbookVolumesConfig: {
+                      ...(prev.lookbookVolumesConfig || {}),
+                      [selectedLookbookVolId]: updated,
+                    },
+                    lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                  }));
+                }}
+                className="w-full h-8 sm:h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+              />
+            </div>
           </div>
 
-          {/* heroSubtitle */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Subtitle Hero (heroSubtitle)
-            </label>
-            <input
-              type="text"
-              value={activeVolConfig.heroSubtitle || ''}
-              placeholder="e.g. '26 SEVILLA CUPRO ABAYA"
-              onChange={(e) => {
-                const val = e.target.value;
-                const updated = { ...activeVolConfig, heroSubtitle: val };
-                setSections((prev) => ({
-                  ...prev,
-                  lookbookVolumesConfig: {
-                    ...(prev.lookbookVolumesConfig || {}),
-                    [selectedLookbookVolId]: updated,
-                  },
-                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
-                }));
-              }}
-              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
-            />
-          </div>
-
-          {/* seasonTitle */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Judul Section Pertama (seasonTitle)
-            </label>
-            <input
-              type="text"
-              value={activeVolConfig.seasonTitle || ''}
-              placeholder="e.g. Every detail is designed with purpose"
-              onChange={(e) => {
-                const val = e.target.value;
-                const updated = { ...activeVolConfig, seasonTitle: val };
-                setSections((prev) => ({
-                  ...prev,
-                  lookbookVolumesConfig: {
-                    ...(prev.lookbookVolumesConfig || {}),
-                    [selectedLookbookVolId]: updated,
-                  },
-                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
-                }));
-              }}
-              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
-            />
-          </div>
-
-          {/* panorama1Title */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Judul Section Panorama (panorama1Title)
-            </label>
-            <input
-              type="text"
-              value={activeVolConfig.panorama1Title || ''}
-              placeholder="e.g. Practical for everyday moments"
-              onChange={(e) => {
-                const val = e.target.value;
-                const updated = { ...activeVolConfig, panorama1Title: val };
-                setSections((prev) => ({
-                  ...prev,
-                  lookbookVolumesConfig: {
-                    ...(prev.lookbookVolumesConfig || {}),
-                    [selectedLookbookVolId]: updated,
-                  },
-                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
-                }));
-              }}
-              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
-            />
-          </div>
-
-          {/* triptychTitle */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Judul Section Triptych (triptychTitle)
-            </label>
-            <input
-              type="text"
-              value={activeVolConfig.triptychTitle || ''}
-              placeholder="e.g. Sevilla is more than an abaya"
-              onChange={(e) => {
-                const val = e.target.value;
-                const updated = { ...activeVolConfig, triptychTitle: val };
-                setSections((prev) => ({
-                  ...prev,
-                  lookbookVolumesConfig: {
-                    ...(prev.lookbookVolumesConfig || {}),
-                    [selectedLookbookVolId]: updated,
-                  },
-                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
-                }));
-              }}
-              className="w-full h-9 rounded-none border border-black/20 bg-white px-3 text-xs text-black focus:border-black focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Text areas for longer descriptions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* seasonDesc */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Deskripsi Hero / Opening (seasonDesc)
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Deskripsi Pembuka (seasonDesc)
             </label>
             <textarea
-              rows={4}
+              rows={2}
               value={activeVolConfig.seasonDesc || ''}
-              placeholder="Deskripsi pembuka lookbook ini..."
+              placeholder="Deskripsi pembuka lookbook..."
               onChange={(e) => {
                 const val = e.target.value;
                 const updated = { ...activeVolConfig, seasonDesc: val };
@@ -686,19 +598,77 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                   lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
                 }));
               }}
-              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+              className="w-full rounded-none border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
             />
           </div>
+        </div>
 
-          {/* panorama1Desc */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Deskripsi Section Panorama (panorama1Desc)
+        {/* Section B: Detail & Purpose */}
+        <div className="rounded-lg border border-black/10 bg-[#fafafa] p-3.5 space-y-2">
+          <span className="text-[10px] font-bold text-black/60 uppercase tracking-wider block">
+            Section 1: Judul Detail &amp; Purpose
+          </span>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Judul Section (seasonTitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.seasonTitle || ''}
+              placeholder="Every detail is designed with purpose"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, seasonTitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-8 sm:h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Section C: Practical Everyday Moments */}
+        <div className="rounded-lg border border-black/10 bg-[#fafafa] p-3.5 space-y-3">
+          <span className="text-[10px] font-bold text-black/60 uppercase tracking-wider block">
+            Section 2: Practical Everyday Moments
+          </span>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Judul Section (panorama1Title)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.panorama1Title || ''}
+              placeholder="Practical for everyday moments"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, panorama1Title: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-8 sm:h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Deskripsi Section (panorama1Desc)
             </label>
             <textarea
-              rows={4}
+              rows={2}
               value={activeVolConfig.panorama1Desc || ''}
-              placeholder="Deskripsi untuk section panorama tengah..."
+              placeholder="A gentle shift in light, a renewed appreciation for simplicity..."
               onChange={(e) => {
                 const val = e.target.value;
                 const updated = { ...activeVolConfig, panorama1Desc: val };
@@ -711,19 +681,47 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                   lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
                 }));
               }}
-              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+              className="w-full rounded-none border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
             />
           </div>
+        </div>
 
-          {/* triptychDesc */}
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <label className="text-[10px] font-bold text-black/60 uppercase tracking-wider">
-              Deskripsi Section Triptych / Penutup (triptychDesc)
+        {/* Section D: Sevilla Story */}
+        <div className="rounded-lg border border-black/10 bg-[#fafafa] p-3.5 space-y-3">
+          <span className="text-[10px] font-bold text-black/60 uppercase tracking-wider block">
+            Section 3: Sevilla Story
+          </span>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Judul Section (triptychTitle)
+            </label>
+            <input
+              type="text"
+              value={activeVolConfig.triptychTitle || ''}
+              placeholder="Sevilla is more than an abaya"
+              onChange={(e) => {
+                const val = e.target.value;
+                const updated = { ...activeVolConfig, triptychTitle: val };
+                setSections((prev) => ({
+                  ...prev,
+                  lookbookVolumesConfig: {
+                    ...(prev.lookbookVolumesConfig || {}),
+                    [selectedLookbookVolId]: updated,
+                  },
+                  lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
+                }));
+              }}
+              className="w-full h-8 sm:h-9 rounded-none border border-black/20 bg-white px-2.5 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-black/70">
+              Deskripsi Section (triptychDesc)
             </label>
             <textarea
-              rows={4}
+              rows={2}
               value={activeVolConfig.triptychDesc || ''}
-              placeholder="Deskripsi penutup / pesan brand di section triptych..."
+              placeholder="It is a little reminder that beautiful design should not only look good..."
               onChange={(e) => {
                 const val = e.target.value;
                 const updated = { ...activeVolConfig, triptychDesc: val };
@@ -736,12 +734,12 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                   lookbookPage: selectedLookbookVolId === 'vol-1' ? updated : prev.lookbookPage,
                 }));
               }}
-              className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
+              className="w-full rounded-none border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black leading-relaxed focus:border-black focus:outline-none resize-none"
             />
           </div>
         </div>
 
-        {/* Save button bottom */}
+        {/* Tombol Simpan Teks di bawah */}
         <div className="flex justify-end pt-2 border-t border-black/10">
           <button
             type="button"
@@ -754,7 +752,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
         </div>
       </div>
 
-      {/* ══ STEP 4: MANAJEMEN & HAPUS VOLUME (DILETAKKAN DI BAWAH) ══ */}
+      {/* ══ STEP 4: MANAJEMEN VOLUME ══ */}
       <div className="rounded-xl border border-red-200 bg-red-50/30 p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
         <div className="border-b border-red-200/60 pb-2.5 flex items-center justify-between">
           <div>
@@ -762,7 +760,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               4. Manajemen Hapus Volume
             </h3>
             <p className="text-[11px] text-red-600/80 mt-0">
-              Kelola dan hapus volume lookbook yang sudah tidak aktif atau tidak diperlukan lagi.
+              Kelola volume lookbook yang sudah tidak aktif atau tidak diperlukan lagi.
             </p>
           </div>
           <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700 border border-red-200">

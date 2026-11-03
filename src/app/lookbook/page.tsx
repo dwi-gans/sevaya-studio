@@ -250,10 +250,10 @@ export default function LookbookPage() {
         {/* Section 1: Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            &apos;26 SEVILLA CUPRO ABAYA
+            {cfg.heroSubtitle || "'26 SEVILLA CUPRO ABAYA"}
           </span>
           <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
-            {cfg.heroTitle && cfg.heroTitle !== '26°RHAPSODY' ? cfg.heroTitle : 'VOL 1: INTO A NEW SEASON'}
+            {cfg.heroTitle || 'VOL 1: INTO A NEW SEASON'}
           </h1>
           <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
             {cfg.seasonDesc || t('lookbook.hero_desc')}
@@ -278,7 +278,7 @@ export default function LookbookPage() {
         {/* Section 3: The Seed of The Story */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            Every detail is designed with purpose
+            {cfg.seasonTitle || 'Every detail is designed with purpose'}
           </h2>
           <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
             <li><span className="font-medium text-[#000000]">Two looks in one:</span> {t('lookbook.purpose_desc1')}</li>
@@ -316,10 +316,10 @@ export default function LookbookPage() {
         {/* Section 4: Meet The Icon */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            Practical for everyday moments
+            {cfg.panorama1Title || 'Practical for everyday moments'}
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {t('lookbook.practical_desc')}
+            {cfg.panorama1Desc || t('lookbook.practical_desc')}
           </p>
         </section>
 
@@ -340,10 +340,10 @@ export default function LookbookPage() {
         {/* Section 5: The Summer 2026 Collection */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            Sevilla is more than an abaya
+            {cfg.triptychTitle || 'Sevilla is more than an abaya'}
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            It is a little reminder that beautiful design should not only look good, but make life easier, too.
+            {cfg.triptychDesc || 'It is a little reminder that beautiful design should not only look good, but make life easier, too.'}
           </p>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
             SEVAYA — Slow fashion, thoughtfully made.
