@@ -6,14 +6,15 @@ import { NarrativeSection } from '@/components/home/NarrativeSection';
 import { JournalSection } from '@/components/home/JournalSection';
 import { Footer } from '@/components/layout/Footer';
 import { fetchCatalogProducts } from '@/features/catalog';
+import { getSiteSections } from '@/integrations/supabase';
 
 export default async function HomePage() {
-  const products = await fetchCatalogProducts();
+  const [products, sections] = await Promise.all([fetchCatalogProducts(), getSiteSections()]);
 
   return (
     <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">
       {/* 1. Hero Section matching Figma: TIMELESS • INTENTIONAL • EFFORTLESS */}
-      <HeroSection />
+      <HeroSection initialHero={sections?.hero} />
 
       {/* 2. Best Sellers Carousel */}
       <ProductGrid products={products} />

@@ -1,57 +1,58 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
+import { getSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 const PRIMARY_HERO = '/images/hero_optimized.jpg';
 
-export function HeroSection() {
-  const [hero, setHero] = useState<HeroSectionData>(DEFAULT_SITE_SECTIONS.hero);
-  const [heroImage, setHeroImage] = useState<string>(() => {
-    try {
-      const cached = getCachedSiteSections();
-      const candidate = cached?.hero?.image?.trim();
-      if (candidate && !candidate.startsWith('blob:') && candidate !== 'undefined') {
-        return candidate;
-      }
-    } catch {
-      // fallback
-    }
-    return PRIMARY_HERO;
-  });
+interface HeroSectionProps {
+  initialHero?: HeroSectionData;
+}
 
-  const currentImageRef = useRef(heroImage);
-  currentImageRef.current = heroImage;
+export function HeroSection({ initialHero }: HeroSectionProps) {
+  const [hero, setHero] = useState<HeroSectionData>(() => initialHero || DEFAULT_SITE_SECTIONS.hero);
 
   useEffect(() => {
-    // Only update state if cloud sections actually return a different valid image
+    // Background refresh: update only if cloud data differs from current state
     getSiteSections().then((sections) => {
       if (sections?.hero) {
-        setHero(sections.hero);
-        const newImg = sections.hero.image?.trim();
-        if (
-          newImg &&
-          !newImg.startsWith('blob:') &&
-          newImg !== 'undefined' &&
-          newImg !== currentImageRef.current
-        ) {
-          setHeroImage(newImg);
-        }
+        setHero((prev) => {
+          const newImg = sections.hero.image?.trim();
+          if (
+            newImg &&
+            !newImg.startsWith('blob:') &&
+            newImg !== 'undefined' &&
+            (newImg !== prev.image ||
+              sections.hero.title !== prev.title ||
+              sections.hero.ctaShop !== prev.ctaShop ||
+              sections.hero.ctaLookbook !== prev.ctaLookbook)
+          ) {
+            return sections.hero;
+          }
+          return prev;
+        });
       }
     });
   }, []);
 
+  const heroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
+
   return (
-    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
+    <section
+      suppressHydrationWarning
+      className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]"
+    >
       {/* Background Hero Image with smooth Ken Burns animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
+          suppressHydrationWarning
           className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat"
           style={{ backgroundImage: `url("${heroImage}")` }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            suppressHydrationWarning
             src={heroImage}
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
             loading="eager"
@@ -59,7 +60,7 @@ export function HeroSection() {
             className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
             onError={(e) => {
               const target = e.currentTarget;
-              if (target.src !== PRIMARY_HERO && !target.src.endsWith(PRIMARY_HERO)) {
+              if (!target.src.endsWith(PRIMARY_HERO)) {
                 target.src = PRIMARY_HERO;
               }
             }}
