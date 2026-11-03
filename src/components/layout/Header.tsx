@@ -44,8 +44,18 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled((prev) => {
+            const next = window.scrollY > 20;
+            return prev !== next ? next : prev;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });

@@ -58,7 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group relative flex flex-col bg-transparent">
       {/* Product Image Frame: 2:3 Portrait Aspect Ratio */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/5">
-        <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
+        <Link href={`/product/${product.slug}`} prefetch={true} className="relative block h-full w-full">
           {/* Badge */}
           {product.badge && (
             <span className="absolute top-3 left-3 z-10 bg-black px-2.5 py-1 text-[8px] font-medium tracking-widest text-white uppercase">

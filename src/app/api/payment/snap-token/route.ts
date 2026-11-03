@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createSnapTransaction } from '@/integrations/midtrans';
+import { supabaseAdmin } from '@/lib/auth-server';
 import { createDokuCheckoutSession } from '@/integrations/doku';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { order_id, grand_total: clientGrandTotal, items: clientItems, customer: clientCustomer } = body;
+    const {
+      order_id,
+      grand_total: clientGrandTotal,
+      items: clientItems,
+      customer: clientCustomer,
+      payment_method,
+      payment_method_types,
+    } = body;
 
     if (!order_id) {
       return NextResponse.json(
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Fetch official order from database to ensure price cannot be manipulated from client
+    // Ambil data order dari DB untuk pastikan harga tidak bisa dimanipulasi client
     let finalGrandTotal = Number(clientGrandTotal) || 0;
     let finalItems = clientItems;
     let finalCustomer = clientCustomer;
@@ -33,10 +34,8 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (dbOrder && typeof dbOrder.grand_total === 'number' && dbOrder.grand_total > 0) {
-        // ALWAYS use database verified grand total
         finalGrandTotal = Math.round(dbOrder.grand_total);
 
-        // If items are stored in db, parse and use them
         if (dbOrder.items) {
           try {
             const parsed = typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items;
@@ -48,12 +47,9 @@ export async function POST(req: NextRequest) {
                 quantity: Math.round(Number(it.quantity) || 1),
               }));
             }
-          } catch {
-            // fallback to client items
-          }
+          } catch { /* fallback ke client items */ }
         }
 
-        // Use official customer details from db
         const nameParts = (dbOrder.customer_name || '').split(' ');
         finalCustomer = {
           first_name: nameParts[0] || 'Pelanggan',
@@ -73,66 +69,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Try DOKU Payment Gateway first if credentials are configured
-    const dokuClientId = process.env.DOKU_CLIENT_ID;
-    const dokuSecretKey = process.env.DOKU_SECRET_KEY;
-
-    if (dokuClientId && dokuSecretKey) {
-      try {
-        const customerFullName =
-          [finalCustomer?.first_name, finalCustomer?.last_name].filter(Boolean).join(' ') ||
-          'Pelanggan SEVAYA';
-
-        const dokuSession = await createDokuCheckoutSession({
-          order_id,
-          amount: finalGrandTotal,
-          items: finalItems?.map((it: any) => ({
-            name: it.name || it.title || 'Produk SEVAYA',
-            price: Math.round(Number(it.price) || finalGrandTotal),
-            quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
-          })),
-          customer: {
-            name: customerFullName,
-            email: finalCustomer?.email || 'customer@sevaya.id',
-            phone: finalCustomer?.phone || '',
-          },
-        });
-
-        console.log(`[DOKU Session Created] Order: ${order_id}, URL: ${dokuSession.payment_url}`);
-
-        return NextResponse.json({
-          success: true,
-          gateway: 'doku',
-          payment_url: dokuSession.payment_url,
-          redirect_url: dokuSession.payment_url,
-          token: dokuSession.token || dokuSession.payment_url,
-          gross_amount: finalGrandTotal,
-        });
-      } catch (dokuErr: any) {
-        console.warn('[DOKU Checkout Fallback to Midtrans]:', dokuErr.message);
-        // If DOKU payment channels are inactive, gracefully fallback to Midtrans
-      }
+    // DOKU Payment Gateway
+    let selectedMethodTypes = payment_method_types;
+    if (!selectedMethodTypes) {
+      if (payment_method === 'va_bri') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BRI'];
+      else if (payment_method === 'va_bni') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BNI'];
+      else if (payment_method === 'va_bsi') selectedMethodTypes = ['VIRTUAL_ACCOUNT_BSI', 'VIRTUAL_ACCOUNT_BRI'];
+      else if (payment_method === 'va_other') selectedMethodTypes = ['VIRTUAL_ACCOUNT_DOKU', 'VIRTUAL_ACCOUNT_BRI', 'VIRTUAL_ACCOUNT_BNI'];
     }
 
-    // 3. Midtrans Gateway Fallback
-    const { token, redirect_url } = await createSnapTransaction({
+    const customerFullName =
+      [finalCustomer?.first_name, finalCustomer?.last_name].filter(Boolean).join(' ') ||
+      'Pelanggan SEVAYA';
+
+    const dokuSession = await createDokuCheckoutSession({
       order_id,
-      gross_amount: finalGrandTotal,
-      items: finalItems,
-      customer: finalCustomer,
+      amount: finalGrandTotal,
+      payment_method_types: selectedMethodTypes,
+      items: finalItems?.map((it: any) => ({
+        name: it.name || it.title || 'Produk SEVAYA',
+        price: Math.round(Number(it.price) || finalGrandTotal),
+        quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
+      })),
+      customer: {
+        name: customerFullName,
+        email: finalCustomer?.email || 'customer@sevaya.id',
+        phone: finalCustomer?.phone || '',
+      },
     });
+
+    console.log(`[DOKU Session] Order: ${order_id}, URL: ${dokuSession.payment_url}`);
 
     return NextResponse.json({
       success: true,
-      gateway: 'midtrans',
-      token,
-      redirect_url,
+      gateway: 'doku',
+      payment_url: dokuSession.payment_url,
       gross_amount: finalGrandTotal,
     });
-  } catch (err) {
-    console.error('API /api/payment/snap-token error:', err);
+
+  } catch (err: any) {
+    console.error('[snap-token error]:', err);
     return NextResponse.json(
-      { success: false, error: err instanceof Error ? err.message : 'Internal Server Error' },
+      { success: false, error: err instanceof Error ? err.message : 'Gagal membuat sesi pembayaran' },
       { status: 500 },
     );
   }

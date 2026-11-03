@@ -48,20 +48,26 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en" className={`${dmSans.variable} ${inter.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.cdnfonts.com" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.cdnfonts.com/css/avenir"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.cdnfonts.com/css/avenir-next-lt-pro"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        {/* Asynchronously load external brand fonts without blocking DOM First Contentful Paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var l1 = document.createElement('link');
+                  l1.rel = 'stylesheet';
+                  l1.href = 'https://fonts.cdnfonts.com/css/avenir';
+                  document.head.appendChild(l1);
+                  var l2 = document.createElement('link');
+                  l2.rel = 'stylesheet';
+                  l2.href = 'https://fonts.cdnfonts.com/css/avenir-next-lt-pro';
+                  document.head.appendChild(l2);
+                } catch(e) {}
+              })();
+            `,
+          }}
         />
       </head>
       <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FFFFFF] text-[#000000] antialiased">
@@ -73,4 +79,3 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     </html>
   );
 }
-

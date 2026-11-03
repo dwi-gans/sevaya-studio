@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
 
+const ORDER_DETAIL_COLUMNS =
+  'id, order_number, user_id, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ orderId: string }> }
@@ -31,28 +34,30 @@ export async function GET(
     if (isUUID) {
       const res = await supabaseAdmin
         .from('orders')
-        .select('*')
+        .select(ORDER_DETAIL_COLUMNS)
         .eq('id', cleanedOrderId)
         .maybeSingle();
       order = res.data;
       fetchErr = res.error;
     } else {
-      const res = await supabaseAdmin
+      // 1. Fast exact index-friendly lookup first
+      const exactRes = await supabaseAdmin
         .from('orders')
-        .select('*')
-        .ilike('order_number', cleanedOrderId)
+        .select(ORDER_DETAIL_COLUMNS)
+        .eq('order_number', cleanedOrderId)
         .maybeSingle();
-      order = res.data;
-      fetchErr = res.error;
 
-      // Fallback: try with partial match if exact match returned nothing
-      if (!order && !fetchErr) {
-        const fallbackRes = await supabaseAdmin
+      if (exactRes.data) {
+        order = exactRes.data;
+      } else {
+        // Fallback to case-insensitive exact match
+        const ilikeRes = await supabaseAdmin
           .from('orders')
-          .select('*')
-          .ilike('order_number', `%${cleanedOrderId}%`)
+          .select(ORDER_DETAIL_COLUMNS)
+          .ilike('order_number', cleanedOrderId)
           .maybeSingle();
-        order = fallbackRes.data;
+        order = ilikeRes.data;
+        fetchErr = ilikeRes.error;
       }
     }
 
@@ -80,11 +85,11 @@ export async function GET(
       );
     }
 
-    // Auto-cancel if pending and older than 10 minutes (600,000 ms)
+    // Auto-cancel if pending and older than 60 minutes (1 hour / 3,600,000 ms)
     if (
       (order.status === 'pending' || order.status === 'pending_payment' || order.status === 'unpaid') &&
       order.created_at &&
-      Date.now() - new Date(order.created_at).getTime() > 10 * 60 * 1000
+      Date.now() - new Date(order.created_at).getTime() > 60 * 60 * 1000
     ) {
       order.status = 'cancelled';
       supabaseAdmin
@@ -127,6 +132,10 @@ export async function GET(
         status: order.status,
         created_at: order.created_at,
         updated_at: order.updated_at,
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
       },
     });
   } catch (err: unknown) {

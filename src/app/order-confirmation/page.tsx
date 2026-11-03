@@ -6,19 +6,6 @@ import { useSearchParams } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/context/AuthContext';
 
-const BANK_ACCOUNTS = [
-  { bank: 'BCA', account: '8720-9981-22', name: 'SEVAYA STUDIO INDONESIA' },
-  { bank: 'Mandiri', account: '1370-0291-8821', name: 'SEVAYA STUDIO INDONESIA' },
-  { bank: 'BSI (Syariah)', account: '7190-2819-01', name: 'SEVAYA STUDIO INDONESIA' },
-];
-
-const VA_BANKS = [
-  { id: 'bca', name: 'BCA', prefix: '80777', label: 'BCA Virtual Account' },
-  { id: 'mandiri', name: 'Mandiri', prefix: '88908', label: 'Mandiri Virtual Account' },
-  { id: 'bni', name: 'BNI', prefix: '988', label: 'BNI Virtual Account' },
-  { id: 'bri', name: 'BRI', prefix: '12800', label: 'BRI Virtual Account' },
-];
-
 const formatIDR = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
 function resolveProductImage(rawImg?: string): string {
@@ -72,6 +59,43 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
 function OrderConfirmationContent() {
   const params = useSearchParams();
   const { getAccessToken } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  const handleBayar = async () => {
+    setIsRedirecting(true);
+    setPayError(null);
+    try {
+      const token = await getAccessToken();
+      const res = await fetch('/api/payment/snap-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          order_id: orderNumber,
+          grand_total: grandTotal,
+          customer: {
+            first_name: customerName.split(' ')[0] || '',
+            last_name: customerName.split(' ').slice(1).join(' ') || '',
+            email: customerEmail,
+            phone: customerPhone,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        setPayError(data.error || 'Gagal membuka halaman pembayaran. Coba lagi.');
+        setIsRedirecting(false);
+      }
+    } catch {
+      setPayError('Koneksi bermasalah. Periksa internet lalu coba lagi.');
+      setIsRedirecting(false);
+    }
+  };
 
   const orderNumber = params.get('orderNumber') ?? 'SVY-261101-A4CC50';
   const [dbOrder, setDbOrder] = useState<any>(null);
@@ -117,30 +141,9 @@ function OrderConfirmationContent() {
   const paymentStatus = params.get('payment_status') ?? '';
   const isPaid = dbOrder?.status === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture';
 
-  // Sub-tabs for payment method in-page (QRIS vs Virtual Account)
-  const [activePaymentTab, setActivePaymentTab] = useState<'qris' | 'va' | 'transfer' | 'cod'>(() => {
-    if (rawPaymentMethod.includes('transfer')) return 'transfer';
-    if (rawPaymentMethod.includes('cod')) return 'cod';
-    if (rawPaymentMethod.includes('va')) return 'va';
-    return 'qris';
-  });
-
-  const [selectedVaBank, setSelectedVaBank] = useState<string>('bca');
   const [localPaid, setLocalPaid] = useState(isPaid);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(600);
   const [isCancelled, setIsCancelled] = useState(false);
-
-  // Extract clean digits for numerical VA account
-  const vaNumberDigits = useMemo(() => {
-    const digits = orderNumber.replace(/\D/g, '');
-    return digits.length >= 6 ? digits.slice(-7) : '2611018';
-  }, [orderNumber]);
-
-  const currentVaBankObj = useMemo(() => {
-    return VA_BANKS.find((b) => b.id === selectedVaBank) ?? VA_BANKS[0]!;
-  }, [selectedVaBank]);
-
-  const activeVaNumber = `${currentVaBankObj.prefix}${vaNumberDigits}`;
 
   // 1-second countdown ticker for 10-minute payment window
   useEffect(() => {
@@ -284,27 +287,20 @@ function OrderConfirmationContent() {
               </div>
             )}
 
-            {/* ════════ DIRECT IN-PAGE PAYMENT INSTRUCTIONS (NO POPUP) ════════ */}
+            {/* ════════ PAYMENT SECTION ════════ */}
             {!localPaid && !isCancelled && (
-              <div className="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-5 shadow-2xs">
-                
-                {/* Payment Header with Total */}
+              <div className="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-4 shadow-2xs">
+
+                {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-neutral-100 pb-4">
                   <div>
                     <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">
-                      Instruksi Pembayaran
+                      Selesaikan Pembayaran
                     </span>
                     <h3 className="text-sm font-semibold text-neutral-900 mt-0.5">
-                      {activePaymentTab === 'qris'
-                        ? 'Scan QRIS (Semua E-Wallet & Mobile Banking)'
-                        : activePaymentTab === 'va'
-                        ? 'Transfer Virtual Account'
-                        : activePaymentTab === 'transfer'
-                        ? 'Transfer Rekening Resmi Sevaya'
-                        : 'Bayar Tunai di Tempat (COD)'}
+                      Bayar via DOKU Virtual Account
                     </h3>
                   </div>
-
                   <div className="flex items-center gap-2 self-start sm:self-auto bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded">
                     <div className="text-right">
                       <span className="text-[9px] text-neutral-500 uppercase block">Total Bayar</span>
@@ -316,193 +312,32 @@ function OrderConfirmationContent() {
                   </div>
                 </div>
 
-                {/* Sub-Tabs: Toggle between QRIS and Virtual Account easily */}
-                {(rawPaymentMethod === 'midtrans' || rawPaymentMethod === 'qris' || rawPaymentMethod === 'va') && (
-                  <div className="flex rounded-md border border-neutral-200 p-1 bg-neutral-50/80">
-                    <button
-                      type="button"
-                      onClick={() => setActivePaymentTab('qris')}
-                      className={`flex-1 rounded py-1.5 text-xs font-medium transition cursor-pointer ${
-                        activePaymentTab === 'qris'
-                          ? 'bg-white text-neutral-900 shadow-2xs font-semibold'
-                          : 'text-neutral-500 hover:text-neutral-900'
-                      }`}
-                    >
-                      QRIS / E-Wallet
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActivePaymentTab('va')}
-                      className={`flex-1 rounded py-1.5 text-xs font-medium transition cursor-pointer ${
-                        activePaymentTab === 'va'
-                          ? 'bg-white text-neutral-900 shadow-2xs font-semibold'
-                          : 'text-neutral-500 hover:text-neutral-900'
-                      }`}
-                    >
-                      Virtual Account
-                    </button>
-                  </div>
-                )}
+                {/* DOKU Online payment */}
+                <div className="space-y-3">
+                  <p className="text-xs text-neutral-600 leading-relaxed">
+                    Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>DOKU</strong>.
+                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, dan DOKU VA Bank Lainnya).
+                  </p>
 
-                {/* TAB 1: QRIS CODE IN-PAGE */}
-                {activePaymentTab === 'qris' && (
-                  <div className="flex flex-col items-center justify-center space-y-4 pt-1 text-center">
-                    {/* QR Code Container */}
-                    <div className="relative rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
-                      <div className="mb-2.5 flex items-center justify-between border-b border-neutral-100 pb-2">
-                        <span className="font-bold text-[11px] tracking-widest text-[#E1251B]">
-                          QRIS
-                        </span>
-                        <span className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">
-                          GPN &bull; Nasional
-                        </span>
-                      </div>
-
-                      {/* Official QR Code Image for this exact order */}
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=00020101021226540014ID.LINKAJA.WWW0118936009110021${orderNumber}520454115303360540${grandTotal || subtotal}5802ID5913SEVAYA STUDIO6007JAKARTA`}
-                        alt="QRIS Sevaya"
-                        width={200}
-                        height={200}
-                        className="mx-auto rounded block"
-                      />
-
-                      <div className="mt-2.5 border-t border-neutral-100 pt-2 text-[10px] text-neutral-500">
-                        <p className="font-semibold text-neutral-900 uppercase tracking-wide">
-                          SEVAYA STUDIO
-                        </p>
-                        <p className="font-mono text-[9px] text-neutral-400 mt-0.5">
-                          NMID: ID1024392819201 &bull; #{orderNumber}
-                        </p>
-                      </div>
+                  {payError && (
+                    <div className="rounded border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-700">
+                      {payError}
                     </div>
+                  )}
 
-                    {/* QRIS Steps */}
-                    <div className="w-full max-w-md rounded-md bg-neutral-50 p-3.5 text-left text-xs text-neutral-600 space-y-1.5">
-                      <p className="font-semibold text-neutral-900 text-[11px]">Cara Pembayaran:</p>
-                      <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
-                        <li>Buka aplikasi <strong>BCA Mobile, Livin&#039; Mandiri, BRImo, BNI</strong>, atau <strong>GoPay, OVO, ShopeePay, DANA</strong>.</li>
-                        <li>Pilih menu <strong>Scan / Bayar QRIS</strong> dan arahkan kamera ke kode di atas.</li>
-                        <li>Pastikan nama merchant adalah <strong>SEVAYA STUDIO</strong> dengan nominal <strong>{formatIDR(grandTotal || subtotal)}</strong>.</li>
-                        <li>Konfirmasi pembayaran. Status pesanan akan terverifikasi otomatis.</li>
-                      </ol>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 2: VIRTUAL ACCOUNT IN-PAGE */}
-                {activePaymentTab === 'va' && (
-                  <div className="space-y-4 pt-1">
-                    {/* Bank Selector Chips */}
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                      {VA_BANKS.map((b) => (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => setSelectedVaBank(b.id)}
-                          className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition cursor-pointer shrink-0 ${
-                            selectedVaBank === b.id
-                              ? 'border-black bg-black text-white'
-                              : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400'
-                          }`}
-                        >
-                          Bank {b.name}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* VA Number Highlight Box */}
-                    <div className="rounded-lg border border-neutral-200 bg-neutral-50/80 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] font-semibold text-neutral-500 uppercase">
-                            Nomor Virtual Account ({currentVaBankObj.name})
-                          </span>
-                          <p className="font-mono text-base sm:text-lg font-bold text-neutral-950 tracking-wider mt-0.5">
-                            {activeVaNumber}
-                          </p>
-                        </div>
-                        <CopyButton text={activeVaNumber} label="Salin Nomor VA" />
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-neutral-200/60 pt-2.5 text-xs">
-                        <span className="text-neutral-500">Nama Akun:</span>
-                        <span className="font-semibold text-neutral-900">SEVAYA - {customerName}</span>
-                      </div>
-                    </div>
-
-                    {/* VA Steps */}
-                    <div className="rounded-md bg-neutral-50 p-3.5 text-left text-xs text-neutral-600 space-y-1.5">
-                      <p className="font-semibold text-neutral-900 text-[11px]">
-                        Petunjuk Transfer {currentVaBankObj.label}:
-                      </p>
-                      <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
-                        <li>Buka aplikasi Mobile Banking atau ATM <strong>{currentVaBankObj.name}</strong>.</li>
-                        <li>Pilih menu <strong>Transfer &gt; Virtual Account</strong>.</li>
-                        <li>Masukkan nomor Virtual Account: <strong className="font-mono">{activeVaNumber}</strong>.</li>
-                        <li>Periksa rincian tagihan <strong>{formatIDR(grandTotal || subtotal)}</strong>, lalu masukkan PIN Anda.</li>
-                      </ol>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: TRANSFER BANK MANUAL IN-PAGE */}
-                {activePaymentTab === 'transfer' && (
-                  <div className="space-y-3 pt-1">
-                    <p className="text-xs text-neutral-600">
-                      Silakan transfer tepat sebesar <strong className="text-neutral-950">{formatIDR(grandTotal || subtotal)}</strong> ke salah satu rekening resmi berikut:
-                    </p>
-
-                    <div className="space-y-2.5">
-                      {BANK_ACCOUNTS.map((b) => (
-                        <div
-                          key={b.bank}
-                          className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-3.5"
-                        >
-                          <div>
-                            <span className="text-[10px] font-bold text-neutral-500 uppercase">
-                              Bank {b.bank}
-                            </span>
-                            <p className="font-mono text-sm font-bold text-neutral-950 mt-0.5">
-                              {b.account}
-                            </p>
-                            <p className="text-[10px] text-neutral-500">{b.name}</p>
-                          </div>
-                          <CopyButton text={b.account.replace(/-/g, '')} label="Salin No. Rekening" />
-                        </div>
-                      ))}
-                    </div>
-
-                    <p className="text-[11px] text-neutral-500 leading-relaxed pt-1">
-                      Setelah transfer berhasil, Anda dapat mengonfirmasi via WhatsApp untuk verifikasi instan.
-                    </p>
-                  </div>
-                )}
-
-                {/* TAB 4: COD IN-PAGE */}
-                {activePaymentTab === 'cod' && (
-                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-2 text-xs">
-                    <p className="font-semibold text-neutral-900">Bayar Tunai ke Kurir saat Paket Tiba</p>
-                    <p className="text-neutral-600 leading-relaxed">
-                      Harap siapkan uang pas sebesar <strong className="text-neutral-950">{formatIDR(grandTotal || subtotal)}</strong> untuk diberikan kepada kurir pengantar saat paket pesanan Anda sampai.
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Button: Cek Status Pembayaran (Tanpa Popup) */}
-                <div className="border-t border-neutral-100 pt-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span className="text-[11px] text-neutral-400">
-                    Status pembayaran akan otomatis diperbarui setelah transaksi selesai.
-                  </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      setLocalPaid(true);
-                    }}
-                    className="w-full sm:w-auto rounded bg-neutral-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-neutral-800 cursor-pointer text-center"
+                    onClick={handleBayar}
+                    disabled={isRedirecting}
+                    className="flex w-full items-center justify-center gap-2 rounded bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-60 cursor-pointer"
                   >
-                    Saya Sudah Membayar
+                    <Icon name="payments" size={16} />
+                    <span>{isRedirecting ? 'Membuka halaman pembayaran...' : 'Bayar Sekarang'}</span>
                   </button>
+
+                  <p className="text-[10px] text-neutral-400 text-center">
+                    Anda akan diarahkan ke halaman pembayaran aman DOKU. Setelah bayar, status otomatis diperbarui.
+                  </p>
                 </div>
 
               </div>
@@ -558,13 +393,7 @@ function OrderConfirmationContent() {
                         💳
                       </span>
                       <span>
-                        {activePaymentTab === 'qris'
-                          ? `QRIS (GoPay, OVO, ShopeePay, BCA) · ${formatIDR(grandTotal || subtotal)} IDR`
-                          : activePaymentTab === 'va'
-                          ? `${currentVaBankObj.name} Virtual Account · ${formatIDR(grandTotal || subtotal)} IDR`
-                          : activePaymentTab === 'transfer'
-                          ? `Bank Transfer Manual · ${formatIDR(grandTotal || subtotal)} IDR`
-                          : `Bayar di Tempat (COD) · ${formatIDR(grandTotal || subtotal)} IDR`}
+                        DOKU Virtual Account · {formatIDR(grandTotal || subtotal)} IDR
                       </span>
                     </div>
                   </div>

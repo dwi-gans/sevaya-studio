@@ -23,9 +23,26 @@ export interface AuthenticatedUser {
   supabaseUser: SupabaseUser;
 }
 
+// In-memory token verification cache to eliminate remote Supabase Auth network latency
+// on frequent authenticated requests (120 seconds TTL — safe since Supabase JWTs valid 1h)
+interface TokenCacheEntry {
+  user: AuthenticatedUser;
+  expiresAt: number;
+}
+const tokenVerificationCache = new Map<string, TokenCacheEntry>();
+
+export function invalidateTokenCache(token?: string) {
+  if (token) {
+    tokenVerificationCache.delete(token);
+  } else {
+    tokenVerificationCache.clear();
+  }
+}
+
 /**
  * Extracts and cryptographically verifies the bearer token from the incoming request.
  * NEVER trusts client-supplied user IDs.
+ * Uses a short-lived in-memory cache to prevent redundant remote network round-trips.
  */
 export async function getAuthenticatedUser(
   req: NextRequest
@@ -65,10 +82,18 @@ export async function getAuthenticatedUser(
       return { user: null, error: 'Token autentikasi tidak ditemukan. Harap login terlebih dahulu.' };
     }
 
-    // Verify token cryptographically with Supabase Auth server
+    // 1. Check in-memory verification cache
+    const now = Date.now();
+    const cached = tokenVerificationCache.get(token);
+    if (cached && cached.expiresAt > now) {
+      return { user: cached.user, error: null };
+    }
+
+    // 2. Verify token cryptographically with Supabase Auth server
     const { data, error } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !data.user) {
+      tokenVerificationCache.delete(token);
       return { user: null, error: 'Sesi tidak valid atau telah kedaluwarsa. Harap login kembali.' };
     }
 
@@ -88,6 +113,19 @@ export async function getAuthenticatedUser(
       created_at: sbUser.created_at,
       supabaseUser: sbUser,
     };
+
+    // Store in cache (120 seconds TTL — Supabase JWTs are valid for 1 hour)
+    tokenVerificationCache.set(token, {
+      user: authenticatedUser,
+      expiresAt: now + 120 * 1000,
+    });
+
+    // Clean up expired cache entries if cache grows
+    if (tokenVerificationCache.size > 200) {
+      for (const [key, entry] of tokenVerificationCache.entries()) {
+        if (entry.expiresAt <= now) tokenVerificationCache.delete(key);
+      }
+    }
 
     return { user: authenticatedUser, error: null };
   } catch (err: unknown) {

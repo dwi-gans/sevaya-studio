@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getBiteshipRates } from '@/integrations/biteship';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
+// In-memory cache for shipping calculation results (5 minutes TTL)
+interface ShippingRatesCacheEntry {
+  rates: any;
+  notice?: string;
+  expiresAt: number;
+}
+const shippingCache = new Map<string, ShippingRatesCacheEntry>();
+
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request);
@@ -25,10 +33,19 @@ export async function POST(request: NextRequest) {
     const postalCode =
       destination_postal_code || (typeof destination === 'number' ? destination : undefined);
 
+    const courierList = couriers || 'jne,sicepat,jnt,anteraja,tiki,pos,gojek,grab';
+    const cacheKey = `${areaId || ''}_${postalCode || ''}_${courierList}_${weight}`;
+
+    const now = Date.now();
+    const cached = shippingCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return NextResponse.json({ success: true, data: cached.rates, notice: cached.notice });
+    }
+
     const { rates, notice } = await getBiteshipRates({
       destination_area_id: areaId,
       destination_postal_code: postalCode,
-      couriers: couriers || 'jne,sicepat,jnt,anteraja,tiki,pos,gojek,grab',
+      couriers: courierList,
       items: items || [
         {
           name: 'The Obsidian Abaya - Silk Noir',
@@ -40,6 +57,20 @@ export async function POST(request: NextRequest) {
         },
       ],
     });
+
+    // Cache results for 5 minutes
+    shippingCache.set(cacheKey, {
+      rates,
+      notice,
+      expiresAt: now + 5 * 60 * 1000,
+    });
+
+    // Clean up if map exceeds 300 entries
+    if (shippingCache.size > 300) {
+      for (const [key, entry] of shippingCache.entries()) {
+        if (entry.expiresAt <= now) shippingCache.delete(key);
+      }
+    }
 
     return NextResponse.json({ success: true, data: rates, notice });
   } catch (error) {

@@ -4,8 +4,9 @@ import {
   updateArticle,
   deleteArticle,
 } from '@/integrations/supabase/articles';
+import { verifyAdminSession } from '@/lib/auth-admin';
 
-// GET /api/articles/[id]  — by id or slug
+// GET /api/articles/[id] — by id or slug
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,14 +16,22 @@ export async function GET(
   if (!article) {
     return NextResponse.json({ error: 'Artikel tidak ditemukan' }, { status: 404 });
   }
-  return NextResponse.json({ article });
+  return NextResponse.json(
+    { article },
+    { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } }
+  );
 }
 
-// PATCH /api/articles/[id]
+// PATCH /api/articles/[id] (Admin Only)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   const { id } = await params;
   try {
     const body = await req.json();
@@ -38,11 +47,16 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/articles/[id]
+// DELETE /api/articles/[id] (Admin Only)
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   const { id } = await params;
   try {
     const ok = await deleteArticle(id);

@@ -1,23 +1,19 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 export function HeroSection() {
-  // State awal selalu persis sama antara server dan client (SSR)
   const [hero, setHero] = useState<HeroSectionData>(DEFAULT_SITE_SECTIONS.hero);
 
-  // useLayoutEffect hanya berjalan di browser client sebelum browser render ke layar
-  useLayoutEffect(() => {
+  useEffect(() => {
     const cached = getCachedSiteSections();
     if (cached?.hero?.image) {
       setHero(cached.hero);
     }
-  }, []);
 
-  // Cloud refresh di background
-  useEffect(() => {
     getSiteSections().then((sections) => {
       if (sections?.hero?.image) setHero(sections.hero);
     });
@@ -27,19 +23,17 @@ export function HeroSection() {
 
   return (
     <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
-      {/* Background Hero Image with smooth Ken Burns */}
+      {/* Background Hero Image with smooth Ken Burns using next/image (single download) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="relative h-full w-full animate-kenburns bg-cover bg-[center_35%] bg-no-repeat"
-          style={{ backgroundImage: `url("${heroImageSrc}")` }}
-        >
-          <img
+        <div className="relative h-full w-full animate-kenburns">
+          <Image
             src={heroImageSrc}
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-            loading="eager"
-            decoding="sync"
-            fetchPriority="high"
-            className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
+            fill
+            priority
+            sizes="100vw"
+            quality={85}
+            className="object-cover object-[center_30%] sm:object-[center_35%]"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />

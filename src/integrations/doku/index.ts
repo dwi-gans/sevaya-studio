@@ -26,6 +26,7 @@ export interface CreateDokuPaymentParams {
   items?: DokuItemDetail[];
   customer?: DokuCustomerDetail;
   callback_url?: string;
+  payment_method_types?: string[];
 }
 
 /**
@@ -66,6 +67,55 @@ export function generateDokuHeaders(
 }
 
 /**
+ * Sanitize item name to only allow characters accepted by DOKU API:
+ * a-z A-Z 0-9 . - / + , = _ : ' @ % ( ) and space
+ */
+function cleanDokuName(name: string): string {
+  return String(name || 'Item')
+    .replace(/&/g, 'dan')
+    .replace(/[^a-zA-Z0-9.\-/+,=_:'@%() ]/g, '')
+    .slice(0, 50);
+}
+
+/**
+ * Build line_items array that always sums to roundedAmount.
+ * - If items total equals amount → use as-is.
+ * - If amount > items total → append a "Ongkos Kirim dan Layanan" line for the difference.
+ * - If amount < items total → collapse to a single line to avoid mismatch.
+ * - If no items provided → return undefined (don't send line_items).
+ */
+function buildLineItems(
+  items: DokuItemDetail[],
+  roundedAmount: number,
+  orderId: string,
+): Array<{ name: string; price: number; quantity: number }> | undefined {
+  if (!items || items.length === 0) return undefined;
+
+  const rawLineItems = items.map((it) => ({
+    name: cleanDokuName(it.name || 'Produk SEVAYA'),
+    price: Math.max(0, Math.round(Number(it.price) || 0)),
+    quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
+  }));
+
+  const itemsTotal = rawLineItems.reduce((acc, curr) => acc + curr.price * curr.quantity, 0);
+
+  if (itemsTotal === roundedAmount) {
+    return rawLineItems;
+  } else if (roundedAmount > itemsTotal) {
+    // Append shipping / service fee line to balance the total
+    rawLineItems.push({
+      name: 'Ongkos Kirim dan Layanan',
+      price: roundedAmount - itemsTotal,
+      quantity: 1,
+    });
+    return rawLineItems;
+  } else {
+    // items exceed total (shouldn't happen) → collapse to single line
+    return [{ name: cleanDokuName(`Pesanan SEVAYA ${orderId}`), price: roundedAmount, quantity: 1 }];
+  }
+}
+
+/**
  * Create a DOKU Checkout Payment Session
  * Returns payment url and token
  */
@@ -83,24 +133,28 @@ export async function createDokuCheckoutSession(params: CreateDokuPaymentParams)
     throw new Error('Invalid payment amount');
   }
 
+  const allowedChannels =
+    params.payment_method_types && params.payment_method_types.length > 0
+      ? params.payment_method_types
+      : ['VIRTUAL_ACCOUNT_BRI', 'VIRTUAL_ACCOUNT_BNI', 'VIRTUAL_ACCOUNT_BSI', 'VIRTUAL_ACCOUNT_DOKU'];
+
   const payload: Record<string, unknown> = {
     order: {
       amount: roundedAmount,
       invoice_number: params.order_id,
       currency: 'IDR',
       callback_url: params.callback_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sevaya-studio.com'}/profile/orders/${encodeURIComponent(params.order_id)}`,
+      callback_url_cancel: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sevaya-studio.com'}/profile/orders/${encodeURIComponent(params.order_id)}`,
     },
     payment: {
       payment_due_date: 60, // 60 minutes
+      payment_method_types: allowedChannels,
     },
   };
 
-  if (params.items && params.items.length > 0) {
-    (payload.order as Record<string, unknown>).line_items = params.items.map((it) => ({
-      name: String(it.name || 'Produk SEVAYA').slice(0, 50),
-      price: Math.round(Number(it.price) || 0),
-      quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
-    }));
+  const lineItems = buildLineItems(params.items || [], roundedAmount, params.order_id);
+  if (lineItems) {
+    (payload.order as Record<string, unknown>).line_items = lineItems;
   }
 
   if (params.customer) {

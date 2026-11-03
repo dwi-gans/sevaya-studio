@@ -496,16 +496,16 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
     }
   };
 
-  const fetchOrders = useCallback(async (silent = false) => {
+  const fetchOrders = useCallback(async (silent = false, sync = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/orders');
+      const url = sync ? '/api/admin/orders?sync=true' : '/api/admin/orders';
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setOrders(data.data);
-        if (onOrdersCountChange) onOrdersCountChange(data.data.length);
         setLastRefresh(new Date());
       } else {
         setError(data.error || 'Gagal memuat orders');
@@ -518,14 +518,21 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
     }
   }, []);
 
-  // Auto-polling: automatically syncs with Biteship API periodically
+  // Periodic polling: fetch orders from DB every 25 seconds only when document is visible
   useEffect(() => {
     fetchOrders();
     const interval = setInterval(() => {
-      fetchOrders(true);
-    }, 8000);
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchOrders(true, false);
+      }
+    }, 25000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
+
+  // Notify parent whenever order count changes (outside render phase)
+  useEffect(() => {
+    if (onOrdersCountChange) onOrdersCountChange(orders.length);
+  }, [orders.length, onOrdersCountChange]);
 
   // Delete an order (also cancels it on Biteship server)
   const handleDeleteOrder = async (id: string, orderNumber: string) => {
@@ -534,11 +541,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
       const res = await fetch(`/api/admin/orders?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setOrders((prev) => {
-          const updated = prev.filter((o) => o.id !== id);
-          if (onOrdersCountChange) onOrdersCountChange(updated.length);
-          return updated;
-        });
+        setOrders((prev) => prev.filter((o) => o.id !== id));
         if (selectedOrder?.id === id) setSelectedOrder(null);
       } else {
         alert(data.error || 'Gagal menghapus order');
@@ -676,11 +679,11 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
             </span>
           )}
           <button
-            onClick={() => fetchOrders(true)}
+            onClick={() => fetchOrders(true, true)}
             disabled={refreshing}
             className="rounded-full border border-black/20 bg-white px-3.5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95 disabled:opacity-40"
           >
-            {refreshing ? '↻ Memuat...' : '↻ Segarkan'}
+            {refreshing ? '↻ Menyinkronkan...' : '↻ Segarkan & Sinkron'}
           </button>
         </div>
       </div>

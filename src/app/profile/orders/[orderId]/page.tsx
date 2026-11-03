@@ -72,8 +72,36 @@ export default function OrderDetailPage({
   const { user, isAuthenticated, isLoading: authLoading, getAccessToken } = useAuth();
   const { showToast } = useToast();
 
-  const [order, setOrder] = useState<UserOrder | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [order, setOrder] = useState<UserOrder | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_orders');
+        if (stored) {
+          const list: UserOrder[] = JSON.parse(stored);
+          const found = list.find(
+            (o) => o.id === orderId || o.order_number === orderId || `#${o.order_number}` === orderId
+          );
+          if (found) return found;
+        }
+      } catch {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_orders');
+        if (stored) {
+          const list: UserOrder[] = JSON.parse(stored);
+          const found = list.find(
+            (o) => o.id === orderId || o.order_number === orderId || `#${o.order_number}` === orderId
+          );
+          if (found) return false;
+        }
+      } catch {}
+    }
+    return true;
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -128,7 +156,6 @@ export default function OrderDetailPage({
 
   const handleRepay = async () => {
     if (!order) return;
-    // Re-request snap token then redirect to confirmation page
     try {
       const token = await getAccessToken();
       const snapRes = await fetch('/api/payment/snap-token', {
@@ -155,6 +182,14 @@ export default function OrderDetailPage({
         }),
       });
       const snapData = await snapRes.json();
+
+      // DOKU gateway — redirect langsung ke halaman pembayaran DOKU
+      if (snapData.success && snapData.gateway === 'doku' && snapData.payment_url) {
+        window.location.href = snapData.payment_url;
+        return;
+      }
+
+      // Midtrans — simpan token lalu redirect ke /pay
       if (snapData.success && snapData.token) {
         try {
           sessionStorage.setItem('sevaya_snap_pending', JSON.stringify({
@@ -165,9 +200,10 @@ export default function OrderDetailPage({
           }));
         } catch { /* ignore */ }
         window.location.href = `/pay/${encodeURIComponent(order.order_number)}?payment=${encodeURIComponent(order.payment_method || 'midtrans')}&total=${order.grand_total || ''}&name=${encodeURIComponent(order.customer_name || '')}&email=${encodeURIComponent(order.customer_email || '')}&phone=${encodeURIComponent(order.customer_phone || '')}`;
-      } else {
-        showToast('Gagal menghubungi gateway pembayaran. Coba lagi.');
+        return;
       }
+
+      showToast('Gagal menghubungi gateway pembayaran. Coba lagi.');
     } catch {
       showToast('Gagal melakukan pembayaran ulang. Hubungi layanan.');
     }
@@ -334,7 +370,7 @@ export default function OrderDetailPage({
 
             {/* Quick Actions (Cetak Nota & Hubungi Layanan) */}
             <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-black/15/70 pt-4 print:hidden">
-              {order.status === 'pending_payment' && order.payment_method === 'midtrans' && (
+              {order.status === 'pending_payment' && (
                 <button
                   type="button"
                   onClick={handleRepay}
@@ -601,11 +637,15 @@ export default function OrderDetailPage({
               </div>
               <div className="space-y-1 text-xs text-[#554C48]">
                 <p className="font-semibold text-black">
-                  {order.payment_method === 'midtrans'
-                    ? 'Pembayaran Instan (QRIS / VA / E-Wallet)'
-                    : order.payment_method === 'cod'
-                    ? 'Bayar di Tempat (COD)'
-                    : 'Transfer Bank Manual'}
+                  {order.payment_method === 'va_bri'
+                    ? 'Virtual Account BRI (BRIVA)'
+                    : order.payment_method === 'va_bni'
+                    ? 'Virtual Account BNI'
+                    : order.payment_method === 'va_bsi'
+                    ? 'Virtual Account BSI (Syariah)'
+                    : order.payment_method === 'va_other'
+                    ? 'DOKU VA (Bank Lainnya)'
+                    : 'Virtual Account (DOKU)'}
                 </p>
                 <p className="text-black/70">
                   Email: {order.customer_email || '—'}

@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
 
+interface OrdersCacheEntry {
+  orders: any[];
+  count: number;
+  expiresAt: number;
+}
+
+// In-memory cache for user orders per user ID (20s TTL)
+// Avoids repeated expensive queries when user refreshes or toggles tabs
+const userOrdersCache = new Map<string, OrdersCacheEntry>();
+const USER_ORDERS_CACHE_TTL = 20 * 1000;
+
+function invalidateUserOrdersCache(userId?: string) {
+  if (userId) {
+    userOrdersCache.delete(userId);
+  } else {
+    userOrdersCache.clear();
+  }
+}
+// Suppress unused warning — available for internal route use
+void invalidateUserOrdersCache;
+
 export async function GET(req: NextRequest) {
   try {
     const { user, error } = await getAuthenticatedUser(req);
@@ -14,14 +35,39 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get('status');
     const userEmail = (user.email || '').trim().toLowerCase();
+    const cacheKey = `${user.id}_${statusFilter || 'all'}`;
 
-    // Query orders by user's email directly - with fast timeout & limit
+    // 1. Check in-memory cache
+    const now = Date.now();
+    const cached = userOrdersCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return NextResponse.json(
+        {
+          success: true,
+          orders: cached.orders,
+          count: cached.count,
+          cached: true,
+        },
+        {
+          headers: {
+            'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+          },
+        }
+      );
+    }
+
+    // 2. Query orders by user's ID or email directly
     let query = supabaseAdmin
       .from('orders')
-      .select('*')
-      .ilike('customer_email', userEmail)
+      .select('id, order_number, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at')
+      .or(`user_id.eq.${user.id},customer_email.eq.${userEmail},customer_email.ilike.${userEmail}`)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    // Filter in DB directly to avoid loading unneeded rows
+    if (statusFilter && statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
+    }
 
     const { data: emailData, error: emailErr } = await query;
 
@@ -33,22 +79,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    let orders: any[] = emailData || [];
-
-    // Filter in memory if filter query exists
-    if (statusFilter && statusFilter !== 'all') {
-      orders = orders.filter((o) => o.status === statusFilter);
-    }
-
-    const now = Date.now();
+    const orders: any[] = emailData || [];
     const expiredIds: string[] = [];
 
     const mappedOrders = orders.map((o) => {
       let isExpired = false;
+      // Auto-cancel only after 60 minutes (1 hour) of pending payment
       if (
         (o.status === 'pending' || o.status === 'pending_payment' || o.status === 'unpaid') &&
         o.created_at &&
-        now - new Date(o.created_at).getTime() > 10 * 60 * 1000
+        now - new Date(o.created_at).getTime() > 60 * 60 * 1000
       ) {
         isExpired = true;
         expiredIds.push(o.id);
@@ -88,6 +128,13 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // Save to in-memory cache
+    userOrdersCache.set(cacheKey, {
+      orders: mappedOrders,
+      count: mappedOrders.length,
+      expiresAt: now + USER_ORDERS_CACHE_TTL,
+    });
+
     // Asynchronously update expired orders in bulk without blocking API response
     if (expiredIds.length > 0) {
       supabaseAdmin
@@ -97,11 +144,18 @@ export async function GET(req: NextRequest) {
         .then(() => {});
     }
 
-    return NextResponse.json({
-      success: true,
-      orders: mappedOrders,
-      count: mappedOrders.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        orders: mappedOrders,
+        count: mappedOrders.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (err: unknown) {
     console.error('User orders API error:', err);
     return NextResponse.json(

@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyDokuWebhookSignature } from '@/integrations/doku';
 import { sendOrderCancelledEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +31,9 @@ export async function POST(req: NextRequest) {
         clientId,
         requestId,
       });
-      // Allow proceeding if signature is missing in dev/test, but log warning
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ message: 'Invalid or missing signature' }, { status: 401 });
+      }
     }
 
     // 2. Parse DOKU payload format (supports Standard DOKU Checkout & SNAP format)

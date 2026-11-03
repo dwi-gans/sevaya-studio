@@ -5,6 +5,7 @@ import {
   createArticle,
   generateSlug,
 } from '@/integrations/supabase/articles';
+import { verifyAdminSession } from '@/lib/auth-admin';
 
 // GET /api/articles?admin=true
 export async function GET(req: NextRequest) {
@@ -12,15 +13,27 @@ export async function GET(req: NextRequest) {
 
   try {
     const articles = isAdmin ? await getAllArticlesAdmin() : await getArticles();
-    return NextResponse.json({ articles });
+    return NextResponse.json(
+      { articles },
+      {
+        headers: isAdmin
+          ? { 'Cache-Control': 'no-store' }
+          : { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' },
+      }
+    );
   } catch (err) {
     console.error('[GET /api/articles]', err);
     return NextResponse.json({ error: 'Gagal mengambil artikel' }, { status: 500 });
   }
 }
 
-// POST /api/articles
+// POST /api/articles (Admin Only)
 export async function POST(req: NextRequest) {
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { title, category, excerpt, content, image, images, featured, published, date, read_time } = body;

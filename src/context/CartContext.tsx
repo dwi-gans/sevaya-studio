@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { siteConfig } from '@/config/site';
 
 export interface CartItem {
@@ -52,7 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [promoApplied, setPromoApplied] = useState(false);
 
   // Restore cart items from localStorage on client mount
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const stored = localStorage.getItem('sevaya_cart_items');
       if (stored) {
@@ -69,7 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Sync cart items to localStorage ONLY AFTER INITIAL RESTORE
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoaded) return;
     try {
       localStorage.setItem('sevaya_cart_items', JSON.stringify(items));
@@ -78,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, isLoaded]);
 
-  const addToCart = (newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+  const addToCart = useCallback((newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex(
         (i) => i.id === newItem.id && i.color === newItem.color && i.size === newItem.size,
@@ -97,13 +97,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...newItem, quantity: qtyToAdd }];
     });
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+  }, []);
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = useCallback((id: string, delta: number) => {
     setItems((prev) =>
       prev
         .map((item) => {
@@ -115,65 +115,93 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         })
         .filter((item): item is CartItem => item !== null),
     );
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([]);
     try {
       localStorage.removeItem('sevaya_cart_items');
     } catch {
       // ignore
     }
-  };
+  }, []);
 
-  const applyPromoCode = (code: string) => {
+  const applyPromoCode = useCallback((code: string) => {
     if (code.trim().toUpperCase() === 'EIDDELIGHT' || code.trim().toUpperCase() === 'SEVAYA10') {
       setPromoCode(code.trim().toUpperCase());
       setPromoApplied(true);
       return true;
     }
     return false;
-  };
+  }, []);
 
-  const removePromoCode = () => {
+  const removePromoCode = useCallback(() => {
     setPromoCode('');
     setPromoApplied(false);
-  };
+  }, []);
 
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const discount = promoApplied && subtotal > 0 ? 50000 : 0;
-  const totalPayable = Math.max(0, subtotal - discount);
+  const calculations = useMemo(() => {
+    const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const discount = promoApplied && subtotal > 0 ? 50000 : 0;
+    const totalPayable = Math.max(0, subtotal - discount);
 
-  const threshold = siteConfig.freeShippingThreshold;
-  const freeShippingProgress = Math.min(100, Math.round((subtotal / threshold) * 100));
-  const freeShippingRemaining = Math.max(0, threshold - subtotal);
+    const threshold = siteConfig.freeShippingThreshold;
+    const freeShippingProgress = Math.min(100, Math.round((subtotal / threshold) * 100));
+    const freeShippingRemaining = Math.max(0, threshold - subtotal);
+
+    return {
+      itemCount,
+      subtotal,
+      discount,
+      totalPayable,
+      freeShippingProgress,
+      freeShippingRemaining,
+    };
+  }, [items, promoApplied]);
+
+  const contextValue = useMemo(
+    () => ({
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      itemCount: calculations.itemCount,
+      subtotal: calculations.subtotal,
+      discount: calculations.discount,
+      promoCode,
+      promoApplied,
+      applyPromoCode,
+      removePromoCode,
+      giftPackaging,
+      setGiftPackaging,
+      personalNote,
+      setPersonalNote,
+      totalPayable: calculations.totalPayable,
+      freeShippingProgress: calculations.freeShippingProgress,
+      freeShippingRemaining: calculations.freeShippingRemaining,
+      isLoaded,
+    }),
+    [
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      calculations,
+      promoCode,
+      promoApplied,
+      applyPromoCode,
+      removePromoCode,
+      giftPackaging,
+      personalNote,
+      isLoaded,
+    ]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        itemCount,
-        subtotal,
-        discount,
-        promoCode,
-        promoApplied,
-        applyPromoCode,
-        removePromoCode,
-        giftPackaging,
-        setGiftPackaging,
-        personalNote,
-        setPersonalNote,
-        totalPayable,
-        freeShippingProgress,
-        freeShippingRemaining,
-        isLoaded,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

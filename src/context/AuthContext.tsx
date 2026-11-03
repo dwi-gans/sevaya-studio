@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase';
 
 export interface User {
@@ -32,10 +32,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const tokenRef = useRef<string | null>(null);
 
-  const syncUserFromSession = useCallback((sessionUser: any) => {
+  const syncUserFromSession = useCallback((sessionUser: any, token?: string | null) => {
+    if (token !== undefined) {
+      tokenRef.current = token;
+    }
     if (!sessionUser) {
       setUser(null);
+      tokenRef.current = null;
       return;
     }
     const meta = sessionUser.user_metadata || {};
@@ -57,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 1. Initial active session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        syncUserFromSession(session.user);
+        syncUserFromSession(session.user, session.access_token);
       }
       setIsLoading(false);
     });
@@ -67,8 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        syncUserFromSession(session.user);
+        syncUserFromSession(session.user, session.access_token);
       } else {
+        tokenRef.current = null;
         setUser(null);
       }
     });
@@ -78,16 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [syncUserFromSession]);
 
-  const getAccessToken = async (): Promise<string | null> => {
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    if (tokenRef.current) {
+      return tokenRef.current;
+    }
     try {
       const { data } = await supabase.auth.getSession();
-      return data.session?.access_token || null;
+      tokenRef.current = data.session?.access_token || null;
+      return tokenRef.current;
     } catch {
       return null;
     }
-  };
+  }, []);
 
-  const login = async (email: string, password?: string): Promise<AuthResult> => {
+  const login = useCallback(async (email: string, password?: string): Promise<AuthResult> => {
     if (!email || !email.includes('@')) {
       return { error: 'Format email tidak valid.' };
     }
@@ -119,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data.user) {
-        syncUserFromSession(data.user);
+        syncUserFromSession(data.user, data.session?.access_token);
       }
 
       return { error: null };
@@ -127,9 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const msg = err instanceof Error ? err.message : 'Gagal masuk akun';
       return { error: msg };
     }
-  };
+  }, [syncUserFromSession]);
 
-  const register = async (
+  const register = useCallback(async (
     name: string,
     email: string,
     password?: string,
@@ -180,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
 
           if (!signUpError && signUpData.user) {
-            syncUserFromSession(signUpData.user);
+            syncUserFromSession(signUpData.user, signUpData.session?.access_token);
             return { error: null };
           }
         } catch {
@@ -219,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!signUpError && signUpData.user) {
-          syncUserFromSession(signUpData.user);
+          syncUserFromSession(signUpData.user, signUpData.session?.access_token);
           return { error: null };
         }
         if (signUpError) {
@@ -231,33 +241,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return { error: 'Terjadi kesalahan saat pendaftaran akun.' };
     }
-  };
+  }, [login, syncUserFromSession]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
     } finally {
+      tokenRef.current = null;
       setUser(null);
     }
-  };
+  }, []);
 
-  const updateUser = (updatedData: Partial<User>) => {
+  const updateUser = useCallback((updatedData: Partial<User>) => {
     setUser((prev) => (prev ? { ...prev, ...updatedData } : null));
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      register,
+      logout,
+      updateUser,
+      getAccessToken,
+    }),
+    [user, isLoading, login, register, logout, updateUser, getAccessToken]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        register,
-        logout,
-        updateUser,
-        getAccessToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

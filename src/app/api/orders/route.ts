@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { supabaseAdmin } from '@/lib/auth-server';
 import { sendOrderPendingPaymentEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { getVerifiedProductPrice } from '@/lib/catalog-prices';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 function generateOrderNumber() {
   const now = new Date();
@@ -344,15 +339,12 @@ export async function POST(req: NextRequest) {
       }
     })();
 
-    if (error) {
-      console.error('Supabase insert error:', error.message);
-      const mockId = `mock-${Date.now()}`;
-      return NextResponse.json({
-        success: true,
-        orderId: mockId,
-        orderNumber,
-        mock: true,
-      });
+    if (error || !data) {
+      console.error('Supabase insert error:', error?.message);
+      return NextResponse.json(
+        { success: false, error: 'Gagal menyimpan pesanan ke database. Silakan coba beberapa saat lagi.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

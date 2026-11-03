@@ -39,6 +39,15 @@ const SIZE_OPTIONS = ['All Size'];
  * Mencari produk secara instan dan akurat berdasarkan slug dari seluruh sumber data
  */
 function findInitialProduct(slug: string): DbProduct {
+  // 0. Cek di localStorage (data sinkron dari storage/admin)
+  if (typeof window !== 'undefined') {
+    const local = loadFromLocalStorage();
+    if (local && local.length > 0) {
+      const found = local.find((p) => p.slug === slug);
+      if (found) return found;
+    }
+  }
+
   // 1. Cek di DEFAULT_DB_PRODUCTS
   const fromDb = DEFAULT_DB_PRODUCTS.find((p) => p.slug === slug);
   if (fromDb) return fromDb;
@@ -173,39 +182,48 @@ export default function ProductDetailPage({ params }: PageProps) {
     setSelectedColor(mapped[0] || DEFAULT_COLOR_OPTIONS[0]!);
     setActiveImage(initial.image || mapped[0]?.image || '/images/catalog/catalog-01.jpg');
 
-    // Fetch dari cloud database Supabase
+        // Fetch dari cloud database Supabase (background revalidation)
     getDbProducts().then((items) => {
       if (!isMounted) return;
       const found = items.find((p) => p.slug === slug);
-      if (found) {
-        setDbProduct(found);
-        if (found.swatches && found.swatches.length > 0) {
-          const fromDbColors: ProductColorOption[] = found.swatches.map((s, idx) => ({
-            name: s.name,
-            hex: s.color,
-            image: s.image || found.image || '/images/catalog/catalog-01.jpg',
-            outOfStock: idx === 3,
-          }));
-          setColors(fromDbColors);
-          setSelectedColor(fromDbColors[0]!);
-          setActiveImage(fromDbColors[0]!.image);
+      if (!found) return;
 
-          const thumbs = Array.from(
-            new Set([
-              ...fromDbColors.map((c) => c.image),
-              found.image,
-              '/images/catalog/catalog-01.jpg',
-              '/images/catalog/catalog-03.jpg',
-              '/images/catalog/catalog-04.jpg',
-              '/images/catalog/catalog-05.jpg',
-              '/images/catalog/catalog-06.jpg',
-              '/images/catalog/catalog-07.jpg',
-            ].filter(Boolean) as string[])
-          );
-          setGalleryImages(thumbs);
-        } else if (found.image) {
-          setActiveImage(found.image);
-        }
+      // Only trigger re-render if data has genuinely changed
+      const isIdentical =
+        found.price === initial.price &&
+        found.title === initial.title &&
+        found.image === initial.image &&
+        (found.swatches?.length || 0) === (initial.swatches?.length || 0);
+
+      if (isIdentical) return;
+
+      setDbProduct(found);
+      if (found.swatches && found.swatches.length > 0) {
+        const fromDbColors: ProductColorOption[] = found.swatches.map((s, idx) => ({
+          name: s.name,
+          hex: s.color,
+          image: s.image || found.image || '/images/catalog/catalog-01.jpg',
+          outOfStock: idx === 3,
+        }));
+        setColors(fromDbColors);
+        setSelectedColor(fromDbColors[0]!);
+        setActiveImage(fromDbColors[0]!.image);
+
+        const thumbs = Array.from(
+          new Set([
+            ...fromDbColors.map((c) => c.image),
+            found.image,
+            '/images/catalog/catalog-01.jpg',
+            '/images/catalog/catalog-03.jpg',
+            '/images/catalog/catalog-04.jpg',
+            '/images/catalog/catalog-05.jpg',
+            '/images/catalog/catalog-06.jpg',
+            '/images/catalog/catalog-07.jpg',
+          ].filter(Boolean) as string[])
+        );
+        setGalleryImages(thumbs);
+      } else if (found.image) {
+        setActiveImage(found.image);
       }
     });
 

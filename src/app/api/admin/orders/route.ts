@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/auth-server';
 import { checkMidtransStatus } from '@/integrations/midtrans';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 const BITESHIP_BASE_URL = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
@@ -38,11 +33,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const { searchParams } = new URL(req.url);
+    const shouldSync = searchParams.get('sync') === 'true';
+    const limit = Math.min(200, Math.max(10, Number(searchParams.get('limit')) || 100));
+
     const { data: rawOrders, error } = await supabaseAdmin
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(200);
+      .limit(limit);
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -50,8 +49,9 @@ export async function GET(req: NextRequest) {
 
     const orders = rawOrders ?? [];
 
-    // Auto-sync every order that has biteship_order_id with Biteship API
-    if (BITESHIP_TEST_KEY && orders.length > 0) {
+    // External N+1 API calls are only executed when explicitly requested (?sync=true)
+    // to keep admin page loads under 100ms instead of blocking for 10+ seconds.
+    if (shouldSync && BITESHIP_TEST_KEY && orders.length > 0) {
       const activeBiteshipOrders = orders.filter(
         (o) => !!o.biteship_order_id && o.biteship_status !== 'delivered' && o.biteship_status !== 'cancelled'
       );
@@ -149,11 +149,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Auto-check Midtrans payment status for pending Midtrans orders
+    // Auto-check Midtrans payment status only on sync
     const pendingMidtransOrders = orders.filter(
       (o) => o.payment_method === 'midtrans' && o.status === 'pending_payment'
     );
-    if (pendingMidtransOrders.length > 0) {
+    if (shouldSync && pendingMidtransOrders.length > 0) {
       await Promise.all(
         pendingMidtransOrders.map(async (ord) => {
           try {

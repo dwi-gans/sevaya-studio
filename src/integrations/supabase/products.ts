@@ -28,7 +28,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     slug: 'fina-abaya-stripe-2',
     title: 'Fina Abaya - Stripe Edition 2.0',
     edition: 'Edition 2.0',
-    price: 1339000,
+    price: 14975,
     original_price: 1489000,
     badge: 'Best Seller',
     image: '/images/catalog/catalog-01.jpg',
@@ -231,10 +231,19 @@ export async function getDbProducts(): Promise<DbProduct[]> {
     return _cachedProducts as DbProduct[];
   }
 
-  // If in browser, first try fetching fresh data from our API endpoint
+  // 1. In browser: check localStorage for instant fallback
+  if (typeof window !== 'undefined' && !_cachedProducts) {
+    const lsData = loadFromLocalStorage();
+    if (lsData && lsData.length > 0) {
+      _cachedProducts = lsData;
+      _cachedTime = now;
+    }
+  }
+
+  // 2. Fetch fresh catalog with browser HTTP cache support
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch('/api/products', { cache: 'no-store' });
+      const res = await fetch('/api/products');
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.products) && json.products.length > 0) {
@@ -245,36 +254,12 @@ export async function getDbProducts(): Promise<DbProduct[]> {
         }
       }
     } catch {
-      // Fallback below
+      // Fallback to storage or cache
     }
   }
 
+  // 3. Server or direct fetch: Cloud Storage JSON file (where live catalog is maintained)
   try {
-    // 1. Try PostgreSQL table with 1.2s timeout
-    const fetchDb = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('id', { ascending: true });
-      return { data, error };
-    };
-
-    const timeoutDb = new Promise<{ data: null; error: Error }>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: new Error('DB Timeout') }), 1200)
-    );
-
-    const { data: tableData, error: tableError } = (await Promise.race([
-      fetchDb(),
-      timeoutDb,
-    ])) as { data: DbProduct[] | null; error: Error | null };
-
-    if (!tableError && tableData && tableData.length > 0) {
-      _cachedProducts = tableData as DbProduct[];
-      _cachedTime = Date.now();
-      return _cachedProducts;
-    }
-
-    // 2. Try Supabase Cloud Storage sync file with 1.2s timeout
     const fetchStorage = async () => {
       const { data, error } = await supabase.storage
         .from('catalog')
@@ -283,7 +268,7 @@ export async function getDbProducts(): Promise<DbProduct[]> {
     };
 
     const timeoutStorage = new Promise<{ data: null; error: Error }>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: new Error('Storage Timeout') }), 1200)
+      setTimeout(() => resolve({ data: null, error: new Error('Storage Timeout') }), 1500)
     );
 
     const { data: fileData, error: fileError } = (await Promise.race([
@@ -297,33 +282,25 @@ export async function getDbProducts(): Promise<DbProduct[]> {
       if (Array.isArray(parsed) && parsed.length > 0) {
         _cachedProducts = parsed;
         _cachedTime = Date.now();
+        saveToLocalStorage(parsed);
         return _cachedProducts;
       }
     }
-
-    // 3. Try localStorage (client-side persistent fallback)
-    const lsData = loadFromLocalStorage();
-    if (lsData) {
-      _cachedProducts = lsData;
-      _cachedTime = Date.now();
-      return _cachedProducts;
-    }
-
-    _cachedProducts = DEFAULT_DB_PRODUCTS;
-    _cachedTime = Date.now();
-    return DEFAULT_DB_PRODUCTS;
   } catch {
-    // Try localStorage before giving up
-    const lsData = loadFromLocalStorage();
-    if (lsData) {
-      _cachedProducts = lsData;
-      _cachedTime = Date.now();
-      return _cachedProducts;
-    }
-    _cachedProducts = DEFAULT_DB_PRODUCTS;
-    _cachedTime = Date.now();
-    return DEFAULT_DB_PRODUCTS;
+    // Ignore and fallback below
   }
+
+  // 4. Fallback to localStorage or code defaults
+  const lsData = loadFromLocalStorage();
+  if (lsData && lsData.length > 0) {
+    _cachedProducts = lsData;
+    _cachedTime = Date.now();
+    return _cachedProducts;
+  }
+
+  _cachedProducts = DEFAULT_DB_PRODUCTS;
+  _cachedTime = Date.now();
+  return DEFAULT_DB_PRODUCTS;
 }
 
 /**

@@ -52,10 +52,18 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </span>
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
               <Image
-                src={sections.hero.image}
+                src={(sections.hero?.image && sections.hero.image.trim()) || '/images/hero_optimized.jpg'}
                 alt="Hero preview"
                 fill
+                unoptimized
+                sizes="(max-width: 640px) 50vw, 33vw"
                 className="object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== '/images/hero_optimized.jpg') {
+                    target.src = '/images/hero_optimized.jpg';
+                  }
+                }}
               />
             </div>
             <button
@@ -144,7 +152,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 Kartu Spotlight #{idx + 1}
               </span>
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-                <Image src={card.image} alt={card.title} fill className="object-cover" />
+                <Image src={card.image || "/images/catalog/catalog-01.jpg"} alt={card.title || "Spotlight"} fill unoptimized sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
               </div>
               <button
                 type="button"
@@ -202,12 +210,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
-            <Image
-              src={sections.missionTextiles.image}
-              alt="Textiles background"
-              fill
-              className="object-cover"
-            />
+            <Image src={sections.missionTextiles?.image || "/images/catalog/catalog-06.jpg"} alt="Textiles background" fill unoptimized sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
           </div>
           <div className="flex flex-col justify-center gap-3 sm:col-span-2">
             <button
@@ -254,7 +257,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 Artikel #{idx + 1}
               </span>
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-                <Image src={art.image} alt={art.title} fill className="object-cover" />
+                <Image src={art.image || "/images/catalog/catalog-11.jpg"} alt={art.title || "Journal"} fill unoptimized sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
               </div>
               <button
                 type="button"

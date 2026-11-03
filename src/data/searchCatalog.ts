@@ -16,7 +16,7 @@ export const SEARCH_CATALOG: SearchItem[] = [
     slug: 'fina-abaya-stripe-2',
     title: 'Fina Abaya - Stripe Edition 2.0',
     edition: 'Edition 2.0',
-    price: 1339000,
+    price: 14975,
     originalPrice: 1489000,
     image: '/images/catalog/catalog-01.jpg',
     category: 'abaya',
@@ -54,7 +54,7 @@ export const SEARCH_CATALOG: SearchItem[] = [
   },
   {
     id: '5',
-    slug: 'fina-abaya-stripe-2',
+    slug: 'amani-modest-abaya-sage',
     title: 'Amani Modest Abaya - Sage',
     edition: 'Soft Earth Tones',
     price: 1339000,

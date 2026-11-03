@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import type { DbProduct, ProductSwatch } from '@/integrations/supabase';
@@ -27,6 +27,19 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
   onToggleHide,
   onDeleteProduct,
 }) => {
+  const [localQuery, setLocalQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    setLocalQuery(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [localQuery, setSearchQuery]);
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4">
       {/* Top Toolbar */}
@@ -60,8 +73,8 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
         <div className="relative flex-1 min-w-0">
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Cari nama abaya, edisi, warna..."
             className="w-full h-8 sm:h-9 rounded-lg border border-black/20 bg-white pr-3 pl-8 py-1 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none transition-colors"
           />

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ProductCard, Product } from '@/components/home/ProductCard';
-import { getDbProducts, DEFAULT_DB_PRODUCTS, DbProduct } from '@/integrations/supabase';
+import { getDbProducts, DEFAULT_DB_PRODUCTS, DbProduct, loadFromLocalStorage } from '@/integrations/supabase';
 import { mapDbProductToProduct } from '@/features/catalog';
 import { Icon } from '@/components/ui/Icon';
 import { Footer } from '@/components/layout/Footer';
@@ -30,9 +30,11 @@ function ShopContent() {
   const [inStockOnly, setInStockOnly] = useState(false);
 
   // Initial state strictly derives from DEFAULT_DB_PRODUCTS so there is zero hardcoded disparity
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(() =>
-    DEFAULT_DB_PRODUCTS.filter((p) => !p.hidden).map(mapDbProductToProduct)
-  );
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(() => {
+    const local = typeof window !== 'undefined' ? loadFromLocalStorage() : null;
+    const source = local && local.length > 0 ? local : DEFAULT_DB_PRODUCTS;
+    return source.filter((p) => !p.hidden).map(mapDbProductToProduct);
+  });
 
   // Always fetch fresh products on mount and update catalogProducts
   useEffect(() => {
@@ -43,7 +45,16 @@ function ShopContent() {
         if (!isMounted) return;
         if (Array.isArray(items) && items.length > 0) {
           const visible = items.filter((p) => !p.hidden).map(mapDbProductToProduct);
-          setCatalogProducts(visible);
+          setCatalogProducts((prev) => {
+            if (
+              prev.length === visible.length &&
+              prev[0]?.price === visible[0]?.price &&
+              prev[0]?.id === visible[0]?.id
+            ) {
+              return prev;
+            }
+            return visible;
+          });
         }
       } catch (e) {
         console.error('Failed to load shop products:', e);

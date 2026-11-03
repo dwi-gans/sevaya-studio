@@ -16,28 +16,30 @@ export interface AddressItem {
   updated_at: string;
 }
 
-// Helper to get fallback addresses from metadata
+// Helper to get addresses from user_metadata (0ms latency, zero extra network trips)
 function getMetadataAddresses(user: any): AddressItem[] {
   const meta = user.supabaseUser?.user_metadata || {};
   return Array.isArray(meta.addresses) ? meta.addresses : [];
 }
 
-// Helper to save fallback addresses to metadata
-async function saveMetadataAddresses(user: any, addresses: AddressItem[]) {
-  try {
-    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+// Helper to save addresses to user_metadata securely (fire-and-forget — never blocks response)
+function saveMetadataAddresses(user: any, addresses: AddressItem[]) {
+  // Intentionally not awaited — saves in background after response is sent
+  supabaseAdmin.auth.admin
+    .updateUserById(user.id, {
       user_metadata: {
-        ...user.supabaseUser.user_metadata,
+        ...(user.supabaseUser?.user_metadata || {}),
         addresses,
       },
+    })
+    .catch((err) => {
+      console.warn('saveMetadataAddresses warning:', err);
     });
-  } catch (err) {
-    console.warn('saveMetadataAddresses warning:', err);
-  }
 }
 
 /**
  * GET /api/user/addresses
+ * Instantly returns user addresses from session metadata without dead DB table latency.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -46,24 +48,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: error || 'Tidak terautentikasi' }, { status: 401 });
     }
 
-    // Try reading from public.addresses table
-    try {
-      const { data, error: aErr } = await supabaseAdmin
-        .from('addresses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (!aErr && data && data.length >= 0) {
-        return NextResponse.json({ success: true, addresses: data });
-      }
-    } catch {
-      // Table may not exist yet, fallback to user_metadata
-    }
-
-    const fallbackAddresses = getMetadataAddresses(user);
-    return NextResponse.json({ success: true, addresses: fallbackAddresses });
+    const addresses = getMetadataAddresses(user);
+    return NextResponse.json(
+      { success: true, addresses },
+      { headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' } }
+    );
   } catch (err: unknown) {
     console.error('Get addresses error:', err);
     return NextResponse.json({ success: false, error: 'Gagal mengambil daftar alamat' }, { status: 500 });
@@ -72,6 +61,7 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/user/addresses
+ * Adds a new address to user profile
  */
 export async function POST(req: NextRequest) {
   try {
@@ -108,28 +98,14 @@ export async function POST(req: NextRequest) {
       updated_at: now,
     };
 
-    // Try DB first
-    let dbSuccess = false;
-    try {
-      if (newAddress.is_default) {
-        // unset other defaults for this user
-        await supabaseAdmin.from('addresses').update({ is_default: false }).eq('user_id', user.id);
-      }
-      const { data, error: dbErr } = await supabaseAdmin.from('addresses').insert(newAddress).select().single();
-      if (!dbErr && data) {
-        dbSuccess = true;
-      }
-    } catch {
-      // fallback
-    }
-
-    // Always keep metadata updated as reliable replica
     const currentList = getMetadataAddresses(user);
     const updatedList = newAddress.is_default
       ? currentList.map((a) => ({ ...a, is_default: false }))
       : [...currentList];
     updatedList.unshift(newAddress);
-    await saveMetadataAddresses(user, updatedList);
+
+    // Save to user metadata (fire-and-forget — response is instant)
+    saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,
@@ -144,6 +120,7 @@ export async function POST(req: NextRequest) {
 
 /**
  * PUT /api/user/addresses
+ * Updates an existing address
  */
 export async function PUT(req: NextRequest) {
   try {
@@ -160,33 +137,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-
-    // Try DB update
-    try {
-      if (is_default) {
-        await supabaseAdmin.from('addresses').update({ is_default: false }).eq('user_id', user.id);
-      }
-      await supabaseAdmin
-        .from('addresses')
-        .update({
-          recipient_name: recipient_name?.trim(),
-          phone: phone?.trim(),
-          address_line: address_line?.trim(),
-          city: city?.trim(),
-          province: province?.trim(),
-          postal_code: postal_code?.trim(),
-          notes: notes?.trim() || '',
-          is_default: Boolean(is_default),
-          updated_at: now,
-        })
-        .eq('id', id)
-        .eq('user_id', user.id); // Strict ownership check!
-    } catch {
-      // fallback
-    }
-
-    // Update metadata
     const currentList = getMetadataAddresses(user);
+
     const updatedList = currentList.map((a) => {
       if (a.id === id) {
         return {
@@ -205,7 +157,7 @@ export async function PUT(req: NextRequest) {
       return is_default ? { ...a, is_default: false } : a;
     });
 
-    await saveMetadataAddresses(user, updatedList);
+    saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,
@@ -219,6 +171,7 @@ export async function PUT(req: NextRequest) {
 
 /**
  * DELETE /api/user/addresses
+ * Deletes an address from user profile
  */
 export async function DELETE(req: NextRequest) {
   try {
@@ -234,17 +187,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'ID alamat diperlukan.' }, { status: 400 });
     }
 
-    // DB delete with strict ownership check
-    try {
-      await supabaseAdmin.from('addresses').delete().eq('id', id).eq('user_id', user.id);
-    } catch {
-      // fallback
-    }
-
-    // Update metadata
     const currentList = getMetadataAddresses(user);
     const updatedList = currentList.filter((a) => a.id !== id);
-    await saveMetadataAddresses(user, updatedList);
+
+    saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,

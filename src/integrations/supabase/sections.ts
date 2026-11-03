@@ -244,7 +244,7 @@ export function getCachedSiteSections(): SiteSectionsConfig {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
-        if (parsed.hero && !parsed.hero.image) { parsed.hero.image = DEFAULT_SITE_SECTIONS.hero.image; }
+        if (parsed.hero && (!parsed.hero.image || !parsed.hero.image.trim())) { parsed.hero.image = DEFAULT_SITE_SECTIONS.hero.image; }
         const merged = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
@@ -297,6 +297,11 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
   const immediateFallback: SiteSectionsConfig = {
     ...DEFAULT_SITE_SECTIONS,
     ...localData,
+    hero: {
+      ...DEFAULT_SITE_SECTIONS.hero,
+      ...(localData?.hero || {}),
+      image: (localData?.hero?.image && localData.hero.image.trim()) || DEFAULT_SITE_SECTIONS.hero.image,
+    },
     lookbookPage: {
       ...DEFAULT_SITE_SECTIONS.lookbookPage!,
       ...(localData?.lookbookPage || {}),
@@ -329,6 +334,12 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
         ...DEFAULT_SITE_SECTIONS,
         ...localData,
         ...parsed,
+        hero: {
+          ...DEFAULT_SITE_SECTIONS.hero,
+          ...(localData?.hero || {}),
+          ...(parsed?.hero || {}),
+          image: (parsed.hero?.image && parsed.hero.image.trim()) || (localData?.hero?.image && localData.hero.image.trim()) || DEFAULT_SITE_SECTIONS.hero.image,
+        },
         lookbookPage: {
           ...DEFAULT_SITE_SECTIONS.lookbookPage!,
           ...(localData?.lookbookPage || {}),

@@ -76,13 +76,51 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<'orders' | 'profile'>('orders');
 
-  // Orders state
-  const [orders, setOrders] = useState<UserOrder[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+  // Orders state with optimistic client-side cache for instant 0ms render
+  const [orders, setOrders] = useState<UserOrder[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_orders');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
+  const [ordersLoading, setOrdersLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_orders');
+        if (stored && JSON.parse(stored).length > 0) return false;
+      } catch {}
+    }
+    return true;
+  });
 
-  // Addresses state
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [addressesLoading, setAddressesLoading] = useState(true);
+  // Addresses state with optimistic client-side cache
+  const [addresses, setAddresses] = useState<Address[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_addresses');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
+  const [addressesLoading, setAddressesLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_profile_addresses');
+        if (stored && JSON.parse(stored).length > 0) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
@@ -151,8 +189,11 @@ export default function ProfilePage() {
         },
       });
       const data = await res.json();
-      if (data.success) {
-        setOrders(data.orders || []);
+      if (data.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+        try {
+          localStorage.setItem('sevaya_profile_orders', JSON.stringify(data.orders));
+        } catch {}
       }
     } catch {
       // ignore
@@ -172,8 +213,11 @@ export default function ProfilePage() {
         },
       });
       const data = await res.json();
-      if (data.success) {
-        setAddresses(data.addresses || []);
+      if (data.success && Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+        try {
+          localStorage.setItem('sevaya_profile_addresses', JSON.stringify(data.addresses));
+        } catch {}
       }
     } catch {
       // ignore
@@ -182,16 +226,10 @@ export default function ProfilePage() {
     }
   }, [getAccessToken]);
 
-  // Lazy non-blocking data loading for smoother profile navigation
+  // Parallel non-blocking data loading for fast profile navigation
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchOrders();
-
-    // Fetch addresses with a tiny idle delay so orders render immediately
-    const timer = setTimeout(() => {
-      fetchAddresses();
-    }, 100);
-    return () => clearTimeout(timer);
+    Promise.all([fetchOrders(), fetchAddresses()]);
   }, [isAuthenticated, fetchOrders, fetchAddresses]);
 
   // Initialize edit profile form fields

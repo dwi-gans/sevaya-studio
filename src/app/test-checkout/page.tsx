@@ -51,30 +51,32 @@ const INDONESIA_PROVINCES = [
 
 const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string; icon: IconName }[] = [
   {
-    id: 'qris',
-    label: 'QRIS (GoPay, OVO, ShopeePay, BCA, DANA)',
-    desc: 'Scan kode QRIS instan dari semua e-wallet & mobile banking.',
-    badge: 'Instan',
-    icon: 'payments',
-  },
-  {
-    id: 'va',
-    label: 'Virtual Account (BCA, Mandiri, BNI, BRI)',
-    desc: 'Transfer via Virtual Account dengan verifikasi otomatis.',
+    id: 'va_bri',
+    label: 'Virtual Account BRI (BRIVA)',
+    desc: 'Transfer via BRIVA dengan verifikasi otomatis 24 jam.',
     badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
   {
-    id: 'transfer',
-    label: 'Transfer Bank Manual',
-    desc: 'Transfer ke rekening resmi Sevaya Studio (BCA, Mandiri, BSI).',
+    id: 'va_bni',
+    label: 'Virtual Account BNI',
+    desc: 'Transfer via BNI Virtual Account dengan verifikasi otomatis.',
+    badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
   {
-    id: 'cod',
-    label: 'Bayar di Tempat (COD)',
-    desc: 'Bayar tunai kepada kurir saat paket tiba di alamat Anda.',
-    icon: 'local_shipping',
+    id: 'va_bsi',
+    label: 'Virtual Account BSI (Bank Syariah Indonesia)',
+    desc: 'Transfer via BSI Virtual Account Syariah resmi.',
+    badge: 'Syariah',
+    icon: 'receipt_long' as IconName,
+  },
+  {
+    id: 'va_other',
+    label: 'DOKU VA (Bank Lainnya)',
+    desc: 'Bisa transfer antarbank dari Mandiri, Danamon, Permata, CIMB, dan lainnya.',
+    badge: 'Multi-Bank',
+    icon: 'receipt_long' as IconName,
   },
 ];
 
@@ -104,7 +106,7 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState('');
   const [phone, setPhone] = useState('');
   const [saveInfo, setSaveInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('qris');
+  const [paymentMethod, setPaymentMethod] = useState('va_bri');
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
@@ -305,15 +307,15 @@ export default function CheckoutPage() {
         items: JSON.stringify(orderItems),
       });
 
-      // If Midtrans is selected, request Snap Token then redirect to order-confirmation
-      // The confirmation page will show "Pay Now" → opens Midtrans popup there
-      if (paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
+      // If online payment (DOKU VA), request session then redirect directly
+      if (paymentMethod.startsWith('va') || paymentMethod === 'doku' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
         const snapRes = await fetch('/api/payment/snap-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             order_id: data.orderNumber,
             grand_total: displayTotal,
+            payment_method: paymentMethod,
             items: orderItems.map((it: any, idx: number) => ({
               id: String(it.id || `item-${idx}`),
               name: String(it.title || it.name || 'Abaya SEVAYA'),
@@ -330,8 +332,16 @@ export default function CheckoutPage() {
         });
 
         const snapData = await snapRes.json();
+
+        // DOKU gateway — langsung redirect ke halaman pembayaran DOKU
+        if (snapData.success && snapData.gateway === 'doku' && snapData.payment_url) {
+          if (items.length > 0 && clearCart) clearCart();
+          window.location.href = snapData.payment_url;
+          return;
+        }
+
         if (!snapData.success || !snapData.token) {
-          throw new Error(snapData.error || 'Gagal menghubungi gateway pembayaran Midtrans');
+          throw new Error(snapData.error || 'Gagal menghubungi gateway pembayaran');
         }
 
         // Clear cart now
@@ -347,6 +357,9 @@ export default function CheckoutPage() {
           }));
         } catch { /* ignore */ }
 
+        // Invalidate profile orders cache so next visit shows fresh orders
+        try { localStorage.removeItem('sevaya_profile_orders'); } catch { /* ignore */ }
+
         // Redirect to order-confirmation — Pay Now button lives there
         router.push(`/order-confirmation?${queryParams.toString()}`);
         return;
@@ -356,6 +369,9 @@ export default function CheckoutPage() {
       if (items.length > 0 && clearCart) {
         clearCart();
       }
+
+      // Invalidate profile orders cache so next visit shows fresh orders
+      try { localStorage.removeItem('sevaya_profile_orders'); } catch { /* ignore */ }
 
       router.push(`/order-confirmation?${queryParams.toString()}`);
     } catch (err: any) {
@@ -1136,83 +1152,36 @@ export default function CheckoutPage() {
               </div>
 
               {/* KONTEN METODE TERPILIH */}
-              {/* Option 1: Bayar Otomatis (Midtrans) */}
-              {(paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
-                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48]">
-                  {!snapToken ? (
-                    <div className="flex items-center gap-2">
-                      <Icon name="verified_user" size={15} className="text-black shrink-0" />
-                      <p className="text-[11px] leading-relaxed">
-                        Mendukung <strong>QRIS (GoPay, OVO, BCA, Shopee)</strong>, <strong>Virtual Account</strong>, <strong>E-Wallet</strong>, dan <strong>Kartu Kredit</strong>. Layar pembayaran instan akan langsung terbuka saat menekan tombol &ldquo;Bayar Sekarang&rdquo;.
+              {/* Option 1: Bayar Otomatis (DOKU Virtual Account) */}
+              {(paymentMethod.startsWith('va') || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
+                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-4 text-xs text-[#554C48] space-y-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <Icon name="verified_user" size={16} className="text-black shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-[12px] font-semibold text-black leading-snug">
+                        {paymentMethod === 'va_bri'
+                          ? 'Virtual Account BRI (BRIVA) — Verifikasi Otomatis 24 Jam'
+                          : paymentMethod === 'va_bni'
+                          ? 'Virtual Account BNI — Verifikasi Otomatis 24 Jam'
+                          : paymentMethod === 'va_bsi'
+                          ? 'Virtual Account BSI (Syariah) — Verifikasi Otomatis 24 Jam'
+                          : 'DOKU Virtual Account (Bank Lainnya) — Verifikasi Otomatis'}
+                      </p>
+                      <p className="text-[11px] text-[#554C48] leading-relaxed">
+                        {paymentMethod === 'va_bri'
+                          ? 'Dapat dibayar melalui BRImo, ATM BRI, Mini ATM / Agen BRILink, atau transfer dari bank lain.'
+                          : paymentMethod === 'va_bni'
+                          ? 'Dapat dibayar melalui BNI Mobile Banking, BNI Internet Banking, ATM BNI, atau transfer dari bank lain.'
+                          : paymentMethod === 'va_bsi'
+                          ? 'Dapat dibayar melalui BSI Mobile, Net Banking BSI, ATM BSI, atau transfer dari bank lain.'
+                          : 'Dapat dibayar dari Mandiri, Danamon, Permata, CIMB Niaga, dan seluruh rekening bank di Indonesia.'}
                       </p>
                     </div>
-                  ) : (
-                    /* Active Embedded Midtrans */
-                    <div id="section-payment-embed" className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-black/10 pb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <h3 className="text-xs font-semibold text-black uppercase tracking-wider">
-                            Selesaikan Pembayaran #{embeddedOrderNumber}
-                          </h3>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSnapToken(null);
-                            setEmbeddedOrderNumber(null);
-                            try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
-                          }}
-                          className="text-[11px] text-black/60 underline hover:text-black"
-                        >
-                          Batalkan
-                        </button>
-                      </div>
-                      <div className="overflow-hidden rounded-lg border border-black/15 bg-white p-1">
-                        <div id="snap-embed-container" className="min-h-[500px] w-full rounded" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Option 2: Transfer Bank Manual */}
-              {paymentMethod === 'transfer' && (
-                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48] space-y-3">
-                  <p className="text-[11px] leading-relaxed">
-                    Silakan transfer tepat sebesar <strong className="text-black">{formatIDR(displayTotal)}</strong> ke rekening resmi Sevaya:
-                  </p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {[
-                      { bank: 'BCA', no: '8720998122', display: '8720-9981-22', name: 'SEVAYA STUDIO INDONESIA' },
-                      { bank: 'Mandiri', no: '137002918821', display: '1370-0291-8821', name: 'SEVAYA STUDIO INDONESIA' },
-                      { bank: 'BSI (Syariah)', no: '7190281901', display: '7190-2819-01', name: 'SEVAYA STUDIO INDONESIA' },
-                    ].map((b) => (
-                      <div key={b.bank} className="rounded-md border border-black/15 bg-white p-2.5 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold text-black/60 uppercase">Bank {b.bank}</span>
-                          <button
-                            type="button"
-                            onClick={() => copyBankToClipboard(b.no, b.bank)}
-                            className="rounded border border-black/20 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-[#554C48] hover:border-black"
-                          >
-                            {copiedBank === b.bank ? 'Tersalin' : 'Salin'}
-                          </button>
-                        </div>
-                        <p className="font-mono text-xs font-bold text-black">{b.display}</p>
-                        <p className="text-[9px] text-black/50">a.n. {b.name}</p>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              )}
-
-              {/* Option 3: COD */}
-              {paymentMethod === 'cod' && (
-                <div className="rounded-lg border border-black/15 bg-black/[0.02] p-3.5 text-xs text-[#554C48]">
-                  <p className="text-[11px] leading-relaxed">
-                    Siapkan uang pas sebesar <strong className="text-black">{formatIDR(displayTotal)}</strong> saat kurir menyerahkan paket di alamat tujuan Anda.
-                  </p>
+                  <div className="border-t border-black/10 pt-2 text-[10px] text-[#7C726E] flex items-center justify-between">
+                    <span>Ditenagai oleh gateway pembayaran resmi <strong>DOKU</strong></span>
+                    <span className="font-medium text-emerald-700">Verifikasi Instan Tanpa Upload Bukti</span>
+                  </div>
                 </div>
               )}
             </section>
