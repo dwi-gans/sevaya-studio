@@ -1,16 +1,11 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 const PRIMARY_HERO = '/images/hero_optimized.jpg';
 const SECONDARY_HERO = '/images/hero_clean.jpg';
-
-// Instant 0ms inline blur placeholder (300 bytes) to eliminate any black flash before image finishes decoding
-const HERO_BLUR_DATA_URL =
-  'data:image/jpeg;base64,/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAUABADASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAUBAwb/xAAlEAACAgIAAwkAAAAAAAAAAAABAgMRACEEElETFCIjMTJBsfD/xAAVAQEBAAAAAAAAAAAAAAAAAAABA//EABYRAQEBAAAAAAAAAAAAAAAAAAABEv/aAAwDAQACEQMRAD8Abd+gKFlfmA6ZY262LJoC93mPV5u0eOMOxQ24X96Y2jmMPCpxcxPOpBUH4uxX3hoZQnjIY6bqNHCfzFWKQB1LH3YYZKKV/9k=';
 
 function isValidImage(url?: string | null): boolean {
   if (!url) return false;
@@ -60,58 +55,35 @@ export function HeroSection() {
 
   const handleImageError = () => {
     if (fallbackLevel === 0) {
-      // Step 1: Fallback to primary local hero
       setFallbackLevel(1);
       setImgSrc(PRIMARY_HERO);
     } else if (fallbackLevel === 1) {
-      // Step 2: Fallback to secondary local hero
       setFallbackLevel(2);
       setImgSrc(SECONDARY_HERO);
-    } else {
-      // Step 3: Pure static fallback
-      setFallbackLevel(3);
     }
   };
 
   const currentImageSrc = isValidImage(imgSrc) ? imgSrc : PRIMARY_HERO;
 
   return (
-    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#1c1a18] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
-      {/* Background Hero Image with smooth Ken Burns animation and instant 0ms inline placeholder */}
+    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
+      {/* Background Hero Image with smooth Ken Burns animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat"
-          style={{ backgroundImage: `url("${HERO_BLUR_DATA_URL}")` }}
+          style={{ backgroundImage: `url("${currentImageSrc}")` }}
         >
-          {fallbackLevel < 2 ? (
-            <Image
-              key={`${currentImageSrc}-${fallbackLevel}`}
-              src={currentImageSrc}
-              alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-              fill
-              priority
-              sizes="100vw"
-              placeholder="blur"
-              blurDataURL={HERO_BLUR_DATA_URL}
-              unoptimized={currentImageSrc.startsWith('/')}
-              className="object-cover object-[center_30%] sm:object-[center_35%]"
-              onError={handleImageError}
-            />
-          ) : (
-            /* Resilient native img fallback if Next.js image optimizer fails on this browser */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={fallbackLevel === 2 ? SECONDARY_HERO : PRIMARY_HERO}
-              alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-              className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (target.src !== SECONDARY_HERO) {
-                  target.src = SECONDARY_HERO;
-                }
-              }}
-            />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={`${currentImageSrc}-${fallbackLevel}`}
+            src={currentImageSrc}
+            alt="SEVAYA Collection - Timeless, Intentional, Effortless"
+            loading="eager"
+            decoding="sync"
+            fetchPriority="high"
+            className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
+            onError={handleImageError}
+          />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
       </div>
