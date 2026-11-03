@@ -12,11 +12,16 @@ export function LanguageSwitcher({ className = '', variant = 'light' }: Language
   const { language, setLanguage } = useLanguage();
   const isLight = variant === 'light';
 
+  const baseDisplay =
+    className.includes('hidden') || className.includes('flex') || className.includes('block')
+      ? ''
+      : 'inline-flex';
+
   return (
     <div
       role="group"
       aria-label="Language selection"
-      className={`inline-flex items-center rounded-full border p-0.5 text-[10px] font-semibold tracking-wider transition-colors select-none ${
+      className={`${baseDisplay} items-center rounded-full border p-0.5 text-[10px] font-semibold tracking-wider transition-colors select-none ${
         isLight
           ? 'border-black/15 bg-black/5 text-black'
           : 'border-white/20 bg-white/10 text-white'

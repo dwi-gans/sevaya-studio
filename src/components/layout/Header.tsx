@@ -125,7 +125,9 @@ export function Header() {
               </Link>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <LanguageSwitcher />
+                <div className="hidden md:inline-flex">
+                  <LanguageSwitcher />
+                </div>
                 <Link
                   href="/"
                   aria-label="Close to Home"
@@ -155,7 +157,7 @@ export function Header() {
               </Link>
 
               {/* Language Switcher + Balance Spacer */}
-              <div className="flex items-center justify-end">
+              <div className="hidden md:inline-flex items-center justify-end">
                 <LanguageSwitcher />
               </div>
             </div>
@@ -340,7 +342,9 @@ export function Header() {
 
               {/* Right: Actions — smaller refined icons hugged to right */}
               <div className="flex items-center gap-1 sm:gap-2 -mr-1">
-                <LanguageSwitcher />
+                <div className="hidden md:inline-flex">
+                  <LanguageSwitcher />
+                </div>
 
                 <button
                   type="button"

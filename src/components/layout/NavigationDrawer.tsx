@@ -119,8 +119,6 @@ export function NavigationDrawer() {
           )}
 
           <div className="flex items-center gap-2">
-            {!activeSubmenu && <LanguageSwitcher variant="dark" />}
-
             <button
               type="button"
               aria-label="Close menu"
@@ -440,11 +438,19 @@ export function NavigationDrawer() {
           )}
         </div>
 
-        {/* ── Footer: Profile / Masuk Button (Seamless Luxury Black) ── */}
+        {/* ── Footer: Profile / Masuk Button & Language Switcher ── */}
         <div
-          className="pb-safe animate-luxury-fade-up border-t border-white/15 bg-black px-6 py-4"
+          className="pb-safe animate-luxury-fade-up border-t border-white/15 bg-black px-6 py-4 space-y-3"
           style={{ animationDelay: '370ms' }}
         >
+          {/* Mobile Language Switcher Row */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <span className="text-[11px] font-semibold tracking-wider text-white/70 uppercase">
+              {isId ? 'Bahasa' : 'Language'}
+            </span>
+            <LanguageSwitcher variant="dark" />
+          </div>
+
           {user ? (
             <div className="flex items-center justify-between">
               <Link
