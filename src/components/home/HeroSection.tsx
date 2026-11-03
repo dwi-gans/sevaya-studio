@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -75,7 +75,7 @@ export function HeroSection() {
     <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
       {/* Background Hero Image with smooth Ken Burns animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="relative h-full w-full animate-kenburns">
+        <div className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat" style={{ backgroundImage: `url("${currentImageSrc}")` }}>
           {fallbackLevel < 2 ? (
             <Image
               key={`${currentImageSrc}-${fallbackLevel}`}

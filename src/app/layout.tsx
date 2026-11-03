@@ -48,6 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en" className={`${dmSans.variable} ${inter.variable}`}>
       <head>
+        <link rel="preload" as="image" href="/images/hero_optimized.jpg" fetchPriority="high" />
         <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.cdnfonts.com" />
         {/* Asynchronously load external brand fonts without blocking DOM First Contentful Paint */}
