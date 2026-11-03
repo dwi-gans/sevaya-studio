@@ -227,6 +227,21 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
 const SECTIONS_FILE = 'sections.json';
 const LOCAL_STORAGE_KEY = 'sevaya_site_sections';
 
+function sanitizeHeroImage(img?: string | null): string {
+  if (!img) return DEFAULT_SITE_SECTIONS.hero.image;
+  const trimmed = img.trim();
+  if (
+    !trimmed ||
+    trimmed === 'undefined' ||
+    trimmed === 'null' ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('data:')
+  ) {
+    return DEFAULT_SITE_SECTIONS.hero.image;
+  }
+  return trimmed;
+}
+
 let _cachedSiteSections: SiteSectionsConfig | null = null;
 let _cachedSectionsTime = 0;
 const SECTIONS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in-memory cache
@@ -244,7 +259,7 @@ export function getCachedSiteSections(): SiteSectionsConfig {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
-        if (parsed.hero && (!parsed.hero.image || !parsed.hero.image.trim())) { parsed.hero.image = DEFAULT_SITE_SECTIONS.hero.image; }
+        if (parsed.hero) { parsed.hero.image = sanitizeHeroImage(parsed.hero.image); }
         const merged = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
@@ -300,7 +315,7 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
     hero: {
       ...DEFAULT_SITE_SECTIONS.hero,
       ...(localData?.hero || {}),
-      image: (localData?.hero?.image && localData.hero.image.trim()) || DEFAULT_SITE_SECTIONS.hero.image,
+      image: sanitizeHeroImage(localData?.hero?.image),
     },
     lookbookPage: {
       ...DEFAULT_SITE_SECTIONS.lookbookPage!,
@@ -338,7 +353,7 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
           ...DEFAULT_SITE_SECTIONS.hero,
           ...(localData?.hero || {}),
           ...(parsed?.hero || {}),
-          image: (parsed.hero?.image && parsed.hero.image.trim()) || (localData?.hero?.image && localData.hero.image.trim()) || DEFAULT_SITE_SECTIONS.hero.image,
+          image: sanitizeHeroImage(parsed.hero?.image || localData?.hero?.image),
         },
         lookbookPage: {
           ...DEFAULT_SITE_SECTIONS.lookbookPage!,
