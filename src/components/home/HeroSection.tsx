@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -7,6 +7,10 @@ import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, HeroSect
 
 const PRIMARY_HERO = '/images/hero_optimized.jpg';
 const SECONDARY_HERO = '/images/hero_clean.jpg';
+
+// Instant 0ms inline blur placeholder (300 bytes) to eliminate any black flash before image finishes decoding
+const HERO_BLUR_DATA_URL =
+  'data:image/jpeg;base64,/9j/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAUABADASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAUBAwb/xAAlEAACAgIAAwkAAAAAAAAAAAABAgMRACEEElETFCIjMTJBsfD/xAAVAQEBAAAAAAAAAAAAAAAAAAABA//EABYRAQEBAAAAAAAAAAAAAAAAAAABEv/aAAwDAQACEQMRAD8Abd+gKFlfmA6ZY262LJoC93mPV5u0eOMOxQ24X96Y2jmMPCpxcxPOpBUH4uxX3hoZQnjIY6bqNHCfzFWKQB1LH3YYZKKV/9k=';
 
 function isValidImage(url?: string | null): boolean {
   if (!url) return false;
@@ -72,10 +76,13 @@ export function HeroSection() {
   const currentImageSrc = isValidImage(imgSrc) ? imgSrc : PRIMARY_HERO;
 
   return (
-    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
-      {/* Background Hero Image with smooth Ken Burns animation */}
+    <section className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#1c1a18] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]">
+      {/* Background Hero Image with smooth Ken Burns animation and instant 0ms inline placeholder */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat" style={{ backgroundImage: `url("${currentImageSrc}")` }}>
+        <div
+          className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat"
+          style={{ backgroundImage: `url("${HERO_BLUR_DATA_URL}")` }}
+        >
           {fallbackLevel < 2 ? (
             <Image
               key={`${currentImageSrc}-${fallbackLevel}`}
@@ -84,7 +91,9 @@ export function HeroSection() {
               fill
               priority
               sizes="100vw"
-              quality={85}
+              placeholder="blur"
+              blurDataURL={HERO_BLUR_DATA_URL}
+              unoptimized={currentImageSrc.startsWith('/')}
               className="object-cover object-[center_30%] sm:object-[center_35%]"
               onError={handleImageError}
             />
