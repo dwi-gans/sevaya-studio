@@ -74,6 +74,19 @@ function ShopContent() {
     setActiveCategory(cat.toLowerCase());
   }, [searchParams]);
 
+  const handleCategorySelect = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (categoryId === 'all') {
+        url.searchParams.delete('category');
+      } else {
+        url.searchParams.set('category', categoryId);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInput.trim());
@@ -179,6 +192,29 @@ function ShopContent() {
           </div>
         )}
 
+        {/* Category Filter Pills (Journal style) */}
+        <nav aria-label="Kategori Produk" className="mb-6">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+            {CATEGORIES.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleCategorySelect(cat.id)}
+                  className={`shrink-0 rounded-none px-3.5 py-1.5 text-[10px] tracking-wider uppercase transition-all duration-200 border cursor-pointer ${
+                    isActive
+                      ? 'bg-[#000000] text-[#FFFFFF] border-[#000000] font-semibold'
+                      : 'bg-transparent text-[#666666] border-black/15 hover:border-black/50 hover:text-black'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
         {/* Item Counter */}
         <div className="mb-6 flex items-center justify-between text-[10px] text-[#666666]">
           <span>Showing {filteredProducts.length} pieces</span>
@@ -195,7 +231,7 @@ function ShopContent() {
             {activeCategory !== 'all' && (
               <button
                 type="button"
-                onClick={() => setActiveCategory('all')}
+                onClick={() => handleCategorySelect('all')}
                 className="underline underline-offset-2 hover:text-[#000000] cursor-pointer"
               >
                 Reset Category
@@ -235,7 +271,7 @@ function ShopContent() {
               {activeCategory !== 'all' && (
                 <button
                   type="button"
-                  onClick={() => setActiveCategory('all')}
+                  onClick={() => handleCategorySelect('all')}
                   className="rounded-full border border-[#000000] bg-white px-4 py-2 text-[10px] font-semibold tracking-wider text-[#000000] uppercase hover:bg-[#F5F5F5] transition cursor-pointer"
                 >
                   View All Products
