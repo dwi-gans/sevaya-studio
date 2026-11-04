@@ -29,8 +29,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_CACHE_KEY = 'sevaya_auth_user';
+
+function readCachedUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as User;
+    if (parsed?.email) return parsed;
+  } catch {}
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  // Seed user from localStorage cache so profile page renders instantly (0ms)
+  const [user, setUser] = useState<User | null>(() => readCachedUser());
   const [isLoading, setIsLoading] = useState(true);
   const tokenRef = useRef<string | null>(null);
 
@@ -56,6 +70,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar_url: meta.avatar_url || '',
       created_at: sessionUser.created_at,
     });
+
+    // Persist user to localStorage cache for instant profile render on next visit
+    try {
+      const cached: User = {
+        id: sessionUser.id,
+        name: meta.full_name || meta.name || sessionUser.email?.split('@')[0] || 'Member Sevaya',
+        email: sessionUser.email || '',
+        phone: meta.phone || sessionUser.phone || '',
+        avatar_url: meta.avatar_url || '',
+        created_at: sessionUser.created_at,
+      };
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(cached));
+    } catch {}
 
     // Background prefetch: warm up localStorage cache so profile page loads instantly
     const accessToken = token !== undefined ? token : tokenRef.current;
@@ -290,6 +317,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       tokenRef.current = null;
       setUser(null);
+      // Clear localStorage cache on logout
+      try { localStorage.removeItem(USER_CACHE_KEY); } catch {}
     }
   }, []);
 

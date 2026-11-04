@@ -6,7 +6,7 @@ import { Logo } from '@/components/ui/Logo';
 import { useLanguage } from '@/context/LanguageContext';
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -27,9 +27,9 @@ export function Footer() {
   return (
     <footer className="w-full border-t border-black/10 bg-white pt-16 pb-12 text-black section--light">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 lg:gap-8">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-12 lg:gap-8">
           {/* Column 1: Contact Us */}
-          <div className="space-y-3">
+          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-3">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Contact Us
             </h4>
@@ -86,7 +86,7 @@ export function Footer() {
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
-                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .59.04.86.13V9.38a6.34 6.34 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.34a8.21 8.21 0 0 0 4.77 1.78V6.69z" />
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .59.04.86.13V9.38a6.34 6.34 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.34a8.21 8.21 0 0 0 4.77 1.78V6.69z" />
                   </svg>
                 </a>
               </div>
@@ -94,7 +94,7 @@ export function Footer() {
           </div>
 
           {/* Column 2: Company */}
-          <div className="space-y-3">
+          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Company
             </h4>
@@ -122,8 +122,43 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3 & 4: Newsletter Subscription */}
-          <div className="space-y-3 sm:col-span-2 md:col-span-2">
+          {/* Column 3: Language (sebelah Company di right) */}
+          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
+            <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
+              Language
+            </h4>
+            <ul className="space-y-2 text-xs text-black/60">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`transition cursor-pointer text-left ${
+                    language === 'en'
+                      ? 'font-medium text-black underline underline-offset-4'
+                      : 'hover:text-black'
+                  }`}
+                >
+                  English
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('id')}
+                  className={`transition cursor-pointer text-left ${
+                    language === 'id'
+                      ? 'font-medium text-black underline underline-offset-4'
+                      : 'hover:text-black'
+                  }`}
+                >
+                  Indonesia
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Newsletter Subscription */}
+          <div className="space-y-3 sm:col-span-2 md:col-span-1 lg:col-span-5">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Newsletter
             </h4>

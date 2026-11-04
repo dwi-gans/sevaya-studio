@@ -10,7 +10,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
 import { getCachedSiteSections } from '@/integrations/supabase';
@@ -125,9 +124,6 @@ export function Header() {
               </Link>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <div className="hidden md:inline-flex">
-                  <LanguageSwitcher />
-                </div>
                 <Link
                   href="/"
                   aria-label="Close to Home"
@@ -156,10 +152,8 @@ export function Header() {
                 <Logo className="h-7 w-auto sm:h-8 text-black" />
               </Link>
 
-              {/* Language Switcher + Balance Spacer */}
-              <div className="hidden md:inline-flex items-center justify-end">
-                <LanguageSwitcher />
-              </div>
+              {/* Balance Spacer */}
+              <div className="w-10 sm:w-16" />
             </div>
           ) : (
             /* Standard Storefront Header */
@@ -342,10 +336,6 @@ export function Header() {
 
               {/* Right: Actions — smaller refined icons hugged to right */}
               <div className="flex items-center gap-1 sm:gap-2 -mr-1">
-                <div className="hidden md:inline-flex">
-                  <LanguageSwitcher />
-                </div>
-
                 <button
                   type="button"
                   aria-label="Search Catalog"

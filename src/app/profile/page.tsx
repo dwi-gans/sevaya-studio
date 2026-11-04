@@ -500,7 +500,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (authLoading) {
+  if (!user && !authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3.5 text-center">
