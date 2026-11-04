@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
 
   const { user, getAccessToken, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // ── Autofill authenticated user info ───────────────────────────────────────
+  // ── Autofill authenticated user info from cache & cloud ────────────────────
   useEffect(() => {
     if (user) {
       if (user.email) setEmail((prev) => prev || user.email);
@@ -146,6 +146,23 @@ export default function CheckoutPage() {
         setLastName((prev) => prev || parts.slice(1).join(' ') || '');
       }
       if (user.phone) setPhone((prev) => prev || user.phone || '');
+
+      // Check cached addresses first for 0ms autofill
+      try {
+        const stored = localStorage.getItem('sevaya_profile_addresses');
+        if (stored) {
+          const list = JSON.parse(stored);
+          if (Array.isArray(list) && list.length > 0) {
+            const defaultAddr = list.find((a: any) => a.is_default) || list[0];
+            if (defaultAddr) {
+              setAddress((prev) => prev || defaultAddr.address_line || '');
+              setCity((prev) => prev || defaultAddr.city || '');
+              setProvince((prev) => (prev === 'DKI Jakarta' && defaultAddr.province ? defaultAddr.province : prev));
+              setPostalCode((prev) => prev || defaultAddr.postal_code || '');
+            }
+          }
+        }
+      } catch {}
 
       getAccessToken().then((token) => {
         if (!token) return;
@@ -520,7 +537,7 @@ export default function CheckoutPage() {
   const grandTotal = (totalPayable || subtotal) + shippingCost + giftFee;
 
   // ── Wait for cart items to load from localStorage before checking empty ──
-  if (!isLoaded || authLoading) {
+  if (!isLoaded || (!user && authLoading)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3 text-center">

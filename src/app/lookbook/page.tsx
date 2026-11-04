@@ -142,9 +142,7 @@ function EditorialImage({
   priority?: boolean;
   sizes?: string;
 }) {
-  if (!isMounted) {
-    return <div className="absolute inset-0 bg-black/5" />;
-  }
+  // Render immediately for 0ms visual load
   return (
     <Image
       src={src}
@@ -167,9 +165,14 @@ export default function LookbookPage() {
   const [hasMoved, setHasMoved] = useState(false);
 
   const [isMounted, setIsMounted] = useState(false);
-  const [cfg, setCfg] = useState<LookbookPageConfig>(
-    DEFAULT_SITE_SECTIONS.lookbookPage!
-  );
+  const [cfg, setCfg] = useState<LookbookPageConfig>(() => {
+    const cached = getCachedSiteSections();
+    return (
+      cached.lookbookVolumesConfig?.['vol-1'] ||
+      cached.lookbookPage ||
+      DEFAULT_SITE_SECTIONS.lookbookPage!
+    );
+  });
 
   useEffect(() => {
     // 1. Immediately read cached sections from localStorage

@@ -105,14 +105,17 @@ export default function OrderDetailPage({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated && !user) {
       router.push(`/login?redirect=/profile/orders/${orderId}`);
     }
-  }, [authLoading, isAuthenticated, router, orderId]);
+  }, [authLoading, isAuthenticated, user, router, orderId]);
 
   useEffect(() => {
     async function fetchOrderDetail() {
-      setIsLoading(true);
+      // Only set loading true if we don't have cached order data yet
+      if (!order) {
+        setIsLoading(true);
+      }
       setErrorMsg(null);
 
       try {
@@ -132,16 +135,18 @@ export default function OrderDetailPage({
         setOrder(data.order);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Gagal memuat detail pesanan';
-        setErrorMsg(msg);
+        if (!order) {
+          setErrorMsg(msg);
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (isAuthenticated) {
+    if (isAuthenticated || user) {
       fetchOrderDetail();
     }
-  }, [orderId, isAuthenticated, getAccessToken]);
+  }, [orderId, isAuthenticated, user, getAccessToken]);
 
   const handlePrint = () => {
     window.print();
@@ -250,7 +255,7 @@ export default function OrderDetailPage({
     </header>
   );
 
-  if (authLoading || isLoading) {
+  if (!order && (isLoading || (!user && authLoading))) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
         {renderMinimalHeader()}
