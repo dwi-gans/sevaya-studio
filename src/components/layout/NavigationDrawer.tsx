@@ -277,6 +277,7 @@ export function NavigationDrawer() {
               <div className="animate-luxury-fade-up" style={{ animationDelay: '70ms' }}>
                 <Link
                   href="/"
+                  prefetch={true}
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname === '/'
@@ -302,6 +303,7 @@ export function NavigationDrawer() {
               >
                 <Link
                   href="/shop"
+                  prefetch={true}
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/shop')
@@ -364,6 +366,7 @@ export function NavigationDrawer() {
               <div className="animate-luxury-fade-up" style={{ animationDelay: '250ms' }}>
                 <Link
                   href="/conscious"
+                  prefetch={true}
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/conscious')
@@ -386,6 +389,7 @@ export function NavigationDrawer() {
               <div className="animate-luxury-fade-up" style={{ animationDelay: '310ms' }}>
                 <Link
                   href="/news"
+                  prefetch={true}
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/news')
@@ -411,6 +415,7 @@ export function NavigationDrawer() {
               >
                 <Link
                   href="/customer/faq"
+                  prefetch={true}
                   onClick={handleClose}
                   className={`group relative inline-flex w-fit items-center text-[13px] tracking-widest uppercase transition-colors `+
                     (pathname.startsWith('/customer')

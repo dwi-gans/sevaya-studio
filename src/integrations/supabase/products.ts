@@ -220,7 +220,12 @@ async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> 
 }
 let _cachedProducts: DbProduct[] | null = null;
 let _cachedTime = 0;
-const CACHE_TTL_MS = 5 * 1000; // 5s short cache so admin updates reflect in shop immediately
+const CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache, fast navigation between pages
+
+export function invalidateProductsCache(): void {
+  _cachedProducts = null;
+  _cachedTime = 0;
+}
 
 /**
  * Fetch products with fast in-memory cache & non-blocking timeout fallback.

@@ -51,25 +51,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <link rel="preload" as="image" href="/images/hero_optimized.jpg" fetchPriority="high" />
         <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.cdnfonts.com" />
-        {/* Asynchronously load external brand fonts without blocking DOM First Contentful Paint */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var l1 = document.createElement('link');
-                  l1.rel = 'stylesheet';
-                  l1.href = 'https://fonts.cdnfonts.com/css/avenir';
-                  document.head.appendChild(l1);
-                  var l2 = document.createElement('link');
-                  l2.rel = 'stylesheet';
-                  l2.href = 'https://fonts.cdnfonts.com/css/avenir-next-lt-pro';
-                  document.head.appendChild(l2);
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
+        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/avenir" />
+        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/avenir-next-lt-pro" />
       </head>
       <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FFFFFF] text-[#000000] antialiased">
         <Providers>

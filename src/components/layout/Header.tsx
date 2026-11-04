@@ -171,6 +171,7 @@ export function Header() {
 
                 <Link
                   href="/"
+                  prefetch={true}
                   className="hidden items-center md:flex"
                   aria-label="Sevaya Homepage"
                 >
@@ -182,6 +183,7 @@ export function Header() {
               <div className="pointer-events-none absolute inset-x-0 flex items-center justify-center md:hidden">
                 <Link
                   href="/"
+                  prefetch={true}
                   className="pointer-events-auto flex items-center"
                   aria-label="Sevaya Homepage"
                 >
@@ -194,6 +196,7 @@ export function Header() {
                 {/* 1. Home Link */}
                 <Link
                   href="/"
+                  prefetch={true}
                   className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
                     pathname === "/"
                       ? "font-medium text-black"
@@ -242,6 +245,7 @@ export function Header() {
                           <Link
                             key={link.id || link.href}
                             href={link.href}
+                            prefetch={true}
                             onClick={() => setLookbookOpen(false)}
                             className={`flex items-center justify-between gap-3 px-5 py-2.5 text-[11px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
                               pathname === link.href ? "font-medium text-black" : "text-[#555555]"
@@ -271,6 +275,7 @@ export function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={true}
                       className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
                         isActive
                           ? "font-medium text-black"
@@ -320,6 +325,7 @@ export function Header() {
                           <Link
                             key={link.href}
                             href={link.href}
+                            prefetch={true}
                             onClick={() => setCustomerOpen(false)}
                             className={`block px-5 py-2.5 text-[11px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
                               pathname === link.href ? "font-medium text-black" : "text-[#555555]"

@@ -68,8 +68,8 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group relative flex flex-col bg-transparent">
-      {/* Product Image Frame: 2:3 Portrait Aspect Ratio */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/5">
+      {/* Product Image Frame: 2:3 Portrait Aspect Ratio — clean subtle backdrop, zero gray flash */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#FBFBFB]">
         <Link href={`/product/${product.slug}`} prefetch={true} className="relative block h-full w-full">
           {/* Badge */}
           {product.badge && (
@@ -78,13 +78,27 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           )}
 
+          {/* Persistent base image underneath prevents any blank/gray flash during photo decoding */}
+          {product.image && product.image !== displayImage && (
+            <Image
+              src={product.image}
+              alt={product.title}
+              fill
+              unoptimized={product.image.startsWith('http')}
+              sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
+              className="pointer-events-none select-none object-cover"
+              draggable={false}
+            />
+          )}
+
           {/* Primary Product Image */}
           <Image
             src={displayImage}
             alt={`${product.title} - ${selectedSwatch}`}
             fill
+            unoptimized={displayImage.startsWith('http')}
             sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
-            className={`pointer-events-none select-none object-cover transition-all duration-700 ease-out ${
+            className={`pointer-events-none select-none object-cover transition-all duration-500 ease-out ${
               secondaryImage
                 ? 'group-hover:opacity-0 group-hover:scale-105'
                 : 'group-hover:scale-105'
@@ -98,8 +112,9 @@ export function ProductCard({ product }: { product: Product }) {
               src={secondaryImage}
               alt={`${product.title} alternate view`}
               fill
+              unoptimized={secondaryImage.startsWith('http')}
               sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
-              className="pointer-events-none select-none object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
+              className="pointer-events-none select-none object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
               draggable={false}
             />
           )}

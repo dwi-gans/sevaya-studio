@@ -7,10 +7,10 @@ export const runtime = 'nodejs';
 
 const PRODUCTS_FILE = 'products.json';
 
-// Short in-memory cache for public product catalog (5s TTL)
+// In-memory cache for public product catalog (60s TTL, instantly updated on POST)
 let cachedProducts: DbProduct[] | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 5 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 
 const PUBLIC_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
