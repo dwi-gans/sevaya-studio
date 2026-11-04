@@ -181,6 +181,7 @@ export default function AdminPage() {
     content: '',
     image: '/images/catalog/catalog-11.jpg',
     images: [],
+    image_captions: [],
     featured: false,
   });
 
@@ -202,6 +203,9 @@ export default function AdminPage() {
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
       { name: 'Garnet', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
     ],
+    description: '',
+    fabric: '',
+    sizing: '',
   });
 
   // ── Image Picker Modal State ──
@@ -317,6 +321,9 @@ export default function AdminPage() {
         { name: 'Caramel Dune', color: '#C68B59', image: '/images/catalog/catalog-08.jpg' },
         { name: 'Peach Bloom', color: '#E5A894', image: '/images/catalog/catalog-10.jpg' },
       ],
+      description: '',
+      fabric: '',
+      sizing: '',
     });
     setIsProductModalOpen(true);
   };
@@ -345,6 +352,9 @@ export default function AdminPage() {
               { name: 'Black', color: '#000000', image: product.image },
               { name: 'Garnet', color: '#6B2D2B', image: product.image },
             ],
+      description: product.description || '',
+      fabric: (product as any).fabric || '',
+      sizing: (product as any).sizing || '',
     });
     setIsProductModalOpen(true);
   };
@@ -770,6 +780,7 @@ export default function AdminPage() {
       content: '',
       image: '/images/catalog/catalog-11.jpg',
       images: [],
+      image_captions: [],
       featured: false,
     });
     setIsArticleModalOpen(true);
@@ -793,6 +804,7 @@ export default function AdminPage() {
         Array.isArray(art.images) && art.images.length > 0
           ? art.images
           : ['/images/catalog/catalog-12.jpg'],
+      image_captions: Array.isArray((art as any).image_captions) ? (art as any).image_captions : [],
     });
     setIsArticleModalOpen(true);
   };
@@ -823,6 +835,7 @@ export default function AdminPage() {
             content: paragraphs.length > 0 ? paragraphs : editingArticle.content,
             image: articleForm.image,
             images: articleForm.images,
+            image_captions: articleForm.image_captions ?? [],
             featured: articleForm.featured,
           }),
         });
@@ -847,6 +860,7 @@ export default function AdminPage() {
             content: paragraphs.length > 0 ? paragraphs : [articleForm.excerpt.trim()],
             image: articleForm.image,
             images: articleForm.images,
+            image_captions: articleForm.image_captions ?? [],
             featured: articleForm.featured,
             published: true,
           }),

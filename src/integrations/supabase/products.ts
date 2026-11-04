@@ -17,7 +17,9 @@ export interface DbProduct {
   image: string;
   images?: string[];
   swatches: ProductSwatch[];
-  description?: string;
+  description?: string;  // deskripsi produk utama
+  fabric?: string;       // informasi bahan / kain
+  sizing?: string;       // panduan ukuran / size chart
   inStock?: boolean;
   stock?: number; // available inventory quantity
   hidden?: boolean; // if true, product is hidden from the public storefront

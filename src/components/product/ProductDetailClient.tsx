@@ -254,9 +254,13 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
               </div>
 
               <div className="text-[11px] leading-relaxed text-black/70">
-                <p>
-                  The {title} features the same cut as our signature Alia One Set, but refreshed with minimalist button details on the sleeves. Designed in a relaxed fit and crafted from 100% premium cupro silk linen, it offers an easy, comfortable feel while keeping the look effortlessly stylish. The front buttons add a practical touch to the design, making {title.toLowerCase()} an easy choice for running errands, slow days, and everything in between.
-                </p>
+                {dbProduct.description ? (
+                  <p className="whitespace-pre-line leading-relaxed">{dbProduct.description}</p>
+                ) : (
+                  <p>
+                    The {title} features the same cut as our signature Alia One Set, but refreshed with minimalist button details on the sleeves. Designed in a relaxed fit and crafted from 100% premium cupro silk linen, it offers an easy, comfortable feel while keeping the look effortlessly stylish. The front buttons add a practical touch to the design, making {title.toLowerCase()} an easy choice for running errands, slow days, and everything in between.
+                  </p>
+                )}
               </div>
 
               {/* Pilihan Warna */}
@@ -429,9 +433,13 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                   </button>
                   {fabricOpen && (
                     <div className="pb-4 text-[11px] leading-relaxed text-black/70">
-                      <p>
-                        100% Bemberg™ Cupro Silk Linen. Naturally breathable, lightweight, with a soft cool-touch finish and elegant fluid drape. Hand wash or gentle machine wash cold, hang dry in shade, warm iron if needed.
-                      </p>
+                      {dbProduct.fabric ? (
+                        <p className="whitespace-pre-line leading-relaxed">{dbProduct.fabric}</p>
+                      ) : (
+                        <p>
+                          100% Bemberg™ Cupro Silk Linen. Naturally breathable, lightweight, with a soft cool-touch finish and elegant fluid drape. Hand wash or gentle machine wash cold, hang dry in shade, warm iron if needed.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -449,15 +457,21 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                   </button>
                   {sizingOpen && (
                     <div className="pb-4 text-[11px] leading-relaxed text-black/70">
-                      <p className="font-medium text-black">
-                        All Size (fits XS through XL comfortably):
-                      </p>
-                      <ul className="mt-2 list-inside list-disc space-y-1">
-                        <li>Bust / Lingkar Dada: 120 cm</li>
-                        <li>Abaya Length / Panjang Baju: 140 cm</li>
-                        <li>Sleeve Length / Panjang Lengan: 57 cm</li>
-                        <li>Armhole / Lingkar Kerung: 52 cm</li>
-                      </ul>
+                      {dbProduct.sizing ? (
+                        <div className="whitespace-pre-line leading-relaxed">{dbProduct.sizing}</div>
+                      ) : (
+                        <>
+                          <p className="font-medium text-black">
+                            All Size (fits XS through XL comfortably):
+                          </p>
+                          <ul className="mt-2 list-inside list-disc space-y-1">
+                            <li>Bust / Lingkar Dada: 120 cm</li>
+                            <li>Abaya Length / Panjang Baju: 140 cm</li>
+                            <li>Sleeve Length / Panjang Lengan: 57 cm</li>
+                            <li>Armhole / Lingkar Kerung: 52 cm</li>
+                          </ul>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

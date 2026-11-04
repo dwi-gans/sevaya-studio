@@ -18,6 +18,9 @@ export interface ProductFormData {
   hidden: boolean;
   stock: number;
   swatches: ProductSwatch[];
+  description: string;  // deskripsi produk
+  fabric: string;       // informasi bahan / kain
+  sizing: string;       // panduan ukuran
 }
 
 interface ProductModalProps {
@@ -443,6 +446,53 @@ export function ProductModal({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Description, Fabric & Sizing */}
+          <div className="flex flex-col gap-3 rounded-xl border border-black/10 bg-black/[0.02] p-3 sm:p-4">
+            <span className="text-[11px] font-semibold text-black">Deskripsi, Bahan &amp; Ukuran</span>
+
+            {/* Deskripsi */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-black/70">
+                Deskripsi Produk
+              </label>
+              <textarea
+                rows={3}
+                value={productForm.description}
+                onChange={(e) => setProductForm((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="cth. Abaya dari bahan Cupro premium dengan siluet yang mengalir elegan..."
+                className="w-full rounded-lg border border-black/20 bg-white p-2.5 text-xs text-black focus:border-black focus:outline-none leading-relaxed resize-none"
+              />
+            </div>
+
+            {/* Fabric */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-black/70">
+                Informasi Bahan / Fabric
+              </label>
+              <textarea
+                rows={2}
+                value={productForm.fabric}
+                onChange={(e) => setProductForm((prev) => ({ ...prev, fabric: e.target.value }))}
+                placeholder="cth. 100% Cupro Bemberg · Breathable · Anti-static · Lining: Microfiber"
+                className="w-full rounded-lg border border-black/20 bg-white p-2.5 text-xs text-black focus:border-black focus:outline-none leading-relaxed resize-none"
+              />
+            </div>
+
+            {/* Sizing */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-black/70">
+                Panduan Ukuran / Sizing Guide
+              </label>
+              <textarea
+                rows={3}
+                value={productForm.sizing}
+                onChange={(e) => setProductForm((prev) => ({ ...prev, sizing: e.target.value }))}
+                placeholder={`cth.\nS  — Lingkar Dada 86-90 cm · Panjang 140 cm\nM  — Lingkar Dada 90-96 cm · Panjang 142 cm\nL  — Lingkar Dada 96-102 cm · Panjang 144 cm`}
+                className="w-full rounded-lg border border-black/20 bg-white p-2.5 text-xs text-black focus:border-black focus:outline-none leading-relaxed resize-none font-mono"
+              />
             </div>
           </div>
 

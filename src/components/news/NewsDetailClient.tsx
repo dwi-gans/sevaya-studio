@@ -83,7 +83,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    {t('news.atelier_caption')}
+                    {article.image_captions?.[0] || t('news.atelier_caption')}
                   </p>
                 </div>
               )}
@@ -100,7 +100,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    {t('news.atelier_caption')}
+                    {article.image_captions?.[index] || t('news.atelier_caption')}
                   </p>
                 </div>
               )}
@@ -109,22 +109,25 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
 
           {extraImages.length >= (article.content?.length || 1) && (
             <div className="mt-8 space-y-6">
-              {extraImages.slice((article.content?.length || 1) - 1).map((img, i) => (
-                <div key={i} className="space-y-3">
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
-                    <Image
-                      src={img}
-                      alt={`${article.title} — foto ${i + 2}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 800px"
-                    />
+              {extraImages.slice((article.content?.length || 1) - 1).map((img, i) => {
+                const imgIdx = (article.content?.length || 1) + i;
+                return (
+                  <div key={i} className="space-y-3">
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
+                      <Image
+                        src={img}
+                        alt={`${article.title} — foto ${i + 2}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 800px"
+                      />
+                    </div>
+                    <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                      {article.image_captions?.[imgIdx] || t('news.atelier_caption')}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    {t('news.atelier_caption')}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </article>

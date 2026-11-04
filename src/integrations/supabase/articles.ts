@@ -12,6 +12,7 @@ export interface Article {
   content: string[];
   image: string;           // cover / thumbnail utama
   images: string[];        // foto-foto isi artikel (bisa lebih dari 1)
+  image_captions?: string[]; // keterangan / penjelasan tiap foto
   featured: boolean;
   published: boolean;
   created_at?: string;
@@ -142,6 +143,7 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
       content: Array.isArray(updates.content) ? updates.content : [],
       image: updates.image || '/images/catalog/catalog-11.jpg',
       images: Array.isArray(updates.images) ? updates.images : [],
+      image_captions: Array.isArray(updates.image_captions) ? updates.image_captions : [],
       featured: Boolean(updates.featured),
       published: updates.published !== false,
       updated_at: new Date().toISOString(),
@@ -211,6 +213,18 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
     }
   }
 
+  let image_captions: string[] = [];
+  if (Array.isArray(raw.image_captions)) {
+    image_captions = raw.image_captions as string[];
+  } else if (typeof raw.image_captions === 'string') {
+    try {
+      const parsed = JSON.parse(raw.image_captions as string);
+      image_captions = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      image_captions = [];
+    }
+  }
+
   return {
     id: String(raw.id),
     slug: String(raw.slug ?? ''),
@@ -222,6 +236,7 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
     content,
     image: String(raw.image ?? ''),
     images,
+    image_captions,
     featured: Boolean(raw.featured),
     published: Boolean(raw.published ?? true),
     created_at: raw.created_at ? String(raw.created_at) : undefined,

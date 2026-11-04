@@ -16,6 +16,7 @@ export interface ArticleFormData {
   content: string;
   image: string;
   images: string[];
+  image_captions: string[]; // penjelasan/keterangan tiap foto isi artikel
   featured: boolean;
 }
 
@@ -59,7 +60,7 @@ export function ArticleModal({
               {editingArticle ? 'Edit Artikel Berita' : 'Tulis Artikel Berita Baru'}
             </h3>
             <p className="text-[11px] sm:text-[11px] text-black/60 mt-0">
-              Publikasikan wawasan busana, filosofi tekstil, atau rilis studio ke /news.
+              Atelier notes — an intimate gathering and honest reflections on modest grace.
             </p>
           </div>
           <button
@@ -327,6 +328,18 @@ export function ArticleModal({
                       }}
                       placeholder="/images/catalog/catalog-12.jpg atau URL Supabase"
                       className="w-full min-h-[34px] rounded border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none"
+                    />
+                    {/* Caption / Penjelasan Gambar */}
+                    <input
+                      type="text"
+                      value={articleForm.image_captions?.[idx] ?? ''}
+                      onChange={(e) => {
+                        const next = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
+                        next[idx] = e.target.value;
+                        setArticleForm((prev) => ({ ...prev, image_captions: next }));
+                      }}
+                      placeholder="Keterangan gambar (opsional) — tampil di bawah foto"
+                      className="w-full min-h-[30px] rounded border border-black/10 bg-black/[0.02] px-2.5 py-1 text-[10px] text-black/70 italic focus:border-black/30 focus:outline-none"
                     />
                   </div>
 
