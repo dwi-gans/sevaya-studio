@@ -32,6 +32,24 @@ export interface OrderEmailData {
 
 const formatIDR = (n?: number) => `Rp ${(n || 0).toLocaleString('id-ID')}`;
 
+function formatDateWIB(isoDate?: string): string {
+  try {
+    const d = isoDate ? new Date(isoDate) : new Date();
+    return (
+      new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Jakarta',
+      }).format(d) + ' WIB'
+    );
+  } catch {
+    return '';
+  }
+}
+
 function escapeHtml(str?: string | number | null): string {
   if (str === undefined || str === null) return '';
   return String(str)
@@ -211,9 +229,12 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
             </span>
           </td>
           <td align="right" valign="middle">
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 600; color: #111111; letter-spacing: 0.05em; text-transform: uppercase;">
               ORDER ${escapeHtml(data.orderNumber)}
             </span>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; color: #888888; margin-top: 3px;">
+              ${escapeHtml(formatDateWIB(data.createdAt))}
+            </div>
           </td>
         </tr>
       </table>
@@ -346,7 +367,11 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
 </body>
 </html>`;
 
-    const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
+    const recipient = data.customerEmail?.trim();
+    if (!recipient) {
+      console.warn(`[Resend Pending Email Skipped] Customer email missing for order ${data.orderNumber}`);
+      return { success: false, error: 'Customer email address missing' };
+    }
     const sendResult = await sendEmail({
       to: recipient,
       subject: `Order ${escapeHtml(data.orderNumber)} confirmed — Complete your payment`,
@@ -430,9 +455,12 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
             </span>
           </td>
           <td align="right" valign="middle">
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 600; color: #111111; letter-spacing: 0.05em; text-transform: uppercase;">
               ORDER ${escapeHtml(data.orderNumber)}
             </span>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; color: #888888; margin-top: 3px;">
+              ${escapeHtml(formatDateWIB(data.createdAt))}
+            </div>
           </td>
         </tr>
       </table>
@@ -561,7 +589,11 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
 </body>
 </html>`;
 
-    const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
+    const recipient = data.customerEmail?.trim();
+    if (!recipient) {
+      console.warn(`[Resend Pending Email Skipped] Customer email missing for order ${data.orderNumber}`);
+      return { success: false, error: 'Customer email address missing' };
+    }
     const sendResult = await sendEmail({
       to: recipient,
       subject: `Order ${escapeHtml(data.orderNumber)} payment confirmed — Thank you for your purchase`,
@@ -651,9 +683,12 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
             </span>
           </td>
           <td align="right" valign="middle">
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; color: #767676; letter-spacing: 0.05em; text-transform: uppercase;">
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 600; color: #111111; letter-spacing: 0.05em; text-transform: uppercase;">
               ORDER ${escapeHtml(data.orderNumber)}
             </span>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; color: #888888; margin-top: 3px;">
+              ${escapeHtml(formatDateWIB(data.createdAt))}
+            </div>
           </td>
         </tr>
       </table>
@@ -752,7 +787,11 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
 </body>
 </html>`;
 
-    const recipient = data.customerEmail || 'agus2100018486@webmail.uad.ac.id';
+    const recipient = data.customerEmail?.trim();
+    if (!recipient) {
+      console.warn(`[Resend Pending Email Skipped] Customer email missing for order ${data.orderNumber}`);
+      return { success: false, error: 'Customer email address missing' };
+    }
     const sendResult = await sendEmail({
       to: recipient,
       subject: `Order ${escapeHtml(data.orderNumber)} cancelled`,

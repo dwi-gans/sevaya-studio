@@ -4,6 +4,9 @@ import { verifyDokuWebhookSignature } from '@/integrations/doku';
 import { sendOrderCancelledEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 
+// In-memory idempotency cache to prevent concurrent webhook duplicate emails
+const dispatchedReceipts = new Set<string>();
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
@@ -117,7 +120,11 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[DOKU Webhook] DB update error:', error.message);
-    } else if (internalStatus === 'paid' && updatedOrder && !wasAlreadyPaid) {
+    } else if (internalStatus === 'paid' && updatedOrder && !wasAlreadyPaid && !dispatchedReceipts.has(orderNumber)) {
+      dispatchedReceipts.add(orderNumber);
+      // Prune after 1 hour to prevent memory leaks
+      setTimeout(() => dispatchedReceipts.delete(orderNumber), 60 * 60 * 1000);
+
       let items: any[] = [];
       try {
         items = typeof updatedOrder.items === 'string' ? JSON.parse(updatedOrder.items) : updatedOrder.items || [];
@@ -125,7 +132,7 @@ export async function POST(req: NextRequest) {
         items = [];
       }
 
-      // 5. Send receipt email to customer
+      // 5. Send receipt email to customer (strictly isolated in try/catch)
       try {
         await sendOrderPaidReceiptEmail({
           orderNumber: updatedOrder.order_number,
@@ -142,6 +149,16 @@ export async function POST(req: NextRequest) {
           courierName: updatedOrder.courier_name,
           createdAt: updatedOrder.created_at,
         });
+
+        // Record receipt sent timestamp in database if column exists
+        try {
+          await supabaseAdmin
+            .from('orders')
+            .update({ receipt_sent_at: new Date().toISOString() })
+            .eq('order_number', orderNumber);
+        } catch {
+          // Non-critical if column doesn't exist
+        }
       } catch (mailErr) {
         console.warn('[DOKU Webhook Paid Email Error]:', mailErr);
       }
