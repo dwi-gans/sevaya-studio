@@ -134,14 +134,39 @@ export function LookbookVolumeClient({
         </div>
 
         {/* Section 3: The Seed of The Story */}
-        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
-          <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.seasonTitle || 'A Poetic Transition'}
-          </h2>
-          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {cfg.seasonDesc || volDesc}
-          </p>
-        </section>
+        {(() => {
+          const points = (
+            Array.isArray(cfg.purposePoints)
+              ? cfg.purposePoints
+              : [
+                  cfg.purpose1Title ? { title: cfg.purpose1Title, desc: cfg.purpose1Desc || '' } : null,
+                  cfg.purpose2Title ? { title: cfg.purpose2Title, desc: cfg.purpose2Desc || '' } : null,
+                  cfg.purpose3Title ? { title: cfg.purpose3Title, desc: cfg.purpose3Desc || '' } : null,
+                ].filter(Boolean)
+          ).filter((p): p is { title: string; desc: string } => Boolean(p && (p.title || p.desc)));
+
+          return (
+            <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+              <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
+                {cfg.seasonTitle || 'The Seed of The Story'}
+              </h2>
+              {points.length > 0 ? (
+                <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
+                  {points.map((pt, idx) => (
+                    <li key={idx}>
+                      <span className="font-medium text-[#000000]">{pt.title}:</span>{' '}
+                      {pt.desc}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
+                  {cfg.seasonDesc || volDesc}
+                </p>
+              )}
+            </section>
+          );
+        })()}
 
         {/* Centered Editorial Collage */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">

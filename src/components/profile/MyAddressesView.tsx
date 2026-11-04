@@ -152,7 +152,11 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
 
       showToast(isEdit ? 'Alamat berhasil diperbarui.' : 'Alamat baru berhasil ditambahkan.');
       setIsFormOpen(false);
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Terjadi kesalahan';
       showToast(msg);
@@ -181,7 +185,11 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
       }
 
       showToast('Alamat berhasil dihapus.');
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal menghapus alamat.';
       showToast(msg);
@@ -216,7 +224,11 @@ export function MyAddressesView({ onAddressCountChange }: MyAddressesViewProps) 
       }
 
       showToast('Alamat utama berhasil diubah.');
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengatur alamat';
       showToast(msg);

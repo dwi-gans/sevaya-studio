@@ -19,6 +19,7 @@ export interface DbProduct {
   swatches: ProductSwatch[];
   description?: string;
   inStock?: boolean;
+  stock?: number; // available inventory quantity
   hidden?: boolean; // if true, product is hidden from the public storefront
 }
 

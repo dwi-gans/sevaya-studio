@@ -197,6 +197,7 @@ export default function AdminPage() {
     image: '/images/catalog/catalog-01.jpg',
     inStock: true,
     hidden: false,
+    stock: 25,
     swatches: [
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
       { name: 'Garnet', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
@@ -309,6 +310,7 @@ export default function AdminPage() {
       image: '/images/catalog/catalog-01.jpg',
       inStock: true,
       hidden: false,
+      stock: 25,
       swatches: [
         { name: 'Obsidian Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
         { name: 'Garnet Maroon', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
@@ -331,6 +333,7 @@ export default function AdminPage() {
       image: product.image,
       inStock: product.inStock !== false,
       hidden: product.hidden === true,
+      stock: typeof product.stock === 'number' ? product.stock : (product.inStock === false ? 0 : 25),
       swatches:
         product.swatches && product.swatches.length > 0
           ? product.swatches.map((s) => ({
@@ -362,13 +365,36 @@ export default function AdminPage() {
 
     setIsLoading(true);
     try {
+      const targetBadge = (productForm.badge || '').trim();
+      if (targetBadge && (targetBadge.toLowerCase() === 'best seller' || targetBadge.toLowerCase() === 'trending')) {
+        const currentTargetId = editingProduct ? String(editingProduct.id) : null;
+        const othersWithBadge = products.filter(
+          (p) => String(p.id) !== currentTargetId && (p.badge || '').trim().toLowerCase() === targetBadge.toLowerCase()
+        );
+        for (const other of othersWithBadge) {
+          await updateDbProduct(other.id, { badge: '' });
+        }
+      }
+
       if (editingProduct) {
         const updated = await updateDbProduct(editingProduct.id, {
           ...productForm,
           slug,
         });
         if (updated) {
-          setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
+          setProducts((prev) =>
+            prev.map((p) => {
+              if (p.id === editingProduct.id) return updated;
+              if (
+                targetBadge &&
+                (targetBadge.toLowerCase() === 'best seller' || targetBadge.toLowerCase() === 'trending') &&
+                (p.badge || '').trim().toLowerCase() === targetBadge.toLowerCase()
+              ) {
+                return { ...p, badge: '' };
+              }
+              return p;
+            })
+          );
           showToast(`Produk "${updated.title}" berhasil diperbarui!`);
         }
       } else {
@@ -376,7 +402,19 @@ export default function AdminPage() {
           ...productForm,
           slug,
         });
-        setProducts((prev) => [created, ...prev]);
+        setProducts((prev) => [
+          created,
+          ...prev.map((p) => {
+            if (
+              targetBadge &&
+              (targetBadge.toLowerCase() === 'best seller' || targetBadge.toLowerCase() === 'trending') &&
+              (p.badge || '').trim().toLowerCase() === targetBadge.toLowerCase()
+            ) {
+              return { ...p, badge: '' };
+            }
+            return p;
+          }),
+        ]);
         showToast(`Produk "${created.title}" berhasil ditambahkan!`);
       }
       setIsProductModalOpen(false);
@@ -413,6 +451,54 @@ export default function AdminPage() {
           ? `"${updated.title}" disembunyikan dari toko.`
           : `"${updated.title}" ditampilkan kembali di toko.`,
       );
+    }
+  };
+
+  const handleSetBadge = async (product: DbProduct, newBadge: string) => {
+    const isCurrentBadge = (product.badge || '').trim().toLowerCase() === newBadge.trim().toLowerCase();
+    const finalBadge = isCurrentBadge ? '' : newBadge.trim();
+
+    setIsLoading(true);
+    try {
+      // Jika menyematkan 'Best Seller' atau 'Trending', lepaskan badge tersebut dari produk lain agar tidak ganda
+      if (finalBadge && (finalBadge.toLowerCase() === 'best seller' || finalBadge.toLowerCase() === 'trending')) {
+        const othersWithBadge = products.filter(
+          (p) => String(p.id) !== String(product.id) && (p.badge || '').trim().toLowerCase() === finalBadge.toLowerCase()
+        );
+        for (const other of othersWithBadge) {
+          await updateDbProduct(other.id, { badge: '' });
+        }
+      }
+
+      const updated = await updateDbProduct(product.id, { badge: finalBadge });
+      if (updated) {
+        setProducts((prev) =>
+          prev.map((p) => {
+            if (String(p.id) === String(product.id)) {
+              return updated;
+            }
+            if (
+              finalBadge &&
+              (finalBadge.toLowerCase() === 'best seller' || finalBadge.toLowerCase() === 'trending') &&
+              (p.badge || '').trim().toLowerCase() === finalBadge.toLowerCase()
+            ) {
+              return { ...p, badge: '' };
+            }
+            return p;
+          })
+        );
+
+        if (finalBadge) {
+          showToast(`Status "${finalBadge}" berhasil dipindahkan ke "${product.title}"!`);
+        } else {
+          showToast(`Badge dihapus dari "${product.title}".`);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update product badge:', err);
+      showToast('Gagal mengubah badge produk');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -964,6 +1050,7 @@ export default function AdminPage() {
             onOpenCreateModal={handleOpenCreateModal}
             onOpenEditModal={handleOpenEditModal}
             onToggleHide={handleToggleHide}
+            onSetBadge={handleSetBadge}
             onDeleteProduct={handleDeleteProduct}
           />
         )}

@@ -12,9 +12,9 @@ export interface SendEmailOptions {
 }
 
 const DEFAULT_FROM =
-  process.env.RESEND_FROM_EMAIL || 'Sevaya Studio <info@sevaya-studio.com>';
+  process.env.RESEND_FROM_EMAIL || 'Sevaya Studio <sevayaofficial@gmail.com>';
 const DEFAULT_REPLY_TO =
-  process.env.RESEND_REPLY_TO || 'info@sevaya-studio.com';
+  process.env.RESEND_REPLY_TO || 'sevayaofficial@gmail.com';
 
 /**
  * Strips carriage returns and newlines to prevent email header injection (CWE-93).

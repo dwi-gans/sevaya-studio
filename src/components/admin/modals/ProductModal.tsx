@@ -16,6 +16,7 @@ export interface ProductFormData {
   image: string;
   inStock: boolean;
   hidden: boolean;
+  stock: number;
   swatches: ProductSwatch[];
 }
 
@@ -160,7 +161,7 @@ export function ProductModal({
           </div>
 
           {/* Badge & Stock & Visibility */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="flex flex-col gap-1 min-w-0">
               <label className="text-[11px] font-medium text-black/70">
                 Badge Label (Opsional)
@@ -172,10 +173,75 @@ export function ProductModal({
                 placeholder="cth. Best Seller, Sale -20%"
                 className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
               />
+              <div className="flex flex-wrap items-center gap-1 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, badge: 'Best Seller' }))}
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                    productForm.badge?.toLowerCase() === 'best seller'
+                      ? 'bg-black text-white'
+                      : 'bg-black/5 text-black hover:bg-black/10'
+                  }`}
+                >
+                  ★ Best Seller
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, badge: 'Trending' }))}
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                    productForm.badge?.toLowerCase() === 'trending'
+                      ? 'bg-neutral-900 text-amber-300'
+                      : 'bg-black/5 text-black hover:bg-black/10'
+                  }`}
+                >
+                  Trending
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, badge: 'New' }))}
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                    productForm.badge?.toLowerCase() === 'new'
+                      ? 'bg-black text-white'
+                      : 'bg-black/5 text-black hover:bg-black/10'
+                  }`}
+                >
+                  New
+                </button>
+                {productForm.badge && (
+                  <button
+                    type="button"
+                    onClick={() => setProductForm((prev) => ({ ...prev, badge: '' }))}
+                    className="text-[9px] text-red-600 hover:underline cursor-pointer ml-1"
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-black/15 bg-white p-2">
+            <div className="flex flex-col gap-1 min-w-0">
+              <label className="text-[11px] font-medium text-black/70">
+                Jumlah Stok (Stock)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={productForm.stock ?? 20}
+                onChange={(e) => {
+                  const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                  setProductForm((prev) => ({
+                    ...prev,
+                    stock: val,
+                    inStock: val > 0,
+                  }));
+                }}
+                placeholder="cth. 25"
+                className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none font-semibold"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-5">
+              <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-black/15 bg-white p-2">
                 <input
                   type="checkbox"
                   checked={productForm.inStock}
@@ -184,11 +250,11 @@ export function ProductModal({
                   }
                   className="h-3.5 w-3.5 accent-[#000000]"
                 />
-                <span className="text-[11px] font-medium text-black truncate">
-                  In Stock
+                <span className="text-[10px] font-medium text-black truncate">
+                  Tersedia
                 </span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
+              <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2">
                 <input
                   type="checkbox"
                   checked={productForm.hidden}
@@ -197,8 +263,8 @@ export function ProductModal({
                   }
                   className="h-3.5 w-3.5 accent-amber-600"
                 />
-                <span className="text-[11px] font-medium text-amber-800 truncate">
-                  Sembunyikan
+                <span className="text-[10px] font-medium text-amber-800 truncate">
+                  Hide
                 </span>
               </label>
             </div>

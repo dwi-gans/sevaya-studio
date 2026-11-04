@@ -116,7 +116,16 @@ export function ProductCard({ product }: { product: Product }) {
         <Link href={`/product/${product.slug}`} prefetch={true} className="relative block h-full w-full">
           {/* Badge */}
           {product.badge && (
-            <span className="absolute top-3 left-3 z-10 bg-black px-2.5 py-1 text-[8px] font-medium tracking-widest text-white uppercase">
+            <span
+              className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[9px] font-bold tracking-widest uppercase shadow-sm ${
+                product.badge.toLowerCase().includes('best')
+                  ? 'bg-black text-white'
+                  : product.badge.toLowerCase().includes('trend')
+                  ? 'bg-neutral-900 text-amber-300 border border-amber-300/30'
+                  : 'bg-black text-white'
+              }`}
+            >
+              {product.badge.toLowerCase().includes('best') && <span className="mr-1">★</span>}
               {product.badge}
             </span>
           )}

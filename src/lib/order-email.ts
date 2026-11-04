@@ -358,7 +358,7 @@ export async function sendOrderPendingPaymentEmail(data: OrderEmailData) {
       <!-- Footer Help -->
       <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
         <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
-          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+          If you have any questions, reply to this email or contact us at <a href="mailto:sevayaofficial@gmail.com" style="color: #111111; text-decoration: none; font-weight: 600;">sevayaofficial@gmail.com</a>
         </p>
       </div>
 
@@ -580,7 +580,7 @@ export async function sendOrderPaidReceiptEmail(data: OrderEmailData) {
       <!-- Footer Help -->
       <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
         <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
-          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+          If you have any questions, reply to this email or contact us at <a href="mailto:sevayaofficial@gmail.com" style="color: #111111; text-decoration: none; font-weight: 600;">sevayaofficial@gmail.com</a>
         </p>
       </div>
 
@@ -778,7 +778,7 @@ export async function sendOrderCancelledEmail(data: OrderEmailData & { cancelRea
       <!-- Footer Help -->
       <div style="border-top: 1px solid #EEEEEE; padding-top: 24px; margin-top: 36px;">
         <p style="margin: 0; font-size: 11px; line-height: 1.6; color: #767676;">
-          If you have any questions, reply to this email or contact us at <a href="mailto:info@sevaya-studio.com" style="color: #111111; text-decoration: none; font-weight: 600;">info@sevaya-studio.com</a>
+          If you have any questions, reply to this email or contact us at <a href="mailto:sevayaofficial@gmail.com" style="color: #111111; text-decoration: none; font-weight: 600;">sevayaofficial@gmail.com</a>
         </p>
       </div>
 

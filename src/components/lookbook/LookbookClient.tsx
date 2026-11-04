@@ -119,34 +119,35 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         </div>
 
         {/* Section 3: The Seed of The Story (Features with Custom Purpose Points) */}
-        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
-          <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.seasonTitle || 'The Seed of The Story'}
-          </h2>
-          <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
-            <li>
-              <span className="font-medium text-[#000000]">
-                {cfg.purpose1Title || 'Two looks in one'}:
-              </span>{' '}
-              {cfg.purpose1Desc ||
-                'A beautiful abstract button detail lets you style your abaya in two different ways, giving you more versatility in one piece.'}
-            </li>
-            <li>
-              <span className="font-medium text-[#000000]">
-                {cfg.purpose2Title || '40 cm front zipper'}:
-              </span>{' '}
-              {cfg.purpose2Desc ||
-                'Designed for extra convenience, making everyday activities and mealtimes easier.'}
-            </li>
-            <li>
-              <span className="font-medium text-[#000000]">
-                {cfg.purpose3Title || 'Two side pockets'}:
-              </span>{' '}
-              {cfg.purpose3Desc ||
-                'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.'}
-            </li>
-          </ul>
-        </section>
+        {(() => {
+          const points = (
+            Array.isArray(cfg.purposePoints)
+              ? cfg.purposePoints
+              : [
+                  cfg.purpose1Title ? { title: cfg.purpose1Title, desc: cfg.purpose1Desc || '' } : null,
+                  cfg.purpose2Title ? { title: cfg.purpose2Title, desc: cfg.purpose2Desc || '' } : null,
+                  cfg.purpose3Title ? { title: cfg.purpose3Title, desc: cfg.purpose3Desc || '' } : null,
+                ].filter(Boolean)
+          ).filter((p): p is { title: string; desc: string } => Boolean(p && (p.title || p.desc)));
+
+          if (points.length === 0) return null;
+
+          return (
+            <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+              <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
+                {cfg.seasonTitle || 'The Seed of The Story'}
+              </h2>
+              <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
+                {points.map((pt, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium text-[#000000]">{pt.title}:</span>{' '}
+                    {pt.desc}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })()}
 
         {/* Centered Editorial Collage — 2 Photos Side by Side */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">

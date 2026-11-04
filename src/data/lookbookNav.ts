@@ -4,6 +4,7 @@ export interface LookbookLink {
   season?: string;
   href: string;
   badge?: string;
+  hidden?: boolean;
 }
 
 /**

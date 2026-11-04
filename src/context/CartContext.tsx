@@ -14,6 +14,7 @@ export interface CartItem {
   size: string;
   image: string;
   quantity: number;
+  stock?: number;
 }
 
 interface CartContextType {
@@ -84,18 +85,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         (i) => i.id === newItem.id && i.color === newItem.color && i.size === newItem.size,
       );
       const qtyToAdd = newItem.quantity || 1;
+      const maxStock = newItem.stock;
+
       if (existingIndex > -1) {
         const updated = [...prev];
         const existing = updated[existingIndex];
         if (existing) {
+          const cap = typeof maxStock === 'number' ? maxStock : existing.stock;
+          let newQty = existing.quantity + qtyToAdd;
+          if (typeof cap === 'number' && newQty > cap) {
+            newQty = Math.max(existing.quantity, cap);
+          }
           updated[existingIndex] = {
             ...existing,
-            quantity: existing.quantity + qtyToAdd,
+            quantity: newQty,
+            stock: cap,
           };
         }
         return updated;
       }
-      return [...prev, { ...newItem, quantity: qtyToAdd }];
+
+      const initialQty = typeof maxStock === 'number' ? Math.min(qtyToAdd, Math.max(1, maxStock)) : qtyToAdd;
+      return [...prev, { ...newItem, quantity: initialQty }];
     });
   }, []);
 
@@ -108,7 +119,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       prev
         .map((item) => {
           if (item.id === id) {
-            const newQty = item.quantity + delta;
+            let newQty = item.quantity + delta;
+            if (typeof item.stock === 'number' && delta > 0 && newQty > item.stock) {
+              newQty = item.stock;
+            }
             return newQty > 0 ? { ...item, quantity: newQty } : null;
           }
           return item;

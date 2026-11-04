@@ -82,9 +82,11 @@ export interface LookbookLinkItem {
   season?: string;
   href: string;
   badge?: string;
+  hidden?: boolean;
 }
 
 export interface LookbookPageConfig {
+  hidden?: boolean;
   heroImage: string;
   heroTitle: string;
   heroSubtitle: string;
@@ -96,6 +98,7 @@ export interface LookbookPageConfig {
   purpose2Desc?: string;
   purpose3Title?: string;
   purpose3Desc?: string;
+  purposePoints?: Array<{ title: string; desc: string }>;
   collagePortrait: string;
   collageDetail1: string;
   collageDetail2?: string;
@@ -240,6 +243,20 @@ const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
   purpose3Title: 'Two side pockets',
   purpose3Desc:
     'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.',
+  purposePoints: [
+    {
+      title: 'Two looks in one',
+      desc: 'A beautiful abstract button detail lets you style your abaya in two different ways, giving you more versatility in one piece.',
+    },
+    {
+      title: '40 cm front zipper',
+      desc: 'Designed for extra convenience, making everyday activities and mealtimes easier.',
+    },
+    {
+      title: 'Two side pockets',
+      desc: 'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.',
+    },
+  ],
 
   collagePortrait: '/images/lookbook_figma_0.png',
   collageDetail1: '/images/figma_about_1.png',

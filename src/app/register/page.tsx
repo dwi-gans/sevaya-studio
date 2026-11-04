@@ -115,25 +115,25 @@ export default function RegisterPage() {
   const isId = language === 'id';
 
   return (
-    <div className="min-h-screen w-full bg-white text-black font-body grid grid-cols-1 lg:grid-cols-2">
+    <div className="h-screen w-full bg-white text-black font-body grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
       {/* ── LEFT HALF: AUTH FORM ── */}
-      <div className="flex flex-col justify-between px-6 sm:px-12 lg:px-16 xl:px-24 py-8 sm:py-12 min-h-screen">
-        {/* Top Header: Back Button only */}
+      <div className="flex flex-col justify-between px-6 sm:px-10 lg:px-14 xl:px-20 pt-6 pb-6 h-full overflow-y-auto no-scrollbar">
+        {/* Top Header: Back to Store at the top corner */}
         <div className="flex items-center justify-start w-full">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-black/60 hover:text-black transition"
+            className="inline-flex items-center gap-2 text-xs font-medium text-black/60 hover:text-black transition group"
             aria-label="Back to Store"
           >
-            <Icon name="arrow_back" size={14} />
+            <Icon name="arrow_back" size={15} className="transition-transform group-hover:-translate-x-0.5" />
             <span>{isId ? 'Kembali ke Toko' : 'Back to Store'}</span>
           </Link>
         </div>
 
         {/* Center: Main Form Content */}
-        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-8">
+        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-2 sm:py-4">
           {/* Heading & Subtitle */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <h1 className="font-sans text-2xl sm:text-3xl font-medium tracking-tight text-black">
               {isId ? 'Daftar Akun Baru' : 'Create an Account'}
             </h1>
@@ -329,8 +329,8 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* ── RIGHT HALF: FULL BLACK WITH WHITE SEVAYA ONLY ── */}
-      <div className="hidden lg:flex flex-col items-center justify-center bg-black text-white p-12 min-h-screen relative overflow-hidden select-none">
+      {/* ── RIGHT HALF: FULL BLACK WITH WHITE SEVAYA ONLY (FULL HEIGHT TO TOP, NO SCROLL) ── */}
+      <div className="hidden lg:flex flex-col items-center justify-center bg-black text-white p-12 h-full w-full relative overflow-hidden select-none">
         <h2 className="font-sans text-2xl sm:text-3xl font-light tracking-[0.3em] text-white uppercase text-center">
           SEVAYA
         </h2>

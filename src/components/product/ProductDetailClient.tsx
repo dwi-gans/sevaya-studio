@@ -35,10 +35,18 @@ interface ProductDetailClientProps {
 }
 
 export function ProductDetailClient({ slug, initialProduct }: ProductDetailClientProps) {
-  const { addToCart } = useCart();
+  const { items, addToCart } = useCart();
   const { showToast } = useToast();
 
   const [dbProduct, setDbProduct] = useState<DbProduct>(initialProduct);
+
+  const availableStock =
+    typeof dbProduct.stock === 'number'
+      ? dbProduct.stock
+      : dbProduct.inStock === false
+      ? 0
+      : 25;
+  const isOutOfStock = availableStock <= 0 || dbProduct.inStock === false;
 
   const initialColors = useMemo(() => {
     if (initialProduct.swatches && initialProduct.swatches.length > 0) {
@@ -136,8 +144,38 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
   const formattedPrice = `RP ${price.toLocaleString('id-ID')}`;
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      showToast('Mohon maaf, produk ini sedang habis.');
+      return;
+    }
+
+    const cartItemId = `${slug}-${selectedColor.name}-${selectedSize}-${selectedQuality}`;
+    const existingInCart = items.find((i) => i.id === cartItemId)?.quantity || 0;
+
+    if (existingInCart + quantity > availableStock) {
+      const remainingCanAdd = Math.max(0, availableStock - existingInCart);
+      if (remainingCanAdd <= 0) {
+        showToast(`Stok telah mencapai batas maksimum (${availableStock} buah) di keranjang Anda.`);
+        return;
+      }
+      showToast(`Stok tersisa ${availableStock}. Hanya ${remainingCanAdd} buah yang ditambahkan.`);
+      addToCart({
+        id: cartItemId,
+        title,
+        edition: selectedQuality,
+        price,
+        color: selectedColor.name,
+        colorHex: selectedColor.hex,
+        size: selectedSize,
+        image: activeImage,
+        quantity: remainingCanAdd,
+        stock: availableStock,
+      });
+      return;
+    }
+
     addToCart({
-      id: `${slug}-${selectedColor.name}-${selectedSize}-${selectedQuality}`,
+      id: cartItemId,
       title,
       edition: selectedQuality,
       price,
@@ -146,6 +184,7 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
       size: selectedSize,
       image: activeImage,
       quantity,
+      stock: availableStock,
     });
 
     showToast(`Ditambahkan ke keranjang: ${title} (${selectedColor.name})`);
@@ -190,6 +229,22 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
             <div className="order-2 flex flex-col lg:order-1 lg:col-span-6 space-y-6">
               
               <div>
+                {dbProduct.badge && (
+                  <div className="mb-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-3 py-1 text-[9px] font-bold tracking-widest uppercase shadow-xs ${
+                        dbProduct.badge.toLowerCase().includes('best')
+                          ? 'bg-black text-white'
+                          : dbProduct.badge.toLowerCase().includes('trend')
+                          ? 'bg-neutral-900 text-amber-300 border border-amber-400/40'
+                          : 'bg-black text-white'
+                      }`}
+                    >
+                      {dbProduct.badge.toLowerCase().includes('best') && <span>★</span>}
+                      {dbProduct.badge}
+                    </span>
+                  </div>
+                )}
                 <h1 className="font-sans text-sm sm:text-base lg:text-lg font-normal tracking-[0.18em] text-black uppercase">
                   {title}
                 </h1>
@@ -308,25 +363,38 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
 
               {/* Kuantitas */}
               <div>
-                <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
-                  QUANTITY
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
+                    QUANTITY
+                  </span>
+                  {isOutOfStock ? (
+                    <span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">
+                      Stok Habis
+                    </span>
+                  ) : availableStock <= 5 ? (
+                    <span className="text-[10px] font-medium text-amber-700">
+                      Sisa {availableStock} lagi
+                    </span>
+                  ) : null}
+                </div>
                 <div className="mt-2.5 inline-flex items-center border border-black/20 bg-white">
                   <button
                     type="button"
+                    disabled={isOutOfStock || quantity <= 1}
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer"
+                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     aria-label="Kurangi kuantitas"
                   >
                     &minus;
                   </button>
                   <span className="w-10 text-center text-[11px] font-semibold text-black">
-                    {quantity}
+                    {isOutOfStock ? 0 : quantity}
                   </span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((prev) => prev + 1)}
-                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer"
+                    disabled={isOutOfStock || quantity >= availableStock}
+                    onClick={() => setQuantity((prev) => Math.min(availableStock, prev + 1))}
+                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                     aria-label="Tambah kuantitas"
                   >
                     &#43;
@@ -338,10 +406,11 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
               <div className="pt-2">
                 <button
                   type="button"
+                  disabled={isOutOfStock}
                   onClick={handleAddToCart}
-                  className="w-full bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors cursor-pointer active:scale-[0.99]"
+                  className="w-full bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors cursor-pointer active:scale-[0.99] disabled:bg-black/30 disabled:cursor-not-allowed"
                 >
-                  ADD TO CART
+                  {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
                 </button>
               </div>
 
@@ -399,6 +468,20 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
             <div className="order-1 flex flex-col lg:order-2 lg:col-span-6 static lg:sticky lg:top-24">
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#ECE8E1] border border-black/5">
+                {dbProduct.badge && (
+                  <span
+                    className={`absolute top-3 left-3 z-10 px-3 py-1 text-[9px] font-bold tracking-widest uppercase shadow-sm ${
+                      dbProduct.badge.toLowerCase().includes('best')
+                        ? 'bg-black text-white'
+                        : dbProduct.badge.toLowerCase().includes('trend')
+                        ? 'bg-neutral-900 text-amber-300 border border-amber-300/40'
+                        : 'bg-black text-white'
+                    }`}
+                  >
+                    {dbProduct.badge.toLowerCase().includes('best') && <span className="mr-1">★</span>}
+                    {dbProduct.badge}
+                  </span>
+                )}
                 <Image
                   src={activeImage}
                   alt={`${title} - ${selectedColor.name}`}

@@ -431,10 +431,10 @@ function OrderConfirmationContent() {
               <p className="text-xs text-neutral-500">
                 Need help?{' '}
                 <a
-                  href="mailto:info@sevaya-studio.com"
+                  href="mailto:sevayaofficial@gmail.com"
                   className="text-neutral-900 underline hover:text-black font-medium"
                 >
-                  Contact us
+                  Contact us (sevayaofficial@gmail.com)
                 </a>
               </p>
 

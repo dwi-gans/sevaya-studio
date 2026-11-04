@@ -13,6 +13,7 @@ interface CatalogTabProps {
   onOpenCreateModal: () => void;
   onOpenEditModal: (product: Product) => void;
   onToggleHide: (product: Product) => Promise<void> | void;
+  onSetBadge?: (product: Product, badge: string) => Promise<void> | void;
   onDeleteProduct: (id: string | number, title: string) => void;
 }
 
@@ -25,6 +26,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
   onOpenCreateModal,
   onOpenEditModal,
   onToggleHide,
+  onSetBadge,
   onDeleteProduct,
 }) => {
   const [localQuery, setLocalQuery] = useState(searchQuery);
@@ -138,16 +140,27 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                   </div>
                 )}
                 {product.badge && (
-                  <span className="absolute top-2 left-2 rounded-full bg-black px-2 py-0.5 text-[9px] font-semibold tracking-wider text-white uppercase sm:text-[10px]">
+                  <span
+                    className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase sm:text-[10px] shadow-sm ${
+                      product.badge.toLowerCase().includes('best')
+                        ? 'bg-black text-white ring-1 ring-white/20'
+                        : product.badge.toLowerCase().includes('trend')
+                        ? 'bg-neutral-900 text-amber-300 border border-amber-300/40'
+                        : 'bg-black text-white'
+                    }`}
+                  >
+                    {product.badge.toLowerCase().includes('best') && <span className="mr-0.5">★</span>}
                     {product.badge}
                   </span>
                 )}
                 <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false ? 'bg-emerald-500' : 'bg-red-500'}`}
+                    className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false && (product.stock == null || product.stock > 0) ? 'bg-emerald-500' : 'bg-red-500'}`}
                   />
-                  <span className="xs:inline hidden">
-                    {product.inStock !== false ? 'In Stock' : 'Habis'}
+                  <span>
+                    {product.inStock !== false && (product.stock == null || product.stock > 0)
+                      ? `Stok: ${product.stock ?? 25}`
+                      : 'Habis'}
                   </span>
                 </div>
               </div>
@@ -206,6 +219,55 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Quick Badge Switcher: Best Seller & Trending */}
+                <div className="mt-2 flex flex-col gap-1 rounded-xl border border-black/10 bg-[#FAFAFA] p-2">
+                  <div className="flex items-center justify-between text-[9px] font-semibold text-black/60 uppercase tracking-wider">
+                    <span>Badge Status:</span>
+                    {product.badge ? (
+                      <span className="font-bold text-black truncate max-w-[90px]">
+                        {product.badge}
+                      </span>
+                    ) : (
+                      <span className="text-black/40 italic">Normal</span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => onSetBadge?.(product, 'Best Seller')}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-wider transition active:scale-95 cursor-pointer ${
+                        product.badge?.toLowerCase() === 'best seller'
+                          ? 'bg-black text-white shadow-xs'
+                          : 'bg-white border border-black/15 text-black/70 hover:bg-black/5 hover:text-black'
+                      }`}
+                      title={
+                        product.badge?.toLowerCase() === 'best seller'
+                          ? 'Klik untuk menghapus status Best Seller'
+                          : 'Pindahkan status Best Seller ke produk ini'
+                      }
+                    >
+                      <span>★</span>
+                      <span className="truncate">Best Seller</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSetBadge?.(product, 'Trending')}
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-wider transition active:scale-95 cursor-pointer ${
+                        product.badge?.toLowerCase() === 'trending'
+                          ? 'bg-neutral-900 text-amber-300 border border-amber-400 shadow-xs'
+                          : 'bg-white border border-black/15 text-black/70 hover:bg-black/5 hover:text-black'
+                      }`}
+                      title={
+                        product.badge?.toLowerCase() === 'trending'
+                          ? 'Klik untuk menghapus status Trending'
+                          : 'Pindahkan status Trending ke produk ini'
+                      }
+                    >
+                      <span className="truncate">Trending</span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="mt-2.5 flex items-center gap-1 border-t border-black/10 pt-2 sm:gap-1.5">

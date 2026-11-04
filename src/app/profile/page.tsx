@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -328,12 +328,13 @@ export default function ProfilePage() {
     try {
       const token = await getAccessToken();
       const payload = {
+        ...(editingAddress ? { id: editingAddress.id } : {}),
         recipient_name: addrRecipient.trim(),
         phone: addrPhone.trim(),
         address_line: addrLine.trim(),
         city: addrCity.trim(),
-        province: addrProvince,
-        postal_code: addrPostal.trim(),
+        province: addrProvince || 'DKI Jakarta',
+        postal_code: addrPostal.trim() || '10110',
         is_default: addrIsDefault,
       };
 
@@ -356,7 +357,11 @@ export default function ProfilePage() {
 
       showToast(editingAddress ? 'Alamat berhasil diperbarui' : 'Alamat baru berhasil ditambahkan');
       setIsAddressModalOpen(false);
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch (err: any) {
       showToast(err.message || 'Gagal menyimpan alamat');
     } finally {
@@ -378,7 +383,11 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Gagal menghapus');
       showToast('Alamat berhasil dihapus');
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch {
       showToast('Gagal menghapus alamat');
     }
@@ -399,7 +408,11 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Gagal');
       showToast('Alamat utama berhasil diperbarui');
-      fetchAddresses();
+      if (Array.isArray(data.addresses)) {
+        setAddresses(data.addresses);
+      } else {
+        fetchAddresses();
+      }
     } catch {
       showToast('Gagal memperbarui alamat utama');
     }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
+import { getAuthenticatedUser, supabaseAdmin, invalidateTokenCache } from '@/lib/auth-server';
 
 export interface AddressItem {
   id: string;
@@ -16,30 +16,32 @@ export interface AddressItem {
   updated_at: string;
 }
 
-// Helper to get addresses from user_metadata (0ms latency, zero extra network trips)
+// Helper to get addresses from user_metadata
 function getMetadataAddresses(user: any): AddressItem[] {
   const meta = user.supabaseUser?.user_metadata || {};
   return Array.isArray(meta.addresses) ? meta.addresses : [];
 }
 
-// Helper to save addresses to user_metadata securely (fire-and-forget — never blocks response)
-function saveMetadataAddresses(user: any, addresses: AddressItem[]) {
-  // Intentionally not awaited — saves in background after response is sent
-  supabaseAdmin.auth.admin
-    .updateUserById(user.id, {
-      user_metadata: {
-        ...(user.supabaseUser?.user_metadata || {}),
-        addresses,
-      },
-    })
-    .catch((err) => {
-      console.warn('saveMetadataAddresses warning:', err);
-    });
+// Helper to save addresses to user_metadata securely
+async function saveMetadataAddresses(user: any, addresses: AddressItem[]) {
+  const { data, error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    user_metadata: {
+      ...(user.supabaseUser?.user_metadata || {}),
+      addresses,
+    },
+  });
+  if (error) {
+    console.error('[addresses] updateUserById error:', error);
+    throw new Error(error.message || 'Gagal menyimpan alamat ke database akun');
+  }
+  // Invalidate token cache so GET immediately reflects new addresses!
+  invalidateTokenCache();
+  return data;
 }
 
 /**
  * GET /api/user/addresses
- * Instantly returns user addresses from session metadata without dead DB table latency.
+ * Returns user addresses from session metadata.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -73,9 +75,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { recipient_name, phone, address_line, city, province, postal_code, notes, is_default } = body;
 
-    if (!recipient_name?.trim() || !phone?.trim() || !address_line?.trim() || !city?.trim() || !province?.trim() || !postal_code?.trim()) {
+    if (!recipient_name?.trim() || !phone?.trim() || !address_line?.trim() || !city?.trim()) {
       return NextResponse.json(
-        { success: false, error: 'Semua kolom wajib alamat harus diisi lengkap.' },
+        { success: false, error: 'Harap lengkapi nama penerima, nomor telepon, alamat, dan kota.' },
         { status: 400 }
       );
     }
@@ -90,8 +92,8 @@ export async function POST(req: NextRequest) {
       phone: phone.trim(),
       address_line: address_line.trim(),
       city: city.trim(),
-      province: province.trim(),
-      postal_code: postal_code.trim(),
+      province: (province && province.trim()) || 'DKI Jakarta',
+      postal_code: (postal_code && postal_code.trim()) || '10110',
       notes: notes?.trim() || '',
       is_default: Boolean(is_default),
       created_at: now,
@@ -104,17 +106,18 @@ export async function POST(req: NextRequest) {
       : [...currentList];
     updatedList.unshift(newAddress);
 
-    // Save to user metadata (fire-and-forget — response is instant)
-    saveMetadataAddresses(user, updatedList);
+    await saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,
       message: 'Alamat berhasil ditambahkan.',
       address: newAddress,
+      addresses: updatedList,
     });
   } catch (err: unknown) {
     console.error('Create address error:', err);
-    return NextResponse.json({ success: false, error: 'Gagal menambahkan alamat baru.' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Gagal menambahkan alamat baru.';
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -130,7 +133,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, recipient_name, phone, address_line, city, province, postal_code, notes, is_default } = body;
+    const id = body.id || req.nextUrl.searchParams.get('id');
+    const { recipient_name, phone, address_line, city, province, postal_code, notes, is_default } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID alamat tidak ditemukan.' }, { status: 400 });
@@ -147,8 +151,8 @@ export async function PUT(req: NextRequest) {
           phone: phone?.trim() || a.phone,
           address_line: address_line?.trim() || a.address_line,
           city: city?.trim() || a.city,
-          province: province?.trim() || a.province,
-          postal_code: postal_code?.trim() || a.postal_code,
+          province: province?.trim() || a.province || 'DKI Jakarta',
+          postal_code: postal_code?.trim() || a.postal_code || '10110',
           notes: notes !== undefined ? notes.trim() : a.notes,
           is_default: is_default !== undefined ? Boolean(is_default) : a.is_default,
           updated_at: now,
@@ -157,15 +161,17 @@ export async function PUT(req: NextRequest) {
       return is_default ? { ...a, is_default: false } : a;
     });
 
-    saveMetadataAddresses(user, updatedList);
+    await saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,
       message: 'Alamat berhasil diperbarui.',
+      addresses: updatedList,
     });
   } catch (err: unknown) {
     console.error('Update address error:', err);
-    return NextResponse.json({ success: false, error: 'Gagal memperbarui alamat.' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Gagal memperbarui alamat.';
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -190,14 +196,16 @@ export async function DELETE(req: NextRequest) {
     const currentList = getMetadataAddresses(user);
     const updatedList = currentList.filter((a) => a.id !== id);
 
-    saveMetadataAddresses(user, updatedList);
+    await saveMetadataAddresses(user, updatedList);
 
     return NextResponse.json({
       success: true,
       message: 'Alamat berhasil dihapus.',
+      addresses: updatedList,
     });
   } catch (err: unknown) {
     console.error('Delete address error:', err);
-    return NextResponse.json({ success: false, error: 'Gagal menghapus alamat.' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Gagal menghapus alamat.';
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

@@ -254,7 +254,9 @@ export function Header() {
                   {lookbookOpen && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 z-50 pt-px">
                       <div className="border border-black/8 bg-white shadow-lg min-w-[220px] py-2">
-                        {lookbookLinks.map((link) => (
+                        {lookbookLinks
+                          .filter((link) => !link.hidden)
+                          .map((link) => (
                           <Link
                             key={link.id || link.href}
                             href={link.href}

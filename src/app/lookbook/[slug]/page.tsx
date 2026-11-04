@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { getSiteSections, DEFAULT_SITE_SECTIONS } from '@/integrations/supabase';
 import { fetchCatalogProducts } from '@/features/catalog';
 import { LookbookVolumeClient } from '@/components/lookbook/LookbookVolumeClient';
@@ -26,11 +27,14 @@ export default async function LookbookVolumePage({
   let volTitle = `${targetSlug.replace('-', ' ').toUpperCase()}`;
   let volDesc = 'A poetic transition into warmer tones, softer draperies, and intimate seasonal silhouettes designed for timeless elegance.';
 
-  if (sections.lookbookLinks) {
-    const found = sections.lookbookLinks.find((l) => l.href.includes(targetSlug) || l.id === targetSlug);
-    if (found) {
-      volTitle = found.label.toUpperCase();
+  const foundLink = sections.lookbookLinks?.find((l) => l.href.includes(targetSlug) || l.id === targetSlug);
+  if (foundLink) {
+    volTitle = foundLink.label.toUpperCase();
+    if (foundLink.hidden || cfg.hidden) {
+      notFound();
     }
+  } else if (cfg.hidden) {
+    notFound();
   }
 
   return (

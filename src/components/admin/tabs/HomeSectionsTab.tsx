@@ -150,7 +150,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-4 pb-20">
       {/* ── HEADER TITLE & ACTION ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/10 pb-4">
         <div>

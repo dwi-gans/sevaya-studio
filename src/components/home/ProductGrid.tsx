@@ -141,8 +141,22 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   const [scrollLeftPos, setScrollLeftPos] = React.useState(0);
   const [hasMoved, setHasMoved] = React.useState(false);
 
-  const list = products && products.length > 0 ? products : DEFAULT_BEST_SELLERS;
-  const displayList = list.length >= 8 ? list.slice(0, 8) : list;
+  const sortedList = React.useMemo(() => {
+    const raw = products && products.length > 0 ? [...products] : [...DEFAULT_BEST_SELLERS];
+    return raw.sort((a, b) => {
+      const aBest = (a.badge || '').toLowerCase().includes('best') ? 1 : 0;
+      const bBest = (b.badge || '').toLowerCase().includes('best') ? 1 : 0;
+      if (aBest !== bBest) return bBest - aBest;
+
+      const aTrend = (a.badge || '').toLowerCase().includes('trend') ? 1 : 0;
+      const bTrend = (b.badge || '').toLowerCase().includes('trend') ? 1 : 0;
+      if (aTrend !== bTrend) return bTrend - aTrend;
+
+      return 0;
+    });
+  }, [products]);
+
+  const displayList = sortedList.length >= 8 ? sortedList.slice(0, 8) : sortedList;
 
   const scrollLeft = () => {
     if (scrollRef.current) {

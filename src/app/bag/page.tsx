@@ -134,13 +134,17 @@ export default function ShoppingBagPage() {
                                 </span>
                                 <button
                                   type="button"
+                                  disabled={typeof item.stock === 'number' && item.quantity >= item.stock}
                                   onClick={() => updateQuantity(item.id, 1)}
-                                  className="px-2.5 py-1 text-[10px] text-black transition-colors hover:bg-white"
+                                  className="px-2.5 py-1 text-[10px] text-black transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
                                   aria-label="Increase quantity"
                                 >
                                   &#43;
                                 </button>
                               </div>
+                              {typeof item.stock === 'number' && item.quantity >= item.stock && (
+                                <span className="text-[9px] text-amber-700">Maksimal stok tercapai</span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => removeFromCart(item.id)}
@@ -175,13 +179,17 @@ export default function ShoppingBagPage() {
                           </span>
                           <button
                             type="button"
+                            disabled={typeof item.stock === 'number' && item.quantity >= item.stock}
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="px-3 py-1.5 text-[10px] text-black transition-colors hover:bg-white"
+                            className="px-3 py-1.5 text-[10px] text-black transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
                             aria-label="Increase quantity"
                           >
                             &#43;
                           </button>
                         </div>
+                        {typeof item.stock === 'number' && item.quantity >= item.stock && (
+                          <span className="text-[9px] text-amber-700">Maks. {item.stock} stok</span>
+                        )}
 
                         <button
                           type="button"
