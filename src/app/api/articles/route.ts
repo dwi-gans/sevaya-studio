@@ -16,9 +16,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       { articles },
       {
-        headers: isAdmin
-          ? { 'Cache-Control': 'no-store' }
-          : { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' },
+        headers: {
+          // Always no-store: artikel yg dihapus tidak boleh muncul lagi dari cache
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        },
       }
     );
   } catch (err) {
