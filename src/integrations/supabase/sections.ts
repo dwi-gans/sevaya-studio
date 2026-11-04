@@ -84,7 +84,7 @@ export interface SiteSectionsConfig {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEFAULT — only Vol 1 (single official lookbook volume)
+// DEFAULT — synchronized with actual Supabase / Admin state
 // ─────────────────────────────────────────────────────────────────────────────
 export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   hero: {
@@ -138,10 +138,9 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       id: 'ch-1',
       num: 'BAB 1',
       title: 'Floraison // Summer 2026',
-      image: '/images/sevaya_first_chapter.jpg',
+      image: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
     },
   ],
-  // Vol 1 only — Vol 2 is not yet released/published
   lookbookLinks: [
     {
       id: 'vol-1',
@@ -152,7 +151,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     },
   ],
   lookbookPage: {
-    heroImage: '/images/sevaya_first_chapter.jpg',
+    heroImage: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
     heroTitle: 'FLORAISON',
     heroSubtitle: 'SEVAYA • FLORAISON',
     seasonTitle: 'The Seed of The Story',
@@ -171,11 +170,11 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     triptych3: '/images/lookbook_figma_4.png',
     triptychTitle: 'The Summer 2026 Collection',
     triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
-    fullDress: '/images/lookbook_figma_5.png',
+    fullDress: '/images/catalog/catalog-15.jpg',
   },
   lookbookVolumesConfig: {
     'vol-1': {
-      heroImage: '/images/sevaya_first_chapter.jpg',
+      heroImage: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
       heroTitle: 'FLORAISON',
       heroSubtitle: 'SEVAYA • FLORAISON',
       seasonTitle: 'The Seed of The Story',
@@ -194,7 +193,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       triptych3: '/images/lookbook_figma_4.png',
       triptychTitle: 'The Summer 2026 Collection',
       triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
-      fullDress: '/images/lookbook_figma_5.png',
+      fullDress: '/images/catalog/catalog-15.jpg',
     },
   },
   conscious: {
@@ -228,7 +227,8 @@ function sanitizeHeroImage(img?: string | null): string {
 
 let _cachedSiteSections: SiteSectionsConfig | null = null;
 let _cachedSectionsTime = 0;
-const SECTIONS_CACHE_TTL = 5 * 60 * 1000; // 5-minute in-memory cache
+let _isServerFetched = false;
+const SECTIONS_CACHE_TTL = 30 * 1000; // 30-second in-memory cache for ultra-responsive updates
 
 // ─────────────────────────────────────────────────────────────────────────────
 // getCachedSiteSections — synchronous, 0 network delay
@@ -280,20 +280,14 @@ export function getCachedSiteSections(): SiteSectionsConfig {
 /**
  * Loads sections configuration via /api/sections (server endpoint using Service Role Key).
  * Falls back to LocalStorage then DEFAULT_SITE_SECTIONS if the server is unreachable.
- *
- * Priority:
- *  1. In-memory cache (0ms, 5-min TTL)
- *  2. /api/sections  (server ← Supabase Storage via Service Role Key)
- *  3. LocalStorage   (offline / stale cache)
- *  4. DEFAULT_SITE_SECTIONS
  */
-export async function getSiteSections(): Promise<SiteSectionsConfig> {
+export async function getSiteSections(forceRefresh = false): Promise<SiteSectionsConfig> {
   const now = Date.now();
-  if (_cachedSiteSections && now - _cachedSectionsTime < SECTIONS_CACHE_TTL) {
+  if (!forceRefresh && _cachedSiteSections && _isServerFetched && now - _cachedSectionsTime < SECTIONS_CACHE_TTL) {
     return _cachedSiteSections;
   }
 
-  // ── 2. Fetch from server ──────────────────────────────────────────────────
+  // ── Fetch from server ──────────────────────────────────────────────────────
   try {
     const res = await fetch('/api/sections', { cache: 'no-store' });
     if (res.ok) {
@@ -301,6 +295,7 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
       if (json.success && json.sections) {
         _cachedSiteSections = json.sections;
         _cachedSectionsTime = Date.now();
+        _isServerFetched = true;
         // Keep localStorage in sync as an offline cache
         if (typeof window !== 'undefined') {
           try {
@@ -316,7 +311,7 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
     console.warn('[sections] /api/sections unreachable, falling back to localStorage', err);
   }
 
-  // ── 3. LocalStorage fallback ──────────────────────────────────────────────
+  // ── LocalStorage fallback ──────────────────────────────────────────────────
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -348,7 +343,7 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
     }
   }
 
-  // ── 4. Hard default ───────────────────────────────────────────────────────
+  // ── Hard default ───────────────────────────────────────────────────────────
   return DEFAULT_SITE_SECTIONS;
 }
 
@@ -364,6 +359,7 @@ export async function saveSiteSections(sections: SiteSectionsConfig): Promise<bo
   // Instant local cache update
   _cachedSiteSections = sections;
   _cachedSectionsTime = Date.now();
+  _isServerFetched = true;
 
   if (typeof window !== 'undefined') {
     try {
@@ -384,7 +380,7 @@ export async function saveSiteSections(sections: SiteSectionsConfig): Promise<bo
       body: JSON.stringify({ sections }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({})) as { error?: string };
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
       console.warn('[sections] Save failed:', err.error ?? res.status);
     }
     return res.ok;

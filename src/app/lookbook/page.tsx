@@ -91,8 +91,8 @@ export default function LookbookPage() {
       }
     });
 
-    // 5. Refresh sections from cloud in background
-    getSiteSections().then((sections) => {
+    // 5. Refresh sections from cloud in background (force refresh to guarantee admin sync)
+    getSiteSections(true).then((sections) => {
       if (sections.lookbookVolumesConfig?.['vol-1']) {
         setCfg(sections.lookbookVolumesConfig['vol-1']);
       } else if (sections.lookbookPage) {

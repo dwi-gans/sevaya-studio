@@ -12,7 +12,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
-import { getCachedSiteSections } from '@/integrations/supabase';
+import { getCachedSiteSections, getSiteSections } from '@/integrations/supabase';
 
 const CUSTOMER_LINKS = [
   { label: 'Terms of Service', href: '/customer/terms-of-service' },
@@ -48,6 +48,11 @@ export function Header() {
     if (sections.lookbookLinks && sections.lookbookLinks.length > 0) {
       setLookbookLinks(sections.lookbookLinks);
     }
+    getSiteSections().then((live) => {
+      if (live.lookbookLinks && live.lookbookLinks.length > 0) {
+        setLookbookLinks(live.lookbookLinks);
+      }
+    });
   }, []);
 
   useEffect(() => {

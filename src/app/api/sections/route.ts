@@ -7,10 +7,10 @@ export const runtime = 'nodejs';
 
 const SECTIONS_FILE = 'sections.json';
 
-// In-memory cache for public site sections (5 min TTL, instantly updated on POST)
+// In-memory cache for public site sections (15s TTL, instantly updated on POST)
 let cachedSections: SiteSectionsConfig | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 15 * 1000;
 
 const PUBLIC_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
@@ -21,9 +21,12 @@ const PUBLIC_CACHE_HEADERS = {
  * Returns the current site sections from memory cache or Supabase Storage.
  * Single source of truth for both localhost and production hosting.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const bypassCache = url.searchParams.get('fresh') === '1';
+
   const now = Date.now();
-  if (cachedSections && now - cacheTimestamp < CACHE_TTL_MS) {
+  if (!bypassCache && cachedSections && now - cacheTimestamp < CACHE_TTL_MS) {
     return NextResponse.json(
       { success: true, sections: cachedSections },
       { headers: PUBLIC_CACHE_HEADERS }

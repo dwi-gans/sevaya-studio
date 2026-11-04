@@ -100,8 +100,8 @@ export default function LookbookVolumePage() {
       }
     });
 
-    // 3. Refresh sections
-    getSiteSections().then((sections) => {
+    // 3. Refresh sections (force fresh from cloud)
+    getSiteSections(true).then((sections) => {
       if (sections.lookbookVolumesConfig?.[slug]) {
         setCfg(sections.lookbookVolumesConfig[slug]);
       } else if (sections.lookbookPage) {
