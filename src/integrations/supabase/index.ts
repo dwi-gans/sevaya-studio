@@ -27,12 +27,18 @@ export {
   getCachedSiteSections,
   saveSiteSections,
   DEFAULT_SITE_SECTIONS,
+  DEFAULT_HOME_NARRATIVE,
+  DEFAULT_JOURNAL_HEADER,
+  DEFAULT_CONSCIOUS_PAGE,
   type SiteSectionsConfig,
   type HeroSectionData,
   type SpotlightItem,
   type JournalArticleData,
   type LookbookChapterData,
   type LookbookPageConfig,
+  type HomeNarrativeConfig,
+  type HomeJournalHeaderConfig,
+  type ConsciousPageConfig,
 } from './sections';
 export {
   uploadFileToStorage,

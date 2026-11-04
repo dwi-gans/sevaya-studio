@@ -24,6 +24,49 @@ export interface JournalArticleData {
   date: string;
   excerpt: string;
   image: string;
+  href?: string;
+}
+
+export interface HomeNarrativeConfig {
+  // 1. Elegance in Simplicity
+  eleganceTitle?: string;
+  eleganceParagraph?: string;
+  eleganceHighlight?: string;
+  eleganceLinkText?: string;
+  eleganceLinkUrl?: string;
+
+  // 2. Video Player Showcase
+  videoSrc?: string;
+  videoPoster?: string;
+
+  // 3. Brand Pillars (Our Core Values)
+  pillarsTagline?: string;
+  pillarsTitle?: string;
+  pillar1Title?: string;
+  pillar1Desc?: string;
+  pillar2Title?: string;
+  pillar2Desc?: string;
+  pillar3Title?: string;
+  pillar3Desc?: string;
+
+  // 4. About SEVAYA
+  aboutTagline?: string;
+  aboutTitle?: string;
+  aboutDesc?: string;
+  aboutLinkText?: string;
+  aboutLinkUrl?: string;
+  aboutImage1?: string;
+  aboutImage2?: string;
+}
+
+export interface HomeJournalHeaderConfig {
+  manifestoTag?: string;
+  manifestoTitle?: string;
+  manifestoDesc?: string;
+  journalBadge?: string;
+  journalTitle?: string;
+  journalLinkText?: string;
+  journalLinkUrl?: string;
 }
 
 export interface LookbookChapterData {
@@ -47,24 +90,113 @@ export interface LookbookPageConfig {
   heroSubtitle: string;
   seasonTitle: string;
   seasonDesc: string;
+  purpose1Title?: string;
+  purpose1Desc?: string;
+  purpose2Title?: string;
+  purpose2Desc?: string;
+  purpose3Title?: string;
+  purpose3Desc?: string;
   collagePortrait: string;
   collageDetail1: string;
-  collageDetail2: string;
+  collageDetail2?: string;
   panorama1: string;
   panorama1Title: string;
   panorama1Desc: string;
-  panorama2: string;
+  panorama2?: string;
   triptych1: string;
   triptych2: string;
   triptych3: string;
   triptychTitle: string;
   triptychDesc: string;
+  triptychTagline?: string;
   fullDress: string;
+  shopTag?: string;
+  shopTitle?: string;
+  shopDesc?: string;
 }
+
+export interface ConsciousPageConfig {
+  // Images
+  heroImage?: string;
+  inspoImage?: string;
+  founderImage?: string;
+  bembergImage?: string;
+  tencelImage?: string;
+  linenImage?: string;
+  modalImage?: string;
+  // Section 1: About SEVAYA
+  aboutBadge?: string;
+  aboutTitle?: string;
+  aboutP?: string;
+  // Philosophy block
+  philoBadge?: string;
+  philo1?: string;
+  philo2?: string;
+  philoQuote?: string;
+  // Pillars divider
+  pillars?: string;
+  // Section 2: Inspiration
+  inspoBadge?: string;
+  inspoTitle?: string;
+  inspoP1?: string;
+  inspoP2?: string;
+  inspoP3?: string;
+  inspoTagline?: string;
+  // Section 3: Founder's Story
+  founderBadge?: string;
+  founderTitle?: string;
+  founderP1?: string;
+  founderP2?: string;
+  founderP3?: string;
+  founderClosing?: string;
+}
+
+export const DEFAULT_CONSCIOUS_PAGE: ConsciousPageConfig = {
+  heroImage: '/images/figma_about_1.png',
+  inspoImage: '/images/figma_about_2.png',
+  founderImage: '/images/figma_about_1.png',
+  bembergImage: '/images/catalog/catalog-06.jpg',
+  tencelImage: '/images/catalog/catalog-16.jpg',
+  linenImage: '/images/catalog/catalog-15.jpg',
+  modalImage: '/images/catalog/catalog-04.jpg',
+  aboutBadge: 'ABOUT SEVAYA',
+  aboutTitle: 'A Softer Way of Dressing.',
+  aboutP:
+    'SEVAYA was born from a love for timeless design, the beauty of modest dressing, and the belief that what we wear can be both beautiful and meaningful. Inspired by the architectural heritage of Andalusia, particularly the enduring beauty of Sevilla and Granada, SEVAYA brings together understated elegance, thoughtful details, and a sense of quiet simplicity.',
+  philoBadge: 'OUR PHILOSOPHY',
+  philo1:
+    'We believe modesty is not about making yourself smaller. It is about dressing in a way that feels true to your values while making space for everything you aspire to be. Whether you are leading a team, creating something new, building a career, spending time with loved ones, or simply finding your own rhythm in everyday life, what you wear should support you through it all.',
+  philo2:
+    'At SEVAYA, we design with this in mind: graceful silhouettes, thoughtful details, and comfort that allows you to move freely through your day. Pieces that respect your commitment to modesty without asking you to compromise on personal style, comfort, or ambition.',
+  philoQuote:
+    'Because being a modest woman does not mean choosing between your faith and your aspirations. You can honour both, beautifully.',
+  pillars: 'TIMELESS · INTENTIONAL · EFFORTLESS',
+  inspoBadge: 'OUR INSPIRATION',
+  inspoTitle: 'Inspired by Andalusia. Made for the Woman You Are Becoming.',
+  inspoP1:
+    'There is something timeless about Andalusia. The warmth of its architecture, the rhythm of its courtyards, the intricate patterns of its tiles, and the quiet beauty found in the simplest details.',
+  inspoP2:
+    'Inspired by Sevilla and Granada, our aesthetic draws from warm Mediterranean tones, graceful forms, and a deep appreciation for thoughtful design. With a background in architecture, we see clothing much like the spaces we inhabit: every proportion, detail, and material has a purpose.',
+  inspoP3:
+    'We translate this inspiration into modestwear for contemporary women, pieces that feel timeless yet relevant, elegant yet effortless, and beautiful without sacrificing the ease of everyday life.',
+  inspoTagline: 'Rooted in heritage. Designed for the life ahead.',
+  founderBadge: "THE FOUNDER'S STORY",
+  founderTitle: 'A Personal Journey, Woven into Every Piece.',
+  founderP1:
+    'My years living in Spain shaped the way I see design. I learned to appreciate not only the beauty of architecture, but also the culture, rituals, and everyday experiences that give meaning to the things we create. With a background in architecture and design, I have always believed that good design should be thoughtful, purposeful, and made to serve the people who experience it.',
+  founderP2:
+    'SEVAYA grew from that belief, alongside my own personal journey toward dressing more intentionally and deepening my understanding of modesty. I wanted to create clothing that reflected my love for design while supporting the woman I aspire to become: a woman who can pursue her ambitions, embrace her individuality, and remain grounded in her faith.',
+  founderP3:
+    'SEVAYA is still growing, learning, and discovering better ways to create. We are committed to making more thoughtful choices in our materials, our production, and the way we approach fashion. Every piece is part of that ongoing journey.',
+  founderClosing: 'Thank you for being here, and for growing with us.',
+};
 
 export interface SiteSectionsConfig {
   hero: HeroSectionData;
+  spotlightIntro?: string;
   spotlight: SpotlightItem[];
+  narrative?: HomeNarrativeConfig;
+  journalHeader?: HomeJournalHeaderConfig;
   missionTextiles: {
     title: string;
     image: string;
@@ -74,6 +206,8 @@ export interface SiteSectionsConfig {
   lookbookLinks?: LookbookLinkItem[];
   lookbookPage?: LookbookPageConfig;
   lookbookVolumesConfig?: Record<string, LookbookPageConfig>;
+  consciousPage?: ConsciousPageConfig;
+  /** @deprecated use consciousPage instead */
   conscious?: {
     heroImage: string;
     bembergImage: string;
@@ -84,17 +218,107 @@ export interface SiteSectionsConfig {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEFAULT — synchronized with actual Supabase / Admin state
+// DEFAULT — synchronized with actual Supabase / Admin state (Sevilla Abaya)
 // ─────────────────────────────────────────────────────────────────────────────
+const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
+  heroSubtitle: 'SEVAYA • SEVILLA',
+  heroTitle: 'SEVILLA ABAYA',
+  seasonDesc:
+    "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments. Made from a blend of 60% cupro and 40% viscose, the fabric offers a silky-soft touch and fluid movement, creating a look that feels polished without trying too hard. Because elegance doesn't have to be complicated.",
+  heroImage:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
+
+  seasonTitle: 'The Seed of The Story',
+  purpose1Title: 'Two looks in one',
+  purpose1Desc:
+    'A beautiful abstract button detail lets you style your abaya in two different ways, giving you more versatility in one piece.',
+  purpose2Title: '40 cm front zipper',
+  purpose2Desc:
+    'Designed for extra convenience, making everyday activities and mealtimes easier.',
+  purpose3Title: 'Two side pockets',
+  purpose3Desc:
+    'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.',
+
+  collagePortrait: '/images/lookbook_figma_0.png',
+  collageDetail1: '/images/figma_about_1.png',
+
+  panorama1Title: 'Fabric Story',
+  panorama1Desc:
+    'A Fabric Chosen for Its Feel. 60% Cupro · 40% Viscose A thoughtful blend selected for its silky touch, soft feel, and fluid drape. Cupro is a regenerated cellulose fibre made from cotton linter, a material left over from cotton processing. Viscose is also a regenerated cellulose fibre, commonly made from wood pulp or other cellulose sources. Together, they create a fabric with an elegant fall and a smooth, refined appearance—bringing ease and understated sophistication to everyday dressing. We believe the fabric is an essential part of the experience: not only how a garment looks, but how it moves and feels when you wear it.',
+  panorama1: '/images/figma_hero.png',
+
+  triptychTitle: 'The Seed of The Story',
+  triptychDesc:
+    '• A graceful, flowing silhouette • Soft-touch fabric with an elegant drape • Hidden side pockets for everyday convenience • Front zipper for ease of wear • Abstract button detail at the sleeve • Designed for versatile modest styling\n\nFabric composition: 60% Cupro, 40% Viscose\nCare: Follow the garment\'s care label to maintain its texture, shape, and appearance.',
+  triptychTagline: 'SEVAYA — Slow fashion, thoughtfully made.',
+
+  triptych1: '/images/lookbook_figma_2.png',
+  triptych2: '/images/lookbook_figma_3.png',
+  triptych3: '/images/lookbook_figma_4.png',
+
+  fullDress: '/images/catalog/catalog-15.jpg',
+
+  shopTag: 'SHOP THE COLLECTION',
+  shopTitle: 'SEVILLA ABAYA',
+  shopDesc:
+    'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.',
+};
+
+export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
+  eleganceTitle: 'Elegance in Simplicity',
+  eleganceParagraph:
+    'Opting for quality over quantity means selecting timeless, durable, and responsibly made items. This approach simplifies our lives and fosters a deeper appreciation for our surroundings. Emphasizing longevity and responsible production resonates with a more sustainable and mindful lifestyle.',
+  eleganceHighlight: 'The Art of Fewer, Better Choices',
+  eleganceLinkText: 'Read more',
+  eleganceLinkUrl: '/conscious',
+
+  videoSrc: '/videos/kani.mp4',
+  videoPoster: '/images/figma_video_cover.png',
+
+  pillarsTagline: 'OUR CORE VALUES',
+  pillarsTitle: 'Brand Pillars',
+  pillar1Title: 'Timeless',
+  pillar1Desc:
+    "Designed beyond fleeting trends, with silhouettes and colours you'll want to wear season after season.",
+  pillar2Title: 'Intentional',
+  pillar2Desc:
+    'From fabric selection to details, every decision creates meaning.',
+  pillar3Title: 'Effortless',
+  pillar3Desc:
+    'Modest silhouettes made for ease, comfort, and quiet confidence.',
+
+  aboutTagline: 'ABOUT SEVAYA',
+  aboutTitle: 'About SEVAYA',
+  aboutDesc:
+    'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship. Each piece is designed to be lived in, moving with quiet grace through every chapter of your day.',
+  aboutLinkText: 'Read more',
+  aboutLinkUrl: '/conscious',
+  aboutImage1: '/images/figma_about_1.png',
+  aboutImage2: '/images/figma_about_2.png',
+};
+
+export const DEFAULT_JOURNAL_HEADER: HomeJournalHeaderConfig = {
+  manifestoTag: 'Philosophy • Studio Manifesto',
+  manifestoTitle: 'The Art of Fewer, Better Choices',
+  manifestoDesc:
+    'Opting for quality over quantity means selecting timeless, durable, and responsibly made items. This approach simplifies our lives and fosters a deeper appreciation for our surroundings. Emphasizing longevity and responsible production resonates with a more sustainable and mindful lifestyle.',
+  journalBadge: 'EDITORIAL JOURNAL',
+  journalTitle: 'OUR READING CORNER',
+  journalLinkText: 'Explore All Stories',
+  journalLinkUrl: '/news',
+};
+
 export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   hero: {
-    badge: "Ramadan & Eid '26",
-    title: 'Floraison',
+    badge: 'TIMELESS • INTENTIONAL • EFFORTLESS',
+    title: 'SEVAYA',
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
     image: '/images/hero_optimized.jpg',
-    ctaLookbook: 'View Lookbook',
-    ctaShop: 'Shop Capsule',
+    ctaLookbook: 'Lookbook',
+    ctaShop: 'Shop The Collection',
   },
+  spotlightIntro:
+    'Discover modestwear designed for women who embrace their faith, pursue their ambitions, and move through life with confidence. Timeless design, effortless comfort, and thoughtful details for a life of purpose.',
   spotlight: [
     {
       id: 'spotlight-1',
@@ -111,6 +335,8 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       href: '/shop',
     },
   ],
+  narrative: DEFAULT_HOME_NARRATIVE,
+  journalHeader: DEFAULT_JOURNAL_HEADER,
   missionTextiles: {
     title: 'The Future Wears What We Choose Today',
     image: '/images/catalog/catalog-06.jpg',
@@ -123,6 +349,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       excerpt:
         'Pertumbuhan bukanlah panen sekali jadi. Ini adalah kesabaran merawat akar kita, menyadari bahwa setiap diri bertumbuh dengan caranya masing-masing...',
       image: '/images/catalog/catalog-11.jpg',
+      href: '/news',
     },
     {
       id: 'journal-2',
@@ -131,71 +358,32 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       excerpt:
         'Belajar merangkul transformasi kecil dan hening dalam kehidupan modest masa kini dengan siluet sejuk dan bernapas alami...',
       image: '/images/catalog/catalog-12.jpg',
+      href: '/news',
     },
   ],
   lookbook: [
     {
       id: 'ch-1',
       num: 'BAB 1',
-      title: 'Floraison // Summer 2026',
-      image: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
+      title: 'Sevilla Abaya // Lookbook',
+      image:
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
     },
   ],
   lookbookLinks: [
     {
       id: 'vol-1',
-      label: 'Vol 1: Into a New Season',
+      label: 'Vol 1: Sevilla Abaya',
       season: "'26",
       href: '/lookbook',
       badge: 'NEW',
     },
   ],
-  lookbookPage: {
-    heroImage: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
-    heroTitle: 'FLORAISON',
-    heroSubtitle: 'SEVAYA • FLORAISON',
-    seasonTitle: 'The Seed of The Story',
-    seasonDesc:
-      'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
-    collagePortrait: '/images/lookbook_figma_0.png',
-    collageDetail1: '/images/figma_about_1.png',
-    collageDetail2: '/images/figma_about_2.png',
-    panorama1: '/images/figma_hero.png',
-    panorama1Title: 'Meet The Icon',
-    panorama1Desc:
-      'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
-    panorama2: '/images/lookbook_figma_1.png',
-    triptych1: '/images/lookbook_figma_2.png',
-    triptych2: '/images/lookbook_figma_3.png',
-    triptych3: '/images/lookbook_figma_4.png',
-    triptychTitle: 'The Summer 2026 Collection',
-    triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
-    fullDress: '/images/catalog/catalog-15.jpg',
-  },
+  lookbookPage: DEFAULT_LOOKBOOK_CONFIG,
   lookbookVolumesConfig: {
-    'vol-1': {
-      heroImage: 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
-      heroTitle: 'FLORAISON',
-      heroSubtitle: 'SEVAYA • FLORAISON',
-      seasonTitle: 'The Seed of The Story',
-      seasonDesc:
-        'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
-      collagePortrait: '/images/lookbook_figma_0.png',
-      collageDetail1: '/images/figma_about_1.png',
-      collageDetail2: '/images/figma_about_2.png',
-      panorama1: '/images/figma_hero.png',
-      panorama1Title: 'Meet The Icon',
-      panorama1Desc:
-        'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
-      panorama2: '/images/lookbook_figma_1.png',
-      triptych1: '/images/lookbook_figma_2.png',
-      triptych2: '/images/lookbook_figma_3.png',
-      triptych3: '/images/lookbook_figma_4.png',
-      triptychTitle: 'The Summer 2026 Collection',
-      triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
-      fullDress: '/images/catalog/catalog-15.jpg',
-    },
+    'vol-1': DEFAULT_LOOKBOOK_CONFIG,
   },
+  consciousPage: DEFAULT_CONSCIOUS_PAGE,
   conscious: {
     heroImage: '/images/catalog/catalog-06.jpg',
     bembergImage: '/images/catalog/catalog-06.jpg',
@@ -228,7 +416,7 @@ function sanitizeHeroImage(img?: string | null): string {
 let _cachedSiteSections: SiteSectionsConfig | null = null;
 let _cachedSectionsTime = 0;
 let _isServerFetched = false;
-const SECTIONS_CACHE_TTL = 30 * 1000; // 30-second in-memory cache for ultra-responsive updates
+const SECTIONS_CACHE_TTL = 30 * 1000; // 30-second in-memory cache
 
 // ─────────────────────────────────────────────────────────────────────────────
 // getCachedSiteSections — synchronous, 0 network delay
@@ -250,9 +438,41 @@ export function getCachedSiteSections(): SiteSectionsConfig {
         if (parsed.hero) {
           parsed.hero.image = sanitizeHeroImage(parsed.hero.image);
         }
+        if (
+          parsed.lookbookPage?.heroTitle === 'FLORAISON' ||
+          parsed.lookbookPage?.heroSubtitle === 'SEVAYA • FLORAISON'
+        ) {
+          parsed.lookbookPage = DEFAULT_LOOKBOOK_CONFIG;
+        }
+        if (
+          parsed.lookbookVolumesConfig?.['vol-1']?.heroTitle === 'FLORAISON' ||
+          parsed.lookbookVolumesConfig?.['vol-1']?.heroSubtitle === 'SEVAYA • FLORAISON'
+        ) {
+          parsed.lookbookVolumesConfig = {
+            ...(parsed.lookbookVolumesConfig || {}),
+            'vol-1': DEFAULT_LOOKBOOK_CONFIG,
+          };
+        }
         const merged: SiteSectionsConfig = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
+          hero: {
+            ...DEFAULT_SITE_SECTIONS.hero,
+            ...(parsed.hero || {}),
+            image: sanitizeHeroImage(parsed.hero?.image),
+          },
+          narrative: {
+            ...DEFAULT_HOME_NARRATIVE,
+            ...(parsed.narrative || {}),
+          },
+          journalHeader: {
+            ...DEFAULT_JOURNAL_HEADER,
+            ...(parsed.journalHeader || {}),
+          },
+          consciousPage: {
+            ...DEFAULT_CONSCIOUS_PAGE,
+            ...(parsed.consciousPage || {}),
+          },
           lookbookPage: {
             ...DEFAULT_SITE_SECTIONS.lookbookPage!,
             ...(parsed.lookbookPage || {}),
@@ -289,7 +509,8 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
 
   // ── Fetch from server ──────────────────────────────────────────────────────
   try {
-    const res = await fetch('/api/sections', { cache: 'no-store' });
+    const url = forceRefresh ? `/api/sections?fresh=1&t=${Date.now()}` : '/api/sections';
+    const res = await fetch(url, { cache: 'no-store' });
     if (res.ok) {
       const json = (await res.json()) as { success: boolean; sections?: SiteSectionsConfig };
       if (json.success && json.sections) {
@@ -317,6 +538,21 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
+        if (
+          parsed.lookbookPage?.heroTitle === 'FLORAISON' ||
+          parsed.lookbookPage?.heroSubtitle === 'SEVAYA • FLORAISON'
+        ) {
+          parsed.lookbookPage = DEFAULT_LOOKBOOK_CONFIG;
+        }
+        if (
+          parsed.lookbookVolumesConfig?.['vol-1']?.heroTitle === 'FLORAISON' ||
+          parsed.lookbookVolumesConfig?.['vol-1']?.heroSubtitle === 'SEVAYA • FLORAISON'
+        ) {
+          parsed.lookbookVolumesConfig = {
+            ...(parsed.lookbookVolumesConfig || {}),
+            'vol-1': DEFAULT_LOOKBOOK_CONFIG,
+          };
+        }
         const merged: SiteSectionsConfig = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
@@ -324,6 +560,18 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...DEFAULT_SITE_SECTIONS.hero,
             ...(parsed.hero || {}),
             image: sanitizeHeroImage(parsed.hero?.image),
+          },
+          narrative: {
+            ...DEFAULT_HOME_NARRATIVE,
+            ...(parsed.narrative || {}),
+          },
+          journalHeader: {
+            ...DEFAULT_JOURNAL_HEADER,
+            ...(parsed.journalHeader || {}),
+          },
+          consciousPage: {
+            ...DEFAULT_CONSCIOUS_PAGE,
+            ...(parsed.consciousPage || {}),
           },
           lookbookPage: {
             ...DEFAULT_SITE_SECTIONS.lookbookPage!,

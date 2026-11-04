@@ -41,7 +41,8 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   return (
     <section
       suppressHydrationWarning
-      className="relative flex h-[82vh] min-h-[560px] w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark sm:h-[86vh] md:min-h-[720px] lg:h-[90vh] lg:min-h-[780px]"
+      style={{ height: 'calc(100dvh - 4rem)', minHeight: '520px' }}
+      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark h-[calc(100vh-4rem)] h-[calc(100dvh-4rem)] min-h-[520px]"
     >
       {/* Background Hero Image with smooth Ken Burns animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -71,10 +72,10 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 pb-24 text-center text-white sm:pb-32 md:pb-36 lg:pb-40">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 pb-12 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
         <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
-          TIMELESS • INTENTIONAL • EFFORTLESS
+          {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
         {/* CTA Buttons */}

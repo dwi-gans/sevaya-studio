@@ -483,6 +483,24 @@ export default function AdminPage() {
       setSections(next);
       saveSiteSections(next);
       showToast('Foto tersimpan otomatis!');
+    } else if (target === 'home-about-1') {
+      const nextNarrative = { ...(sections.narrative || {}), aboutImage1: urlOrPath };
+      const next = { ...sections, narrative: nextNarrative };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto About SEVAYA #1 tersimpan otomatis!');
+    } else if (target === 'home-about-2') {
+      const nextNarrative = { ...(sections.narrative || {}), aboutImage2: urlOrPath };
+      const next = { ...sections, narrative: nextNarrative };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto About SEVAYA #2 tersimpan otomatis!');
+    } else if (target === 'home-video-poster') {
+      const nextNarrative = { ...(sections.narrative || {}), videoPoster: urlOrPath };
+      const next = { ...sections, narrative: nextNarrative };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Cover video beranda tersimpan otomatis!');
     } else if (target === 'textiles') {
       const next = {
         ...sections,
@@ -534,6 +552,10 @@ export default function AdminPage() {
     } else if (target === 'conscious-hero') {
       const next = {
         ...sections,
+        consciousPage: {
+          ...(sections.consciousPage || {}),
+          heroImage: urlOrPath,
+        },
         conscious: {
           ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
           heroImage: urlOrPath,
@@ -541,10 +563,33 @@ export default function AdminPage() {
       };
       setSections(next);
       saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      showToast('Foto hero about tersimpan!');
+    } else if (target === 'conscious-inspo') {
+      const next = {
+        ...sections,
+        consciousPage: {
+          ...(sections.consciousPage || {}),
+          inspoImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto inspirasi tersimpan!');
+    } else if (target === 'conscious-founder') {
+      const next = {
+        ...sections,
+        consciousPage: {
+          ...(sections.consciousPage || {}),
+          founderImage: urlOrPath,
+        },
+      };
+      setSections(next);
+      saveSiteSections(next);
+      showToast('Foto founder tersimpan!');
     } else if (target === 'conscious-bemberg') {
       const next = {
         ...sections,
+        consciousPage: { ...(sections.consciousPage || {}), bembergImage: urlOrPath },
         conscious: {
           ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
           bembergImage: urlOrPath,
@@ -552,10 +597,11 @@ export default function AdminPage() {
       };
       setSections(next);
       saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      showToast('Foto Bemberg tersimpan!');
     } else if (target === 'conscious-tencel') {
       const next = {
         ...sections,
+        consciousPage: { ...(sections.consciousPage || {}), tencelImage: urlOrPath },
         conscious: {
           ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
           tencelImage: urlOrPath,
@@ -563,10 +609,11 @@ export default function AdminPage() {
       };
       setSections(next);
       saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      showToast('Foto Tencel tersimpan!');
     } else if (target === 'conscious-linen') {
       const next = {
         ...sections,
+        consciousPage: { ...(sections.consciousPage || {}), linenImage: urlOrPath },
         conscious: {
           ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
           linenImage: urlOrPath,
@@ -574,10 +621,11 @@ export default function AdminPage() {
       };
       setSections(next);
       saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      showToast('Foto Linen tersimpan!');
     } else if (target === 'conscious-modal') {
       const next = {
         ...sections,
+        consciousPage: { ...(sections.consciousPage || {}), modalImage: urlOrPath },
         conscious: {
           ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
           modalImage: urlOrPath,
@@ -585,7 +633,7 @@ export default function AdminPage() {
       };
       setSections(next);
       saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      showToast('Foto Modal tersimpan!');
     } else if (target === 'article') {
       setArticleForm((prev) => ({ ...prev, image: urlOrPath }));
     } else if (target === 'article-add-image') {
@@ -910,10 +958,12 @@ export default function AdminPage() {
           <HomeSectionsTab
             sections={sections}
             setSections={setSections}
+            articles={articles}
             onOpenImagePicker={(target) => {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);
             }}
+            showToast={showToast}
           />
         )}
 

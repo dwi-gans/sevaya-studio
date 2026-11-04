@@ -2,7 +2,13 @@
 
 import React, { useRef, useEffect } from 'react';
 
-export function VideoShowcase() {
+export function VideoShowcase({
+  src = '/videos/kani.mp4',
+  poster = '/images/figma_video_cover.png',
+}: {
+  src?: string;
+  poster?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -54,8 +60,8 @@ export function VideoShowcase() {
       <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden bg-black shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
         <video
           ref={videoRef}
-          src="/videos/kani.mp4"
-          poster="/images/figma_video_cover.png"
+          src={src}
+          poster={poster}
           muted
           loop
           playsInline

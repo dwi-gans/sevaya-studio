@@ -1,7 +1,14 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
-import type { SiteSectionsConfig } from '@/integrations/supabase';
+import {
+  saveSiteSections,
+  DEFAULT_CONSCIOUS_PAGE,
+  type SiteSectionsConfig,
+  type ConsciousPageConfig,
+} from '@/integrations/supabase';
 import type { ImagePickerTarget } from '../adminTypes';
 
 interface ConsciousTabProps {
@@ -13,156 +20,278 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   sections,
   onOpenImagePicker,
 }) => {
+  const [cfg, setCfg] = useState<ConsciousPageConfig>(() => ({
+    ...DEFAULT_CONSCIOUS_PAGE,
+    ...(sections.consciousPage || {}),
+  }));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Sync when parent sections update (e.g. after image picker saves)
+  useEffect(() => {
+    setCfg((prev) => ({
+      ...prev,
+      ...(sections.consciousPage || {}),
+    }));
+  }, [sections.consciousPage]);
+
+  function set(key: keyof ConsciousPageConfig, value: string) {
+    setCfg((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSaveAll() {
+    setSaving(true);
+    setSaved(false);
+    const updated: SiteSectionsConfig = {
+      ...sections,
+      consciousPage: cfg,
+      // keep backward compat for image-only fields
+      conscious: {
+        heroImage: cfg.heroImage || '/images/figma_about_1.png',
+        bembergImage: cfg.bembergImage || '/images/catalog/catalog-06.jpg',
+        tencelImage: cfg.tencelImage || '/images/catalog/catalog-16.jpg',
+        linenImage: cfg.linenImage || '/images/catalog/catalog-15.jpg',
+        modalImage: cfg.modalImage || '/images/catalog/catalog-04.jpg',
+      },
+    };
+    const ok = await saveSiteSections(updated);
+    setSaving(false);
+    if (ok) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  }
+
+  // ── small helper components ──────────────────────────────────────────────
+  const Field = ({
+    label,
+    fieldKey,
+    multiline = false,
+    rows = 3,
+    hint,
+  }: {
+    label: string;
+    fieldKey: keyof ConsciousPageConfig;
+    multiline?: boolean;
+    rows?: number;
+    hint?: string;
+  }) => (
+    <div className="space-y-1">
+      <label className="block text-[11px] font-semibold text-black/60 uppercase tracking-wider">
+        {label}
+      </label>
+      {multiline ? (
+        <textarea
+          rows={rows}
+          value={(cfg[fieldKey] as string) || ''}
+          onChange={(e) => set(fieldKey, e.target.value)}
+          className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-xs text-black resize-y focus:border-black focus:outline-none"
+        />
+      ) : (
+        <input
+          type="text"
+          value={(cfg[fieldKey] as string) || ''}
+          onChange={(e) => set(fieldKey, e.target.value)}
+          className="w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-xs text-black focus:border-black focus:outline-none"
+        />
+      )}
+      {hint && <p className="text-[10px] text-black/40">{hint}</p>}
+    </div>
+  );
+
+  const PhotoBox = ({
+    src,
+    alt,
+    target,
+    label,
+    aspect = 'aspect-[16/9]',
+  }: {
+    src: string;
+    alt: string;
+    target: ImagePickerTarget;
+    label: string;
+    aspect?: string;
+  }) => (
+    <div className="flex flex-col gap-2">
+      <div className={`relative ${aspect} w-full overflow-hidden rounded-xl border border-black/15 bg-black/5`}>
+        <Image src={src || '/images/figma_about_1.png'} alt={alt} fill className="object-cover" />
+      </div>
+      <button
+        type="button"
+        onClick={() => onOpenImagePicker(target)}
+        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
+      >
+        <Icon name="image" size={13} />
+        <span>{label}</span>
+      </button>
+    </div>
+  );
+
+  const SectionCard = ({
+    num,
+    title,
+    children,
+  }: {
+    num: string;
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <div className="rounded-xl border border-black/15 bg-white p-4 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+      <div className="border-b border-black/10 pb-2">
+        <h3 className="text-xs font-bold text-black">
+          {num}. {title}
+        </h3>
+      </div>
+      {children}
+    </div>
+  );
+
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="mx-auto w-full max-w-5xl space-y-4 pb-24">
+      {/* Header */}
       <div className="pb-2">
         <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-          Editorial &amp; Storefront
+          About • Copywriting & Media
         </span>
         <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-          Halaman Tentang Toko (About)
+          Halaman About SEVAYA
         </h2>
         <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-          Kelola banner filosofi brand dan 4 foto arsip material kain busana Sevaya. Tersimpan otomatis.
+          Edit semua teks copywriting dan foto di halaman About/Conscious. Visual Page Mirror — urutan sama dengan halaman user.
         </p>
       </div>
 
-      {/* Manifesto Hero Banner */}
-      <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
-        <div className="border-b border-black/10 pb-2">
-          <h3 className="text-xs font-bold text-black">
-            1. Banner Utama Halaman About
-          </h3>
-          <p className="text-[11px] text-black/60 mt-0">
-            Foto tajuk atas halaman Tentang Toko (&quot;A Softer Way of Dressing&quot;).
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5">
-            <Image
-              src={sections.conscious?.heroImage || '/images/catalog/catalog-11.jpg'}
-              alt="Conscious hero"
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div className="flex flex-col justify-center gap-3 sm:col-span-2">
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('conscious-hero')}
-              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
-            >
-              <Icon name="image" size={14} />
-              <span>Ganti Gambar Hero Filosofi</span>
-            </button>
-            <p className="text-xs text-black/70">
-              Tampilan editorial manifesto untuk mengedukasi pelanggan mengenai etika pembuatan pakaian Sevaya.
-            </p>
+      {/* ── 1. HERO BANNER ─────────────────────────────────────────────── */}
+      <SectionCard num="1" title="Banner Hero Utama">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <PhotoBox
+            src={cfg.heroImage || '/images/figma_about_1.png'}
+            alt="Hero banner"
+            target="conscious-hero"
+            label="Ganti Foto Hero"
+            aspect="aspect-[16/7]"
+          />
+          <div className="space-y-3">
+            <Field label="Badge / Label Atas" fieldKey="aboutBadge" hint='Contoh: "ABOUT SEVAYA"' />
+            <Field label="Judul Utama (H1)" fieldKey="aboutTitle" />
+            <Field label="Paragraf Deskripsi" fieldKey="aboutP" multiline rows={5} />
           </div>
         </div>
-      </div>
+      </SectionCard>
 
-      {/* 4 Textile Archives */}
-      <div className="rounded-xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3">
-        <div className="border-b border-black/10 pb-2">
-          <h3 className="text-xs font-bold text-black">
-            2. Foto 4 Arsip Tekstil Berkelanjutan
-          </h3>
-          <p className="text-[11px] text-black/60 mt-0">
-            Empat foto makro material kain alami (Bemberg, Tencel, Pure Linen, Eco Modal).
-          </p>
+      {/* ── 2. PHILOSOPHY BLOCK ────────────────────────────────────────── */}
+      <SectionCard num="2" title="Blok Filosofi (Our Philosophy)">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Badge Filosofi" fieldKey="philoBadge" hint='Contoh: "OUR PHILOSOPHY"' />
+          <Field label="Pillars Tagline" fieldKey="pillars" hint='Contoh: "TIMELESS · INTENTIONAL · EFFORTLESS"' />
         </div>
+        <Field label="Paragraf 1" fieldKey="philo1" multiline rows={4} />
+        <Field label="Paragraf 2" fieldKey="philo2" multiline rows={4} />
+        <Field label="Quote / Penutup" fieldKey="philoQuote" multiline rows={3} />
+      </SectionCard>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {/* 1. Bemberg */}
-          <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
-            <span className="truncate text-xs font-semibold text-black">
-              Bemberg™ Cupro
-            </span>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-              <Image
-                src={sections.conscious?.bembergImage || '/images/catalog/catalog-06.jpg'}
-                alt="Bemberg Cupro"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('conscious-bemberg')}
-              className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
-            >
-              Ganti Foto
-            </button>
-          </div>
-
-          {/* 2. Tencel */}
-          <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
-            <span className="truncate text-xs font-semibold text-black">
-              TENCEL™ Lyocell
-            </span>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-              <Image
-                src={sections.conscious?.tencelImage || '/images/catalog/catalog-16.jpg'}
-                alt="Tencel Lyocell"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('conscious-tencel')}
-              className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
-            >
-              Ganti Foto
-            </button>
-          </div>
-
-          {/* 3. Linen */}
-          <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
-            <span className="truncate text-xs font-semibold text-black">
-              Pure Flax Linen
-            </span>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-              <Image
-                src={sections.conscious?.linenImage || '/images/catalog/catalog-15.jpg'}
-                alt="Pure Flax Linen"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('conscious-linen')}
-              className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
-            >
-              Ganti Foto
-            </button>
-          </div>
-
-          {/* 4. Modal */}
-          <div className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15/60">
-            <span className="truncate text-xs font-semibold text-black">
-              Eco Modal
-            </span>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-              <Image
-                src={sections.conscious?.modalImage || '/images/catalog/catalog-04.jpg'}
-                alt="Eco Modal"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('conscious-modal')}
-              className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
-            >
-              Ganti Foto
-            </button>
+      {/* ── 3. INSPIRATION ─────────────────────────────────────────────── */}
+      <SectionCard num="3" title="Inspirasi Andalusia (Image kiri, teks kanan)">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <PhotoBox
+            src={cfg.inspoImage || '/images/figma_about_2.png'}
+            alt="Inspiration image"
+            target="conscious-inspo"
+            label="Ganti Foto Inspirasi"
+            aspect="aspect-[1/1]"
+          />
+          <div className="space-y-3">
+            <Field label="Badge" fieldKey="inspoBadge" hint='Contoh: "OUR INSPIRATION"' />
+            <Field label="Judul" fieldKey="inspoTitle" />
+            <Field label="Paragraf 1" fieldKey="inspoP1" multiline rows={3} />
+            <Field label="Paragraf 2" fieldKey="inspoP2" multiline rows={3} />
+            <Field label="Paragraf 3" fieldKey="inspoP3" multiline rows={3} />
+            <Field label="Tagline / Italic" fieldKey="inspoTagline" hint='Teks italic di bawah paragraf' />
           </div>
         </div>
+      </SectionCard>
+
+      {/* ── 4. FOUNDER'S STORY ─────────────────────────────────────────── */}
+      <SectionCard num="4" title="Cerita Pendiri (The Founder's Story)">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <PhotoBox
+            src={cfg.founderImage || '/images/figma_about_1.png'}
+            alt="Founder story image"
+            target="conscious-founder"
+            label="Ganti Foto Founder"
+            aspect="aspect-[16/8]"
+          />
+          <div className="space-y-3">
+            <Field label="Badge" fieldKey="founderBadge" hint="Contoh: THE FOUNDER'S STORY" />
+            <Field label="Judul" fieldKey="founderTitle" />
+          </div>
+        </div>
+        <Field label="Paragraf 1" fieldKey="founderP1" multiline rows={4} />
+        <Field label="Paragraf 2" fieldKey="founderP2" multiline rows={4} />
+        <Field label="Paragraf 3" fieldKey="founderP3" multiline rows={4} />
+        <Field label="Kalimat Penutup" fieldKey="founderClosing" hint='Contoh: "Thank you for being here, and for growing with us."' />
+      </SectionCard>
+
+      {/* ── 5. TEXTILE ARCHIVE IMAGES ──────────────────────────────────── */}
+      <SectionCard num="5" title="Foto Arsip Material Kain (4 Foto)">
+        <p className="text-[11px] text-black/50">
+          Foto makro 4 material kain (Bemberg, Tencel, Linen, Modal) — tampil di halaman Conscious versi lama. Tetap tersimpan untuk kompatibilitas.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: 'Bemberg™ Cupro', src: cfg.bembergImage || '/images/catalog/catalog-06.jpg', target: 'conscious-bemberg' as ImagePickerTarget },
+            { label: 'TENCEL™ Lyocell', src: cfg.tencelImage || '/images/catalog/catalog-16.jpg', target: 'conscious-tencel' as ImagePickerTarget },
+            { label: 'Pure Flax Linen', src: cfg.linenImage || '/images/catalog/catalog-15.jpg', target: 'conscious-linen' as ImagePickerTarget },
+            { label: 'Eco Modal', src: cfg.modalImage || '/images/catalog/catalog-04.jpg', target: 'conscious-modal' as ImagePickerTarget },
+          ].map((item) => (
+            <div key={item.target} className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15">
+              <span className="truncate text-xs font-semibold text-black">{item.label}</span>
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
+                <Image src={item.src} alt={item.label} fill className="object-cover" />
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenImagePicker(item.target)}
+                className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
+              >
+                Ganti Foto
+              </button>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* ── Sticky Save Bar ─────────────────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-3 border-t border-black/10 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+        <span className="text-[11px] text-black/50 hidden sm:block">
+          Semua perubahan tersimpan ke Supabase & langsung tampil di website.
+        </span>
+        <button
+          type="button"
+          onClick={handleSaveAll}
+          disabled={saving}
+          className="ml-auto inline-flex items-center gap-2 rounded-full bg-black px-6 py-2.5 text-xs font-semibold text-white shadow transition hover:bg-black/80 disabled:opacity-60"
+        >
+          {saving ? (
+            <>
+              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Menyimpan...
+            </>
+          ) : saved ? (
+            <>
+              <Icon name="check" size={14} />
+              Tersimpan!
+            </>
+          ) : (
+            <>
+              <Icon name="save" size={14} />
+              Simpan Semua
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

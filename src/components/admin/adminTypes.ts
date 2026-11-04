@@ -16,6 +16,9 @@ export type ImagePickerTarget =
   | 'hero'
   | 'spotlight-0'
   | 'spotlight-1'
+  | 'home-about-1'
+  | 'home-about-2'
+  | 'home-video-poster'
   | 'textiles'
   | 'journal-0'
   | 'journal-1'
@@ -26,6 +29,8 @@ export type ImagePickerTarget =
   | 'conscious-tencel'
   | 'conscious-linen'
   | 'conscious-modal'
+  | 'conscious-inspo'
+  | 'conscious-founder'
   | 'article'
   | 'article-add-image'
   | `article-image-${number}`

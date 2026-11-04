@@ -8,7 +8,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
 
 type SubmenuKey = 'collection' | 'lookbook' | 'conscious' | 'customer' | null;
@@ -18,7 +17,7 @@ export function NavigationDrawer() {
   const router = useRouter();
   const { isOpen, closeDrawer } = useDrawer();
   const { user, logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey>(null);
   const [drawerSearch, setDrawerSearch] = useState('');
   const isId = language === 'id';
@@ -443,19 +442,11 @@ export function NavigationDrawer() {
           )}
         </div>
 
-        {/* ── Footer: Profile / Masuk Button & Language Switcher ── */}
+        {/* ── Footer: Profile / Masuk Button ── */}
         <div
           className="pb-safe animate-luxury-fade-up border-t border-white/15 bg-black px-6 py-4 space-y-3"
           style={{ animationDelay: '370ms' }}
         >
-          {/* Mobile Language Switcher Row */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <span className="text-[11px] font-semibold tracking-wider text-white/70 uppercase">
-              {isId ? 'Bahasa' : 'Language'}
-            </span>
-            <LanguageSwitcher variant="dark" />
-          </div>
-
           {user ? (
             <div className="flex items-center justify-between">
               <Link

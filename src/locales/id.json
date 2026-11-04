@@ -286,6 +286,10 @@
     "password": "Kata Sandi",
     "encrypted": "Terenkripsi",
     "change": "Ubah Sandi",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "more_items": "produk lainnya",
+    "marketing_pref": "Preferensi Pemasaran",
     "language_pref": "Pilihan Bahasa",
     "sign_out": "Keluar Akun",
     "sign_out_all": "Keluar dari semua perangkat"

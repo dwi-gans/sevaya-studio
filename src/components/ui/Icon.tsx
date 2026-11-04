@@ -80,6 +80,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   Newspaper,
+  Play,
+  Save,
 } from 'lucide-react';
 
 export type IconName =
@@ -173,7 +175,9 @@ export type IconName =
   | 'grid_view'
   | 'table_rows'
   | 'newspaper'
-  | 'done';
+  | 'done'
+  | 'play'
+  | 'save';
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
   menu: Menu,
@@ -267,6 +271,8 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   table_rows: Table,
   newspaper: Newspaper,
   done: Check,
+  play: Play,
+  save: Save,
 };
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {

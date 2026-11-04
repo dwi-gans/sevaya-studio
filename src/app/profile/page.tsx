@@ -831,14 +831,14 @@ export default function ProfilePage() {
                             onClick={() => openEditAddressModal(addr)}
                             className="text-[11px] font-medium text-black hover:underline"
                           >
-                            {t('profile.edit')}
+                            {t('profile.edit') === 'profile.edit' ? (language === 'id' ? 'Ubah' : 'Edit') : t('profile.edit')}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteAddress(addr.id)}
                             className="text-[11px] font-medium text-red-600 hover:underline"
                           >
-                            {t('profile.delete')}
+                            {t('profile.delete') === 'profile.delete' ? (language === 'id' ? 'Hapus' : 'Delete') : t('profile.delete')}
                           </button>
                         </div>
                       </div>
@@ -880,7 +880,7 @@ export default function ProfilePage() {
               {/* 4. Marketing Preferences (Screenshot 1) */}
               <section className="space-y-2">
                 <div className="px-1">
-                  <span className="font-headline text-sm font-semibold text-black">{t('profile.marketing_pref')}</span>
+                  <span className="font-headline text-sm font-semibold text-black">{t('profile.marketing_pref') === 'profile.marketing_pref' ? (language === 'id' ? 'Preferensi Pemasaran' : 'Marketing Preferences') : t('profile.marketing_pref')}</span>
                 </div>
 
                 <div className="flex items-center justify-between rounded-none border border-black/15 bg-white p-4">

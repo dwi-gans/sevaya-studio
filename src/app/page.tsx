@@ -19,14 +19,20 @@ export default async function HomePage() {
       {/* 2. Best Sellers Carousel */}
       <ProductGrid products={products} />
 
-      {/* 3. Category Split Banners: ABAYA & KHIBAN */}
-      <CategorySpotlight />
+      {/* 3. Category Split Banners: ABAYA & KHIMAR */}
+      <CategorySpotlight
+        initialSpotlight={sections?.spotlight}
+        initialIntro={sections?.spotlightIntro}
+      />
 
       {/* 4. Narrative: Elegance in Simplicity, Video Showcase, Brand Pillars, About SEVAYA 2-photo split, Trust Badges */}
-      <NarrativeSection />
+      <NarrativeSection initialNarrative={sections?.narrative} />
 
       {/* 5. Our Reading Corner (Prestigious Journals) */}
-      <JournalSection />
+      <JournalSection
+        initialArticles={sections?.journal}
+        initialHeader={sections?.journalHeader}
+      />
 
       {/* 6. Footer (4 Columns + Newsletter) */}
       <Footer />

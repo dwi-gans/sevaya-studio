@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
-import { DEFAULT_SITE_SECTIONS, SiteSectionsConfig } from '@/integrations/supabase';
+import { DEFAULT_SITE_SECTIONS, DEFAULT_CONSCIOUS_PAGE, SiteSectionsConfig } from '@/integrations/supabase/sections';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +48,14 @@ export async function GET(req: NextRequest) {
           ...DEFAULT_SITE_SECTIONS.hero,
           ...(parsed.hero || {}),
         },
+        narrative: {
+          ...DEFAULT_SITE_SECTIONS.narrative!,
+          ...(parsed.narrative || {}),
+        },
+        journalHeader: {
+          ...DEFAULT_SITE_SECTIONS.journalHeader!,
+          ...(parsed.journalHeader || {}),
+        },
         lookbookPage: {
           ...DEFAULT_SITE_SECTIONS.lookbookPage!,
           ...(parsed.lookbookPage || {}),
@@ -55,6 +63,10 @@ export async function GET(req: NextRequest) {
         lookbookVolumesConfig: {
           ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
           ...(parsed.lookbookVolumesConfig || {}),
+        },
+        consciousPage: {
+          ...DEFAULT_CONSCIOUS_PAGE,
+          ...(parsed.consciousPage || {}),
         },
       };
 

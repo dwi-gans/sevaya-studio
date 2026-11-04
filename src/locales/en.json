@@ -286,6 +286,10 @@
     "password": "Password",
     "encrypted": "Encrypted",
     "change": "Change",
+    "edit": "Edit",
+    "delete": "Delete",
+    "more_items": "more items",
+    "marketing_pref": "Marketing Preferences",
     "language_pref": "Language",
     "sign_out": "Sign Out",
     "sign_out_all": "Sign out from all devices"

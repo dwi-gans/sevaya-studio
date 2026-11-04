@@ -34,7 +34,6 @@ function EditorialImage({
   priority?: boolean;
   sizes?: string;
 }) {
-  // Render immediately for 0ms visual load
   return (
     <Image
       src={src}
@@ -160,17 +159,18 @@ export default function LookbookPage() {
         {/* Section 1: Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            {cfg.heroSubtitle || "'26 SEVILLA CUPRO ABAYA"}
+            {cfg.heroSubtitle || 'SEVAYA • SEVILLA'}
           </span>
           <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
-            {cfg.heroTitle || 'VOL 1: INTO A NEW SEASON'}
+            {cfg.heroTitle || 'SEVILLA ABAYA'}
           </h1>
           <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
-            {cfg.seasonDesc || t('lookbook.hero_desc')}
+            {cfg.seasonDesc ||
+              "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments."}
           </p>
         </header>
 
-        {/* Section 2: Editorial Hero Photo — Matching Text Width (max-w-2xl px-2 sm:px-4) */}
+        {/* Section 2: Editorial Hero Photo */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <EditorialImage
@@ -185,19 +185,37 @@ export default function LookbookPage() {
           </div>
         </div>
 
-        {/* Section 3: The Seed of The Story */}
+        {/* Section 3: The Seed of The Story (Features with Custom Purpose Points) */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.seasonTitle || 'Every detail is designed with purpose'}
+            {cfg.seasonTitle || 'The Seed of The Story'}
           </h2>
           <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
-            <li><span className="font-medium text-[#000000]">Two looks in one:</span> {t('lookbook.purpose_desc1')}</li>
-            <li><span className="font-medium text-[#000000]">40 cm front zipper:</span> {t('lookbook.purpose_desc2')}</li>
-            <li><span className="font-medium text-[#000000]">Two side pockets:</span> {t('lookbook.purpose_desc3')}</li>
+            <li>
+              <span className="font-medium text-[#000000]">
+                {cfg.purpose1Title || 'Two looks in one'}:
+              </span>{' '}
+              {cfg.purpose1Desc ||
+                'A beautiful abstract button detail lets you style your abaya in two different ways, giving you more versatility in one piece.'}
+            </li>
+            <li>
+              <span className="font-medium text-[#000000]">
+                {cfg.purpose2Title || '40 cm front zipper'}:
+              </span>{' '}
+              {cfg.purpose2Desc ||
+                'Designed for extra convenience, making everyday activities and mealtimes easier.'}
+            </li>
+            <li>
+              <span className="font-medium text-[#000000]">
+                {cfg.purpose3Title || 'Two side pockets'}:
+              </span>{' '}
+              {cfg.purpose3Desc ||
+                'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.'}
+            </li>
           </ul>
         </section>
 
-        {/* Centered Editorial Collage — The Seed of The Story */}
+        {/* Centered Editorial Collage — 2 Photos Side by Side */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -223,17 +241,18 @@ export default function LookbookPage() {
           </div>
         </div>
 
-        {/* Section 4: Meet The Icon */}
+        {/* Section 4: Fabric Story */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.panorama1Title || 'Practical for everyday moments'}
+            {cfg.panorama1Title || 'Fabric Story'}
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {cfg.panorama1Desc || t('lookbook.practical_desc')}
+            {cfg.panorama1Desc ||
+              'A Fabric Chosen for Its Feel. 60% Cupro · 40% Viscose A thoughtful blend selected for its silky touch, soft feel, and fluid drape. Cupro is a regenerated cellulose fibre made from cotton linter, a material left over from cotton processing. Viscose is also a regenerated cellulose fibre, commonly made from wood pulp or other cellulose sources. Together, they create a fabric with an elegant fall and a smooth, refined appearance—bringing ease and understated sophistication to everyday dressing. We believe the fabric is an essential part of the experience: not only how a garment looks, but how it moves and feels when you wear it.'}
           </p>
         </section>
 
-        {/* Centered Editorial Feature Image — Meet The Icon — Matching Text Width */}
+        {/* Centered Editorial Feature Image — Panorama 1 */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <EditorialImage
@@ -247,20 +266,21 @@ export default function LookbookPage() {
           </div>
         </div>
 
-        {/* Section 5: The Summer 2026 Collection */}
+        {/* Section 5: The Seed of The Story / Specifications */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.triptychTitle || 'Sevilla is more than an abaya'}
+            {cfg.triptychTitle || 'The Seed of The Story'}
           </h2>
-          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {cfg.triptychDesc || 'It is a little reminder that beautiful design should not only look good, but make life easier, too.'}
-          </p>
+          <div className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] whitespace-pre-line">
+            {cfg.triptychDesc ||
+              '• A graceful, flowing silhouette • Soft-touch fabric with an elegant drape • Hidden side pockets for everyday convenience • Front zipper for ease of wear • Abstract button detail at the sleeve • Designed for versatile modest styling\n\nFabric composition: 60% Cupro, 40% Viscose\nCare: Follow the garment\'s care label to maintain its texture, shape, and appearance.'}
+          </div>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
-            SEVAYA — Slow fashion, thoughtfully made.
+            {cfg.triptychTagline || 'SEVAYA — Slow fashion, thoughtfully made.'}
           </p>
         </section>
 
-        {/* Centered Gallery — Summer 2026 Silhouettes */}
+        {/* Centered Gallery — 3 Photos Side by Side (Triptych) */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -296,7 +316,7 @@ export default function LookbookPage() {
           </div>
         </div>
 
-        {/* Centered Final Movement Frame — Matching Text Width */}
+        {/* Centered Final Movement Frame */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <EditorialImage
@@ -316,13 +336,14 @@ export default function LookbookPage() {
         {/* Title */}
         <div className="mx-auto mb-8 flex max-w-4xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            SHOP THE COLLECTION
+            {cfg.shopTag || 'SHOP THE COLLECTION'}
           </span>
           <h2 className="mt-1 font-sans text-sm font-medium tracking-[0.15em] text-[#000000] uppercase sm:text-lg">
-            {cfg.heroTitle || 'FLORAISON'}
+            {cfg.shopTitle || cfg.heroTitle || 'SEVILLA ABAYA'}
           </h2>
           <p className="mt-2 text-[10px] sm:text-xs text-[#555555] max-w-md font-light">
-            Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.
+            {cfg.shopDesc ||
+              'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.'}
           </p>
         </div>
 
