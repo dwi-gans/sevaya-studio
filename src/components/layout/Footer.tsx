@@ -27,9 +27,9 @@ export function Footer() {
   return (
     <footer className="w-full border-t border-black/10 bg-white pt-16 pb-12 text-black section--light">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-12 lg:gap-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-y-10 md:grid-cols-4 lg:grid-cols-12 lg:gap-8">
           {/* Column 1: Contact Us */}
-          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-3">
+          <div className="col-span-2 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-3">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Contact Us
             </h4>
@@ -94,7 +94,7 @@ export function Footer() {
           </div>
 
           {/* Column 2: Company */}
-          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
+          <div className="col-span-1 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Company
             </h4>
@@ -123,7 +123,7 @@ export function Footer() {
           </div>
 
           {/* Column 3: Language (sebelah Company di right) */}
-          <div className="space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
+          <div className="col-span-1 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Language
             </h4>
@@ -158,7 +158,7 @@ export function Footer() {
           </div>
 
           {/* Column 4: Newsletter Subscription */}
-          <div className="space-y-3 sm:col-span-2 md:col-span-1 lg:col-span-5">
+          <div className="col-span-2 space-y-3 sm:col-span-2 md:col-span-1 lg:col-span-5">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Newsletter
             </h4>
