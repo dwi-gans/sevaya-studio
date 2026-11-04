@@ -49,12 +49,11 @@ export async function getArticles(): Promise<Article[]> {
     .eq('published', true)
     .order('created_at', { ascending: false });
 
-  if (error || !data || data.length === 0) {
-    if (error) {
-      console.warn('[articles] getArticles warning/fallback:', error.message);
-    }
-    return getFallbackInitialArticles();
+  if (error) {
+    console.warn('[articles] getArticles error:', error.message);
+    return [];
   }
+  if (!data || data.length === 0) return [];
   return data.map(normalizeArticle);
 }
 
@@ -69,25 +68,10 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     return normalizeArticle(data);
   }
 
-  // Fallback to INITIAL_ARTICLES if not found in db
-  const found = INITIAL_ARTICLES.find((a) => a.slug === slug);
-  if (found) {
-    return {
-      id: found.id,
-      slug: found.slug,
-      title: found.title,
-      category: found.category,
-      date: found.date,
-      read_time: found.readTime,
-      excerpt: found.excerpt,
-      content: found.content,
-      image: found.image,
-      images: ['/images/catalog/catalog-12.jpg'],
-      featured: Boolean(found.featured),
-      published: true,
-    };
+  // Article not found in DB → return null (do NOT fallback to hardcoded data)
+  if (error) {
+    console.warn('[articles] getArticleBySlug error:', error.message);
   }
-
   return null;
 }
 
@@ -97,12 +81,11 @@ export async function getAllArticlesAdmin(): Promise<Article[]> {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error || !data || data.length === 0) {
-    if (error) {
-      console.warn('[articles] getAllArticlesAdmin warning/fallback:', error.message);
-    }
-    return getFallbackInitialArticles();
+  if (error) {
+    console.warn('[articles] getAllArticlesAdmin error:', error.message);
+    return [];
   }
+  if (!data || data.length === 0) return [];
   return data.map(normalizeArticle);
 }
 
