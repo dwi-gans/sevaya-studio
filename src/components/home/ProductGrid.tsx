@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { ProductCard, Product } from './ProductCard';
 import { Icon } from '@/components/ui/Icon';
 import { useLanguage } from '@/context/LanguageContext';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
 export const DEFAULT_BEST_SELLERS: Product[] = [
   {
@@ -207,95 +208,92 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
 
   return (
     <section className="w-full bg-white py-8 text-black section--light" data-section="collections">
-      {/* Top Header */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Top Header */}
-        <div className="mb-5 flex flex-col gap-1 text-center sm:text-left">
-        <span className="text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
-          SHOP THE COLLECTION
-        </span>
-        <h2 className="font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
-          BEST-LOVED COLLECTIONS
-        </h2>
-      </div>
+        {/* Top Header with subtle fade-up reveal */}
+        <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-center sm:text-left">
+          <span className="text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
+            SHOP THE COLLECTION
+          </span>
+          <h2 className="font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
+            BEST-LOVED COLLECTIONS
+          </h2>
+        </RevealOnScroll>
 
-      {/* Relative container with arrows & horizontal scroll */}
-      <div className="group relative">
-        {/* Left Arrow (Desktop & Tablet) */}
-        <button
-          type="button"
-          aria-label="Scroll left"
-          onClick={scrollLeft}
-          className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
-        >
-          <Icon name="chevron_left" size={20} />
-        </button>
+        {/* Relative container with arrows & horizontal scroll */}
+        <RevealOnScroll variant="editorial" delayMs={80} className="group relative">
+          {/* Left Arrow (Desktop & Tablet) */}
+          <button
+            type="button"
+            aria-label="Scroll left"
+            onClick={scrollLeft}
+            className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
+          >
+            <Icon name="chevron_left" size={20} />
+          </button>
 
-        {/* Product Cards Row: centered on mobile with equal peeks, smooth snap */}
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClickCapture={handleClickCapture}
-          className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[10vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
-            isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
-          }`}
-          style={{
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            scrollSnapType: isDown ? 'none' : 'x mandatory',
-            overscrollBehaviorX: 'contain',
-          }}
-        >
-          {displayList.map((p, i) => (
-            <div
-              key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
-              className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-center md:snap-start"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <ProductCard product={p} />
-            </div>
+          {/* Product Cards Row */}
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClickCapture={handleClickCapture}
+            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[10vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+              isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
+            }`}
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              scrollSnapType: isDown ? 'none' : 'x mandatory',
+              overscrollBehaviorX: 'contain',
+            }}
+          >
+            {displayList.map((p, i) => (
+              <div
+                key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
+                className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-center md:snap-start"
+                style={{ scrollSnapAlign: 'center' }}
+              >
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+
+          {/* Right Arrow (Desktop & Tablet) */}
+          <button
+            type="button"
+            aria-label="Scroll right"
+            onClick={scrollRight}
+            className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
+          >
+            <Icon name="chevron_right" size={20} />
+          </button>
+        </RevealOnScroll>
+
+        {/* Mobile Dot indicators */}
+        <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
+          {displayList.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Lihat produk ${i + 1}`}
+              onClick={() => {
+                if (!scrollRef.current) return;
+                const card = scrollRef.current.children[i] as HTMLElement;
+                if (card) {
+                  card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+                setActiveIndex(i);
+              }}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                activeIndex === i ? 'w-5 bg-black' : 'w-1.5 bg-black/20'
+              }`}
+            />
           ))}
         </div>
-
-        {/* Right Arrow (Desktop & Tablet) */}
-        <button
-          type="button"
-          aria-label="Scroll right"
-          onClick={scrollRight}
-          className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
-        >
-          <Icon name="chevron_right" size={20} />
-        </button>
       </div>
-
-      {/* Mobile Dot indicators */}
-      <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-        {displayList.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label={`Lihat produk ${i + 1}`}
-            onClick={() => {
-              if (!scrollRef.current) return;
-              const card = scrollRef.current.children[i] as HTMLElement;
-              if (card) {
-                card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-              }
-              setActiveIndex(i);
-            }}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              activeIndex === i ? 'w-5 bg-black' : 'w-1.5 bg-black/20'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
     </section>
   );
 }
-
-

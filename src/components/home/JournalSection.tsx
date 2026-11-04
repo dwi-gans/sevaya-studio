@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, JournalArticleData } from '@/integrations/supabase';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
 export function JournalSection() {
   const { t } = useLanguage();
@@ -57,7 +58,7 @@ export function JournalSection() {
     <section className="w-full bg-black text-white section--dark py-8 sm:py-12 overflow-hidden" id="journal">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top Header Layout: Left is Manifesto, Right is Prestigious Journals */}
-        <div className="mb-6 sm:mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-end">
+        <RevealOnScroll variant="fade-up" className="mb-6 sm:mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-end">
           {/* Left Column: The Art of Fewer, Better Choices */}
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-medium tracking-widest text-white/70 uppercase backdrop-blur-xs">
@@ -91,7 +92,7 @@ export function JournalSection() {
               </Link>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Mobile Layout Switcher Bar */}
         <div className="mb-6 flex items-center justify-between border-b border-white/15 pb-3 md:hidden">
@@ -144,40 +145,42 @@ export function JournalSection() {
                   key={`${item.id}-${idx}`}
                   className="w-[82vw] shrink-0 snap-center sm:w-[360px] md:w-auto md:shrink"
                 >
-                  <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-4 sm:p-5 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                    <div className="relative aspect-[16/11] w-full overflow-hidden bg-black/5">
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        sizes="(max-width: 768px) 85vw, 33vw"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                    </div>
-
-                    <div className="flex flex-1 flex-col justify-between pt-4">
-                      <div>
-                        <span className="text-[11px] font-medium tracking-wide text-black/60">
-                          {item.date}
-                        </span>
-                        <h4 className="mt-1 font-sans text-[11px] font-semibold tracking-wider text-black uppercase transition-colors group-hover:text-black/70">
-                          {item.title}
-                        </h4>
-                        <p className="mt-2 text-[10px] leading-relaxed text-black/70 line-clamp-3">
-                          {item.excerpt}
-                        </p>
+                  <RevealOnScroll variant="editorial" delayMs={idx * 140}>
+                    <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-4 sm:p-5 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                      <div className="relative aspect-[16/11] w-full overflow-hidden bg-black/5">
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 768px) 85vw, 33vw"
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
                       </div>
 
-                      <div className="mt-4">
-                        <Link
-                          href="/news"
-                          className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
-                        >
-                          {t('home.journal.read_article')}
-                        </Link>
+                      <div className="flex flex-1 flex-col justify-between pt-4">
+                        <div>
+                          <span className="text-[11px] font-medium tracking-wide text-black/60">
+                            {item.date}
+                          </span>
+                          <h4 className="mt-1 font-sans text-[11px] font-semibold tracking-wider text-black uppercase transition-colors group-hover:text-black/70">
+                            {item.title}
+                          </h4>
+                          <p className="mt-2 text-[10px] leading-relaxed text-black/70 line-clamp-3">
+                            {item.excerpt}
+                          </p>
+                        </div>
+
+                        <div className="mt-4">
+                          <Link
+                            href="/news"
+                            className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
+                          >
+                            {t('home.journal.read_article')}
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  </article>
+                    </article>
+                  </RevealOnScroll>
                 </div>
               ))}
             </div>
@@ -225,46 +228,48 @@ export function JournalSection() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-6 lg:gap-8">
             {articles.map((item, idx) => (
-              <article
+              <RevealOnScroll
                 key={`${item.id}-${idx}`}
-                className={`group flex flex-col overflow-hidden bg-white border border-white/10 p-3 text-black shadow-sm transition-all hover:shadow-xl ${
-                  idx === 0 ? 'col-span-2 sm:col-span-1' : 'col-span-1'
-                }`}
+                variant="editorial"
+                delayMs={idx * 120}
+                className={idx === 0 ? 'col-span-2 sm:col-span-1' : 'col-span-1'}
               >
-                <div
-                  className={`relative w-full overflow-hidden bg-black/5 ${
-                    idx === 0 ? 'aspect-[16/9]' : 'aspect-[4/3]'
-                  }`}
-                >
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
+                <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-3 text-black shadow-sm transition-all hover:shadow-xl">
+                  <div
+                    className={`relative w-full overflow-hidden bg-black/5 ${
+                      idx === 0 ? 'aspect-[16/9]' : 'aspect-[4/3]'
+                    }`}
+                  >
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
 
-                <div className="flex flex-1 flex-col justify-between pt-3">
-                  <div>
-                    <span className="text-[10px] text-black/60">{item.date}</span>
-                    <h4 className="mt-0.5 line-clamp-1 font-sans text-xs font-semibold tracking-wider text-black uppercase sm:text-sm">
-                      {item.title}
-                    </h4>
-                    <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-black/70">
-                      {item.excerpt}
-                    </p>
+                  <div className="flex flex-1 flex-col justify-between pt-3">
+                    <div>
+                      <span className="text-[10px] text-black/60">{item.date}</span>
+                      <h4 className="mt-0.5 line-clamp-1 font-sans text-xs font-semibold tracking-wider text-black uppercase sm:text-sm">
+                        {item.title}
+                      </h4>
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-black/70">
+                        {item.excerpt}
+                      </p>
+                    </div>
+                    <div className="mt-3">
+                      <Link
+                        href="/news"
+                        className="inline-block text-[11px] sm:text-xs font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
+                      >
+                        {t('home.journal.read_article')}
+                      </Link>
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <Link
-                      href="/news"
-                      className="inline-block text-[11px] sm:text-xs font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
-                    >
-                      {t('home.journal.read_article')}
-                    </Link>
-                  </div>
-                </div>
-              </article>
+                </article>
+              </RevealOnScroll>
             ))}
           </div>
         )}
