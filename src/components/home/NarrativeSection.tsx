@@ -156,9 +156,6 @@ export function NarrativeSection() {
             <p className="text-[10px] leading-relaxed text-black/70">
               {t('home.narrative.about_p')}
             </p>
-            <p className="text-[9px] font-medium tracking-[0.28em] text-black/35 uppercase mt-4">
-              TIMELESS • INTENTIONAL • EFFORTLESS
-            </p>
 
             <div className="pt-1">
               <Link
