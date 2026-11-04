@@ -8,14 +8,7 @@ export interface LookbookLink {
 
 /**
  * Daftar edisi Lookbook SEVAYA untuk menu navigasi / dropdown.
- * Untuk menambah lookbook baru di navbar, cukup tambahkan objek baru ke array ini:
- * contoh:
- *   {
- *     id: 'vol-2',
- *     label: 'Vol 2: Autumn Serenade',
- *     season: "'26",
- *     href: '/lookbook/vol-2',
- *   }
+ * Single source of truth.
  */
 export const LOOKBOOK_LINKS: LookbookLink[] = [
   {
@@ -24,12 +17,5 @@ export const LOOKBOOK_LINKS: LookbookLink[] = [
     season: "'26",
     href: '/lookbook',
     badge: 'NEW',
-  },
-  {
-    id: 'vol-2',
-    label: 'Vol 2: Autumn Serenade',
-    season: "'26",
-    href: '/lookbook/vol-2',
-    badge: 'VOL 2',
   },
 ];

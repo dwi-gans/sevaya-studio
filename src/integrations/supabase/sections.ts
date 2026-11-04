@@ -1,4 +1,5 @@
-import { supabase } from './client';
+// No direct Supabase client usage here — all reads/writes go through /api/sections
+// which uses the Service Role Key on the server side.
 
 export interface HeroSectionData {
   badge: string;
@@ -82,6 +83,9 @@ export interface SiteSectionsConfig {
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEFAULT — only Vol 1 (single official lookbook volume)
+// ─────────────────────────────────────────────────────────────────────────────
 export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   hero: {
     badge: "Ramadan & Eid '26",
@@ -137,6 +141,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       image: '/images/sevaya_first_chapter.jpg',
     },
   ],
+  // Vol 1 only — Vol 2 is not yet released/published
   lookbookLinks: [
     {
       id: 'vol-1',
@@ -145,32 +150,27 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       href: '/lookbook',
       badge: 'NEW',
     },
-    {
-      id: 'vol-2',
-      label: 'Vol 2: Autumn Serenade',
-      season: "'26",
-      href: '/lookbook/vol-2',
-      badge: 'VOL 2',
-    },
   ],
   lookbookPage: {
     heroImage: '/images/sevaya_first_chapter.jpg',
     heroTitle: 'FLORAISON',
     heroSubtitle: 'SEVAYA • FLORAISON',
     seasonTitle: 'The Seed of The Story',
-    seasonDesc: 'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
+    seasonDesc:
+      'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
     collagePortrait: '/images/lookbook_figma_0.png',
     collageDetail1: '/images/figma_about_1.png',
     collageDetail2: '/images/figma_about_2.png',
     panorama1: '/images/figma_hero.png',
     panorama1Title: 'Meet The Icon',
-    panorama1Desc: 'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
+    panorama1Desc:
+      'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
     panorama2: '/images/lookbook_figma_1.png',
     triptych1: '/images/lookbook_figma_2.png',
     triptych2: '/images/lookbook_figma_3.png',
     triptych3: '/images/lookbook_figma_4.png',
     triptychTitle: 'The Summer 2026 Collection',
-    triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer’s abundance.',
+    triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
     fullDress: '/images/lookbook_figma_5.png',
   },
   lookbookVolumesConfig: {
@@ -179,40 +179,22 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       heroTitle: 'FLORAISON',
       heroSubtitle: 'SEVAYA • FLORAISON',
       seasonTitle: 'The Seed of The Story',
-      seasonDesc: 'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
+      seasonDesc:
+        'Inspired by 26°C, a temperature where many tropical fruits, flowers, and plants grow at their most joyful. In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced.',
       collagePortrait: '/images/lookbook_figma_0.png',
       collageDetail1: '/images/figma_about_1.png',
       collageDetail2: '/images/figma_about_2.png',
       panorama1: '/images/figma_hero.png',
       panorama1Title: 'Meet The Icon',
-      panorama1Desc: 'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
+      panorama1Desc:
+        'Cherry Tomato has a visible and expressive growth journey, reflecting the essence of becoming and purposeful growth.',
       panorama2: '/images/lookbook_figma_1.png',
       triptych1: '/images/lookbook_figma_2.png',
       triptych2: '/images/lookbook_figma_3.png',
       triptych3: '/images/lookbook_figma_4.png',
       triptychTitle: 'The Summer 2026 Collection',
-      triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer’s abundance.',
+      triptychDesc: 'Through airy textures, comforting handfeels, and a palette inspired by summer\u2019s abundance.',
       fullDress: '/images/lookbook_figma_5.png',
-    },
-    'vol-2': {
-      heroImage: '/images/sevaya_hero_editorial.jpg',
-      heroTitle: 'AUTUMN SERENADE',
-      heroSubtitle: 'SEVAYA • VOL 2',
-      seasonTitle: 'A Poetic Transition',
-      seasonDesc: 'A poetic transition into warmer tones, softer draperies, and intimate seasonal silhouettes designed for timeless elegance.',
-      collagePortrait: '/images/lookbook_figma_1.png',
-      collageDetail1: '/images/figma_about_2.png',
-      collageDetail2: '/images/figma_about_1.png',
-      panorama1: '/images/lookbook_figma_6.png',
-      panorama1Title: 'Warm Silhouettes',
-      panorama1Desc: 'Thoughtfully tailored for cooler evenings and graceful movement.',
-      panorama2: '/images/lookbook_figma_7.png',
-      triptych1: '/images/lookbook_figma_8.png',
-      triptych2: '/images/lookbook_figma_9.png',
-      triptych3: '/images/lookbook_figma_0.png',
-      triptychTitle: 'The Autumn Collection',
-      triptychDesc: 'Deep terracotta, espresso, and sage tones echoing nature’s autumn transitions.',
-      fullDress: '/images/lookbook_figma_2.png',
     },
   },
   conscious: {
@@ -224,7 +206,9 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   },
 };
 
-const SECTIONS_FILE = 'sections.json';
+// ─────────────────────────────────────────────────────────────────────────────
+// Cache
+// ─────────────────────────────────────────────────────────────────────────────
 const LOCAL_STORAGE_KEY = 'sevaya_site_sections';
 
 function sanitizeHeroImage(img?: string | null): string {
@@ -244,10 +228,14 @@ function sanitizeHeroImage(img?: string | null): string {
 
 let _cachedSiteSections: SiteSectionsConfig | null = null;
 let _cachedSectionsTime = 0;
-const SECTIONS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in-memory cache
+const SECTIONS_CACHE_TTL = 5 * 60 * 1000; // 5-minute in-memory cache
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getCachedSiteSections — synchronous, 0 network delay
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Synchronously retrieves cached site sections from LocalStorage or default.
+ * Synchronously retrieves cached site sections from memory → LocalStorage → DEFAULT.
  * Zero network delay, guarantees instant rendering without flash of default content (FOUC).
  */
 export function getCachedSiteSections(): SiteSectionsConfig {
@@ -259,8 +247,10 @@ export function getCachedSiteSections(): SiteSectionsConfig {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
-        if (parsed.hero) { parsed.hero.image = sanitizeHeroImage(parsed.hero.image); }
-        const merged = {
+        if (parsed.hero) {
+          parsed.hero.image = sanitizeHeroImage(parsed.hero.image);
+        }
+        const merged: SiteSectionsConfig = {
           ...DEFAULT_SITE_SECTIONS,
           ...parsed,
           lookbookPage: {
@@ -283,12 +273,19 @@ export function getCachedSiteSections(): SiteSectionsConfig {
   return DEFAULT_SITE_SECTIONS;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// getSiteSections — async, server as single source of truth
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Loads sections configuration with resilient fallback:
- * 1. Fast in-memory cache (0ms)
- * 2. LocalStorage (offline / dev persistence)
- * 3. Supabase Storage (Cloud background refresh)
- * 4. DEFAULT_SITE_SECTIONS (Code defaults)
+ * Loads sections configuration via /api/sections (server endpoint using Service Role Key).
+ * Falls back to LocalStorage then DEFAULT_SITE_SECTIONS if the server is unreachable.
+ *
+ * Priority:
+ *  1. In-memory cache (0ms, 5-min TTL)
+ *  2. /api/sections  (server ← Supabase Storage via Service Role Key)
+ *  3. LocalStorage   (offline / stale cache)
+ *  4. DEFAULT_SITE_SECTIONS
  */
 export async function getSiteSections(): Promise<SiteSectionsConfig> {
   const now = Date.now();
@@ -296,125 +293,103 @@ export async function getSiteSections(): Promise<SiteSectionsConfig> {
     return _cachedSiteSections;
   }
 
-  let localData: Partial<SiteSectionsConfig> | null = null;
+  // ── 2. Fetch from server ──────────────────────────────────────────────────
+  try {
+    const res = await fetch('/api/sections', { cache: 'no-store' });
+    if (res.ok) {
+      const json = (await res.json()) as { success: boolean; sections?: SiteSectionsConfig };
+      if (json.success && json.sections) {
+        _cachedSiteSections = json.sections;
+        _cachedSectionsTime = Date.now();
+        // Keep localStorage in sync as an offline cache
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.sections));
+          } catch {
+            // ignore quota errors
+          }
+        }
+        return json.sections;
+      }
+    }
+  } catch (err) {
+    console.warn('[sections] /api/sections unreachable, falling back to localStorage', err);
+  }
+
+  // ── 3. LocalStorage fallback ──────────────────────────────────────────────
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        localData = JSON.parse(stored) as Partial<SiteSectionsConfig>;
+        const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
+        const merged: SiteSectionsConfig = {
+          ...DEFAULT_SITE_SECTIONS,
+          ...parsed,
+          hero: {
+            ...DEFAULT_SITE_SECTIONS.hero,
+            ...(parsed.hero || {}),
+            image: sanitizeHeroImage(parsed.hero?.image),
+          },
+          lookbookPage: {
+            ...DEFAULT_SITE_SECTIONS.lookbookPage!,
+            ...(parsed.lookbookPage || {}),
+          },
+          lookbookVolumesConfig: {
+            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+            ...(parsed.lookbookVolumesConfig || {}),
+          },
+        };
+        _cachedSiteSections = merged;
+        _cachedSectionsTime = Date.now();
+        return merged;
       }
     } catch (e) {
-      console.warn('Failed to parse site sections from localStorage', e);
+      console.warn('[sections] Failed to parse localStorage', e);
     }
   }
 
-  // If we have local data, return it immediately to prevent blocking navigation
-  const immediateFallback: SiteSectionsConfig = {
-    ...DEFAULT_SITE_SECTIONS,
-    ...localData,
-    hero: {
-      ...DEFAULT_SITE_SECTIONS.hero,
-      ...(localData?.hero || {}),
-      image: sanitizeHeroImage(localData?.hero?.image),
-    },
-    lookbookPage: {
-      ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-      ...(localData?.lookbookPage || {}),
-    },
-    lookbookVolumesConfig: {
-      ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-      ...(localData?.lookbookVolumesConfig || {}),
-    },
-  };
-
-  _cachedSiteSections = immediateFallback;
-  _cachedSectionsTime = now;
-
-  // Background cloud fetch with 1.5s timeout so it never hangs page transitions
-  try {
-    const downloadPromise = supabase.storage.from('catalog').download(SECTIONS_FILE);
-    const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: new Error('Timeout') }), 1500)
-    );
-
-    const { data, error } = (await Promise.race([downloadPromise, timeoutPromise])) as {
-      data: Blob | null;
-      error: Error | null;
-    };
-
-    if (!error && data) {
-      const text = await data.text();
-      const parsed = JSON.parse(text) as SiteSectionsConfig;
-      const merged: SiteSectionsConfig = {
-        ...DEFAULT_SITE_SECTIONS,
-        ...localData,
-        ...parsed,
-        hero: {
-          ...DEFAULT_SITE_SECTIONS.hero,
-          ...(localData?.hero || {}),
-          ...(parsed?.hero || {}),
-          image: sanitizeHeroImage(parsed.hero?.image || localData?.hero?.image),
-        },
-        lookbookPage: {
-          ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-          ...(localData?.lookbookPage || {}),
-          ...(parsed.lookbookPage || {}),
-        },
-        lookbookVolumesConfig: {
-          ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-          ...(localData?.lookbookVolumesConfig || {}),
-          ...(parsed.lookbookVolumesConfig || {}),
-        },
-      };
-
-      _cachedSiteSections = merged;
-      _cachedSectionsTime = Date.now();
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
-      }
-      return merged;
-    }
-  } catch (err) {
-    console.warn('Supabase storage download failed, falling back to local storage', err);
-  }
-
-  return immediateFallback;
+  // ── 4. Hard default ───────────────────────────────────────────────────────
+  return DEFAULT_SITE_SECTIONS;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// saveSiteSections — POST to /api/sections (server saves to Supabase)
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Saves updated site sections configuration to both LocalStorage and Supabase Storage.
- * Guaranteed to persist locally even if Supabase permissions or network fail.
+ * Saves updated sections to the server via /api/sections (Service Role Key upload).
+ * Also updates in-memory cache and LocalStorage immediately for instant UI feedback.
  */
 export async function saveSiteSections(sections: SiteSectionsConfig): Promise<boolean> {
-  // Update in-memory cache immediately
+  // Instant local cache update
   _cachedSiteSections = sections;
   _cachedSectionsTime = Date.now();
 
-  // 1. Immediate LocalStorage persist
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sections));
-    } catch (e) {
-      console.warn('Failed to save sections to localStorage', e);
+    } catch {
+      // ignore quota errors
     }
   }
 
-  // 2. Supabase Cloud Storage persist
+  // Persist to server (which writes to Supabase Storage via Service Role Key)
   try {
-    const jsonStr = JSON.stringify(sections, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const { error } = await supabase.storage.from('catalog').upload(SECTIONS_FILE, blob, {
-      contentType: 'application/json',
-      upsert: true,
+    const res = await fetch('/api/sections', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': 'sevaya-admin',
+      },
+      body: JSON.stringify({ sections }),
     });
-    if (error) {
-      console.warn('Supabase storage upload error:', error.message);
-      return true;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { error?: string };
+      console.warn('[sections] Save failed:', err.error ?? res.status);
     }
-    return true;
+    return res.ok;
   } catch (err) {
-    console.warn('Supabase upload exception:', err);
-    return true;
+    console.warn('[sections] POST /api/sections failed:', err);
+    return false;
   }
 }
