@@ -34,6 +34,14 @@ export function Header() {
   const [lookbookOpen, setLookbookOpen] = useState(false);
   const [lookbookLinks, setLookbookLinks] = useState(LOOKBOOK_LINKS);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayUser = mounted ? user : null;
+  const displayItemCount = mounted ? itemCount : 0;
 
   useEffect(() => {
     const sections = getCachedSiteSections();
@@ -353,13 +361,13 @@ export function Header() {
                 </button>
 
                 <Link
-                  href={user ? '/profile' : '/login'}
-                  aria-label={user ? 'Akun Saya' : 'Account Login'}
+                  href={displayUser ? '/profile' : '/login'}
+                  aria-label={displayUser ? 'Akun Saya' : 'Account Login'}
                   className="relative hidden h-8 w-8 sm:h-8.5 sm:w-8.5 items-center justify-center rounded-full text-black transition-colors hover:bg-black/8 md:flex"
-                  title={user ? `Akun Saya (${user.name})` : 'Masuk Akun'}
+                  title={displayUser ? `Akun Saya (${displayUser.name})` : 'Masuk Akun'}
                 >
                   <Icon name="person" size={17} />
-                  {user && (
+                  {displayUser && (
                     <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-black ring-2 ring-white" />
                   )}
                 </Link>
@@ -371,9 +379,9 @@ export function Header() {
                   title="Shopping Bag"
                 >
                   <Icon name="shopping_bag" size={17} />
-                  {itemCount > 0 && (
+                  {displayItemCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-black px-[3px] text-[9px] leading-none font-bold text-white shadow-xs">
-                      {itemCount}
+                      {displayItemCount}
                     </span>
                   )}
                 </Link>
