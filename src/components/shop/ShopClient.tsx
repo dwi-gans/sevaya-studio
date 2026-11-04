@@ -177,7 +177,7 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
         )}
 
         {/* Category Filter Pills (Journal style) */}
-        <nav aria-label="Kategori Produk" className="mb-6">
+        <nav aria-label="Kategori Produk" className="mb-6 sm:mb-8">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
             {CATEGORIES.map((cat) => {
               const isActive = activeCategory === cat.id;
@@ -198,30 +198,6 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
             })}
           </div>
         </nav>
-
-        {/* Reset Actions if filter active */}
-        {(searchQuery || activeCategory !== 'all') && (
-          <div className="mb-6 flex items-center justify-end gap-3 text-[10px] text-[#666666]">
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="underline underline-offset-2 hover:text-[#000000] cursor-pointer"
-              >
-                Reset Search
-              </button>
-            )}
-            {activeCategory !== 'all' && (
-              <button
-                type="button"
-                onClick={() => handleCategorySelect('all')}
-                className="underline underline-offset-2 hover:text-[#000000] cursor-pointer"
-              >
-                Reset Category
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Responsive Grid */}
         {filteredProducts.length > 0 ? (
