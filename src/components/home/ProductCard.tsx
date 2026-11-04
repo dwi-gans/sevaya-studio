@@ -135,10 +135,10 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Color Swatches below price — hover or tap instantly switches photo (Mobile & Desktop Responsive) */}
+        {/* Color Swatches below price */}
         {product.swatches && product.swatches.length > 0 && (
           <div
-            className="mt-2.5 flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 px-2"
+            className="mt-2.5 flex items-center justify-center gap-1.5"
             onMouseLeave={() => setHoveredSwatch(null)}
           >
             {product.swatches.map((swatch) => {
@@ -150,7 +150,6 @@ export function ProductCard({ product }: { product: Product }) {
                   key={swatch.name}
                   type="button"
                   title={swatch.name}
-                  aria-label={swatch.name}
                   onMouseEnter={() => setHoveredSwatch(swatch.name)}
                   onClick={(e) => {
                     e.preventDefault();
@@ -158,17 +157,13 @@ export function ProductCard({ product }: { product: Product }) {
                     setSelectedSwatch(swatch.name);
                     setHoveredSwatch(null);
                   }}
-                  className="group/swatch relative flex h-7 w-7 items-center justify-center cursor-pointer touch-manipulation focus:outline-none"
-                >
-                  <span
-                    className={`block h-3.5 w-3.5 rounded-full transition-all duration-200 pointer-events-none ${
-                      isSelected
-                        ? 'scale-125 ring-1.5 ring-black ring-offset-2'
-                        : 'opacity-70 ring-1 ring-black/10 group-hover/swatch:opacity-100 group-hover/swatch:scale-110'
-                    }`}
-                    style={{ backgroundColor: swatch.color }}
-                  />
-                </button>
+                  className={`h-3.5 w-3.5 rounded-full transition-all cursor-pointer ${
+                    isSelected
+                      ? 'scale-110 ring-1 ring-black ring-offset-1'
+                      : 'opacity-70 ring-1 ring-black/10 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: swatch.color }}
+                />
               );
             })}
           </div>
