@@ -10,7 +10,7 @@ const PRODUCTS_FILE = 'products.json';
 // In-memory cache for public product catalog (60s TTL, instantly updated on POST)
 let cachedProducts: DbProduct[] | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 60 * 1000;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
 
 const PUBLIC_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',

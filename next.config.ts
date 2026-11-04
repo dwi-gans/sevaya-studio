@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   compress: true, // Gzip & Brotli automatic compression for faster transfers
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
+    // Cache client-side navigations: dynamic routes 60s, static 5 min
+    staleTimes: {
+      dynamic: 60,
+      static: 300,
+    },
   },
   images: {
     formats: ['image/avif', 'image/webp'],

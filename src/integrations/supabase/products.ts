@@ -220,7 +220,7 @@ async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> 
 }
 let _cachedProducts: DbProduct[] | null = null;
 let _cachedTime = 0;
-const CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache, fast navigation between pages
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
 
 export function invalidateProductsCache(): void {
   _cachedProducts = null;
