@@ -152,9 +152,11 @@ export interface ConsciousPageConfig {
 }
 
 export const DEFAULT_CONSCIOUS_PAGE: ConsciousPageConfig = {
-  heroImage: '/images/figma_about_1.png',
+  heroImage:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240874572_wjrb_DSCF5935.jpg',
   inspoImage: '/images/figma_about_2.png',
-  founderImage: '/images/figma_about_1.png',
+  founderImage:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240862805_o7cy_DSCF6074.jpg',
   bembergImage: '/images/catalog/catalog-06.jpg',
   tencelImage: '/images/catalog/catalog-16.jpg',
   linenImage: '/images/catalog/catalog-15.jpg',
@@ -507,29 +509,70 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
     return _cachedSiteSections;
   }
 
-  // ── Fetch from server ──────────────────────────────────────────────────────
+  const isServer = typeof window === 'undefined';
+
+  // ── Fetch from server or Supabase Storage CDN ──────────────────────────────
   try {
-    const url = forceRefresh ? `/api/sections?fresh=1&t=${Date.now()}` : '/api/sections';
+    // In Node.js / Server Components, relative URLs fail with ERR_INVALID_URL.
+    // Use the public Supabase Storage CDN directly on server as the single source of truth!
+    const url = isServer
+      ? 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json' +
+        (forceRefresh ? `?t=${Date.now()}` : '')
+      : forceRefresh
+      ? `/api/sections?fresh=1&t=${Date.now()}`
+      : '/api/sections';
+
     const res = await fetch(url, { cache: 'no-store' });
     if (res.ok) {
-      const json = (await res.json()) as { success: boolean; sections?: SiteSectionsConfig };
-      if (json.success && json.sections) {
-        _cachedSiteSections = json.sections;
+      const json = await res.json();
+      const rawSections = (isServer ? json : json.sections) as SiteSectionsConfig | undefined;
+      if (rawSections) {
+        const merged: SiteSectionsConfig = {
+          ...DEFAULT_SITE_SECTIONS,
+          ...rawSections,
+          hero: {
+            ...DEFAULT_SITE_SECTIONS.hero,
+            ...(rawSections.hero || {}),
+            image: sanitizeHeroImage(rawSections.hero?.image),
+          },
+          narrative: {
+            ...DEFAULT_HOME_NARRATIVE,
+            ...(rawSections.narrative || {}),
+          },
+          journalHeader: {
+            ...DEFAULT_JOURNAL_HEADER,
+            ...(rawSections.journalHeader || {}),
+          },
+          consciousPage: {
+            ...DEFAULT_CONSCIOUS_PAGE,
+            ...(rawSections.consciousPage || {}),
+          },
+          lookbookPage: {
+            ...DEFAULT_SITE_SECTIONS.lookbookPage!,
+            ...(rawSections.lookbookPage || {}),
+          },
+          lookbookVolumesConfig: {
+            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+            ...(rawSections.lookbookVolumesConfig || {}),
+          },
+        };
+
+        _cachedSiteSections = merged;
         _cachedSectionsTime = Date.now();
         _isServerFetched = true;
         // Keep localStorage in sync as an offline cache
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.sections));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
           } catch {
             // ignore quota errors
           }
         }
-        return json.sections;
+        return merged;
       }
     }
   } catch (err) {
-    console.warn('[sections] /api/sections unreachable, falling back to localStorage', err);
+    console.warn('[sections] Failed to fetch sections, falling back to cache/default', err);
   }
 
   // ── LocalStorage fallback ──────────────────────────────────────────────────

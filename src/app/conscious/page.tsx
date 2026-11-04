@@ -1,30 +1,22 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { Footer } from '@/components/layout/Footer';
 import {
   getSiteSections,
-  getCachedSiteSections,
   DEFAULT_CONSCIOUS_PAGE,
   type ConsciousPageConfig,
 } from '@/integrations/supabase';
 
-export default function AboutPage() {
-  const [cfg, setCfg] = useState<ConsciousPageConfig>(() => {
-    const cached = getCachedSiteSections();
-    return { ...DEFAULT_CONSCIOUS_PAGE, ...(cached.consciousPage || {}) };
-  });
+export const revalidate = 0; // Always serve fresh data
 
-  useEffect(() => {
-    getSiteSections(true).then((s) => {
-      setCfg({ ...DEFAULT_CONSCIOUS_PAGE, ...(s.consciousPage || {}) });
-    });
-  }, []);
-
-  const c = cfg;
+export default async function AboutPage() {
+  const sections = await getSiteSections(true);
+  const c: ConsciousPageConfig = {
+    ...DEFAULT_CONSCIOUS_PAGE,
+    ...(sections?.consciousPage || {}),
+  };
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#000000]">
@@ -46,7 +38,7 @@ export default function AboutPage() {
         {/* Big Panoramic Landscape Banner */}
         <div className="relative mb-14 aspect-[16/7] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
           <Image
-            src={c.heroImage || '/images/figma_about_1.png'}
+            src={c.heroImage || DEFAULT_CONSCIOUS_PAGE.heroImage!}
             alt="SEVAYA Landscape"
             fill
             className="object-cover"
@@ -77,7 +69,7 @@ export default function AboutPage() {
         <div className="my-16 grid grid-cols-1 items-center gap-10 md:grid-cols-2">
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none bg-black/5 shadow-xs sm:aspect-[1/1]">
             <Image
-              src={c.inspoImage || '/images/figma_about_2.png'}
+              src={c.inspoImage || DEFAULT_CONSCIOUS_PAGE.inspoImage!}
               alt="Our Inspiration Andalusia"
               fill
               className="object-cover"
@@ -112,7 +104,7 @@ export default function AboutPage() {
 
           <div className="relative aspect-[16/8] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
             <Image
-              src={c.founderImage || '/images/figma_about_1.png'}
+              src={c.founderImage || DEFAULT_CONSCIOUS_PAGE.founderImage!}
               alt="Founder Story"
               fill
               className="object-cover object-[center_30%]"

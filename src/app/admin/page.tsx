@@ -550,89 +550,103 @@ export default function AdminPage() {
       saveSiteSections(next);
       showToast(`Foto tersimpan otomatis untuk ${selectedLookbookVolId.toUpperCase()}!`);
     } else if (target === 'conscious-hero') {
-      const next = {
-        ...sections,
-        consciousPage: {
-          ...(sections.consciousPage || {}),
-          heroImage: urlOrPath,
-        },
-        conscious: {
-          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-          heroImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: {
+            ...(prev.consciousPage || {}),
+            heroImage: urlOrPath,
+          },
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            heroImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto hero about tersimpan!');
     } else if (target === 'conscious-inspo') {
-      const next = {
-        ...sections,
-        consciousPage: {
-          ...(sections.consciousPage || {}),
-          inspoImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: {
+            ...(prev.consciousPage || {}),
+            inspoImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto inspirasi tersimpan!');
     } else if (target === 'conscious-founder') {
-      const next = {
-        ...sections,
-        consciousPage: {
-          ...(sections.consciousPage || {}),
-          founderImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: {
+            ...(prev.consciousPage || {}),
+            founderImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto founder tersimpan!');
     } else if (target === 'conscious-bemberg') {
-      const next = {
-        ...sections,
-        consciousPage: { ...(sections.consciousPage || {}), bembergImage: urlOrPath },
-        conscious: {
-          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-          bembergImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: { ...(prev.consciousPage || {}), bembergImage: urlOrPath },
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            bembergImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto Bemberg tersimpan!');
     } else if (target === 'conscious-tencel') {
-      const next = {
-        ...sections,
-        consciousPage: { ...(sections.consciousPage || {}), tencelImage: urlOrPath },
-        conscious: {
-          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-          tencelImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: { ...(prev.consciousPage || {}), tencelImage: urlOrPath },
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            tencelImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto Tencel tersimpan!');
     } else if (target === 'conscious-linen') {
-      const next = {
-        ...sections,
-        consciousPage: { ...(sections.consciousPage || {}), linenImage: urlOrPath },
-        conscious: {
-          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-          linenImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: { ...(prev.consciousPage || {}), linenImage: urlOrPath },
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            linenImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto Linen tersimpan!');
     } else if (target === 'conscious-modal') {
-      const next = {
-        ...sections,
-        consciousPage: { ...(sections.consciousPage || {}), modalImage: urlOrPath },
-        conscious: {
-          ...(sections.conscious || DEFAULT_SITE_SECTIONS.conscious!),
-          modalImage: urlOrPath,
-        },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          consciousPage: { ...(prev.consciousPage || {}), modalImage: urlOrPath },
+          conscious: {
+            ...(prev.conscious || DEFAULT_SITE_SECTIONS.conscious!),
+            modalImage: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto Modal tersimpan!');
     } else if (target === 'article') {
       setArticleForm((prev) => ({ ...prev, image: urlOrPath }));

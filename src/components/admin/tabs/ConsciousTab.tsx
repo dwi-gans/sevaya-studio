@@ -47,7 +47,7 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
       consciousPage: cfg,
       // keep backward compat for image-only fields
       conscious: {
-        heroImage: cfg.heroImage || '/images/figma_about_1.png',
+        heroImage: cfg.heroImage || DEFAULT_CONSCIOUS_PAGE.heroImage || '/images/figma_about_1.png',
         bembergImage: cfg.bembergImage || '/images/catalog/catalog-06.jpg',
         tencelImage: cfg.tencelImage || '/images/catalog/catalog-16.jpg',
         linenImage: cfg.linenImage || '/images/catalog/catalog-15.jpg',
