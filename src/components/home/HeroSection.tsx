@@ -62,6 +62,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               const target = e.currentTarget;
               if (!target.src.endsWith(PRIMARY_HERO)) {
                 target.src = PRIMARY_HERO;
+                setHero((prev) => ({ ...prev, image: PRIMARY_HERO }));
               }
             }}
           />

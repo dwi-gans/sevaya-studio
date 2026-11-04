@@ -27,20 +27,27 @@ export function ProductCard({ product }: { product: Product }) {
   const { showToast } = useToast();
   const { t, formatPrice } = useLanguage();
   const [selectedSwatch, setSelectedSwatch] = useState<string | null>(null);
+  const [hoveredSwatch, setHoveredSwatch] = useState<string | null>(null);
 
-  const activeSwatch = selectedSwatch
-    ? product.swatches.find((s) => s.name === selectedSwatch)
+  // Active swatch prioritizes hovered swatch, falls back to selected swatch
+  const currentSwatchName = hoveredSwatch || selectedSwatch;
+  const activeSwatch = currentSwatchName
+    ? product.swatches.find((s) => s.name === currentSwatchName)
     : null;
-  // Always prioritize product.image (main cover edited by admin) unless user actively selects another swatch
+
+  // Always show the photo matching the hovered or selected color swatch
   const displayImage = activeSwatch?.image || product.image;
+
+  // Suppress secondary hover view when customer is actively hovering/selecting color swatches
+  const isSwatchSelected = Boolean(currentSwatchName && activeSwatch?.image);
   const secondaryImage =
-    product.images && product.images.length > 1
+    !isSwatchSelected && product.images && product.images.length > 1
       ? product.images[1]
-      : product.images && product.images[0] !== displayImage
+      : !isSwatchSelected && product.images && product.images[0] !== displayImage
       ? product.images[0]
       : null;
 
-  const currentSelectedColor = selectedSwatch || product.swatches[0]?.name || 'Standard';
+  const currentSelectedColor = currentSwatchName || product.swatches[0]?.name || 'Standard';
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -128,27 +135,42 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Color Swatches below price */}
+        {/* Color Swatches below price — hover or tap instantly switches photo (Mobile & Desktop Responsive) */}
         {product.swatches && product.swatches.length > 0 && (
-          <div className="mt-2.5 flex items-center justify-center gap-1.5">
-            {product.swatches.map((swatch) => (
-              <button
-                key={swatch.name}
-                type="button"
-                title={swatch.name}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedSwatch(swatch.name);
-                }}
-                className={`h-3.5 w-3.5 rounded-full transition-all ${
-                  selectedSwatch === swatch.name || (!selectedSwatch && swatch.name === product.swatches[0]?.name)
-                    ? 'scale-110 ring-1 ring-black ring-offset-1'
-                    : 'opacity-70 ring-1 ring-black/10 hover:opacity-100'
-                }`}
-                style={{ backgroundColor: swatch.color }}
-              />
-            ))}
+          <div
+            className="mt-2.5 flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 px-2"
+            onMouseLeave={() => setHoveredSwatch(null)}
+          >
+            {product.swatches.map((swatch) => {
+              const isSelected =
+                currentSwatchName === swatch.name ||
+                (!currentSwatchName && swatch.name === product.swatches[0]?.name);
+              return (
+                <button
+                  key={swatch.name}
+                  type="button"
+                  title={swatch.name}
+                  aria-label={swatch.name}
+                  onMouseEnter={() => setHoveredSwatch(swatch.name)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedSwatch(swatch.name);
+                    setHoveredSwatch(null);
+                  }}
+                  className="group/swatch relative flex h-7 w-7 items-center justify-center cursor-pointer touch-manipulation focus:outline-none"
+                >
+                  <span
+                    className={`block h-3.5 w-3.5 rounded-full transition-all duration-200 pointer-events-none ${
+                      isSelected
+                        ? 'scale-125 ring-1.5 ring-black ring-offset-2'
+                        : 'opacity-70 ring-1 ring-black/10 group-hover/swatch:opacity-100 group-hover/swatch:scale-110'
+                    }`}
+                    style={{ backgroundColor: swatch.color }}
+                  />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
