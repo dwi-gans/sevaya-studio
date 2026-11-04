@@ -199,10 +199,9 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
           </div>
         </nav>
 
-        {/* Item Counter */}
-        <div className="mb-6 flex items-center justify-between text-[10px] text-[#666666]">
-          <span>Showing {filteredProducts.length} pieces</span>
-          <div className="flex items-center gap-3">
+        {/* Reset Actions if filter active */}
+        {(searchQuery || activeCategory !== 'all') && (
+          <div className="mb-6 flex items-center justify-end gap-3 text-[10px] text-[#666666]">
             {searchQuery && (
               <button
                 type="button"
@@ -222,7 +221,7 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
               </button>
             )}
           </div>
-        </div>
+        )}
 
         {/* Responsive Grid */}
         {filteredProducts.length > 0 ? (
