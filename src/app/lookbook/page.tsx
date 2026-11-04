@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -7,123 +7,15 @@ import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
 import { useLanguage } from '@/context/LanguageContext';
-import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, LookbookPageConfig } from '@/integrations/supabase';
-
-const LOOKBOOK_PRODUCTS: Product[] = [
-  {
-    id: 'lb-1',
-    slug: 'fina-abaya-stripe-2',
-    title: 'FINA ABAYA - STRIPE EDITION 2.0',
-    edition: 'Edition 1.0',
-    price: 499000,
-    badge: 'NEW',
-    image: '/images/catalog/catalog-01.jpg',
-    images: ['/images/catalog/catalog-01.jpg', '/images/catalog/catalog-02.jpg'],
-    swatches: [
-      { name: 'Grey', color: '#4A4E53' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Cream', color: '#E5D6C5' },
-    ],
-  },
-  {
-    id: 'lb-2',
-    slug: 'fina-abaya-stripe-2',
-    title: 'TALA ABAYA - FLORAISON',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-03.jpg',
-    images: ['/images/catalog/catalog-03.jpg', '/images/catalog/catalog-04.jpg'],
-    swatches: [
-      { name: 'Espresso', color: '#3A271E' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Camel', color: '#A98263' },
-    ],
-  },
-  {
-    id: 'lb-3',
-    slug: 'tala-abaya-cloudmatte',
-    title: 'SEVILLA CUPRO - ABAYA',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-18.jpg',
-    images: ['/images/catalog/catalog-18.jpg', '/images/catalog/catalog-17.jpg'],
-    swatches: [
-      { name: 'Beige', color: '#D2BFA6' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Blush', color: '#E8BEB7' },
-    ],
-  },
-  {
-    id: 'lb-4',
-    slug: 'fina-abaya-stripe-2',
-    title: 'FINA ABAYA - OATMEAL STRIPE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-13.jpg',
-    images: ['/images/catalog/catalog-13.jpg', '/images/catalog/catalog-14.jpg'],
-    swatches: [
-      { name: 'Sage Green', color: '#889A84' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Rose', color: '#DBA8A0' },
-    ],
-  },
-  {
-    id: 'lb-5',
-    slug: 'fina-abaya-1',
-    title: 'AMANI MODEST ABAYA - SAGE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-05.jpg',
-    images: ['/images/catalog/catalog-05.jpg', '/images/catalog/catalog-06.jpg'],
-    swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA' },
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-    ],
-  },
-  {
-    id: 'lb-6',
-    slug: 'tala-abaya-cloudmatte',
-    title: 'TALA ABAYA - CLOUDMATTE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-07.jpg',
-    images: ['/images/catalog/catalog-07.jpg', '/images/catalog/catalog-08.jpg'],
-    swatches: [
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Cream', color: '#E5D6C5' },
-    ],
-  },
-  {
-    id: 'lb-7',
-    slug: 'fina-abaya-stripe-oatmeal',
-    title: 'LUNA ESSENTIAL ABAYA',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-10.jpg',
-    images: ['/images/catalog/catalog-10.jpg', '/images/catalog/catalog-09.jpg'],
-    swatches: [
-      { name: 'Camel', color: '#A98263' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Grey', color: '#4A4E53' },
-    ],
-  },
-  {
-    id: 'lb-8',
-    slug: 'fina-abaya-1',
-    title: 'NOUR LUXURY SILHOUETTE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-15.jpg',
-    images: ['/images/catalog/catalog-15.jpg', '/images/catalog/catalog-16.jpg'],
-    swatches: [
-      { name: 'Rose', color: '#DBA8A0' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Sage', color: '#889A84' },
-    ],
-  },
-];
+import {
+  getSiteSections,
+  getCachedSiteSections,
+  DEFAULT_SITE_SECTIONS,
+  LookbookPageConfig,
+  getDbProducts,
+  loadFromLocalStorage,
+} from '@/integrations/supabase';
+import { mapDbProductToProduct } from '@/features/catalog';
 
 function EditorialImage({
   isMounted,
@@ -164,6 +56,7 @@ export default function LookbookPage() {
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
   const [hasMoved, setHasMoved] = useState(false);
 
+  const [products, setProducts] = useState<Product[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [cfg, setCfg] = useState<LookbookPageConfig>(() => {
     const cached = getCachedSiteSections();
@@ -185,7 +78,20 @@ export default function LookbookPage() {
     // 2. Mark as mounted to safely render client images without SSR hydration mismatch
     setIsMounted(true);
 
-    // 3. Refresh from cloud in background
+    // 3. Immediately load products from local storage cache
+    const local = loadFromLocalStorage();
+    if (local && local.length > 0) {
+      setProducts(local.filter((p) => !p.hidden).map(mapDbProductToProduct));
+    }
+
+    // 4. Background fresh fetch for products from server/cloud database
+    getDbProducts().then((items) => {
+      if (Array.isArray(items) && items.length > 0) {
+        setProducts(items.filter((p) => !p.hidden).map(mapDbProductToProduct));
+      }
+    });
+
+    // 5. Refresh sections from cloud in background
     getSiteSections().then((sections) => {
       if (sections.lookbookVolumesConfig?.['vol-1']) {
         setCfg(sections.lookbookVolumesConfig['vol-1']);
@@ -213,7 +119,8 @@ export default function LookbookPage() {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const cardWidth = el.firstElementChild?.clientWidth || 280;
-    const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), LOOKBOOK_PRODUCTS.length - 1);
+    const maxIdx = Math.max(products.length - 1, 0);
+    const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), maxIdx);
     setActiveIndex((prev) => (prev !== idx ? idx : prev));
   };
 
@@ -412,7 +319,7 @@ export default function LookbookPage() {
             SHOP THE COLLECTION
           </span>
           <h2 className="mt-1 font-sans text-sm font-medium tracking-[0.15em] text-[#000000] uppercase sm:text-lg">
-            FLORAISON
+            {cfg.heroTitle || 'FLORAISON'}
           </h2>
           <p className="mt-2 text-[10px] sm:text-xs text-[#555555] max-w-md font-light">
             Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.
@@ -448,15 +355,29 @@ export default function LookbookPage() {
               scrollSnapType: isDown ? 'none' : 'x proximity',
             }}
           >
-            {LOOKBOOK_PRODUCTS.map((prod) => (
-              <div
-                key={prod.id}
-                className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)]"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <ProductCard product={prod} />
-              </div>
-            ))}
+            {products.length === 0 ? (
+              [...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] animate-pulse"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="aspect-[3/4] w-full bg-[#F4F4F4] rounded-xs mb-3" />
+                  <div className="h-3 w-3/4 bg-[#EBEBEB] rounded mb-2" />
+                  <div className="h-3 w-1/3 bg-[#F0F0F0] rounded" />
+                </div>
+              ))
+            ) : (
+              products.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)]"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <ProductCard product={prod} />
+                </div>
+              ))
+            )}
           </div>
 
           <button
@@ -470,28 +391,29 @@ export default function LookbookPage() {
         </div>
 
         {/* Dot indicators — mobile only */}
-        <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-          {LOOKBOOK_PRODUCTS.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Produk ${i + 1}`}
-              onClick={() => {
-                if (!scrollRef.current) return;
-                const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 280;
-                scrollRef.current.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
-                setActiveIndex(i);
-              }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                activeIndex === i ? 'w-5 bg-[#000000]' : 'w-1.5 bg-[#CCCCCC]'
-              }`}
-            />
-          ))}
-        </div>
+        {products.length > 0 && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
+            {products.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Produk ${i + 1}`}
+                onClick={() => {
+                  if (!scrollRef.current) return;
+                  const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 280;
+                  scrollRef.current.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
+                  setActiveIndex(i);
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeIndex === i ? 'w-5 bg-[#000000]' : 'w-1.5 bg-[#CCCCCC]'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />
     </div>
   );
 }
-

@@ -7,67 +7,15 @@ import { useParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
-import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, LookbookPageConfig } from '@/integrations/supabase';
-
-const LOOKBOOK_PRODUCTS: Product[] = [
-  {
-    id: 'lb-1',
-    slug: 'fina-abaya-stripe-2',
-    title: 'FINA ABAYA - STRIPE EDITION 2.0',
-    edition: 'Edition 2.0',
-    price: 499000,
-    badge: 'NEW',
-    image: '/images/catalog/catalog-05.jpg',
-    images: ['/images/catalog/catalog-05.jpg', '/images/catalog/catalog-06.jpg'],
-    swatches: [
-      { name: 'Sage', color: '#889A84' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Mocha', color: '#B28E78' },
-    ],
-  },
-  {
-    id: 'lb-2',
-    slug: 'tala-abaya-cloudmatte',
-    title: 'TALA ABAYA - AUTUMN SERENADE',
-    edition: 'Edition 2.0',
-    price: 499000,
-    image: '/images/catalog/catalog-07.jpg',
-    images: ['/images/catalog/catalog-07.jpg', '/images/catalog/catalog-08.jpg'],
-    swatches: [
-      { name: 'Espresso', color: '#3A271E' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Camel', color: '#A98263' },
-    ],
-  },
-  {
-    id: 'lb-3',
-    slug: 'fina-abaya-stripe-oatmeal',
-    title: 'LUNA ESSENTIAL ABAYA - VOL 2',
-    edition: 'Edition 2.0',
-    price: 499000,
-    image: '/images/catalog/catalog-10.jpg',
-    images: ['/images/catalog/catalog-10.jpg', '/images/catalog/catalog-09.jpg'],
-    swatches: [
-      { name: 'Beige', color: '#D2BFA6' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Rose', color: '#DBA8A0' },
-    ],
-  },
-  {
-    id: 'lb-4',
-    slug: 'fina-abaya-1',
-    title: 'NOUR LUXURY SILHOUETTE - VOL 2',
-    edition: 'Edition 2.0',
-    price: 499000,
-    image: '/images/catalog/catalog-15.jpg',
-    images: ['/images/catalog/catalog-15.jpg', '/images/catalog/catalog-16.jpg'],
-    swatches: [
-      { name: 'Rose', color: '#DBA8A0' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Sage', color: '#889A84' },
-    ],
-  },
-];
+import {
+  getSiteSections,
+  getCachedSiteSections,
+  DEFAULT_SITE_SECTIONS,
+  LookbookPageConfig,
+  getDbProducts,
+  loadFromLocalStorage,
+} from '@/integrations/supabase';
+import { mapDbProductToProduct } from '@/features/catalog';
 
 function EditorialImage({
   isMounted,
@@ -110,10 +58,12 @@ export default function LookbookVolumePage() {
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
   const [hasMoved, setHasMoved] = useState(false);
 
+  const [products, setProducts] = useState<Product[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [cfg, setCfg] = useState<LookbookPageConfig>(() => {
     const cached = getCachedSiteSections();
     return (
+      cached.lookbookVolumesConfig?.[slug] ||
       cached.lookbookVolumesConfig?.['vol-2'] ||
       cached.lookbookPage ||
       DEFAULT_SITE_SECTIONS.lookbookPage!
@@ -137,6 +87,20 @@ export default function LookbookVolumePage() {
     }
     setIsMounted(true);
 
+    // 1. Immediately load products from local storage cache
+    const local = loadFromLocalStorage();
+    if (local && local.length > 0) {
+      setProducts(local.filter((p) => !p.hidden).map(mapDbProductToProduct));
+    }
+
+    // 2. Background fresh fetch for products from server/cloud database
+    getDbProducts().then((items) => {
+      if (Array.isArray(items) && items.length > 0) {
+        setProducts(items.filter((p) => !p.hidden).map(mapDbProductToProduct));
+      }
+    });
+
+    // 3. Refresh sections
     getSiteSections().then((sections) => {
       if (sections.lookbookVolumesConfig?.[slug]) {
         setCfg(sections.lookbookVolumesConfig[slug]);
@@ -170,7 +134,8 @@ export default function LookbookVolumePage() {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const cardWidth = el.firstElementChild?.clientWidth || 280;
-    const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), LOOKBOOK_PRODUCTS.length - 1);
+    const maxIdx = Math.max(products.length - 1, 0);
+    const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), maxIdx);
     setActiveIndex((prev) => (prev !== idx ? idx : prev));
   };
 
@@ -206,25 +171,11 @@ export default function LookbookVolumePage() {
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#000000]">
       <main className="mx-auto max-w-4xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10 sm:pb-16 lg:px-8">
-        
-        {/* Navigation back to Vol 1 */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link
-            href="/lookbook"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-black/60 hover:text-black transition"
-          >
-            <Icon name="arrow_back" size={16} />
-            <span>← Kembali ke Lookbook Vol 1</span>
-          </Link>
-          <span className="rounded-full bg-black px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-            {slug.toUpperCase()}
-          </span>
-        </div>
 
-        {/* Campaign Hero Header */}
+        {/* Section 1: Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            {cfg.heroSubtitle || "'26 SEVAYA EDITORIAL COLLECTION"}
+            {cfg.heroSubtitle || 'SEVAYA • VOL 2'}
           </span>
           <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
             {cfg.heroTitle || volTitle}
@@ -234,13 +185,13 @@ export default function LookbookVolumePage() {
           </p>
         </header>
 
-        {/* Editorial Hero Photo */}
+        {/* Section 2: Editorial Hero Photo */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <EditorialImage
               isMounted={isMounted}
               src={cfg.heroImage || '/images/sevaya_hero_editorial.jpg'}
-              alt="SEVAYA Volume 2 Campaign Hero"
+              alt={`${volTitle} Campaign Hero`}
               fill
               priority
               className="object-cover object-center"
@@ -249,16 +200,14 @@ export default function LookbookVolumePage() {
           </div>
         </div>
 
-        {/* The Seed of The Story */}
+        {/* Section 3: The Seed of The Story */}
         <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.seasonTitle || 'Crafted for Intimate Moments & Warmth'}
+            {cfg.seasonTitle || 'A Poetic Transition'}
           </h2>
-          <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
-            <li><span className="font-medium text-[#000000]">Refined Drapery:</span> Enhanced cupro-viscose blend tailored for cooler evenings and graceful movement.</li>
-            <li><span className="font-medium text-[#000000]">Invisible Functional Details:</span> Seamless front zippers and discreet pockets engineered into minimalist silhouettes.</li>
-            <li><span className="font-medium text-[#000000]">Earthy Palette:</span> Deep terracotta, espresso, and sage tones that echo nature&apos;s autumn transitions.</li>
-          </ul>
+          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
+            {cfg.seasonDesc || volDesc}
+          </p>
         </section>
 
         {/* Centered Editorial Collage */}
@@ -268,7 +217,7 @@ export default function LookbookVolumePage() {
               <EditorialImage
                 isMounted={isMounted}
                 src={cfg.collagePortrait || '/images/lookbook_figma_1.png'}
-                alt="Autumn Botanical Silhouette"
+                alt="Autumn Serenade Silhouette"
                 fill
                 className="object-cover transition-transform duration-700 hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 336px"
@@ -278,12 +227,99 @@ export default function LookbookVolumePage() {
               <EditorialImage
                 isMounted={isMounted}
                 src={cfg.collageDetail1 || '/images/figma_about_2.png'}
-                alt="Autumn Textile Flow"
+                alt="Autumn Serenade Drapery"
                 fill
                 className="object-cover transition-transform duration-700 hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 336px"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Section 4: Warm Silhouettes */}
+        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+          <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
+            {cfg.panorama1Title || 'Warm Silhouettes'}
+          </h2>
+          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
+            {cfg.panorama1Desc || 'Thoughtfully tailored for cooler evenings and graceful movement.'}
+          </p>
+        </section>
+
+        {/* Centered Editorial Feature Image */}
+        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+          <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
+            <EditorialImage
+              isMounted={isMounted}
+              src={cfg.panorama1 || '/images/lookbook_figma_6.png'}
+              alt="SEVAYA Warm Silhouettes Editorial"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 672px"
+            />
+          </div>
+        </div>
+
+        {/* Section 5: The Autumn Collection */}
+        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+          <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
+            {cfg.triptychTitle || 'The Autumn Collection'}
+          </h2>
+          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
+            {cfg.triptychDesc || 'Deep terracotta, espresso, and sage tones echoing nature’s autumn transitions.'}
+          </p>
+          <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
+            SEVAYA — Slow fashion, thoughtfully made.
+          </p>
+        </section>
+
+        {/* Centered Gallery */}
+        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+              <EditorialImage
+                isMounted={isMounted}
+                src={cfg.triptych1 || '/images/lookbook_figma_8.png'}
+                alt="Autumn Tone 1"
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-105"
+                sizes="(max-width: 640px) 100vw, 224px"
+              />
+            </div>
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+              <EditorialImage
+                isMounted={isMounted}
+                src={cfg.triptych2 || '/images/lookbook_figma_9.png'}
+                alt="Autumn Tone 2"
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-105"
+                sizes="(max-width: 640px) 100vw, 224px"
+              />
+            </div>
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+              <EditorialImage
+                isMounted={isMounted}
+                src={cfg.triptych3 || '/images/lookbook_figma_0.png'}
+                alt="Autumn Tone 3"
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-105"
+                sizes="(max-width: 640px) 100vw, 224px"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Centered Final Movement Frame */}
+        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+          <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
+            <EditorialImage
+              isMounted={isMounted}
+              src={cfg.fullDress || '/images/lookbook_figma_2.png'}
+              alt="SEVAYA Movement in Rhythm"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 672px"
+            />
           </div>
         </div>
       </main>
@@ -329,15 +365,29 @@ export default function LookbookVolumePage() {
               scrollSnapType: isDown ? 'none' : 'x proximity',
             }}
           >
-            {LOOKBOOK_PRODUCTS.map((prod) => (
-              <div
-                key={prod.id}
-                className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)]"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <ProductCard product={prod} />
-              </div>
-            ))}
+            {products.length === 0 ? (
+              [...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] animate-pulse"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="aspect-[3/4] w-full bg-[#F4F4F4] rounded-xs mb-3" />
+                  <div className="h-3 w-3/4 bg-[#EBEBEB] rounded mb-2" />
+                  <div className="h-3 w-1/3 bg-[#F0F0F0] rounded" />
+                </div>
+              ))
+            ) : (
+              products.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)]"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <ProductCard product={prod} />
+                </div>
+              ))
+            )}
           </div>
 
           <button
@@ -349,6 +399,28 @@ export default function LookbookVolumePage() {
             <Icon name="chevron_right" size={20} />
           </button>
         </div>
+
+        {/* Dot indicators — mobile only */}
+        {products.length > 0 && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
+            {products.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Produk ${i + 1}`}
+                onClick={() => {
+                  if (!scrollRef.current) return;
+                  const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 280;
+                  scrollRef.current.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
+                  setActiveIndex(i);
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeIndex === i ? 'w-5 bg-[#000000]' : 'w-1.5 bg-[#CCCCCC]'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />
