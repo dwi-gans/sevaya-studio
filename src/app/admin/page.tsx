@@ -7,6 +7,8 @@ import {
   createDbProduct,
   updateDbProduct,
   deleteDbProduct,
+  ensureVariantsForProduct,
+  getInventoryVariants,
   DbProduct,
   getSiteSections,
   getCachedSiteSections,
@@ -116,6 +118,7 @@ export default function AdminPage() {
       const tabParam = urlParams.get('tab');
       const validTabs: AdminTab[] = [
         'orders',
+        'inventory',
         'catalog',
         'section-home',
         'section-news',
@@ -221,10 +224,22 @@ export default function AdminPage() {
     let isMounted = true;
     setSections(getCachedSiteSections());
 
-    Promise.all([getDbProducts(), getSiteSections()])
-      .then(([dbProds, siteSections]) => {
+    Promise.all([getDbProducts(), getSiteSections(), getInventoryVariants()])
+      .then(([dbProds, siteSections, invVariants]) => {
         if (!isMounted) return;
-        setProducts(dbProds);
+        const syncedProds = dbProds.map((p) => {
+          const pVariants = invVariants.filter((v) => v.productId === String(p.id));
+          if (pVariants.length > 0) {
+            const totalStock = pVariants.reduce((sum, v) => sum + v.stock, 0);
+            return {
+              ...p,
+              stock: totalStock,
+              inStock: totalStock > 0,
+            };
+          }
+          return p;
+        });
+        setProducts(syncedProds);
         setSections(siteSections);
       })
       .catch(() => {
@@ -393,6 +408,7 @@ export default function AdminPage() {
           slug,
         });
         if (updated) {
+          await ensureVariantsForProduct(updated);
           setProducts((prev) =>
             prev.map((p) => {
               if (p.id === editingProduct.id) return updated;
@@ -406,13 +422,14 @@ export default function AdminPage() {
               return p;
             })
           );
-          showToast(`Produk "${updated.title}" berhasil diperbarui!`);
+          showToast(`Produk "${updated.title}" berhasil diperbarui & varian stok disinkronkan!`);
         }
       } else {
         const created = await createDbProduct({
           ...productForm,
           slug,
         });
+        await ensureVariantsForProduct(created);
         setProducts((prev) => [
           created,
           ...prev.map((p) => {
@@ -426,7 +443,7 @@ export default function AdminPage() {
             return p;
           }),
         ]);
-        showToast(`Produk "${created.title}" berhasil ditambahkan!`);
+        showToast(`Produk "${created.title}" berhasil ditambahkan & varian stok otomatis dibuat!`);
       }
       setIsProductModalOpen(false);
     } catch {

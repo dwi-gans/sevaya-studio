@@ -222,41 +222,54 @@ export function ProductModal({
               </div>
             </div>
 
+            {/* Stok Fisik (Read-Only / Otomatis dari Inventaris) */}
             <div className="flex flex-col gap-1 min-w-0">
-              <label className="text-[11px] font-medium text-black/70">
-                Jumlah Stok (Stock)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={productForm.stock ?? 20}
-                onChange={(e) => {
-                  const val = Math.max(0, parseInt(e.target.value, 10) || 0);
-                  setProductForm((prev) => ({
-                    ...prev,
-                    stock: val,
-                    inStock: val > 0,
-                  }));
-                }}
-                placeholder="cth. 25"
-                className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none font-semibold"
-              />
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium text-black/70">
+                  Stok Fisik
+                </label>
+                <span className="text-[10px] text-black/40 flex items-center gap-0.5 font-mono">
+                  <Icon name="lock" size={10} />
+                  Otomatis
+                </span>
+              </div>
+              <div className="flex items-center justify-between h-8 sm:h-9 rounded-lg border border-black/15 bg-black/[0.03] px-2.5 py-1 text-xs font-semibold text-black">
+                <span>{productForm.stock ?? 0} pcs</span>
+                <span
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    (productForm.stock ?? 0) > 0
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-rose-100 text-rose-800'
+                  }`}
+                >
+                  {(productForm.stock ?? 0) > 0 ? 'Tersedia' : 'Habis'}
+                </span>
+              </div>
+              <p className="text-[9px] text-black/40 leading-tight">
+                {editingProduct
+                  ? 'Dihitung otomatis dari akumulasi varian di tab Inventaris.'
+                  : 'Varian awal akan dibuat otomatis saat produk disimpan.'}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-5">
-              <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-black/15 bg-white p-2">
-                <input
-                  type="checkbox"
-                  checked={productForm.inStock}
-                  onChange={(e) =>
-                    setProductForm((prev) => ({ ...prev, inStock: e.target.checked }))
-                  }
-                  className="h-3.5 w-3.5 accent-[#000000]"
+              <div
+                className={`flex items-center gap-1.5 rounded-lg border p-2 ${
+                  (productForm.stock ?? 0) > 0
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    : 'border-rose-200 bg-rose-50 text-rose-800'
+                }`}
+                title="Status ketersediaan ditentukan otomatis dari total stok varian di inventaris"
+              >
+                <Icon
+                  name={(productForm.stock ?? 0) > 0 ? 'check_circle' : 'cancel'}
+                  size={14}
+                  className={(productForm.stock ?? 0) > 0 ? 'text-emerald-700' : 'text-rose-600'}
                 />
-                <span className="text-[10px] font-medium text-black truncate">
-                  Tersedia
+                <span className="text-[10px] font-semibold truncate">
+                  {(productForm.stock ?? 0) > 0 ? 'Stok Tersedia' : 'Stok Habis'}
                 </span>
-              </label>
+              </div>
               <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2">
                 <input
                   type="checkbox"
@@ -264,10 +277,10 @@ export function ProductModal({
                   onChange={(e) =>
                     setProductForm((prev) => ({ ...prev, hidden: e.target.checked }))
                   }
-                  className="h-3.5 w-3.5 accent-amber-600"
+                  className="h-3.5 w-3.5 accent-[#000000]"
                 />
-                <span className="text-[10px] font-medium text-amber-800 truncate">
-                  Hide
+                <span className="text-[10px] font-medium text-amber-900 truncate">
+                  Sembunyikan
                 </span>
               </label>
             </div>

@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function LookbookLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <div className="relative w-full max-w-full overflow-x-clip">{children}</div>;
 }

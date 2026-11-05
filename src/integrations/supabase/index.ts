@@ -52,6 +52,8 @@ export {
   getStockMutations,
   saveStockMutations,
   executeStockMutation,
+  ensureVariantsForProduct,
+  addCustomVariant,
   generateVariantSku,
   generateDefaultVariantsForProduct,
   type ProductVariant,

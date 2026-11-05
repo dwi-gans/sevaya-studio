@@ -87,8 +87,8 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#000000]">
-      <main className="mx-auto max-w-4xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10 sm:pb-16 lg:px-8">
+    <div className="relative flex min-h-screen w-full max-w-full flex-col bg-[#FFFFFF] text-[#000000] overflow-x-clip">
+      <main className="mx-auto w-full max-w-4xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10 sm:pb-16 lg:px-8">
 
         {/* Section 1: Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
@@ -259,7 +259,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
       </main>
 
       {/* Section: SHOP THE COLLECTION */}
-      <section className="border-t border-[#E5E5E5] pt-10 pb-12 sm:pt-12 sm:pb-16 bg-white/40">
+      <section className="border-t border-[#E5E5E5] pt-10 pb-12 sm:pt-12 sm:pb-16 bg-white/40 overflow-hidden w-full">
         {/* Title */}
         <div className="mx-auto mb-8 flex max-w-4xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
@@ -275,12 +275,12 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         </div>
 
         {/* Desktop: arrow wrapper */}
-        <div className="relative mx-auto max-w-6xl sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             aria-label="Scroll left"
             onClick={scrollLeft}
-            className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex"
+            className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex cursor-pointer"
           >
             <Icon name="chevron_left" size={20} />
           </button>
@@ -294,20 +294,21 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4 pb-4 touch-pan-y select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
-              scrollSnapType: isDown ? 'none' : 'x proximity',
+              scrollSnapType: isDown ? 'none' : 'x mandatory',
+              overscrollBehaviorX: 'contain',
             }}
           >
             {products.length === 0 ? (
               [...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] animate-pulse"
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start animate-pulse"
                   style={{ scrollSnapAlign: 'start' }}
                 >
                   <div className="aspect-[3/4] w-full bg-[#F4F4F4] rounded-xs mb-3" />
@@ -319,7 +320,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               products.map((prod) => (
                 <div
                   key={prod.id}
-                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)]"
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
                   style={{ scrollSnapAlign: 'start' }}
                 >
                   <ProductCard product={prod} />
@@ -332,7 +333,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
             type="button"
             aria-label="Scroll right"
             onClick={scrollRight}
-            className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex"
+            className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex cursor-pointer"
           >
             <Icon name="chevron_right" size={20} />
           </button>

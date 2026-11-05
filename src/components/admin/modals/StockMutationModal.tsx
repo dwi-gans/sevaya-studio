@@ -73,7 +73,10 @@ export default function StockMutationModal({
     try {
       const res = await fetch('/api/admin/inventory/mutate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': 'sevaya-admin',
+        },
         body: JSON.stringify({
           variantId: variant.id,
           type,

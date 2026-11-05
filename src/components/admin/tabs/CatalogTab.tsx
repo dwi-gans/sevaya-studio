@@ -155,12 +155,12 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                 )}
                 <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false && (product.stock == null || product.stock > 0) ? 'bg-emerald-500' : 'bg-red-500'}`}
+                    className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false && product.stock != null && product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
                   />
                   <span>
-                    {product.inStock !== false && (product.stock == null || product.stock > 0)
-                      ? `Stok: ${product.stock ?? 25}`
-                      : 'Habis'}
+                    {product.inStock !== false && product.stock != null && product.stock > 0
+                      ? `Stok: ${product.stock} pcs`
+                      : 'Habis (0)'}
                   </span>
                 </div>
               </div>

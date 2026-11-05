@@ -356,3 +356,161 @@ export async function executeStockMutation(params: {
 
   return { variant: updatedVariant, mutation };
 }
+
+/**
+ * Sinkronkan varian ketika produk dibuat atau diedit di katalog.
+ * Menjamin setiap swatch x size memiliki varian, tanpa menghapus stok yang sudah ada.
+ */
+export async function ensureVariantsForProduct(product: DbProduct): Promise<ProductVariant[]> {
+  const existing = await getInventoryVariants();
+  const swatches = product.swatches && product.swatches.length > 0
+    ? product.swatches
+    : [{ name: 'Default', color: '#1A1A1A' }];
+  const sizes = ['S', 'M', 'L'];
+
+  let changed = false;
+  const updatedList = [...existing];
+
+  for (const sw of swatches) {
+    for (const sz of sizes) {
+      const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
+      const foundIdx = updatedList.findIndex(
+        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size === sz)
+      );
+
+      if (foundIdx === -1) {
+        // Buat varian baru dengan stok 0 (stok fisik dimasukkan via mutasi / restock resmi)
+        const sku = generateVariantSku(product.title, product.id, sw.name, sz);
+        updatedList.push({
+          id: variantId,
+          productId: String(product.id),
+          productSlug: product.slug,
+          productTitle: product.title,
+          sku,
+          colorName: sw.name,
+          colorHex: sw.color || '#1A1A1A',
+          size: sz,
+          stock: 0,
+          lowStockThreshold: 3,
+          updatedAt: new Date().toISOString(),
+        });
+        changed = true;
+      } else {
+        // Update informasi induk (judul, slug, warna hex) jika berubah
+        const curr = updatedList[foundIdx]!;
+        if (curr.productTitle !== product.title || curr.productSlug !== product.slug || curr.colorHex !== sw.color) {
+          updatedList[foundIdx] = {
+            ...curr,
+            productTitle: product.title,
+            productSlug: product.slug,
+            colorHex: sw.color || curr.colorHex,
+            updatedAt: new Date().toISOString(),
+          };
+          changed = true;
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    await saveInventoryVariants(updatedList);
+  }
+
+  // Hitung total stok dan pastikan produk induk tersinkronkan
+  const productVariants = updatedList.filter((v) => v.productId === String(product.id));
+  const totalStock = productVariants.reduce((sum, v) => sum + v.stock, 0);
+  if (product.stock !== totalStock || product.inStock !== (totalStock > 0)) {
+    try {
+      await updateDbProduct(product.id, {
+        stock: totalStock,
+        inStock: totalStock > 0,
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  return updatedList;
+}
+
+/**
+ * Tambah varian kustom langsung dari tab inventaris
+ */
+export async function addCustomVariant(params: {
+  productId: string | number;
+  productTitle: string;
+  productSlug: string;
+  colorName: string;
+  colorHex: string;
+  size: string;
+  initialStock?: number;
+}): Promise<ProductVariant> {
+  const existing = await getInventoryVariants();
+  const cleanColor = params.colorName.trim();
+  const cleanSize = params.size.trim().toUpperCase();
+  const sku = generateVariantSku(params.productTitle, params.productId, cleanColor, cleanSize);
+  const variantId = `${params.productId}-${cleanColor.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${cleanSize.toLowerCase()}`;
+
+  // Cek apakah sudah ada
+  const found = existing.find(
+    (v) => v.id === variantId || (v.productId === String(params.productId) && v.colorName.toLowerCase() === cleanColor.toLowerCase() && v.size.toUpperCase() === cleanSize)
+  );
+  if (found) {
+    throw new Error(`Varian warna "${cleanColor}" ukuran "${cleanSize}" untuk produk ini sudah ada.`);
+  }
+
+  const initialStock = Math.max(0, params.initialStock ?? 0);
+  const newVariant: ProductVariant = {
+    id: variantId,
+    productId: String(params.productId),
+    productSlug: params.productSlug,
+    productTitle: params.productTitle,
+    sku,
+    colorName: cleanColor,
+    colorHex: params.colorHex || '#1A1A1A',
+    size: cleanSize,
+    stock: initialStock,
+    lowStockThreshold: 3,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedList = [newVariant, ...existing];
+  await saveInventoryVariants(updatedList);
+
+  // Jika ada stok awal > 0, catat mutasi awal
+  if (initialStock > 0) {
+    const mutation: StockMutation = {
+      id: `mut-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      variantId: newVariant.id,
+      sku: newVariant.sku,
+      productTitle: newVariant.productTitle,
+      colorName: newVariant.colorName,
+      size: newVariant.size,
+      type: 'in',
+      quantity: initialStock,
+      previousStock: 0,
+      currentStock: initialStock,
+      reason: 'RESTOCK_PRODUCTION',
+      reference: 'INITIAL_STOCK',
+      notes: 'Stok awal penambahan varian baru',
+      createdBy: 'Admin Studio',
+      createdAt: new Date().toISOString(),
+    };
+    const mutations = await getStockMutations();
+    await saveStockMutations([mutation, ...mutations]);
+  }
+
+  // Sync katalog produk
+  try {
+    const productVariants = updatedList.filter((v) => v.productId === String(params.productId));
+    const totalStock = productVariants.reduce((sum, v) => sum + v.stock, 0);
+    await updateDbProduct(params.productId, {
+      stock: totalStock,
+      inStock: totalStock > 0,
+    });
+  } catch (err) {
+    console.warn('[addCustomVariant] product catalog sync warning:', err);
+  }
+
+  return newVariant;
+}

@@ -4,6 +4,8 @@ import {
   getInventoryVariants,
   saveInventoryVariants,
   getStockMutations,
+  ensureVariantsForProduct,
+  addCustomVariant,
   ProductVariant,
 } from '@/integrations/supabase';
 
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin/inventory (Save/Update Variants Batch)
+// POST /api/admin/inventory (Save/Update Variants Batch, Add Custom Variant, or Ensure Product)
 export async function POST(req: NextRequest) {
   try {
     const session = verifyAdminSession(req);
@@ -67,8 +69,33 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { variants } = body as { variants: ProductVariant[] };
 
+    // 1. Action: Add single custom variant
+    if (body.action === 'add_variant') {
+      const { productId, productTitle, productSlug, colorName, colorHex, size, initialStock } = body;
+      if (!productId || !productTitle || !colorName || !size) {
+        return NextResponse.json({ error: 'Data varian tidak lengkap' }, { status: 400 });
+      }
+      const createdVariant = await addCustomVariant({
+        productId,
+        productTitle,
+        productSlug: productSlug || '',
+        colorName,
+        colorHex: colorHex || '#1A1A1A',
+        size,
+        initialStock: Number(initialStock) || 0,
+      });
+      return NextResponse.json({ success: true, variant: createdVariant });
+    }
+
+    // 2. Action: Ensure variants for product
+    if (body.action === 'ensure_product' && body.product) {
+      const allVariants = await ensureVariantsForProduct(body.product);
+      return NextResponse.json({ success: true, variants: allVariants });
+    }
+
+    // 3. Batch save
+    const { variants } = body as { variants: ProductVariant[] };
     if (!Array.isArray(variants)) {
       return NextResponse.json({ error: 'Data varian tidak valid' }, { status: 400 });
     }
@@ -80,7 +107,7 @@ export async function POST(req: NextRequest) {
       variants,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Gagal menyimpan varian';
+    const msg = err instanceof Error ? err.message : 'Gagal memproses data inventaris';
     console.error('[POST /api/admin/inventory]', err);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
