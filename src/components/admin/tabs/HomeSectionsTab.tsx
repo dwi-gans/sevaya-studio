@@ -20,8 +20,6 @@ interface HomeSectionsTabProps {
   setSections: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   articles?: Article[];
   onOpenImagePicker: (target: ImagePickerTarget) => void;
-  onOpenCropper?: (imageSrc: string, target: ImagePickerTarget) => void;
-  onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   showToast: (msg: string) => void;
 }
 
@@ -30,8 +28,6 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   setSections,
   articles,
   onOpenImagePicker,
-  onOpenCropper,
-  onFileSelectForCrop,
   showToast,
 }) => {
   const hero = sections.hero || DEFAULT_SITE_SECTIONS.hero;
@@ -103,7 +99,6 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   const UploadActionGroup = ({
     target,
     label = 'Pilih Galeri',
-    currentImage,
   }: {
     target: ImagePickerTarget;
     label?: string;
@@ -120,13 +115,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) {
-              if (onFileSelectForCrop) {
-                onFileSelectForCrop(file, target);
-              } else {
-                handleDirectUpload(target, file);
-              }
-            }
+            if (file) handleDirectUpload(target, file);
             if (e.target) e.target.value = '';
           }}
         />
@@ -135,23 +124,11 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           disabled={isUploadingThis || uploadingTarget !== null}
           onClick={() => fileInputRefs.current[key]?.click()}
           className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[9px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
-          title="Unggah foto langsung dan sesuaikan posisi"
+          title="Unggah foto langsung"
         >
           <Icon name="upload" size={11} />
-          <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah & Sesuaikan'}</span>
+          <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah'}</span>
         </button>
-
-        {currentImage && onOpenCropper && (
-          <button
-            type="button"
-            onClick={() => onOpenCropper(currentImage, target)}
-            className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer shadow-2xs"
-            title="Sesuaikan posisi / crop foto ini"
-          >
-            <Icon name="search" size={10} />
-            <span>Sesuaikan</span>
-          </button>
-        )}
 
         <button
           type="button"

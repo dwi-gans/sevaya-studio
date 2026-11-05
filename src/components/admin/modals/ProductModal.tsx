@@ -42,8 +42,6 @@ interface ProductModalProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   /** Upload langsung dengan target eksplisit — tidak perlu membuka galeri */
   onFileUploadDirect: (e: React.ChangeEvent<HTMLInputElement>, target: ImagePickerTarget) => Promise<void>;
-  /** Pilih file lalu langsung buka cropper tanpa upload dulu */
-  onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   isLoading: boolean;
   isUploading: boolean;
 }
@@ -65,7 +63,6 @@ export function ProductModal({
   onSetImageTarget,
   onFileUpload,
   onFileUploadDirect,
-  onFileSelectForCrop,
   isLoading,
   isUploading,
 }: ProductModalProps) {
@@ -441,21 +438,13 @@ export function ProductModal({
                 />
                 <label className="inline-flex h-7 w-fit cursor-pointer items-center gap-1 rounded-full bg-black px-3 text-[10px] font-semibold text-white transition hover:bg-black/85 active:scale-95">
                   <Icon name="upload" size={12} />
-                  <span>{isUploading ? 'Menyimpan...' : 'Unggah & Sesuaikan'}</span>
+                  <span>{isUploading ? 'Mengunggah...' : 'Unggah File'}</span>
                   <input
                     type="file"
                     accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                     disabled={isUploading}
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (onFileSelectForCrop) {
-                          onFileSelectForCrop(file, 'product');
-                        } else {
-                          onFileUploadDirect(e, 'product');
-                        }
-                      }
-                      e.target.value = '';
+                      onFileUploadDirect(e, 'product');
                     }}
                     className="hidden"
                   />
@@ -702,15 +691,7 @@ export function ProductModal({
                             accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                             disabled={isUploading}
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (onFileSelectForCrop) {
-                                  onFileSelectForCrop(file, `swatch-${idx}` as ImagePickerTarget);
-                                } else {
-                                  onFileUploadDirect(e, `swatch-${idx}` as ImagePickerTarget);
-                                }
-                              }
-                              e.target.value = '';
+                              onFileUploadDirect(e, `swatch-${idx}` as ImagePickerTarget);
                             }}
                             className="hidden"
                           />

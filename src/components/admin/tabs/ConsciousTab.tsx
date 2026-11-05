@@ -16,8 +16,6 @@ interface ConsciousTabProps {
   sections: SiteSectionsConfig;
   setSections?: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
-  onOpenCropper?: (imageSrc: string, target: ImagePickerTarget) => void;
-  onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   showToast?: (msg: string) => void;
 }
 
@@ -25,8 +23,6 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   sections,
   setSections,
   onOpenImagePicker,
-  onOpenCropper,
-  onFileSelectForCrop,
   showToast,
 }) => {
   const [cfg, setCfg] = useState<ConsciousPageConfig>(() => ({
@@ -195,7 +191,7 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
           )}
         </div>
 
-        {/* Action Buttons: Direct Upload + Gallery Picker + Cropper */}
+        {/* Action Buttons: Direct Upload + Gallery Picker */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Direct Upload input */}
           <input
@@ -205,13 +201,7 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) {
-                if (onFileSelectForCrop) {
-                  onFileSelectForCrop(file, target);
-                } else {
-                  handleDirectUpload(target, file);
-                }
-              }
+              if (file) handleDirectUpload(target, file);
               if (e.target) e.target.value = '';
             }}
           />
@@ -220,23 +210,11 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
             disabled={isUploadingThis || uploadingTarget !== null}
             onClick={() => fileInputRefs.current[String(target)]?.click()}
             className="inline-flex items-center gap-1.5 rounded-full bg-black px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
-            title="Pilih foto langsung dari laptop/Mac dan sesuaikan posisi"
+            title="Pilih foto langsung dari laptop/Mac dan simpan otomatis"
           >
             <Icon name="upload" size={13} />
-            <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah & Sesuaikan'}</span>
+            <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah Foto'}</span>
           </button>
-
-          {src && onOpenCropper && (
-            <button
-              type="button"
-              onClick={() => onOpenCropper(src, target)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95 cursor-pointer shadow-2xs"
-              title="Sesuaikan posisi / crop foto ini"
-            >
-              <Icon name="search" size={12} />
-              <span>Sesuaikan</span>
-            </button>
-          )}
 
           <button
             type="button"
