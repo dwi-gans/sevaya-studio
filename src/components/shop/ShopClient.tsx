@@ -97,20 +97,19 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
     }
 
     if (activeCategory === 'abaya') {
-      list = list.filter(
-        (p) =>
-          p.category === 'abaya' ||
-          p.title.toLowerCase().includes('abaya') ||
-          p.slug.toLowerCase().includes('abaya')
-      );
+      list = list.filter((p) => {
+        if (p.category) return p.category.toLowerCase() === 'abaya';
+        return p.title.toLowerCase().includes('abaya') || p.slug.toLowerCase().includes('abaya');
+      });
     } else if (activeCategory === 'khimar') {
-      list = list.filter(
-        (p) =>
-          p.category === 'khimar' ||
+      list = list.filter((p) => {
+        if (p.category) return p.category.toLowerCase() === 'khimar';
+        return (
           p.title.toLowerCase().includes('khimar') ||
           p.title.toLowerCase().includes('veil') ||
           p.slug.toLowerCase().includes('khimar')
-      );
+        );
+      });
     }
 
     // Sort

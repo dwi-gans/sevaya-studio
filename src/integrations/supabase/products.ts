@@ -10,6 +10,7 @@ export interface DbProduct {
   id: string | number;
   slug: string;
   title: string;
+  category?: 'abaya' | 'khimar' | string; // kategori busana: Abaya atau Khimar
   edition?: string;
   price: number;
   original_price?: number;
@@ -31,6 +32,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '1',
     slug: 'fina-abaya-stripe-2',
     title: 'Fina Abaya - Stripe Edition 2.0',
+    category: 'abaya',
     edition: 'Edition 2.0',
     price: 14975,
     original_price: 1489000,
@@ -50,6 +52,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '2',
     slug: 'fina-abaya-1',
     title: 'Tala Abaya - Rhapsody',
+    category: 'abaya',
     edition: 'Classic Cupro Silk',
     price: 1339000,
     badge: 'New',
@@ -68,6 +71,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '3',
     slug: 'tala-abaya-cloudmatte',
     title: 'Sevilla Cupro - Abaya',
+    category: 'abaya',
     edition: 'Cloudmatte Bemberg',
     price: 1359200,
     original_price: 1699000,
@@ -87,6 +91,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '4',
     slug: 'fina-abaya-stripe-oatmeal',
     title: 'Fina Abaya - Oatmeal Stripe',
+    category: 'abaya',
     edition: 'Summer Light Stripe',
     price: 1339000,
     image: '/images/catalog/catalog-13.jpg',
@@ -103,6 +108,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '5',
     slug: 'amani-modest-abaya-sage',
     title: 'Amani Modest Abaya - Sage',
+    category: 'abaya',
     edition: 'Soft Earth Tones',
     price: 1339000,
     image: '/images/catalog/catalog-05.jpg',
@@ -119,6 +125,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '6',
     slug: 'tala-french-khimar',
     title: 'Tala French Khimar - Cloudmatte',
+    category: 'khimar',
     edition: 'Cloudmatte Finish',
     price: 789000,
     badge: 'Trending',
@@ -135,6 +142,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '7',
     slug: 'luna-essential-khimar',
     title: 'Luna Essential Khimar & Veil',
+    category: 'khimar',
     edition: 'Minimalist Silhouette',
     price: 689000,
     image: '/images/catalog/catalog-10.jpg',
@@ -151,6 +159,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     id: '8',
     slug: 'nour-luxury-khimar',
     title: 'Nour Luxury Flowing Khimar',
+    category: 'khimar',
     edition: 'Fluid Floor Sweep',
     price: 849000,
     image: '/images/catalog/catalog-15.jpg',

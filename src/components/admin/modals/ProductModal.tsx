@@ -9,6 +9,7 @@ import { ImagePickerTarget } from '../adminTypes';
 export interface ProductFormData {
   title: string;
   slug: string;
+  category?: 'abaya' | 'khimar' | string;
   edition: string;
   price: number;
   original_price: number;
@@ -169,6 +170,46 @@ export function ProductModal({
             </div>
           </div>
 
+          {/* Category Selector (Abaya atau Khimar) */}
+          <div className="flex flex-col gap-1.5 rounded-xl border border-black/10 bg-black/[0.02] p-2.5 sm:p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-black uppercase tracking-wider">
+                Kategori Busana *
+              </label>
+              <span className="text-[10px] text-black/50">Wajib dipilih: Abaya atau Khimar</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setProductForm((prev) => ({ ...prev, category: 'abaya' }))}
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  (productForm.category || 'abaya').toLowerCase() === 'abaya'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'bg-white text-black/70 border border-black/15 hover:border-black/40 hover:text-black'
+                }`}
+              >
+                <span>Abaya</span>
+                {(productForm.category || 'abaya').toLowerCase() === 'abaya' && (
+                  <span className="text-[10px]">✓</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductForm((prev) => ({ ...prev, category: 'khimar' }))}
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  (productForm.category || '').toLowerCase() === 'khimar'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'bg-white text-black/70 border border-black/15 hover:border-black/40 hover:text-black'
+                }`}
+              >
+                <span>Khimar</span>
+                {(productForm.category || '').toLowerCase() === 'khimar' && (
+                  <span className="text-[10px]">✓</span>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* Edition, Price, Original Price */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="flex flex-col gap-1 min-w-0">
@@ -232,39 +273,39 @@ export function ProductModal({
                 placeholder="cth. Best Seller, Sale -20%"
                 className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
               />
-              <div className="flex flex-wrap items-center gap-1 pt-1">
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 <button
                   type="button"
                   onClick={() => setProductForm((prev) => ({ ...prev, badge: 'Best Seller' }))}
-                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-medium tracking-wider transition active:scale-95 cursor-pointer ${
                     productForm.badge?.toLowerCase() === 'best seller'
-                      ? 'bg-black text-white'
+                      ? 'bg-[#1C1917] text-[#FBF9F5] border border-black shadow-xs'
                       : 'bg-black/5 text-black hover:bg-black/10'
                   }`}
                 >
-                  ★ Best Seller
+                  ✦ Best Seller
                 </button>
                 <button
                   type="button"
                   onClick={() => setProductForm((prev) => ({ ...prev, badge: 'Trending' }))}
-                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-medium tracking-wider transition active:scale-95 cursor-pointer ${
                     productForm.badge?.toLowerCase() === 'trending'
-                      ? 'bg-neutral-900 text-amber-300'
+                      ? 'bg-[#FAF8F5] text-[#2C2723] border border-[#DDD5C7] shadow-xs'
                       : 'bg-black/5 text-black hover:bg-black/10'
                   }`}
                 >
-                  Trending
+                  ✦ Trending
                 </button>
                 <button
                   type="button"
                   onClick={() => setProductForm((prev) => ({ ...prev, badge: 'New' }))}
-                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold transition active:scale-95 cursor-pointer ${
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-medium tracking-wider transition active:scale-95 cursor-pointer ${
                     productForm.badge?.toLowerCase() === 'new'
-                      ? 'bg-black text-white'
+                      ? 'bg-[#1C1917] text-[#FBF9F5] border border-black shadow-xs'
                       : 'bg-black/5 text-black hover:bg-black/10'
                   }`}
                 >
-                  New
+                  ✦ New
                 </button>
                 {productForm.badge && (
                   <button

@@ -156,15 +156,15 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                 )}
                 {product.badge && (
                   <span
-                    className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase sm:text-[10px] shadow-sm ${
+                    className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[8.5px] font-medium tracking-[0.2em] uppercase shadow-xs backdrop-blur-xs ${
                       product.badge.toLowerCase().includes('best')
-                        ? 'bg-black text-white ring-1 ring-white/20'
+                        ? 'bg-[#1C1917] text-[#FBF9F5] border border-white/20'
                         : product.badge.toLowerCase().includes('trend')
-                        ? 'bg-neutral-900 text-amber-300 border border-amber-300/40'
-                        : 'bg-black text-white'
+                        ? 'bg-[#FAF8F5] text-[#2C2723] border border-[#DDD5C7]'
+                        : 'bg-[#1C1917] text-white border border-white/20'
                     }`}
                   >
-                    {product.badge.toLowerCase().includes('best') && <span className="mr-0.5">★</span>}
+                    <span className="mr-0.5 text-[9px] opacity-75">✦</span>
                     {product.badge}
                   </span>
                 )}
@@ -190,9 +190,14 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                 <h3 className="font-headline line-clamp-1 text-xs font-semibold text-black sm:text-sm">
                   {product.title}
                 </h3>
-                <span className="truncate text-[10px] font-mono text-black/50 sm:text-xs">
-                  /{product.slug}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="truncate text-[10px] font-mono text-black/50 sm:text-xs">
+                    /{product.slug}
+                  </span>
+                  <span className="rounded bg-black/5 px-1.5 py-0.2 text-[9px] font-semibold uppercase tracking-wider text-black/60">
+                    {product.category || (product.title.toLowerCase().includes('khimar') || product.title.toLowerCase().includes('veil') ? 'khimar' : 'abaya')}
+                  </span>
+                </div>
 
                 {/* Pricing */}
                 <div className="mt-1 flex flex-col sm:mt-1.5 sm:flex-row sm:items-baseline sm:gap-2">
@@ -251,9 +256,9 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                     <button
                       type="button"
                       onClick={() => onSetBadge?.(product, 'Best Seller')}
-                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-wider transition active:scale-95 cursor-pointer ${
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-medium uppercase tracking-wider transition active:scale-95 cursor-pointer ${
                         product.badge?.toLowerCase() === 'best seller'
-                          ? 'bg-black text-white shadow-xs'
+                          ? 'bg-[#1C1917] text-[#FBF9F5] border border-black shadow-xs'
                           : 'bg-white border border-black/15 text-black/70 hover:bg-black/5 hover:text-black'
                       }`}
                       title={
@@ -262,15 +267,15 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                           : 'Pindahkan status Best Seller ke produk ini'
                       }
                     >
-                      <span>★</span>
+                      <span className="text-[10px]">✦</span>
                       <span className="truncate">Best Seller</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onSetBadge?.(product, 'Trending')}
-                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-wider transition active:scale-95 cursor-pointer ${
+                      className={`inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[9px] font-medium uppercase tracking-wider transition active:scale-95 cursor-pointer ${
                         product.badge?.toLowerCase() === 'trending'
-                          ? 'bg-neutral-900 text-amber-300 border border-amber-400 shadow-xs'
+                          ? 'bg-[#FAF8F5] text-[#2C2723] border border-[#DDD5C7] shadow-xs'
                           : 'bg-white border border-black/15 text-black/70 hover:bg-black/5 hover:text-black'
                       }`}
                       title={
@@ -279,6 +284,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                           : 'Pindahkan status Trending ke produk ini'
                       }
                     >
+                      <span className="text-[10px]">✦</span>
                       <span className="truncate">Trending</span>
                     </button>
                   </div>

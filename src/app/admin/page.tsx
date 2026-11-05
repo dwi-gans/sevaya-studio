@@ -326,6 +326,7 @@ export default function AdminPage() {
     setProductForm({
       title: '',
       slug: '',
+      category: 'abaya',
       edition: '',
       price: 1350000,
       original_price: 1500000,
@@ -353,6 +354,11 @@ export default function AdminPage() {
     setProductForm({
       title: product.title,
       slug: product.slug,
+      category:
+        product.category ||
+        (product.title.toLowerCase().includes('khimar') || product.title.toLowerCase().includes('veil')
+          ? 'khimar'
+          : 'abaya'),
       edition: product.edition || '',
       price: product.price,
       original_price: product.original_price || product.price,

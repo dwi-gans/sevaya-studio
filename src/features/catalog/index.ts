@@ -13,6 +13,11 @@ export function mapDbProductToProduct(item: DbProduct): Product {
     id: String(item.id),
     slug: item.slug || 'fina-abaya-stripe-2',
     title: item.title,
+    category:
+      item.category ||
+      (item.title.toLowerCase().includes('khimar') || item.title.toLowerCase().includes('veil')
+        ? 'khimar'
+        : 'abaya'),
     edition: item.edition || '',
     price: Number(item.price),
     originalPrice: item.original_price ? Number(item.original_price) : undefined,

@@ -117,15 +117,15 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Badge */}
           {product.badge && (
             <span
-              className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[9px] font-bold tracking-widest uppercase shadow-sm ${
+              className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs transition-colors ${
                 product.badge.toLowerCase().includes('best')
-                  ? 'bg-black text-white'
+                  ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                   : product.badge.toLowerCase().includes('trend')
-                  ? 'bg-neutral-900 text-amber-300 border border-amber-300/30'
-                  : 'bg-black text-white'
+                  ? 'bg-[#FAF8F5]/95 text-[#2C2723] border border-[#DDD5C7]'
+                  : 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
               }`}
             >
-              {product.badge.toLowerCase().includes('best') && <span className="mr-1">★</span>}
+              <span className="mr-1 text-[9px] opacity-75">✦</span>
               {product.badge}
             </span>
           )}

@@ -98,16 +98,12 @@ export function ProductDetailClient({
 
   const [galleryImages, setGalleryImages] = useState<string[]>(() => {
     const list = [
-      initialProduct.image || '/images/catalog/catalog-01.jpg',
+      initialProduct.image || '',
       ...(initialProduct.images || []),
       ...(initialProduct.swatches || []).map((s) => s.image || ''),
-      '/images/catalog/catalog-03.jpg',
-      '/images/catalog/catalog-04.jpg',
-      '/images/catalog/catalog-05.jpg',
-      '/images/catalog/catalog-06.jpg',
-      '/images/catalog/catalog-07.jpg',
     ].filter(Boolean);
-    return Array.from(new Set(list));
+    const unique = Array.from(new Set(list));
+    return unique.length > 0 ? unique : [initialProduct.image || '/images/catalog/catalog-01.jpg'];
   });
 
   // Stok varian spesifik yang dipilih (warna + size)
@@ -191,18 +187,14 @@ export function ProductDetailClient({
 
         const thumbs = Array.from(
           new Set([
+            found.image || '',
             ...freshColors.map((c) => c.image),
-            found.image,
             ...(found.images || []),
-            '/images/catalog/catalog-01.jpg',
-            '/images/catalog/catalog-03.jpg',
-            '/images/catalog/catalog-04.jpg',
-            '/images/catalog/catalog-05.jpg',
-            '/images/catalog/catalog-06.jpg',
-            '/images/catalog/catalog-07.jpg',
           ].filter(Boolean) as string[])
         );
-        setGalleryImages(thumbs);
+        if (thumbs.length > 0) {
+          setGalleryImages(thumbs);
+        }
       } else if (found.image) {
         setActiveImage(found.image);
       }
@@ -322,18 +314,18 @@ export function ProductDetailClient({
               
               <div>
                 {dbProduct.badge && (
-                  <div className="mb-2">
+                  <div className="mb-2.5">
                     <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 text-[9px] font-bold tracking-widest uppercase shadow-xs ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[8.5px] sm:text-[9px] font-medium tracking-[0.22em] uppercase border shadow-2xs ${
                         dbProduct.badge.toLowerCase().includes('best')
-                          ? 'bg-black text-white'
+                          ? 'bg-[#1C1917] text-[#FBF9F5] border-black/30'
                           : dbProduct.badge.toLowerCase().includes('trend')
-                          ? 'bg-neutral-900 text-amber-300 border border-amber-400/40'
-                          : 'bg-black text-white'
+                          ? 'bg-[#FAF8F5] text-[#2C2723] border-[#DDD5C7]'
+                          : 'bg-[#1C1917] text-[#FBF9F5] border-black/30'
                       }`}
                     >
-                      {dbProduct.badge.toLowerCase().includes('best') && <span>★</span>}
-                      {dbProduct.badge}
+                      <span className="text-[10px] opacity-75">✦</span>
+                      <span>{dbProduct.badge}</span>
                     </span>
                   </div>
                 )}
@@ -595,15 +587,15 @@ export function ProductDetailClient({
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#ECE8E1] border border-black/5">
                 {dbProduct.badge && (
                   <span
-                    className={`absolute top-3 left-3 z-10 px-3 py-1 text-[9px] font-bold tracking-widest uppercase shadow-sm ${
+                    className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
                       dbProduct.badge.toLowerCase().includes('best')
-                        ? 'bg-black text-white'
+                        ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                         : dbProduct.badge.toLowerCase().includes('trend')
-                        ? 'bg-neutral-900 text-amber-300 border border-amber-300/40'
-                        : 'bg-black text-white'
+                        ? 'bg-[#FAF8F5]/95 text-[#2C2723] border border-[#DDD5C7]'
+                        : 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                     }`}
                   >
-                    {dbProduct.badge.toLowerCase().includes('best') && <span className="mr-1">★</span>}
+                    <span className="mr-1 text-[9px] opacity-75">✦</span>
                     {dbProduct.badge}
                   </span>
                 )}
@@ -617,32 +609,34 @@ export function ProductDetailClient({
                 />
               </div>
 
-              <div className="no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto py-1">
-                {galleryImages.map((imgSrc, idx) => {
-                  const isActive = activeImage === imgSrc;
-                  return (
-                    <button
-                      key={`${imgSrc}-${idx}`}
-                      type="button"
-                      onClick={() => setActiveImage(imgSrc)}
-                      className={`relative h-16 w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
-                        isActive
-                          ? 'ring-2 ring-black ring-offset-1'
-                          : 'opacity-70 hover:opacity-100 border border-black/10'
-                      }`}
-                      aria-label={`Thumbnail photo ${idx + 1}`}
-                    >
-                      <Image
-                        src={imgSrc}
-                        alt={`Thumbnail ${idx + 1}`}
-                        fill
-                        className="object-cover object-top"
-                        sizes="64px"
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+              {galleryImages.length > 1 && (
+                <div className="no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto py-1">
+                  {galleryImages.map((imgSrc, idx) => {
+                    const isActive = activeImage === imgSrc;
+                    return (
+                      <button
+                        key={`${imgSrc}-${idx}`}
+                        type="button"
+                        onClick={() => setActiveImage(imgSrc)}
+                        className={`relative h-16 w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
+                          isActive
+                            ? 'ring-2 ring-black ring-offset-1'
+                            : 'opacity-70 hover:opacity-100 border border-black/10'
+                        }`}
+                        aria-label={`Thumbnail photo ${idx + 1}`}
+                      >
+                        <Image
+                          src={imgSrc}
+                          alt={`Thumbnail ${idx + 1}`}
+                          fill
+                          className="object-cover object-top"
+                          sizes="64px"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
           </div>
