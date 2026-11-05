@@ -76,6 +76,7 @@ export function RevealOnScroll({
   return (
     <Component
       ref={ref}
+      suppressHydrationWarning
       style={{
         transitionDuration: `${durationMs}ms`,
         transitionDelay: `${delayMs}ms`,

@@ -84,51 +84,57 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
           <div className="mx-auto mt-3 h-[1px] w-12 bg-black/20" />
         </RevealOnScroll>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-0 md:divide-x md:border-y md:border-black/15">
+        <div suppressHydrationWarning className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-0 md:border-y md:border-black/15">
           {/* Pillar 1: Timeless */}
-          <RevealOnScroll variant="editorial" delayMs={0} className="col-span-2 md:col-span-1">
-            <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:border-0 md:bg-transparent md:p-8 md:shadow-none h-full">
-              <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">01</span>
-              <h3 className="mt-2 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[13px]">
-                {narrative.pillar1Title || 'Timeless'}
-              </h3>
-              <p className="mt-2.5 max-w-sm text-[10px] leading-relaxed text-black/60">
-                {narrative.pillar1Desc ||
-                  t('home.narrative.pillar1_desc') ||
-                  "Designed beyond fleeting trends, with silhouettes and colours you'll want to wear season after season."}
-              </p>
-            </div>
-          </RevealOnScroll>
+          <div className="col-span-2 md:col-span-1 md:border-r md:border-black/15 flex flex-col">
+            <RevealOnScroll variant="editorial" delayMs={0} className="h-full">
+              <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs md:border-none md:bg-transparent md:p-8 md:shadow-none h-full">
+                <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">01</span>
+                <h3 className="mt-2 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[13px]">
+                  {narrative.pillar1Title || 'Timeless'}
+                </h3>
+                <p className="mt-2.5 max-w-sm text-[10px] leading-relaxed text-black/60">
+                  {narrative.pillar1Desc ||
+                    t('home.narrative.pillar1_desc') ||
+                    "Designed beyond fleeting trends, with silhouettes and colours you'll want to wear season after season."}
+                </p>
+              </div>
+            </RevealOnScroll>
+          </div>
 
           {/* Pillar 2: Intentional */}
-          <RevealOnScroll variant="editorial" delayMs={120} className="col-span-1">
-            <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:border-0 md:bg-transparent md:p-8 md:shadow-none h-full">
-              <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">02</span>
-              <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
-                {narrative.pillar2Title || 'Intentional'}
-              </h3>
-              <p className="mt-2 text-[10px] leading-relaxed text-black/60">
-                {narrative.pillar2Desc ||
-                  t('home.narrative.pillar2_desc') ||
-                  'From fabric selection to details, every decision creates meaning.'}
-              </p>
-            </div>
-          </RevealOnScroll>
+          <div className="col-span-1 md:border-r md:border-black/15 flex flex-col">
+            <RevealOnScroll variant="editorial" delayMs={120} className="h-full">
+              <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs md:border-none md:bg-transparent md:p-8 md:shadow-none h-full">
+                <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">02</span>
+                <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
+                  {narrative.pillar2Title || 'Intentional'}
+                </h3>
+                <p className="mt-2 text-[10px] leading-relaxed text-black/60">
+                  {narrative.pillar2Desc ||
+                    t('home.narrative.pillar2_desc') ||
+                    'From fabric selection to details, every decision creates meaning.'}
+                </p>
+              </div>
+            </RevealOnScroll>
+          </div>
 
           {/* Pillar 3: Effortless */}
-          <RevealOnScroll variant="editorial" delayMs={240} className="col-span-1">
-            <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs transition-colors hover:bg-white/80 md:border-0 md:bg-transparent md:p-8 md:shadow-none h-full">
-              <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">03</span>
-              <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
-                {narrative.pillar3Title || 'Effortless'}
-              </h3>
-              <p className="mt-2 text-[10px] leading-relaxed text-black/60">
-                {narrative.pillar3Desc ||
-                  t('home.narrative.pillar3_desc') ||
-                  'Modest silhouettes made for ease, comfort, and quiet confidence.'}
-              </p>
-            </div>
-          </RevealOnScroll>
+          <div className="col-span-1 flex flex-col">
+            <RevealOnScroll variant="editorial" delayMs={240} className="h-full">
+              <div className="group flex flex-col items-center border border-black/15 bg-white p-4 text-center shadow-xs md:border-none md:bg-transparent md:p-8 md:shadow-none h-full">
+                <span className="font-sans text-[9px] font-semibold tracking-widest text-black/50">03</span>
+                <h3 className="mt-1.5 font-sans text-xs font-medium tracking-wider text-black/85 uppercase sm:text-[11px]">
+                  {narrative.pillar3Title || 'Effortless'}
+                </h3>
+                <p className="mt-2 text-[10px] leading-relaxed text-black/60">
+                  {narrative.pillar3Desc ||
+                    t('home.narrative.pillar3_desc') ||
+                    'Modest silhouettes made for ease, comfort, and quiet confidence.'}
+                </p>
+              </div>
+            </RevealOnScroll>
+          </div>
         </div>
       </section>
 
