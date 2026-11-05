@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyDokuWebhookSignature } from '@/integrations/doku';
 import { sendOrderCancelledEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
+import { deductStockForOrder } from '@/lib/inventory-server';
 
 // In-memory idempotency cache to prevent concurrent webhook duplicate emails
 const dispatchedReceipts = new Set<string>();
@@ -132,7 +133,18 @@ export async function POST(req: NextRequest) {
         items = [];
       }
 
-      // 5. Send receipt email to customer (strictly isolated in try/catch)
+      // 5. Auto-deduct inventory stock for each purchased variant
+      try {
+        await deductStockForOrder(
+          items,
+          orderNumber,
+          updatedOrder.customer_name || 'Pelanggan'
+        );
+      } catch (stockErr) {
+        console.warn('[DOKU Webhook] Stock deduction warning:', stockErr);
+      }
+
+      // 6. Send receipt email to customer (strictly isolated in try/catch)
       try {
         await sendOrderPaidReceiptEmail({
           orderNumber: updatedOrder.order_number,

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/auth-server';
 import { checkMidtransStatus } from '@/integrations/midtrans';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
+import { deductStockForOrder } from '@/lib/inventory-server';
 
 const BITESHIP_BASE_URL = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
@@ -204,6 +205,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing id or status' }, { status: 400 });
     }
 
+    // Ambil data order sebelum diupdate untuk cek idempotency stok
+    const { data: existingOrderForPatch } = await supabaseAdmin
+      .from('orders')
+      .select('status, order_number, items, customer_name')
+      .eq('id', id)
+      .maybeSingle();
+
+    const wasAlreadyPaidForPatch = existingOrderForPatch?.status === 'paid' || existingOrderForPatch?.status === 'processing';
+
     const updatePayload: Record<string, unknown> = {
       status,
       updated_at: new Date().toISOString(),
@@ -264,6 +274,22 @@ export async function PATCH(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    // Auto-deduct inventory stok jika status diubah ke 'paid' dan sebelumnya belum paid
+    if (data && status === 'paid' && !wasAlreadyPaidForPatch) {
+      let itemsForDeduct: any[] = [];
+      try {
+        itemsForDeduct =
+          typeof data.items === 'string' ? JSON.parse(data.items) : data.items || [];
+      } catch {
+        itemsForDeduct = [];
+      }
+      deductStockForOrder(
+        itemsForDeduct,
+        data.order_number,
+        data.customer_name || 'Pelanggan'
+      ).catch((e: unknown) => console.warn('[Admin PATCH] Stock deduction warning:', e));
     }
 
     // Send admin notification to sevayaofficial@gmail.com

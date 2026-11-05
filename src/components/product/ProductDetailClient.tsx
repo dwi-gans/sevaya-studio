@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { getDbProducts, DbProduct } from '@/integrations/supabase';
+import { ProductVariant } from '@/integrations/supabase/inventory';
 import { SEARCH_CATALOG } from '@/data/searchCatalog';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Footer } from '@/components/layout/Footer';
@@ -27,49 +28,58 @@ const DEFAULT_COLOR_OPTIONS: ProductColorOption[] = [
 ];
 
 const QUALITY_OPTIONS = ['Top Notch', 'Almost Perfect', 'Visible Marks'];
-const SIZE_OPTIONS = ['All Size'];
+
+/** Buat daftar warna awal dari swatches produk, dengan status sold-out dari data varian */
+function buildColorOptions(
+  swatches: Array<{ name: string; color: string; image?: string }> | undefined,
+  fallbackImage: string,
+  variants: ProductVariant[]
+): ProductColorOption[] {
+  if (!swatches || swatches.length === 0) return DEFAULT_COLOR_OPTIONS;
+
+  return swatches.map((s) => {
+    const colorVariants = variants.filter(
+      (v) => v.colorName.toLowerCase() === s.name.toLowerCase()
+    );
+    const isColorSoldOut =
+      colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
+    return {
+      name: s.name,
+      hex: s.color,
+      image: s.image || fallbackImage,
+      outOfStock: isColorSoldOut,
+    };
+  });
+}
 
 interface ProductDetailClientProps {
   slug: string;
   initialProduct: DbProduct;
+  initialVariants?: ProductVariant[];
 }
 
-export function ProductDetailClient({ slug, initialProduct }: ProductDetailClientProps) {
+export function ProductDetailClient({
+  slug,
+  initialProduct,
+  initialVariants = [],
+}: ProductDetailClientProps) {
   const { items, addToCart } = useCart();
   const { showToast } = useToast();
 
   const [dbProduct, setDbProduct] = useState<DbProduct>(initialProduct);
+  const [variants, setVariants] = useState<ProductVariant[]>(initialVariants);
 
-  const availableStock =
-    typeof dbProduct.stock === 'number'
-      ? dbProduct.stock
-      : dbProduct.inStock === false
-      ? 0
-      : 25;
-  const isOutOfStock = availableStock <= 0 || dbProduct.inStock === false;
+  // Warna awal dihitung sekali dari SSR data
+  const [colors, setColors] = useState<ProductColorOption[]>(() =>
+    buildColorOptions(
+      initialProduct.swatches,
+      initialProduct.image || '/images/catalog/catalog-01.jpg',
+      initialVariants
+    )
+  );
 
-  const initialColors = useMemo(() => {
-    if (initialProduct.swatches && initialProduct.swatches.length > 0) {
-      return initialProduct.swatches.map((s, idx) => ({
-        name: s.name,
-        hex: s.color,
-        image: s.image || initialProduct.image || '/images/catalog/catalog-01.jpg',
-        outOfStock: idx === 3,
-      }));
-    }
-    return DEFAULT_COLOR_OPTIONS;
-  }, [initialProduct]);
-
-  const sizeOptions = useMemo(() => {
-    if (dbProduct?.sizes && dbProduct.sizes.length > 0) {
-      return dbProduct.sizes;
-    }
-    return ['S', 'M', 'L'];
-  }, [dbProduct?.sizes]);
-
-  const [colors, setColors] = useState<ProductColorOption[]>(initialColors);
   const [selectedColor, setSelectedColor] = useState<ProductColorOption>(
-    () => initialColors[0] || DEFAULT_COLOR_OPTIONS[0]!
+    () => colors[0] || DEFAULT_COLOR_OPTIONS[0]!
   );
   const [selectedSize, setSelectedSize] = useState<string>(() => {
     if (initialProduct?.sizes && initialProduct.sizes.length > 0) {
@@ -80,7 +90,7 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
   const [selectedQuality, setSelectedQuality] = useState<string>(QUALITY_OPTIONS[0]!);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<string>(
-    () => initialProduct.image || initialColors[0]?.image || '/images/catalog/catalog-01.jpg'
+    () => initialProduct.image || colors[0]?.image || '/images/catalog/catalog-01.jpg'
   );
 
   const [fabricOpen, setFabricOpen] = useState(false);
@@ -100,11 +110,57 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
     return Array.from(new Set(list));
   });
 
+  // Stok varian spesifik yang dipilih (warna + size)
+  const selectedVariantStock = useMemo(() => {
+    if (variants.length > 0) {
+      const v = variants.find(
+        (vr) =>
+          vr.colorName.toLowerCase() === selectedColor.name.toLowerCase() &&
+          vr.size.toUpperCase() === selectedSize.toUpperCase()
+      );
+      if (v !== undefined) return v.stock;
+    }
+    // Fallback ke stok total produk jika tidak ada data varian
+    return typeof dbProduct.stock === 'number'
+      ? dbProduct.stock
+      : dbProduct.inStock === false
+      ? 0
+      : 25;
+  }, [variants, selectedColor, selectedSize, dbProduct]);
+
+  const availableStock = selectedVariantStock;
+  const isOutOfStock = availableStock <= 0 || dbProduct.inStock === false;
+
+  const sizeOptions = useMemo(() => {
+    if (dbProduct?.sizes && dbProduct.sizes.length > 0) {
+      return dbProduct.sizes;
+    }
+    return ['S', 'M', 'L'];
+  }, [dbProduct?.sizes]);
+
+  // Sinkronkan colors state ketika variants berubah (dari fetch API client-side)
+  useEffect(() => {
+    if (variants.length === 0) return;
+    setColors((prev) =>
+      prev.map((c) => {
+        const colorVariants = variants.filter(
+          (v) => v.colorName.toLowerCase() === c.name.toLowerCase()
+        );
+        const isColorSoldOut =
+          colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
+        return { ...c, outOfStock: isColorSoldOut };
+      })
+    );
+  }, [variants]);
+
+  // Refresh produk & varian dari server secara background
   useEffect(() => {
     let isMounted = true;
-    getDbProducts(true).then((items) => {
+
+    // Refresh data produk
+    getDbProducts(true).then((prodList) => {
       if (!isMounted) return;
-      const found = items.find((p) => p.slug === slug);
+      const found = prodList.find((p) => p.slug === slug);
       if (!found) return;
 
       const isIdentical =
@@ -117,19 +173,18 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
 
       setDbProduct(found);
       if (found.swatches && found.swatches.length > 0) {
-        const fromDbColors: ProductColorOption[] = found.swatches.map((s, idx) => ({
-          name: s.name,
-          hex: s.color,
-          image: s.image || found.image || '/images/catalog/catalog-01.jpg',
-          outOfStock: idx === 3,
-        }));
-        setColors(fromDbColors);
-        setSelectedColor(fromDbColors[0]!);
-        setActiveImage(fromDbColors[0]!.image);
+        const freshColors = buildColorOptions(
+          found.swatches,
+          found.image || '/images/catalog/catalog-01.jpg',
+          variants
+        );
+        setColors(freshColors);
+        setSelectedColor(freshColors[0]!);
+        setActiveImage(freshColors[0]!.image);
 
         const thumbs = Array.from(
           new Set([
-            ...fromDbColors.map((c) => c.image),
+            ...freshColors.map((c) => c.image),
             found.image,
             ...(found.images || []),
             '/images/catalog/catalog-01.jpg',
@@ -146,9 +201,27 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
       }
     });
 
+    // Refresh data varian dari API
+    fetch('/api/admin/inventory', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!isMounted || !data?.variants) return;
+        const productId = String(initialProduct.id);
+        const productVariants: ProductVariant[] = (data.variants as ProductVariant[]).filter(
+          (v) =>
+            v.productSlug === slug ||
+            String(v.productId) === productId
+        );
+        if (productVariants.length > 0) {
+          setVariants(productVariants);
+        }
+      })
+      .catch(() => {/* ignore — SSR data masih tersedia */});
+
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, initialProduct]);
 
   const title = (dbProduct?.title || initialProduct.title).toUpperCase();
@@ -157,7 +230,7 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
-      showToast('Mohon maaf, produk ini sedang habis.');
+      showToast('Mohon maaf, stok untuk pilihan ini sedang habis.');
       return;
     }
 
@@ -291,16 +364,23 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedColor(c);
-                            setActiveImage(c.image);
+                            if (!c.outOfStock) {
+                              setSelectedColor(c);
+                              setActiveImage(c.image);
+                            }
                           }}
-                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 cursor-pointer ${
+                          disabled={c.outOfStock}
+                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+                            c.outOfStock
+                              ? 'opacity-40 cursor-not-allowed'
+                              : 'cursor-pointer'
+                          } ${
                             isSelected
                               ? 'ring-1 ring-black ring-offset-2 ring-offset-white scale-105'
                               : 'ring-1 ring-black/20 hover:ring-black/60'
-                          } ${c.outOfStock ? 'opacity-50' : ''}`}
-                          title={c.name}
-                          aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Sold out)' : ''}`}
+                          }`}
+                          title={c.outOfStock ? `${c.name} — Habis` : c.name}
+                          aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Habis)' : ''}`}
                         >
                           <span
                             className="h-full w-full rounded-full border border-black/10 transition-transform duration-150"
@@ -315,8 +395,8 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                         </button>
 
                         {c.outOfStock && (
-                          <span className="text-[10px] font-medium text-black/45 line-through">
-                            {c.name} (Sold out)
+                          <span className="text-[10px] font-medium text-black/40 line-through">
+                            {c.name} (Habis)
                           </span>
                         )}
                       </div>
@@ -333,15 +413,27 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {sizeOptions.map((sz) => {
                     const isSelected = selectedSize === sz;
+                    // Cek apakah kombinasi warna+size ini habis
+                    const szVariant = variants.length > 0
+                      ? variants.find(
+                          (v) =>
+                            v.colorName.toLowerCase() === selectedColor.name.toLowerCase() &&
+                            v.size.toUpperCase() === sz.toUpperCase()
+                        )
+                      : undefined;
+                    const isSzSoldOut = szVariant !== undefined && szVariant.stock <= 0;
                     return (
                       <button
                         key={sz}
                         type="button"
-                        onClick={() => setSelectedSize(sz)}
-                        className={`border px-5 py-2 text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'border-black bg-white text-black font-semibold'
-                            : 'border-black/20 bg-white text-black/60 hover:border-black hover:text-black'
+                        onClick={() => !isSzSoldOut && setSelectedSize(sz)}
+                        disabled={isSzSoldOut}
+                        className={`border px-5 py-2 text-[10px] tracking-wider uppercase transition-colors ${
+                          isSzSoldOut
+                            ? 'border-black/10 bg-white text-black/25 cursor-not-allowed line-through'
+                            : isSelected
+                            ? 'border-black bg-white text-black font-semibold cursor-pointer'
+                            : 'border-black/20 bg-white text-black/60 hover:border-black hover:text-black cursor-pointer'
                         }`}
                       >
                         {sz}

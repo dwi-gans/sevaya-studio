@@ -20,6 +20,7 @@ export type MutationType = 'in' | 'out' | 'adjustment';
 export type MutationReason =
   | 'RESTOCK_PRODUCTION'   // Hasil produksi konveksi
   | 'CUSTOMER_ORDER'       // Penjualan order pelanggan
+  | 'ORDER_FULFILLMENT'    // Pemenuhan pesanan otomatis saat pembayaran dikonfirmasi
   | 'CUSTOMER_RETURN'      // Retur pelanggan
   | 'DAMAGE_DEFECT'        // Cacat kain / reject
   | 'SAMPLE_MARKETING'     // Photoshoot / endorse

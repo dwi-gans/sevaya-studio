@@ -15,6 +15,7 @@ interface StockMutationModalProps {
 export const REASON_LABELS: Record<MutationReason, string> = {
   RESTOCK_PRODUCTION: 'Produksi Masuk (Gudang)',
   CUSTOMER_ORDER: 'Penjualan / Pesanan Pelanggan',
+  ORDER_FULFILLMENT: 'Pesanan Website (Otomatis)',
   CUSTOMER_RETURN: 'Retur dari Pelanggan',
   DAMAGE_DEFECT: 'Barang Cacat / Reject',
   SAMPLE_MARKETING: 'Sampel Foto & Promosi',

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getDbProducts, DEFAULT_DB_PRODUCTS, DbProduct } from '@/integrations/supabase';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
+import { getServerInventoryVariants } from '@/lib/inventory-server';
 
 export const revalidate = 0;
 
@@ -12,7 +13,11 @@ export default async function ProductDetailPage({
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 
-  const products = await getDbProducts(true);
+  const [products, allVariants] = await Promise.all([
+    getDbProducts(true),
+    getServerInventoryVariants(),
+  ]);
+
   let product: DbProduct | undefined = products.find((p) => p.slug === decodedSlug);
 
   if (!product) {
@@ -41,5 +46,17 @@ export default async function ProductDetailPage({
     };
   }
 
-  return <ProductDetailClient slug={decodedSlug} initialProduct={product} />;
+  const productVariants = allVariants.filter(
+    (v) =>
+      v.productSlug === decodedSlug ||
+      (product && String(v.productId) === String(product.id))
+  );
+
+  return (
+    <ProductDetailClient
+      slug={decodedSlug}
+      initialProduct={product}
+      initialVariants={productVariants}
+    />
+  );
 }

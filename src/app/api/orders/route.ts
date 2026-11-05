@@ -5,6 +5,7 @@ import { sendOrderPendingPaymentEmail, sendOrderPaidReceiptEmail } from '@/lib/o
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { getVerifiedProductPrice } from '@/lib/catalog-prices';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { getServerInventoryVariants } from '@/lib/inventory-server';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -120,6 +121,33 @@ export async function POST(req: NextRequest) {
       });
 
       serverSubtotal += verifiedPrice * qty;
+    }
+
+    // 5. Validasi stok per varian sebelum order dibuat
+    try {
+      const allVariants = await getServerInventoryVariants();
+      for (const item of verifiedItems) {
+        if (item.color && item.size) {
+          const variant = allVariants.find(
+            (v) =>
+              String(v.productId) === String(item.id) &&
+              v.colorName.toLowerCase() === (item.color as string).toLowerCase() &&
+              v.size.toUpperCase() === (item.size as string).toUpperCase()
+          );
+          if (variant && variant.stock < item.quantity) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: `Mohon maaf, "${item.title} - ${item.color} (${item.size})" baru saja habis (sisa ${variant.stock} pcs). Silakan perbarui keranjang Anda.`,
+              },
+              { status: 409 }
+            );
+          }
+        }
+      }
+    } catch (stockCheckErr) {
+      // Jika pengecekan stok gagal (misal storage offline), tetap lanjutkan checkout
+      console.warn('[orders/POST] Stock check warning:', stockCheckErr);
     }
 
     const safeShipping = Math.max(0, Math.round(Number(shippingCost) || 0));

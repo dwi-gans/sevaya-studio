@@ -365,6 +365,59 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
   return updatedList;
 }
 
+/**
+ * Kurangi stok secara otomatis untuk setiap item dalam pesanan yang sudah dibayar.
+ * Dipanggil dari DOKU webhook dan admin PATCH order status → 'paid'.
+ * Aman dijalankan lebih dari sekali karena idempotent per variantId (tidak re-deduct jika stok sudah 0).
+ */
+export async function deductStockForOrder(
+  items: Array<{ id: string; color?: string; size?: string; quantity: number }>,
+  orderNumber: string,
+  customerName: string
+): Promise<void> {
+  const allVariants = await getServerInventoryVariants();
+
+  for (const item of items) {
+    try {
+      const variant = allVariants.find(
+        (v) =>
+          String(v.productId) === String(item.id) &&
+          v.colorName.toLowerCase() === (item.color || '').toLowerCase() &&
+          v.size.toUpperCase() === (item.size || '').toUpperCase()
+      );
+
+      if (!variant) {
+        console.warn(
+          `[deductStockForOrder] Varian tidak ditemukan: produk="${item.id}" warna="${item.color}" ukuran="${item.size}" — dilewati.`
+        );
+        continue;
+      }
+
+      if (variant.stock <= 0) {
+        console.warn(
+          `[deductStockForOrder] Stok varian ${variant.sku} sudah 0, tidak ada yang dikurangi.`
+        );
+        continue;
+      }
+
+      await executeServerStockMutation({
+        variantId: variant.id,
+        type: 'out',
+        quantity: item.quantity,
+        reason: 'ORDER_FULFILLMENT',
+        reference: orderNumber,
+        notes: `Pembelian oleh ${customerName} via Web`,
+        createdBy: 'Sistem Otomatis (Checkout)',
+      });
+    } catch (err) {
+      console.warn(
+        `[deductStockForOrder] Gagal kurangi stok untuk item produk="${item.id}":`,
+        err
+      );
+    }
+  }
+}
+
 export async function addServerCustomVariant(params: {
   productId: string | number;
   productTitle: string;
