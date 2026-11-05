@@ -106,7 +106,7 @@ export function NavigationDrawer() {
             <button
               type="button"
               onClick={() => setActiveSubmenu(null)}
-              className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-white uppercase transition-colors hover:text-white/70"
+              className="flex items-center gap-2 text-[10px] font-semibold tracking-widest text-white uppercase transition-colors hover:text-white/70"
             >
               <Icon name="arrow_back" size={15} />
               <span>{submenuLabel[activeSubmenu]}</span>
@@ -148,7 +148,7 @@ export function NavigationDrawer() {
                     key={item.label}
                     href={item.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up flex items-center justify-between text-[11.5px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up flex items-center justify-between text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 40}ms` }}
                   >
                     <span>{item.label}</span>
@@ -180,7 +180,7 @@ export function NavigationDrawer() {
                     key={lb.id}
                     href={lb.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up flex items-center justify-between text-[11.5px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up flex items-center justify-between text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 50}ms` }}
                   >
                     <span>{lb.label}</span>
@@ -210,7 +210,7 @@ export function NavigationDrawer() {
                     key={item.label}
                     href={item.href}
                     onClick={handleClose}
-                    className="animate-luxury-fade-up text-[11.5px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                    className="animate-luxury-fade-up text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                     style={{ animationDelay: `${80 + i * 50}ms` }}
                   >
                     {item.label}
@@ -228,7 +228,7 @@ export function NavigationDrawer() {
                   key={link.href}
                   href={link.href}
                   onClick={handleClose}
-                  className="animate-luxury-fade-up text-[11.5px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                  className="animate-luxury-fade-up text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
                   style={{ animationDelay: `${80 + i * 50}ms` }}
                 >
                   {link.label}
@@ -278,7 +278,7 @@ export function NavigationDrawer() {
                   href="/"
                   prefetch={true}
                   onClick={handleClose}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors ${
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors ${
                     pathname === '/'
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]'
@@ -304,7 +304,7 @@ export function NavigationDrawer() {
                   href="/shop"
                   prefetch={true}
                   onClick={handleClose}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors ${
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/shop')
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]'
@@ -337,7 +337,7 @@ export function NavigationDrawer() {
                 <button
                   type="button"
                   onClick={() => setActiveSubmenu('lookbook')}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors ${
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/lookbook')
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]'
@@ -367,7 +367,7 @@ export function NavigationDrawer() {
                   href="/conscious"
                   prefetch={true}
                   onClick={handleClose}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors ${
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/conscious')
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]'
@@ -390,7 +390,7 @@ export function NavigationDrawer() {
                   href="/news"
                   prefetch={true}
                   onClick={handleClose}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors ${
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors ${
                     pathname.startsWith('/news')
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]'
@@ -416,7 +416,7 @@ export function NavigationDrawer() {
                   href="/customer/faq"
                   prefetch={true}
                   onClick={handleClose}
-                  className={`group relative inline-flex w-fit items-center text-[11.5px] tracking-widest uppercase transition-colors `+
+                  className={`group relative inline-flex w-fit items-center text-[10px] tracking-widest uppercase transition-colors `+
                     (pathname.startsWith('/customer')
                       ? 'font-semibold text-white'
                       : 'font-medium text-white hover:text-[#877274]')}
@@ -458,7 +458,7 @@ export function NavigationDrawer() {
                   {user.name ? user.name.trim().charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold tracking-wider text-white uppercase">
+                  <span className="text-[10px] font-semibold tracking-wider text-white uppercase">
                     {isId ? 'Akun Saya' : 'My Account'}
                   </span>
                   <span className="text-[9.5px] text-white/60 line-clamp-1">
@@ -488,7 +488,7 @@ export function NavigationDrawer() {
                   <Icon name="person" size={15} />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[11px] font-semibold tracking-wider text-white uppercase">
+                  <span className="text-[10px] font-semibold tracking-wider text-white uppercase">
                     {isId ? 'Masuk / Daftar' : 'Sign In / Register'}
                   </span>
                   <span className="text-[9.5px] text-white/60">
@@ -508,3 +508,5 @@ export function NavigationDrawer() {
     </div>
   );
 }
+
+
