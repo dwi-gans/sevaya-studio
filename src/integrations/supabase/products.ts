@@ -34,7 +34,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     title: 'Fina Abaya - Stripe Edition 2.0',
     category: 'abaya',
     edition: 'Edition 2.0',
-    price: 14975,
+    price: 1489000,
     original_price: 1489000,
     badge: 'Best Seller',
     image: '/images/catalog/catalog-01.jpg',

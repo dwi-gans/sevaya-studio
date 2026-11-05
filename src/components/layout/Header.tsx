@@ -10,9 +10,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
-import { SEARCH_CATALOG } from '@/data/searchCatalog';
+import { SEARCH_CATALOG, SearchItem } from '@/data/searchCatalog';
 import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
-import { getCachedSiteSections, getSiteSections } from '@/integrations/supabase';
+import {
+  getCachedSiteSections,
+  getSiteSections,
+  getDbProducts,
+  loadFromLocalStorage,
+  DbProduct,
+} from '@/integrations/supabase';
 
 const CUSTOMER_LINKS = [
   { label: 'Terms of Service', href: '/customer/terms-of-service' },
@@ -20,6 +26,20 @@ const CUSTOMER_LINKS = [
   { label: 'Returns & Exchanges', href: '/customer/returns-exchanges' },
   { label: 'FAQ', href: '/customer/faq' },
 ];
+
+function mapDbProductToSearchItem(p: DbProduct): SearchItem {
+  return {
+    id: String(p.id),
+    slug: p.slug,
+    title: p.title,
+    edition: p.edition || '',
+    price: p.price,
+    originalPrice: p.original_price,
+    image: p.image,
+    category: p.category,
+    badge: p.badge,
+  };
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -33,6 +53,15 @@ export function Header() {
   const [customerOpen, setCustomerOpen] = useState(false);
   const [lookbookOpen, setLookbookOpen] = useState(false);
   const [lookbookLinks, setLookbookLinks] = useState(LOOKBOOK_LINKS);
+  const [catalogItems, setCatalogItems] = useState<SearchItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = loadFromLocalStorage();
+      if (cached && cached.length > 0) {
+        return cached.filter((p) => !p.hidden).map(mapDbProductToSearchItem);
+      }
+    }
+    return SEARCH_CATALOG;
+  });
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -42,6 +71,20 @@ export function Header() {
 
   const displayUser = mounted ? user : null;
   const displayItemCount = mounted ? itemCount : 0;
+
+  useEffect(() => {
+    let isMounted = true;
+    getDbProducts().then((products) => {
+      if (!isMounted || !Array.isArray(products) || products.length === 0) return;
+      const visible = products.filter((p) => !p.hidden).map(mapDbProductToSearchItem);
+      setCatalogItems(visible);
+    }).catch(() => {
+      // ignore
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const sections = getCachedSiteSections();
@@ -88,7 +131,7 @@ export function Header() {
   // Live matching products
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const searchResults = trimmedQuery
-    ? SEARCH_CATALOG.filter((item) => {
+    ? catalogItems.filter((item) => {
         return (
           item.title.toLowerCase().includes(trimmedQuery) ||
           item.edition.toLowerCase().includes(trimmedQuery) ||
@@ -545,13 +588,10 @@ export function Header() {
                     {language === 'id' ? 'Pencarian Populer' : 'Trending Searches'}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      'Floraison',
-                      'Fina Abaya Stripe',
-                      'Tala Abaya Cloudmatte',
-                      'Bemberg Cupro',
-                      'Modest Abaya',
-                    ].map((term) => (
+                    {(catalogItems.length > 0
+                      ? catalogItems.slice(0, 5).map((item) => item.title)
+                      : ['Abaya Ramadhan', 'Sevilla Cupro Abaya', 'Paloma Khiban', 'Khimar 1']
+                    ).map((term) => (
                       <button
                         key={term}
                         type="button"
