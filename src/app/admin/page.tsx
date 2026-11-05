@@ -382,6 +382,16 @@ export default function AdminPage() {
       return;
     }
 
+    // Block duplicate product names
+    const currentId = editingProduct ? String(editingProduct.id) : null;
+    const isDuplicate = products.some(
+      (p) => String(p.id) !== currentId && p.title.trim().toLowerCase() === productForm.title.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      showToast('Nama produk sudah digunakan. Gunakan nama yang berbeda.');
+      return;
+    }
+
     const slug =
       productForm.slug.trim() ||
       productForm.title
@@ -1157,6 +1167,7 @@ export default function AdminPage() {
         isOpen={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
         editingProduct={editingProduct}
+        products={products}
         productForm={productForm}
         setProductForm={setProductForm}
         onSave={handleSaveProduct}

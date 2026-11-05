@@ -6,12 +6,10 @@ import {
   ProductVariant,
   StockMutation,
   MutationType,
-  generateDefaultVariantsForProduct,
 } from '@/integrations/supabase';
 import { DbProduct } from '@/integrations/supabase/products';
 import { Icon } from '@/components/ui/Icon';
 import StockMutationModal, { REASON_LABELS } from '@/components/admin/modals/StockMutationModal';
-import AddVariantModal from '@/components/admin/modals/AddVariantModal';
 
 interface InventoryTelemetry {
   totalVariants: number;
@@ -87,8 +85,6 @@ export default function InventoryTab({ products }: InventoryTabProps) {
     variant: ProductVariant;
     type: MutationType;
   } | null>(null);
-  const [isAddVariantOpen, setIsAddVariantOpen] = useState(false);
-  const [addVariantForProductId, setAddVariantForProductId] = useState<string | null>(null);
 
   // Sync state
   const [generating, setGenerating] = useState(false);
@@ -291,33 +287,28 @@ export default function InventoryTab({ products }: InventoryTabProps) {
     setExpandedProductIds({});
   };
 
-  // Sync / Generate variants for products missing them
+  // Sync / Generate variants for all products via server API
   const handleGenerateVariants = async () => {
     setGenerating(true);
     try {
-      const existingProductIds = new Set(variants.map((v) => v.productId));
-      const missingProducts = products.filter((p) => !existingProductIds.has(String(p.id)));
-
-      if (missingProducts.length === 0) {
-        alert('Semua produk di katalog sudah memiliki varian di inventaris.');
-        return;
+      // Call ensure_product for every catalog product — server will create missing variants idempotently
+      let synced = 0;
+      for (const p of products) {
+        const res = await fetch('/api/admin/inventory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': 'sevaya-admin',
+          },
+          body: JSON.stringify({ action: 'ensure_product', product: p }),
+        });
+        const json = await res.json();
+        if (json.success) synced++;
       }
 
-      const newVariants: ProductVariant[] = [];
-      for (const p of missingProducts) {
-        newVariants.push(...generateDefaultVariantsForProduct(p));
-      }
-
-      const res = await fetch('/api/admin/inventory', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': 'sevaya-admin',
-        },
-        body: JSON.stringify({ variants: [...variants, ...newVariants] }),
-      });
-      const json = await res.json();
-      if (json.success) {
+      if (synced === 0) {
+        alert('Tidak ada produk di katalog untuk disinkronkan.');
+      } else {
         await fetchInventory(true);
       }
     } catch (err) {
@@ -331,11 +322,6 @@ export default function InventoryTab({ products }: InventoryTabProps) {
     setVariants((prev) =>
       prev.map((v) => (v.id === updatedVariant.id ? updatedVariant : v))
     );
-    fetchInventory(true);
-  };
-
-  const handleAddVariantSuccess = (newVariant: ProductVariant) => {
-    setVariants((prev) => [newVariant, ...prev]);
     fetchInventory(true);
   };
 
@@ -375,19 +361,6 @@ export default function InventoryTab({ products }: InventoryTabProps) {
           >
             <Icon name="refresh" size={13} className={loading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Segarkan</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setAddVariantForProductId(null);
-              setIsAddVariantOpen(true);
-            }}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-1.5 sm:px-3.5 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-black transition hover:bg-black/5 active:scale-95 cursor-pointer shadow-2xs"
-            title="Tambah warna atau ukuran baru"
-          >
-            <Icon name="add" size={13} />
-            <span>Tambah Varian Baru</span>
           </button>
 
           <button
@@ -720,21 +693,8 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                         </span>
                       </div>
 
-                      {/* Expand / Collapse & Add Variant Buttons */}
+                      {/* Expand / Collapse Button */}
                       <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAddVariantForProductId(prod.id);
-                            setIsAddVariantOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 py-1 text-[11px] font-semibold text-black hover:bg-black/5 transition active:scale-95 cursor-pointer shadow-2xs"
-                          title="Tambah warna atau ukuran baru untuk produk ini"
-                        >
-                          <Icon name="add" size={12} />
-                          <span className="hidden sm:inline">Varian</span>
-                        </button>
-
                         <button
                           type="button"
                           onClick={() => toggleExpand(prod.id)}
@@ -756,127 +716,150 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                       {prod.variants.length === 0 ? (
                         <div className="p-4 text-center text-xs text-black/50">
                           Belum ada varian ukuran/warna untuk produk ini.
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAddVariantForProductId(prod.id);
-                              setIsAddVariantOpen(true);
-                            }}
-                            className="ml-2 font-bold text-black underline cursor-pointer"
-                          >
-                            + Buat varian sekarang
-                          </button>
+                          <br />
+                          <span className="text-[11px] text-black/40">Tekan &ldquo;Sinkronkan Katalog&rdquo; untuk membuat varian otomatis.</span>
                         </div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs">
-                            <thead>
-                              <tr className="border-b border-black/10 bg-black/[0.03]">
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
-                                  Warna
-                                </th>
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
-                                  SKU Varian
-                                </th>
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
-                                  Ukuran
-                                </th>
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
-                                  Stok Saat Ini
-                                </th>
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
-                                  Status
-                                </th>
-                                <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-right">
-                                  Aksi Mutasi
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-black/[0.05]">
-                              {prod.variants.map((v) => {
-                                const vStatus = getStockStatus(v.stock, v.lowStockThreshold ?? 3);
-                                const vBadge = STATUS_BADGE[vStatus];
-                                return (
-                                  <tr key={v.id} className="hover:bg-black/[0.015] transition-colors bg-white">
-                                    {/* Color */}
-                                    <td className="py-2 px-3 sm:px-4">
-                                      <div className="flex items-center gap-1.5">
-                                        <span
-                                          className="h-3 w-3 rounded-full border border-black/20 shrink-0"
-                                          style={{ backgroundColor: v.colorHex }}
-                                        />
-                                        <span className="text-black/90 font-semibold text-[11px]">
-                                          {v.colorName}
-                                        </span>
-                                      </div>
-                                    </td>
+                      ) : (() => {
+                        // Build color-keyed map: colorName → { hex, variants by size }
+                        const colorMap = new Map<string, { hex: string; bySize: Map<string, ProductVariant> }>();
+                        const allSizes: string[] = [];
+                        prod.variants.forEach((v) => {
+                          if (!colorMap.has(v.colorName)) {
+                            colorMap.set(v.colorName, { hex: v.colorHex, bySize: new Map() });
+                          }
+                          colorMap.get(v.colorName)!.bySize.set(v.size, v);
+                          if (!allSizes.includes(v.size)) allSizes.push(v.size);
+                        });
+                        // Sort sizes naturally: S, M, L, XL, etc.
+                        allSizes.sort((a, b) => {
+                          const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                          const ia = order.indexOf(a.toUpperCase());
+                          const ib = order.indexOf(b.toUpperCase());
+                          if (ia !== -1 && ib !== -1) return ia - ib;
+                          if (ia !== -1) return -1;
+                          if (ib !== -1) return 1;
+                          return a.localeCompare(b);
+                        });
 
-                                    {/* SKU */}
-                                    <td className="py-2 px-3 sm:px-4 font-mono text-[10px] text-black/60 font-medium">
-                                      {v.sku}
-                                    </td>
+                        return (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs">
+                              <thead>
+                                <tr className="border-b border-black/10 bg-black/[0.03]">
+                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
+                                    Warna / Swatch
+                                  </th>
+                                  {allSizes.map((sz) => (
+                                    <th key={sz} className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
+                                      Size {sz}
+                                    </th>
+                                  ))}
+                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
+                                    Total Warna
+                                  </th>
+                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-right">
+                                    Aksi
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-black/[0.05]">
+                                {Array.from(colorMap.entries()).map(([colorName, colorData]) => {
+                                  const colorTotal = Array.from(colorData.bySize.values()).reduce((s, v) => s + v.stock, 0);
+                                  const colorStatus = getStockStatus(colorTotal, 3);
+                                  const colorBadge = STATUS_BADGE[colorStatus];
+                                  // Pick first variant for quick restock action
+                                  const firstVariant = allSizes
+                                    .map((sz) => colorData.bySize.get(sz))
+                                    .find((v) => v !== undefined);
 
-                                    {/* Size */}
-                                    <td className="py-2 px-3 sm:px-4 text-center">
-                                      <span className="inline-block rounded-md bg-black/5 px-2 py-0.5 font-bold text-black/80 text-[10px]">
-                                        {v.size}
-                                      </span>
-                                    </td>
+                                  return (
+                                    <tr key={colorName} className="hover:bg-black/[0.015] transition-colors bg-white">
+                                      {/* Color swatch + name */}
+                                      <td className="py-2.5 px-3 sm:px-4">
+                                        <div className="flex items-center gap-2">
+                                          <span
+                                            className="h-3.5 w-3.5 rounded-full border border-black/20 shrink-0"
+                                            style={{ backgroundColor: colorData.hex }}
+                                          />
+                                          <div className="min-w-0">
+                                            <span className="text-black/90 font-semibold text-[11px] block truncate">{colorName}</span>
+                                            <span className={`inline-block rounded-full px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider mt-0.5 ${colorBadge.className}`}>
+                                              {colorBadge.label}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </td>
 
-                                    {/* Stock pcs */}
-                                    <td className="py-2 px-3 sm:px-4 text-center">
-                                      <span className="text-xs sm:text-sm font-bold text-black tabular-nums">
-                                        {v.stock}
-                                      </span>
-                                      <span className="text-[10px] text-black/50 ml-0.5">pcs</span>
-                                    </td>
+                                      {/* Stock per size */}
+                                      {allSizes.map((sz) => {
+                                        const v = colorData.bySize.get(sz);
+                                        const szStatus = v ? getStockStatus(v.stock, v.lowStockThreshold ?? 3) : null;
+                                        return (
+                                          <td key={sz} className="py-2.5 px-3 sm:px-4 text-center">
+                                            {v ? (
+                                              <button
+                                                type="button"
+                                                onClick={() => setMutationTarget({ variant: v, type: 'in' })}
+                                                title={`Masuk stok: ${colorName} Size ${sz}`}
+                                                className={`inline-flex flex-col items-center gap-0 cursor-pointer rounded-lg px-2 py-1 transition hover:scale-105 active:scale-95 ${
+                                                  szStatus === 'out'
+                                                    ? 'bg-rose-50 text-rose-700'
+                                                    : szStatus === 'low'
+                                                    ? 'bg-amber-50 text-amber-800'
+                                                    : 'bg-emerald-50/60 text-emerald-800'
+                                                }`}
+                                              >
+                                                <span className="text-xs font-bold tabular-nums">{v.stock}</span>
+                                                <span className="text-[9px] font-medium opacity-70">pcs</span>
+                                              </button>
+                                            ) : (
+                                              <span className="text-black/25 text-[11px]">—</span>
+                                            )}
+                                          </td>
+                                        );
+                                      })}
 
-                                    {/* Status Badge */}
-                                    <td className="py-2 px-3 sm:px-4 text-center">
-                                      <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${vBadge.className}`}>
-                                        {vBadge.label}
-                                      </span>
-                                    </td>
+                                      {/* Total per color */}
+                                      <td className="py-2.5 px-3 sm:px-4 text-center">
+                                        <span className="text-sm font-bold text-black tabular-nums">{colorTotal}</span>
+                                        <span className="text-[10px] text-black/50 ml-0.5">pcs</span>
+                                      </td>
 
-                                    {/* Quick Mutation Buttons */}
-                                    <td className="py-2 px-3 sm:px-4 text-right">
-                                      <div className="inline-flex items-center gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => setMutationTarget({ variant: v, type: 'in' })}
-                                          className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
-                                          title="Stok Masuk (+)"
-                                        >
-                                          <Icon name="add" size={11} />
-                                          <span>Masuk</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setMutationTarget({ variant: v, type: 'out' })}
-                                          className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
-                                          title="Stok Keluar (-)"
-                                        >
-                                          <Icon name="remove" size={11} />
-                                          <span>Keluar</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setMutationTarget({ variant: v, type: 'adjustment' })}
-                                          className="inline-flex items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
-                                          title="Penyesuaian Opname"
-                                        >
-                                          <Icon name="tune" size={11} />
-                                          <span>Atur</span>
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                                      {/* Quick action buttons */}
+                                      <td className="py-2.5 px-3 sm:px-4 text-right">
+                                        {firstVariant ? (
+                                          <div className="inline-flex items-center gap-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => setMutationTarget({ variant: firstVariant, type: 'in' })}
+                                              className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
+                                              title="Stok Masuk (+)"
+                                            >
+                                              <Icon name="add" size={11} />
+                                              <span>Masuk</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setMutationTarget({ variant: firstVariant, type: 'out' })}
+                                              className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
+                                              title="Stok Keluar (-)"
+                                            >
+                                              <Icon name="remove" size={11} />
+                                              <span>Keluar</span>
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-black/25 text-[10px]">—</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1095,18 +1078,6 @@ export default function InventoryTab({ products }: InventoryTabProps) {
           onSuccess={handleMutationSuccess}
         />
       )}
-
-      {/* Modal Tambah Varian Baru */}
-      <AddVariantModal
-        isOpen={isAddVariantOpen}
-        products={products}
-        preselectedProductId={addVariantForProductId}
-        onClose={() => {
-          setIsAddVariantOpen(false);
-          setAddVariantForProductId(null);
-        }}
-        onSuccess={handleAddVariantSuccess}
-      />
     </div>
   );
 }
