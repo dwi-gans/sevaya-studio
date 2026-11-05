@@ -163,13 +163,20 @@ export function ProductDetailClient({
       const found = prodList.find((p) => p.slug === slug);
       if (!found) return;
 
-      const isIdentical =
-        found.price === initialProduct.price &&
-        found.title === initialProduct.title &&
-        found.image === initialProduct.image &&
-        (found.swatches?.length || 0) === (initialProduct.swatches?.length || 0);
+      const hasChanged =
+        found.price !== dbProduct.price ||
+        found.title !== dbProduct.title ||
+        found.image !== dbProduct.image ||
+        (found.description || '') !== (dbProduct.description || '') ||
+        (found.fabric || '') !== (dbProduct.fabric || '') ||
+        (found.sizing || '') !== (dbProduct.sizing || '') ||
+        (found.badge || '') !== (dbProduct.badge || '') ||
+        found.stock !== dbProduct.stock ||
+        found.inStock !== dbProduct.inStock ||
+        JSON.stringify(found.swatches || []) !== JSON.stringify(dbProduct.swatches || []) ||
+        JSON.stringify(found.sizes || []) !== JSON.stringify(dbProduct.sizes || []);
 
-      if (isIdentical) return;
+      if (!hasChanged) return;
 
       setDbProduct(found);
       if (found.swatches && found.swatches.length > 0) {

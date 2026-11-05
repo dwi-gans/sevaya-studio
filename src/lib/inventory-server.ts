@@ -10,7 +10,7 @@ import {
   generateDefaultVariantsForProduct,
 } from '@/integrations/supabase/inventory';
 import { DbProduct, DEFAULT_DB_PRODUCTS } from '@/integrations/supabase/products';
-import { setCachedProducts } from '@/lib/products-cache';
+import { setCachedProducts, getCachedProducts } from '@/lib/products-cache';
 
 const INVENTORY_FILE = 'inventory.json';
 const MUTATIONS_FILE = 'stock_mutations.json';
@@ -84,39 +84,37 @@ async function uploadToStorage(filename: string, data: unknown): Promise<boolean
 }
 
 // In-memory caches to guarantee microsecond server performance
-let _serverCachedProducts: DbProduct[] | null = null;
 let _serverCachedVariants: ProductVariant[] | null = null;
 let _serverCachedMutations: StockMutation[] | null = null;
 
 export async function getServerProducts(): Promise<DbProduct[]> {
-  if (_serverCachedProducts && _serverCachedProducts.length > 0) {
-    return _serverCachedProducts;
+  const { products: cached, expired } = getCachedProducts();
+  if (cached && !expired && cached.length > 0) {
+    return cached;
   }
 
-  // 1. Storage
+  // 1. Disk fallback (primary for dev/sandbox & fast persistence)
+  const fromLocal = readLocalFile<DbProduct[]>(PRODUCTS_FILE);
+  if (Array.isArray(fromLocal) && fromLocal.length > 0) {
+    setCachedProducts(fromLocal);
+    return fromLocal;
+  }
+
+  // 2. Storage
   const fromStorage = await downloadFromStorage<DbProduct[]>(PRODUCTS_FILE);
   if (Array.isArray(fromStorage) && fromStorage.length > 0) {
-    _serverCachedProducts = fromStorage;
+    setCachedProducts(fromStorage);
     writeLocalFile(PRODUCTS_FILE, fromStorage);
     return fromStorage;
   }
 
-  // 2. Disk fallback
-  const fromLocal = readLocalFile<DbProduct[]>(PRODUCTS_FILE);
-  if (Array.isArray(fromLocal) && fromLocal.length > 0) {
-    _serverCachedProducts = fromLocal;
-    return fromLocal;
-  }
-
-  _serverCachedProducts = DEFAULT_DB_PRODUCTS;
+  setCachedProducts(DEFAULT_DB_PRODUCTS);
   return DEFAULT_DB_PRODUCTS;
 }
 
 export async function saveServerProducts(products: DbProduct[]): Promise<void> {
-  _serverCachedProducts = products;
-  writeLocalFile(PRODUCTS_FILE, products);
-  // Sync the shared globalThis cache so /api/products GET sees fresh data instantly
   setCachedProducts(products);
+  writeLocalFile(PRODUCTS_FILE, products);
   await uploadToStorage(PRODUCTS_FILE, products);
 }
 
@@ -350,9 +348,14 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
     const products = await getServerProducts();
     const pIdx = products.findIndex((p) => String(p.id) === String(product.id));
     const targetProd = products[pIdx];
-    if (targetProd && (targetProd.stock !== totalStock || targetProd.inStock !== (totalStock > 0))) {
+    if (targetProd) {
       products[pIdx] = {
         ...targetProd,
+        title: product.title || targetProd.title,
+        slug: product.slug || targetProd.slug,
+        description: product.description !== undefined ? product.description : targetProd.description,
+        fabric: product.fabric !== undefined ? product.fabric : targetProd.fabric,
+        sizing: product.sizing !== undefined ? product.sizing : targetProd.sizing,
         stock: totalStock,
         inStock: totalStock > 0,
       };

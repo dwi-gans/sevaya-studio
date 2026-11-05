@@ -18,7 +18,11 @@ export default async function ProductDetailPage({
     getServerInventoryVariants(),
   ]);
 
-  let product: DbProduct | undefined = products.find((p) => p.slug === decodedSlug);
+  let product: DbProduct | undefined = products.find(
+    (p) =>
+      p.slug.toLowerCase() === decodedSlug.toLowerCase() ||
+      String(p.id) === decodedSlug
+  );
 
   if (!product) {
     product = DEFAULT_DB_PRODUCTS.find((p) => p.slug === decodedSlug);

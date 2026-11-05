@@ -204,6 +204,11 @@ async function syncProductsToCloudStorage(products: DbProduct[]): Promise<void> 
   // Always save to localStorage first (instant, reliable fallback)
   saveToLocalStorage(products);
 
+  if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache) {
+    globalThis.__sevayaProductsCache.products = products;
+    globalThis.__sevayaProductsCache.timestamp = Date.now();
+  }
+
   try {
     if (typeof window !== 'undefined') {
       const res = await fetch('/api/products', {
@@ -226,9 +231,32 @@ let _cachedProducts: DbProduct[] | null = null;
 let _cachedTime = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
 
+async function loadServerDiskProducts(): Promise<DbProduct[] | null> {
+  if (typeof window !== 'undefined') return null;
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const diskPath = path.join(process.cwd(), '.data', PRODUCTS_FILE);
+    if (fs.existsSync(diskPath)) {
+      const raw = fs.readFileSync(diskPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed as DbProduct[];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export function invalidateProductsCache(): void {
   _cachedProducts = null;
   _cachedTime = 0;
+  if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache) {
+    globalThis.__sevayaProductsCache.products = null;
+    globalThis.__sevayaProductsCache.timestamp = 0;
+  }
   // Clear localStorage so stale data never surfaces as fallback
   if (typeof window !== 'undefined') {
     try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
@@ -240,6 +268,16 @@ export function invalidateProductsCache(): void {
  */
 export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> {
   const now = Date.now();
+
+  // 0. Cek shared globalThis cache di Node.js server
+  if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache?.products && !forceRefresh) {
+    if (now - globalThis.__sevayaProductsCache.timestamp < CACHE_TTL_MS) {
+      _cachedProducts = globalThis.__sevayaProductsCache.products;
+      _cachedTime = globalThis.__sevayaProductsCache.timestamp;
+      return _cachedProducts;
+    }
+  }
+
   if (!forceRefresh && _cachedProducts && now - _cachedTime < CACHE_TTL_MS) {
     return _cachedProducts as DbProduct[];
   }
@@ -278,7 +316,21 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     }
   }
 
-  // 3. Server or direct fetch: Cloud Storage JSON file (where live catalog is maintained)
+  // 3. Di Server: langsung baca disk lokal .data/products.json (tercepat & paling sinkron)
+  if (typeof window === 'undefined') {
+    const fromDisk = await loadServerDiskProducts();
+    if (fromDisk && fromDisk.length > 0) {
+      _cachedProducts = fromDisk;
+      _cachedTime = Date.now();
+      if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache) {
+        globalThis.__sevayaProductsCache.products = fromDisk;
+        globalThis.__sevayaProductsCache.timestamp = Date.now();
+      }
+      return fromDisk;
+    }
+  }
+
+  // 4. Server or direct fetch: Cloud Storage JSON file (where live catalog is maintained)
   try {
     const fetchStorage = async () => {
       const { data, error } = await supabase.storage
@@ -310,7 +362,7 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     // Ignore and fallback below
   }
 
-  // 4. Fallback to localStorage or code defaults
+  // 5. Fallback to localStorage or code defaults
   const lsData = loadFromLocalStorage();
   if (lsData && lsData.length > 0) {
     _cachedProducts = lsData;
