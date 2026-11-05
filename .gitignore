@@ -60,6 +60,7 @@ coverage/
 # ==============================
 .cache/
 .turbo/
+.data/
 /src/generated/prisma
 
 # Test/temp and root reference files

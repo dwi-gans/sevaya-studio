@@ -14,6 +14,7 @@ export {
 } from './articles';
 export {
   getDbProducts,
+  invalidateProductsCache,
   createDbProduct,
   updateDbProduct,
   deleteDbProduct,
@@ -48,6 +49,7 @@ export {
 } from './storage';
 export {
   getInventoryVariants,
+  invalidateInventoryCache,
   saveInventoryVariants,
   getStockMutations,
   saveStockMutations,

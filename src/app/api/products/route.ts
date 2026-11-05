@@ -1,34 +1,62 @@
+import fs from 'fs';
+import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import { DEFAULT_DB_PRODUCTS, DbProduct } from '@/integrations/supabase';
+import {
+  getCachedProducts,
+  setCachedProducts,
+  invalidateCachedProducts,
+} from '@/lib/products-cache';
 
 export const runtime = 'nodejs';
 
 const PRODUCTS_FILE = 'products.json';
-
-// In-memory cache for public product catalog (60s TTL, instantly updated on POST)
-let cachedProducts: DbProduct[] | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
+const DATA_DIR = path.join(process.cwd(), '.data');
 
 const PUBLIC_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
 };
 
+function readLocalProducts(): DbProduct[] | null {
+  try {
+    const filePath = path.join(DATA_DIR, PRODUCTS_FILE);
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(content) as DbProduct[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function writeLocalProducts(products: DbProduct[]) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(path.join(DATA_DIR, PRODUCTS_FILE), JSON.stringify(products, null, 2), 'utf-8');
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * GET /api/products
- * Returns the current products list from memory cache or Supabase Storage.
+ * Priority: shared globalThis cache → Supabase Storage → .data/products.json → DEFAULT_DB_PRODUCTS
  */
 export async function GET() {
-  const now = Date.now();
-  if (cachedProducts && now - cacheTimestamp < CACHE_TTL_MS) {
+  const { products: cached, expired } = getCachedProducts();
+
+  if (cached && !expired) {
     return NextResponse.json(
-      { success: true, products: cachedProducts },
+      { success: true, products: cached },
       { headers: PUBLIC_CACHE_HEADERS }
     );
   }
 
+  // 1. Try Supabase Storage (may be offline in dev)
   try {
     const { data, error } = await supabaseAdmin.storage
       .from('catalog')
@@ -38,34 +66,39 @@ export async function GET() {
       const text = await data.text();
       const parsed = JSON.parse(text) as DbProduct[];
       if (Array.isArray(parsed) && parsed.length > 0) {
-        cachedProducts = parsed;
-        cacheTimestamp = now;
+        setCachedProducts(parsed);
+        writeLocalProducts(parsed); // keep disk in sync
         return NextResponse.json(
           { success: true, products: parsed },
           { headers: PUBLIC_CACHE_HEADERS }
         );
       }
     }
+  } catch {
+    // offline or storage unavailable — fall through to disk
+  }
 
-    cachedProducts = DEFAULT_DB_PRODUCTS;
-    cacheTimestamp = now;
+  // 2. Fallback: .data/products.json (written by inventory-server after every mutation/sync)
+  const fromDisk = readLocalProducts();
+  if (fromDisk) {
+    setCachedProducts(fromDisk);
     return NextResponse.json(
-      { success: true, products: DEFAULT_DB_PRODUCTS },
-      { headers: PUBLIC_CACHE_HEADERS }
-    );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json(
-      { success: true, products: cachedProducts || DEFAULT_DB_PRODUCTS, warning: message },
+      { success: true, products: fromDisk },
       { headers: PUBLIC_CACHE_HEADERS }
     );
   }
+
+  // 3. Last resort: hardcoded defaults
+  setCachedProducts(DEFAULT_DB_PRODUCTS);
+  return NextResponse.json(
+    { success: true, products: DEFAULT_DB_PRODUCTS },
+    { headers: PUBLIC_CACHE_HEADERS }
+  );
 }
 
 /**
  * POST /api/products
- * Saves / updates the products list in Supabase Storage using privileged Service Role Key.
- * Instantly invalidates and updates the in-memory cache.
+ * Saves / updates the products list in Supabase Storage + disk + shared cache.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -88,26 +121,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Always write to disk first (reliable)
+    writeLocalProducts(products);
+
+    // Update shared cache immediately
+    setCachedProducts(products);
+
+    // Try Supabase (best-effort)
     const jsonStr = JSON.stringify(products, null, 2);
     const buffer = Buffer.from(jsonStr, 'utf-8');
-
-    const { error: uploadError } = await supabaseAdmin.storage
+    await supabaseAdmin.storage
       .from('catalog')
       .upload(PRODUCTS_FILE, buffer, {
         contentType: 'application/json',
         upsert: true,
-      });
-
-    if (uploadError) {
-      return NextResponse.json(
-        { success: false, error: `Gagal simpan ke Supabase Storage: ${uploadError.message}` },
-        { status: 500 }
-      );
-    }
-
-    // Instantly update memory cache
-    cachedProducts = products;
-    cacheTimestamp = Date.now();
+      })
+      .catch(() => {/* offline — disk already saved */});
 
     return NextResponse.json({ success: true, products });
   } catch (err: unknown) {
@@ -115,3 +144,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
+
+// Expose for direct server-side invalidation
+export { invalidateCachedProducts };

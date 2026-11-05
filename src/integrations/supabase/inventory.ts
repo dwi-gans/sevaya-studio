@@ -102,10 +102,10 @@ export function generateDefaultVariantsForProduct(product: DbProduct): ProductVa
     ? product.swatches
     : [{ name: 'Black', color: '#1A1A1A' }];
 
-  const sizes = ['S', 'M', 'L'];
+  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'];
   const baseStock = typeof product.stock === 'number' ? product.stock : (product.inStock === false ? 0 : 25);
-  // Bagi rata ke tiap varian (minimal 0)
-  const stockPerVariant = Math.max(0, Math.floor(baseStock / (swatches.length * sizes.length))) || 5;
+  // Bagi rata ke tiap varian (jika baseStock 0, maka 0)
+  const stockPerVariant = baseStock > 0 ? Math.floor(baseStock / (swatches.length * sizes.length)) : 0;
 
   const variants: ProductVariant[] = [];
 
@@ -134,15 +134,57 @@ export function generateDefaultVariantsForProduct(product: DbProduct): ProductVa
 let _cachedVariants: ProductVariant[] | null = null;
 let _cachedMutations: StockMutation[] | null = null;
 
+export function invalidateInventoryCache(): void {
+  _cachedVariants = null;
+  _cachedMutations = null;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(LS_VARIANTS_KEY);
+      localStorage.removeItem(LS_MUTATIONS_KEY);
+    } catch {
+      // ignore
+    }
+  }
+}
+
 /**
  * Ambil semua varian inventaris (dengan fallback auto-generator dari katalog produk)
  */
 export async function getInventoryVariants(forceRefresh = false): Promise<ProductVariant[]> {
-  if (!forceRefresh && _cachedVariants && _cachedVariants.length > 0) {
+  if (forceRefresh) {
+    invalidateInventoryCache();
+  } else if (_cachedVariants && _cachedVariants.length > 0) {
     return _cachedVariants;
   }
 
-  // 1. Coba dari Cloud Storage via API/Supabase
+  // 1. Prioritaskan server API endpoint (/api/admin/inventory) yang didukung service-role & persistensi disk
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`/api/admin/inventory${forceRefresh ? '?refresh=true' : ''}`, {
+        headers: {
+          'x-admin-key': 'sevaya-admin',
+          'Cache-Control': 'no-cache',
+        },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.variants) && json.variants.length > 0) {
+          _cachedVariants = json.variants;
+          try {
+            localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify(json.variants));
+          } catch {
+            // ignore
+          }
+          return json.variants;
+        }
+      }
+    } catch {
+      // fallback jika network gagal
+    }
+  }
+
+  // 2. Coba dari Cloud Storage via anon Supabase client
   try {
     const { data, error } = await supabase.storage.from('catalog').download(INVENTORY_FILE);
     if (!error && data) {
@@ -157,7 +199,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
     // Ignore & lanjut fallback
   }
 
-  // 2. Coba localStorage (browser)
+  // 3. Coba localStorage (browser)
   if (typeof window !== 'undefined') {
     try {
       const local = localStorage.getItem(LS_VARIANTS_KEY);
@@ -173,7 +215,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
     }
   }
 
-  // 3. Fallback: Auto-generate dari daftar produk yang ada di katalog
+  // 4. Fallback terakhir: Auto-generate dari daftar produk yang ada di katalog
   const products = await getDbProducts();
   const allVariants: ProductVariant[] = [];
   for (const p of products) {
@@ -217,6 +259,33 @@ export async function saveInventoryVariants(variants: ProductVariant[]): Promise
 export async function getStockMutations(): Promise<StockMutation[]> {
   if (_cachedMutations && _cachedMutations.length > 0) {
     return _cachedMutations;
+  }
+
+  // 1. Prioritaskan server API endpoint (/api/admin/inventory)
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/admin/inventory', {
+        headers: {
+          'x-admin-key': 'sevaya-admin',
+          'Cache-Control': 'no-cache',
+        },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.mutations)) {
+          _cachedMutations = json.mutations;
+          try {
+            localStorage.setItem(LS_MUTATIONS_KEY, JSON.stringify(json.mutations));
+          } catch {
+            // ignore
+          }
+          return json.mutations;
+        }
+      }
+    } catch {
+      // fallback
+    }
   }
 
   try {
@@ -366,7 +435,7 @@ export async function ensureVariantsForProduct(product: DbProduct): Promise<Prod
   const swatches = product.swatches && product.swatches.length > 0
     ? product.swatches
     : [{ name: 'Default', color: '#1A1A1A' }];
-  const sizes = ['S', 'M', 'L'];
+  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'];
 
   let changed = false;
   const updatedList = [...existing];

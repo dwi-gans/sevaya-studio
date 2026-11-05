@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import {
-  getInventoryVariants,
-  saveInventoryVariants,
-  getStockMutations,
-  ensureVariantsForProduct,
-  addCustomVariant,
-  ProductVariant,
-} from '@/integrations/supabase';
+  getServerInventoryVariants,
+  saveServerInventoryVariants,
+  getServerStockMutations,
+  ensureServerVariantsForProduct,
+  addServerCustomVariant,
+} from '@/lib/inventory-server';
+import { ProductVariant } from '@/integrations/supabase';
+
+export const runtime = 'nodejs';
 
 // GET /api/admin/inventory
 export async function GET(req: NextRequest) {
@@ -23,8 +25,8 @@ export async function GET(req: NextRequest) {
 
     const forceRefresh = req.nextUrl.searchParams.get('refresh') === 'true';
     const [variants, mutations] = await Promise.all([
-      getInventoryVariants(forceRefresh),
-      getStockMutations(),
+      getServerInventoryVariants(forceRefresh),
+      getServerStockMutations(),
     ]);
 
     // Telemetri ringkasan
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       if (!productId || !productTitle || !colorName || !size) {
         return NextResponse.json({ error: 'Data varian tidak lengkap' }, { status: 400 });
       }
-      const createdVariant = await addCustomVariant({
+      const createdVariant = await addServerCustomVariant({
         productId,
         productTitle,
         productSlug: productSlug || '',
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Action: Ensure variants for product
     if (body.action === 'ensure_product' && body.product) {
-      const allVariants = await ensureVariantsForProduct(body.product);
+      const allVariants = await ensureServerVariantsForProduct(body.product);
       return NextResponse.json({ success: true, variants: allVariants });
     }
 
@@ -100,7 +102,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Data varian tidak valid' }, { status: 400 });
     }
 
-    await saveInventoryVariants(variants);
+    await saveServerInventoryVariants(variants);
 
     return NextResponse.json({
       success: true,

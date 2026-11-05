@@ -4,11 +4,13 @@ import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } fro
 import { useToast } from '@/context/ToastContext';
 import {
   getDbProducts,
+  invalidateProductsCache,
   createDbProduct,
   updateDbProduct,
   deleteDbProduct,
   ensureVariantsForProduct,
   getInventoryVariants,
+  invalidateInventoryCache,
   DbProduct,
   getSiteSections,
   getCachedSiteSections,
@@ -200,9 +202,10 @@ export default function AdminPage() {
     original_price: 1489000,
     badge: '',
     image: '/images/catalog/catalog-01.jpg',
-    inStock: true,
-    hidden: false,
-    stock: 25,
+    inStock: false,
+    hidden: true,
+    stock: 0,
+    sizes: ['S', 'M', 'L'],
     swatches: [
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
       { name: 'Garnet', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
@@ -328,9 +331,10 @@ export default function AdminPage() {
       original_price: 1500000,
       badge: 'Baru',
       image: '/images/catalog/catalog-01.jpg',
-      inStock: true,
-      hidden: false,
-      stock: 25,
+      inStock: false,
+      hidden: true,
+      stock: 0,
+      sizes: ['S', 'M', 'L'],
       swatches: [
         { name: 'Obsidian Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
         { name: 'Garnet Maroon', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
@@ -357,6 +361,7 @@ export default function AdminPage() {
       inStock: product.inStock !== false,
       hidden: product.hidden === true,
       stock: typeof product.stock === 'number' ? product.stock : (product.inStock === false ? 0 : 25),
+      sizes: product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'],
       swatches:
         product.swatches && product.swatches.length > 0
           ? product.swatches.map((s) => ({
@@ -418,6 +423,21 @@ export default function AdminPage() {
           slug,
         });
         if (updated) {
+          try {
+            await fetch('/api/admin/inventory', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': 'sevaya-admin',
+              },
+              body: JSON.stringify({
+                action: 'ensure_product',
+                product: updated,
+              }),
+            });
+          } catch {
+            // ignore
+          }
           await ensureVariantsForProduct(updated);
           setProducts((prev) =>
             prev.map((p) => {
@@ -438,7 +458,25 @@ export default function AdminPage() {
         const created = await createDbProduct({
           ...productForm,
           slug,
+          stock: 0,
+          inStock: false,
+          hidden: productForm.hidden ?? true,
         });
+        try {
+          await fetch('/api/admin/inventory', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': 'sevaya-admin',
+            },
+            body: JSON.stringify({
+              action: 'ensure_product',
+              product: created,
+            }),
+          });
+        } catch {
+          // ignore
+        }
         await ensureVariantsForProduct(created);
         setProducts((prev) => [
           created,
@@ -453,7 +491,7 @@ export default function AdminPage() {
             return p;
           }),
         ]);
-        showToast(`Produk "${created.title}" berhasil ditambahkan & varian stok otomatis dibuat!`);
+        showToast(`Produk "${created.title}" berhasil ditambahkan (stok 0 pcs, auto-hide aktif).`);
       }
       setIsProductModalOpen(false);
     } catch {
@@ -476,6 +514,47 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRefreshProducts = async () => {
+    setIsLoading(true);
+    try {
+      // Hapus cache client-side (memory + localStorage) agar fetch benar-benar fresh
+      invalidateProductsCache();
+      invalidateInventoryCache();
+      const [dbProds, invVariants] = await Promise.all([
+        getDbProducts(true),
+        getInventoryVariants(true),
+      ]);
+      const syncedProds = dbProds.map((p) => {
+        const pVariants = invVariants.filter((v) => v.productId === String(p.id));
+        if (pVariants.length > 0) {
+          const totalStock = pVariants.reduce((sum, v) => sum + v.stock, 0);
+          return {
+            ...p,
+            stock: totalStock,
+            inStock: totalStock > 0,
+          };
+        }
+        return p;
+      });
+      setProducts(syncedProds);
+      showToast('Katalog produk berhasil diperbarui');
+    } catch {
+      showToast('Gagal menyegarkan katalog produk');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStockMutated = (productId: string, totalStock: number) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        String(p.id) === String(productId)
+          ? { ...p, stock: totalStock, inStock: totalStock > 0 }
+          : p
+      )
+    );
   };
 
   const handleToggleHide = async (product: DbProduct) => {
@@ -1083,7 +1162,7 @@ export default function AdminPage() {
         {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
 
         {activeTab === 'inventory' && (
-          <InventoryTab products={products} />
+          <InventoryTab products={products} onStockMutated={handleStockMutated} />
         )}
 
         {activeTab === 'catalog' && (
@@ -1098,6 +1177,7 @@ export default function AdminPage() {
             onToggleHide={handleToggleHide}
             onSetBadge={handleSetBadge}
             onDeleteProduct={handleDeleteProduct}
+            onRefresh={handleRefreshProducts}
           />
         )}
 

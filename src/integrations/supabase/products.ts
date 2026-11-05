@@ -17,6 +17,7 @@ export interface DbProduct {
   image: string;
   images?: string[];
   swatches: ProductSwatch[];
+  sizes?: string[];      // daftar ukuran yang tersedia, cth: ['S', 'M', 'L'] atau ['All Size']
   description?: string;  // deskripsi produk utama
   fabric?: string;       // informasi bahan / kain
   sizing?: string;       // panduan ukuran / size chart
@@ -228,6 +229,10 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
 export function invalidateProductsCache(): void {
   _cachedProducts = null;
   _cachedTime = 0;
+  // Clear localStorage so stale data never surfaces as fallback
+  if (typeof window !== 'undefined') {
+    try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+  }
 }
 
 /**
@@ -239,8 +244,15 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     return _cachedProducts as DbProduct[];
   }
 
-  // 1. In browser: check localStorage for instant fallback
-  if (typeof window !== 'undefined' && !_cachedProducts) {
+  // When forcing refresh, clear localStorage so stale data never serves as fallback
+  if (forceRefresh && typeof window !== 'undefined') {
+    try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+    _cachedProducts = null;
+    _cachedTime = 0;
+  }
+
+  // 1. In browser: check localStorage for instant fallback (only when NOT force refreshing)
+  if (!forceRefresh && typeof window !== 'undefined' && !_cachedProducts) {
     const lsData = loadFromLocalStorage();
     if (lsData && lsData.length > 0) {
       _cachedProducts = lsData;
@@ -248,10 +260,10 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     }
   }
 
-  // 2. Fetch fresh catalog with browser HTTP cache support
+  // 2. Fetch fresh catalog — always bypass browser HTTP cache
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch('/api/products', { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.products) && json.products.length > 0) {

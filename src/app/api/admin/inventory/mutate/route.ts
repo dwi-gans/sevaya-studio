@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/auth-admin';
-import {
-  executeStockMutation,
-  MutationType,
-  MutationReason,
-} from '@/integrations/supabase';
+import { executeServerStockMutation } from '@/lib/inventory-server';
+import { MutationType, MutationReason } from '@/integrations/supabase';
+
+export const runtime = 'nodejs';
 
 // POST /api/admin/inventory/mutate
 export async function POST(req: NextRequest) {
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const result = await executeStockMutation({
+    const result = await executeServerStockMutation({
       variantId,
       type,
       quantity,
@@ -51,6 +50,7 @@ export async function POST(req: NextRequest) {
       message: `Mutasi stok ${type === 'in' ? 'masuk' : type === 'out' ? 'keluar' : 'penyesuaian'} berhasil dicatat.`,
       variant: result.variant,
       mutation: result.mutation,
+      totalProductStock: result.totalProductStock,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Gagal mencatat mutasi stok';

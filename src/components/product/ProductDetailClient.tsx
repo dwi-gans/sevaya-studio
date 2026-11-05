@@ -60,11 +60,23 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
     return DEFAULT_COLOR_OPTIONS;
   }, [initialProduct]);
 
+  const sizeOptions = useMemo(() => {
+    if (dbProduct?.sizes && dbProduct.sizes.length > 0) {
+      return dbProduct.sizes;
+    }
+    return ['S', 'M', 'L'];
+  }, [dbProduct?.sizes]);
+
   const [colors, setColors] = useState<ProductColorOption[]>(initialColors);
   const [selectedColor, setSelectedColor] = useState<ProductColorOption>(
     () => initialColors[0] || DEFAULT_COLOR_OPTIONS[0]!
   );
-  const [selectedSize, setSelectedSize] = useState<string>(SIZE_OPTIONS[0]!);
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    if (initialProduct?.sizes && initialProduct.sizes.length > 0) {
+      return initialProduct.sizes[0]!;
+    }
+    return 'S';
+  });
   const [selectedQuality, setSelectedQuality] = useState<string>(QUALITY_OPTIONS[0]!);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<string>(
@@ -319,7 +331,7 @@ export function ProductDetailClient({ slug, initialProduct }: ProductDetailClien
                   SIZE
                 </span>
                 <div className="mt-2.5 flex flex-wrap gap-2">
-                  {SIZE_OPTIONS.map((sz) => {
+                  {sizeOptions.map((sz) => {
                     const isSelected = selectedSize === sz;
                     return (
                       <button

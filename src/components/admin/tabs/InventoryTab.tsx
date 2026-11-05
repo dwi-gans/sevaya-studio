@@ -21,6 +21,7 @@ interface InventoryTelemetry {
 
 interface InventoryTabProps {
   products: DbProduct[];
+  onStockMutated?: (productId: string, totalStock: number) => void;
 }
 
 type StockFilter = 'all' | 'ready' | 'low' | 'out';
@@ -63,7 +64,7 @@ const MUTATION_TYPE_INFO: Record<MutationType, { label: string; className: strin
   },
 };
 
-export default function InventoryTab({ products }: InventoryTabProps) {
+export default function InventoryTab({ products, onStockMutated }: InventoryTabProps) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [mutations, setMutations] = useState<StockMutation[]>([]);
   const [telemetry, setTelemetry] = useState<InventoryTelemetry | null>(null);
@@ -83,6 +84,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
   // Modals state
   const [mutationTarget, setMutationTarget] = useState<{
     variant: ProductVariant;
+    availableVariants?: ProductVariant[];
     type: MutationType;
   } | null>(null);
 
@@ -318,11 +320,21 @@ export default function InventoryTab({ products }: InventoryTabProps) {
     }
   };
 
-  const handleMutationSuccess = (updatedVariant: ProductVariant) => {
+  const handleMutationSuccess = (updatedVariant: ProductVariant, totalProductStock?: number) => {
     setVariants((prev) =>
       prev.map((v) => (v.id === updatedVariant.id ? updatedVariant : v))
     );
+    if (typeof totalProductStock === 'number' && onStockMutated) {
+      onStockMutated(updatedVariant.productId, totalProductStock);
+    }
     fetchInventory(true);
+  };
+
+  const scrollTable = (id: string | number, offset: number) => {
+    const el = document.getElementById(`table-container-${id}`);
+    if (el) {
+      el.scrollBy({ left: offset, behavior: 'smooth' });
+    }
   };
 
   const formatDate = (iso: string) => {
@@ -362,24 +374,13 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             <Icon name="refresh" size={13} className={loading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Segarkan</span>
           </button>
-
-          <button
-            type="button"
-            onClick={handleGenerateVariants}
-            disabled={generating}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-3 py-1.5 sm:px-3.5 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
-            title="Sinkronkan varian produk dari katalog"
-          >
-            <Icon name="published_with_changes" size={13} />
-            <span className="hidden sm:inline">{generating ? 'Sinkronisasi...' : 'Sinkronkan Katalog'}</span>
-          </button>
         </div>
       </div>
 
-      {/* Telemetry Summary Card */}
-      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
-          <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4 py-1.5 md:py-0">
+      {/* Telemetry Summary Card (Swipeable on Mobile) */}
+      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden">
+        <div className="flex sm:grid sm:grid-cols-4 overflow-x-auto sm:overflow-visible no-scrollbar divide-x divide-black/10 touch-pan-x -mx-1 px-1">
+          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Total Unit Fisik
             </span>
@@ -394,7 +395,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4 py-1.5 md:py-0">
+          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Stok Tersedia
             </span>
@@ -409,7 +410,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4 py-1.5 md:py-0">
+          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Perlu Restock
             </span>
@@ -424,7 +425,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-2 sm:px-4 py-1.5 md:py-0">
+          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Stok Habis
             </span>
@@ -444,12 +445,12 @@ export default function InventoryTab({ products }: InventoryTabProps) {
       {/* View Mode & Filter Controls */}
       <div className="space-y-2.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl sm:rounded-2xl border border-black/15 bg-white p-2.5 sm:p-4 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-          {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 bg-black/5 p-1 rounded-full w-fit shrink-0">
+          {/* View Mode Switcher (Scrollable on Mobile) */}
+          <div className="flex items-center gap-1 bg-black/5 p-1 rounded-full w-full sm:w-fit overflow-x-auto no-scrollbar shrink-0 touch-pan-x">
             <button
               type="button"
               onClick={() => setActiveView('grouped')}
-              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 cursor-pointer ${
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 whitespace-nowrap shrink-0 cursor-pointer ${
                 activeView === 'grouped'
                   ? 'bg-white text-black shadow-xs font-bold'
                   : 'text-black/60 hover:text-black'
@@ -460,7 +461,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             <button
               type="button"
               onClick={() => setActiveView('flat')}
-              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 cursor-pointer ${
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 whitespace-nowrap shrink-0 cursor-pointer ${
                 activeView === 'flat'
                   ? 'bg-white text-black shadow-xs font-bold'
                   : 'text-black/60 hover:text-black'
@@ -471,7 +472,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
             <button
               type="button"
               onClick={() => setActiveView('mutations')}
-              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 cursor-pointer ${
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 whitespace-nowrap shrink-0 cursor-pointer ${
                 activeView === 'mutations'
                   ? 'bg-white text-black shadow-xs font-bold'
                   : 'text-black/60 hover:text-black'
@@ -482,7 +483,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
           </div>
 
           {/* Search Box */}
-          <div className="relative flex-1 sm:max-w-xs">
+          <div className="relative w-full sm:max-w-xs">
             <input
               type="text"
               value={searchQuery}
@@ -500,10 +501,10 @@ export default function InventoryTab({ products }: InventoryTabProps) {
 
         {/* Sub-Filters & Sorting Bar */}
         {activeView !== 'mutations' && (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {/* Status Pills */}
-              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+              {/* Status Pills (Swipeable on Mobile) */}
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 touch-pan-x w-full sm:w-auto">
                 {[
                   { id: 'all', label: 'Semua Stok' },
                   { id: 'ready', label: 'Tersedia (>0)' },
@@ -516,7 +517,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                       key={tab.id}
                       type="button"
                       onClick={() => setStockFilter(tab.id as StockFilter)}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition active:scale-95 shrink-0 cursor-pointer ${
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition active:scale-95 shrink-0 cursor-pointer whitespace-nowrap ${
                         active
                           ? 'bg-black text-white shadow-xs'
                           : 'border border-black/15 bg-white text-black/70 hover:bg-black/5 hover:text-black'
@@ -528,31 +529,34 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                 })}
               </div>
 
-              {/* Size Dropdown */}
-              <select
-                value={sizeFilter}
-                onChange={(e) => setSizeFilter(e.target.value)}
-                className="h-7 sm:h-8 rounded-lg border border-black/20 bg-white px-2.5 text-[11px] font-medium text-black/80 focus:border-black focus:outline-none transition-colors"
-              >
-                {availableSizes.map((s) => (
-                  <option key={s} value={s}>
-                    {s === 'all' ? 'Semua Size' : `Size ${s}`}
-                  </option>
-                ))}
-              </select>
+              {/* Size & Color Dropdowns - Hanya tampil di tab "Semua Baris SKU" */}
+              {activeView === 'flat' && (
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <select
+                    value={sizeFilter}
+                    onChange={(e) => setSizeFilter(e.target.value)}
+                    className="flex-1 sm:flex-initial h-7 sm:h-8 rounded-lg border border-black/20 bg-white px-2.5 text-[11px] font-medium text-black/80 focus:border-black focus:outline-none transition-colors cursor-pointer"
+                  >
+                    {availableSizes.map((s) => (
+                      <option key={s} value={s}>
+                        {s === 'all' ? 'Semua Size' : `Size ${s}`}
+                      </option>
+                    ))}
+                  </select>
 
-              {/* Color Dropdown */}
-              <select
-                value={colorFilter}
-                onChange={(e) => setColorFilter(e.target.value)}
-                className="h-7 sm:h-8 rounded-lg border border-black/20 bg-white px-2.5 text-[11px] font-medium text-black/80 focus:border-black focus:outline-none transition-colors"
-              >
-                {availableColors.map((c) => (
-                  <option key={c} value={c}>
-                    {c === 'all' ? 'Semua Warna' : c}
-                  </option>
-                ))}
-              </select>
+                  <select
+                    value={colorFilter}
+                    onChange={(e) => setColorFilter(e.target.value)}
+                    className="flex-1 sm:flex-initial h-7 sm:h-8 rounded-lg border border-black/20 bg-white px-2.5 text-[11px] font-medium text-black/80 focus:border-black focus:outline-none transition-colors cursor-pointer"
+                  >
+                    {availableColors.map((c) => (
+                      <option key={c} value={c}>
+                        {c === 'all' ? 'Semua Warna' : c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Sorting & Expand/Collapse Toggle */}
@@ -656,12 +660,12 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                           /{prod.slug}
                         </span>
 
-                        {/* Color Subtotals Pills */}
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        {/* Color Subtotals Pills (Swipeable on Mobile) */}
+                        <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto no-scrollbar max-w-full touch-pan-x py-0.5">
                           {prod.colorsSummary.map((c) => (
                             <span
                               key={c.name}
-                              className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/[0.02] px-2 py-0.5 text-[10px] text-black/70 font-medium"
+                              className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/[0.02] px-2 py-0.5 text-[10px] text-black/70 font-medium whitespace-nowrap shrink-0"
                             >
                               <span
                                 className="h-2 w-2 rounded-full border border-black/20 shrink-0"
@@ -742,29 +746,58 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                         });
 
                         return (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
+                          <div
+                            id={`table-container-${prod.id}`}
+                            className="overflow-x-auto touch-pan-x scrollbar-thin scroll-smooth pb-1"
+                          >
+                            {/* Mobile Swipe & Interactive Scroll Buttons */}
+                            <div className="flex sm:hidden items-center justify-between px-3 py-1.5 bg-black/[0.03] border-b border-black/10 text-[10px] text-black/60 sticky left-0 z-20">
+                              <span className="flex items-center gap-1 font-medium">
+                                <span>Geser rincian stok:</span>
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => scrollTable(prod.id, -180)}
+                                  className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                                  title="Geser ke kiri"
+                                >
+                                  <Icon name="chevron_left" size={14} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => scrollTable(prod.id, 180)}
+                                  className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                                  title="Geser ke kanan"
+                                >
+                                  <Icon name="chevron_right" size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <table className="w-full min-w-[500px] text-left text-xs">
                               <thead>
                                 <tr className="border-b border-black/10 bg-black/[0.03]">
-                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
+                                  <th className="sticky left-0 z-10 bg-[#fafafa] py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/60 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                                     Warna / Swatch
                                   </th>
                                   {allSizes.map((sz) => (
-                                    <th key={sz} className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
+                                    <th key={sz} className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center whitespace-nowrap">
                                       Size {sz}
                                     </th>
                                   ))}
-                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center">
+                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-center whitespace-nowrap">
                                     Total Warna
                                   </th>
-                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-right">
+                                  <th className="py-2 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50 text-right whitespace-nowrap">
                                     Aksi
                                   </th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-black/[0.05]">
                                 {Array.from(colorMap.entries()).map(([colorName, colorData]) => {
-                                  const colorTotal = Array.from(colorData.bySize.values()).reduce((s, v) => s + v.stock, 0);
+                                  const colorVariants = Array.from(colorData.bySize.values());
+                                  const colorTotal = colorVariants.reduce((s, v) => s + v.stock, 0);
                                   const colorStatus = getStockStatus(colorTotal, 3);
                                   const colorBadge = STATUS_BADGE[colorStatus];
                                   // Pick first variant for quick restock action
@@ -774,9 +807,9 @@ export default function InventoryTab({ products }: InventoryTabProps) {
 
                                   return (
                                     <tr key={colorName} className="hover:bg-black/[0.015] transition-colors bg-white">
-                                      {/* Color swatch + name */}
-                                      <td className="py-2.5 px-3 sm:px-4">
-                                        <div className="flex items-center gap-2">
+                                      {/* Color swatch + name (Sticky on Mobile Swipe) */}
+                                      <td className="sticky left-0 z-10 bg-white py-2.5 px-3 sm:px-4 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                                        <div className="flex items-center gap-2 min-w-[110px]">
                                           <span
                                             className="h-3.5 w-3.5 rounded-full border border-black/20 shrink-0"
                                             style={{ backgroundColor: colorData.hex }}
@@ -799,7 +832,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                                             {v ? (
                                               <button
                                                 type="button"
-                                                onClick={() => setMutationTarget({ variant: v, type: 'in' })}
+                                                onClick={() => setMutationTarget({ variant: v, availableVariants: colorVariants, type: 'in' })}
                                                 title={`Masuk stok: ${colorName} Size ${sz}`}
                                                 className={`inline-flex flex-col items-center gap-0 cursor-pointer rounded-lg px-2 py-1 transition hover:scale-105 active:scale-95 ${
                                                   szStatus === 'out'
@@ -831,7 +864,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                                           <div className="inline-flex items-center gap-1">
                                             <button
                                               type="button"
-                                              onClick={() => setMutationTarget({ variant: firstVariant, type: 'in' })}
+                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'in' })}
                                               className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
                                               title="Stok Masuk (+)"
                                             >
@@ -840,7 +873,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                                             </button>
                                             <button
                                               type="button"
-                                              onClick={() => setMutationTarget({ variant: firstVariant, type: 'out' })}
+                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'out' })}
                                               className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
                                               title="Stok Keluar (-)"
                                             >
@@ -878,8 +911,33 @@ export default function InventoryTab({ products }: InventoryTabProps) {
               <p className="text-xs font-bold text-black">Tidak ada varian yang cocok</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div
+              id="table-container-flat"
+              className="overflow-x-auto touch-pan-x scrollbar-thin scroll-smooth"
+            >
+              {/* Mobile Swipe & Interactive Scroll Buttons */}
+              <div className="flex sm:hidden items-center justify-between px-3 py-1.5 bg-black/[0.03] border-b border-black/10 text-[10px] text-black/60 sticky left-0 z-20">
+                <span className="font-medium">Geser tabel SKU:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => scrollTable('flat', -180)}
+                    className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                    title="Geser ke kiri"
+                  >
+                    <Icon name="chevron_left" size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollTable('flat', 180)}
+                    className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                    title="Geser ke kanan"
+                  >
+                    <Icon name="chevron_right" size={14} />
+                  </button>
+                </div>
+              </div>
+              <table className="w-full min-w-[650px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-black/10 bg-black/[0.02]">
                     <th className="py-2.5 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
@@ -907,6 +965,9 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                 </thead>
                 <tbody className="divide-y divide-black/[0.06]">
                   {filteredVariants.map((variant) => {
+                    const rowVariants = variants.filter(
+                      (v) => v.productId === variant.productId && v.colorName.toLowerCase() === variant.colorName.toLowerCase()
+                    );
                     const status = getStockStatus(variant.stock, variant.lowStockThreshold ?? 3);
                     const badge = STATUS_BADGE[status];
                     return (
@@ -948,7 +1009,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                           <div className="inline-flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => setMutationTarget({ variant, type: 'in' })}
+                              onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'in' })}
                               className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
                               title="Stok Masuk"
                             >
@@ -957,7 +1018,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setMutationTarget({ variant, type: 'out' })}
+                              onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'out' })}
                               className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
                               title="Stok Keluar"
                             >
@@ -966,7 +1027,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setMutationTarget({ variant, type: 'adjustment' })}
+                              onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'adjustment' })}
                               className="inline-flex items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
                               title="Penyesuaian Opname"
                             >
@@ -997,8 +1058,33 @@ export default function InventoryTab({ products }: InventoryTabProps) {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div
+              id="table-container-mutations"
+              className="overflow-x-auto touch-pan-x scrollbar-thin scroll-smooth"
+            >
+              {/* Mobile Swipe & Interactive Scroll Buttons */}
+              <div className="flex sm:hidden items-center justify-between px-3 py-1.5 bg-black/[0.03] border-b border-black/10 text-[10px] text-black/60 sticky left-0 z-20">
+                <span className="font-medium">Geser riwayat mutasi:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => scrollTable('mutations', -180)}
+                    className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                    title="Geser ke kiri"
+                  >
+                    <Icon name="chevron_left" size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollTable('mutations', 180)}
+                    className="inline-flex items-center justify-center w-7 h-6 rounded-md border border-black/20 bg-white text-black active:bg-black/10 active:scale-95 cursor-pointer shadow-2xs"
+                    title="Geser ke kanan"
+                  >
+                    <Icon name="chevron_right" size={14} />
+                  </button>
+                </div>
+              </div>
+              <table className="w-full min-w-[740px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-black/10 bg-black/[0.02]">
                     <th className="py-2.5 px-3 sm:px-4 text-[10px] font-bold uppercase tracking-wider text-black/50">
@@ -1073,6 +1159,7 @@ export default function InventoryTab({ products }: InventoryTabProps) {
       {mutationTarget && (
         <StockMutationModal
           variant={mutationTarget.variant}
+          availableVariants={mutationTarget.availableVariants}
           defaultType={mutationTarget.type}
           onClose={() => setMutationTarget(null)}
           onSuccess={handleMutationSuccess}

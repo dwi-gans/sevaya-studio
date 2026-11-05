@@ -15,6 +15,7 @@ interface CatalogTabProps {
   onToggleHide: (product: Product) => Promise<void> | void;
   onSetBadge?: (product: Product, badge: string) => Promise<void> | void;
   onDeleteProduct: (id: string | number, title: string) => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 export const CatalogTab: React.FC<CatalogTabProps> = ({
@@ -28,6 +29,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
   onToggleHide,
   onSetBadge,
   onDeleteProduct,
+  onRefresh,
 }) => {
   const [localQuery, setLocalQuery] = useState(searchQuery);
 
@@ -58,11 +60,24 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-black transition hover:bg-black/5 active:scale-95 disabled:opacity-50 cursor-pointer"
+              title="Segarkan katalog produk"
+            >
+              <Icon name="refresh" size={13} className={isLoading ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">Segarkan</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onOpenCreateModal}
-            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95"
+            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95 cursor-pointer shadow-xs"
           >
             <Icon name="add" size={14} />
             <span>Tambah Produk</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { DbProduct, ProductSwatch } from '@/integrations/supabase';
@@ -17,6 +17,7 @@ export interface ProductFormData {
   inStock: boolean;
   hidden: boolean;
   stock: number;
+  sizes?: string[];
   swatches: ProductSwatch[];
   description: string;  // deskripsi produk
   fabric: string;       // informasi bahan / kain
@@ -40,6 +41,8 @@ interface ProductModalProps {
   isUploading: boolean;
 }
 
+const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'All Size'];
+
 export function ProductModal({
   isOpen,
   onClose,
@@ -56,6 +59,8 @@ export function ProductModal({
   isLoading,
   isUploading,
 }: ProductModalProps) {
+  const [customSizeInput, setCustomSizeInput] = useState('');
+
   if (!isOpen) return null;
 
   const currentId = editingProduct ? String(editingProduct.id) : null;
@@ -65,6 +70,38 @@ export function ProductModal({
       (p) => String(p.id) !== currentId && p.title.trim().toLowerCase() === productForm.title.trim().toLowerCase()
     )
   );
+
+  const currentSizes = productForm.sizes && productForm.sizes.length > 0
+    ? productForm.sizes
+    : ['S', 'M', 'L'];
+
+  const toggleSize = (sz: string) => {
+    const isSelected = currentSizes.includes(sz);
+    if (isSelected) {
+      if (currentSizes.length <= 1) return; // pertahankan minimal 1 size
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: currentSizes.filter((s) => s !== sz),
+      }));
+    } else {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: [...currentSizes, sz],
+      }));
+    }
+  };
+
+  const handleAddCustomSize = () => {
+    const trimmed = customSizeInput.trim().toUpperCase();
+    if (!trimmed) return;
+    if (!currentSizes.includes(trimmed)) {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: [...currentSizes, trimmed],
+      }));
+    }
+    setCustomSizeInput('');
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4 backdrop-blur-xs">
@@ -261,13 +298,13 @@ export function ProductModal({
                       : 'bg-rose-100 text-rose-800'
                   }`}
                 >
-                  {(productForm.stock ?? 0) > 0 ? 'Tersedia' : 'Habis'}
+                  {(productForm.stock ?? 0) > 0 ? 'Tersedia' : 'Habis (0 pcs)'}
                 </span>
               </div>
               <p className="text-[9px] text-black/40 leading-tight">
                 {editingProduct
                   ? 'Dihitung otomatis dari akumulasi varian di tab Inventaris.'
-                  : 'Varian awal akan dibuat otomatis saat produk disimpan.'}
+                  : 'Stok awal 0 pcs. Diatur via tab Inventaris (otomatis disembunyikan sampai restock).'}
               </p>
             </div>
 
@@ -286,7 +323,7 @@ export function ProductModal({
                   className={(productForm.stock ?? 0) > 0 ? 'text-emerald-700' : 'text-rose-600'}
                 />
                 <span className="text-[10px] font-semibold truncate">
-                  {(productForm.stock ?? 0) > 0 ? 'Stok Tersedia' : 'Stok Habis'}
+                  {(productForm.stock ?? 0) > 0 ? 'Stok Tersedia' : 'Stok Habis (0 pcs)'}
                 </span>
               </div>
               <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2">
@@ -298,9 +335,16 @@ export function ProductModal({
                   }
                   className="h-3.5 w-3.5 accent-[#000000]"
                 />
-                <span className="text-[10px] font-medium text-amber-900 truncate">
-                  Sembunyikan
-                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-semibold text-amber-900 truncate">
+                    Sembunyikan
+                  </span>
+                  {!editingProduct && (
+                    <span className="text-[8px] text-amber-700/80 leading-none">
+                      (Auto-hide aktif)
+                    </span>
+                  )}
+                </div>
               </label>
             </div>
           </div>
@@ -356,6 +400,142 @@ export function ProductModal({
                   />
                 </label>
               </div>
+            </div>
+          </div>
+
+          {/* Pilihan Ukuran (Size) Builder */}
+          <div className="flex flex-col gap-2.5 rounded-xl border border-black/10 bg-black/[0.02] p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold text-black">
+                    Pilihan Ukuran (Size)
+                  </span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-black/10 text-black">
+                    {currentSizes.length} Ukuran
+                  </span>
+                </div>
+                <p className="text-[10px] text-black/50">
+                  Tentukan ukuran busana apa saja yang diproduksi dan tersedia di inventaris.
+                </p>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
+                <span className="text-black/40 text-[9px]">Preset:</span>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, sizes: ['S', 'M', 'L'] }))}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-medium transition cursor-pointer ${
+                    currentSizes.length === 3 && currentSizes.includes('S') && currentSizes.includes('M') && currentSizes.includes('L')
+                      ? 'bg-black text-white font-semibold'
+                      : 'bg-white border border-black/15 text-black/70 hover:bg-black/5'
+                  }`}
+                >
+                  S, M, L
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, sizes: ['S', 'M', 'L', 'XL'] }))}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-medium transition cursor-pointer ${
+                    currentSizes.length === 4 && currentSizes.includes('S') && currentSizes.includes('M') && currentSizes.includes('L') && currentSizes.includes('XL')
+                      ? 'bg-black text-white font-semibold'
+                      : 'bg-white border border-black/15 text-black/70 hover:bg-black/5'
+                  }`}
+                >
+                  S - XL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((prev) => ({ ...prev, sizes: ['All Size'] }))}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-medium transition cursor-pointer ${
+                    currentSizes.length === 1 && currentSizes.includes('All Size')
+                      ? 'bg-black text-white font-semibold'
+                      : 'bg-white border border-black/15 text-black/70 hover:bg-black/5'
+                  }`}
+                >
+                  All Size
+                </button>
+              </div>
+            </div>
+
+            {/* Size Pills */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              {PRESET_SIZES.map((sz) => {
+                const isSelected = currentSizes.includes(sz);
+                return (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => toggleSize(sz)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? 'bg-black text-white shadow-xs'
+                        : 'bg-white border border-black/15 text-black/60 hover:border-black/40 hover:text-black'
+                    }`}
+                  >
+                    {isSelected && <Icon name="check" size={13} className="text-white" />}
+                    <span>{sz}</span>
+                  </button>
+                );
+              })}
+
+              {/* Custom sizes that aren't in PRESET_SIZES */}
+              {currentSizes.filter((s) => !PRESET_SIZES.includes(s)).map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => toggleSize(sz)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wider bg-black text-white shadow-xs transition active:scale-95 cursor-pointer"
+                  title="Klik untuk menghapus ukuran kustom ini"
+                >
+                  <Icon name="check" size={13} className="text-white" />
+                  <span>{sz}</span>
+                  <Icon name="close" size={11} className="text-white/70 ml-0.5" />
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Size Input */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="relative flex-1 min-w-[140px] max-w-[220px]">
+                <input
+                  type="text"
+                  value={customSizeInput}
+                  onChange={(e) => setCustomSizeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomSize();
+                    }
+                  }}
+                  placeholder="Tambah size kustom..."
+                  className="w-full h-7 rounded-lg border border-black/20 bg-white px-2 text-[10px] text-black focus:border-black focus:outline-none placeholder:text-black/30"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAddCustomSize}
+                disabled={!customSizeInput.trim()}
+                className="h-7 px-2.5 rounded-lg border border-black/20 bg-white text-[10px] font-semibold text-black hover:bg-black/5 active:scale-95 disabled:opacity-40 cursor-pointer"
+              >
+                + Tambah
+              </button>
+              <span className="text-[9px] text-black/40 italic">
+                cth: Petite, Tall, 38, 40
+              </span>
+            </div>
+
+            {/* Summary info box */}
+            <div className="rounded-lg border border-neutral-200 bg-white p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-black/70">
+              <span className="flex items-center gap-1">
+                <Icon name="inventory_2" size={13} className="text-black/50" />
+                <span>Kombinasi SKU:</span>
+                <strong className="text-black">{productForm.swatches.length} warna × {currentSizes.length} size = {productForm.swatches.length * currentSizes.length} SKU</strong>
+              </span>
+              <span className="text-[9px] text-amber-700 font-medium">
+                {editingProduct ? 'Stok dikelola via inventaris' : 'Stok awal: 0 pcs (Auto-hide aktif)'}
+              </span>
             </div>
           </div>
 
