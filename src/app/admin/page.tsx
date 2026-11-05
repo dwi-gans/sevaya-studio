@@ -33,6 +33,7 @@ import { AdminHeader } from '@/components/admin/shared/AdminHeader';
 import { ProductModal, ProductFormData } from '@/components/admin/modals/ProductModal';
 import { ArticleModal, ArticleFormData } from '@/components/admin/modals/ArticleModal';
 import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
+import { ImageCropperModal } from '@/components/admin/modals/ImageCropperModal';
 
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
@@ -264,6 +265,58 @@ export default function AdminPage() {
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [imagePickerTarget, setImagePickerTarget] = useState<ImagePickerTarget>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // ── Image Cropper Modal State (Sesuaikan Manual User View) ──
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [cropperSourceUrl, setCropperSourceUrl] = useState<string>('');
+  const [cropperTarget, setCropperTarget] = useState<ImagePickerTarget>(null);
+
+  const handleOpenCropper = (imageSrc: string, target: ImagePickerTarget) => {
+    if (!imageSrc) return;
+    setCropperSourceUrl(imageSrc);
+    setCropperTarget(target);
+    setIsCropperOpen(true);
+  };
+
+  const handleFileSelectForCrop = (file: File, target: ImagePickerTarget) => {
+    // Buat URL lokal instan (0 ms) agar langsung masuk ke modal penyesuaian
+    const objectUrl = URL.createObjectURL(file);
+    handleOpenCropper(objectUrl, target);
+  };
+
+  const handleApplyCrop = async (croppedBlob: Blob, previewUrl: string) => {
+    const target = cropperTarget;
+    if (!target) return;
+
+    // 1. INSTAN: Pasang preview foto hasil crop langsung ke form produk! (0 milidetik, tanpa tunggu network)
+    applyImageToTarget(target, previewUrl);
+    setIsCropperOpen(false);
+    showToast('Foto langsung terpasang! Menyimpan versi Cloud...');
+
+    // 2. Upload blob WebP hasil crop (~150KB) ke Supabase Cloud di background secara kilat (< 1 detik)
+    try {
+      setIsUploading(true);
+      const safeTarget = String(target).replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = `crop_${Date.now()}_${safeTarget}.webp`;
+      const file = new File([croppedBlob], fileName, { type: 'image/webp' });
+      const publicUrl = await uploadFileToStorage(file);
+
+      // Gantikan URL preview lokal dengan URL permanen Supabase CDN
+      applyImageToTarget(target, publicUrl);
+      showToast('Foto berhasil disesuaikan & tersimpan di Cloud CDN!');
+
+      listUploadedFiles()
+        .then((updatedFiles) => {
+          setMediaFiles(updatedFiles);
+        })
+        .catch(() => {});
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan foto ke cloud';
+      showToast(msg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Fetch data when authenticated
   useEffect(() => {
@@ -1156,9 +1209,18 @@ export default function AdminPage() {
   }, [imagePickerTarget, productForm, sections, articleForm]);
 
   const handleSelectPredefinedImage = (imagePath: string) => {
-    applyImageToTarget(imagePickerTarget, imagePath);
     setIsImagePickerOpen(false);
-    showToast('Gambar berhasil dipilih!');
+
+    // Jika target adalah produk atau swatch warna, buka modal penyesuaian framing
+    if (
+      imagePickerTarget === 'product' ||
+      (imagePickerTarget && imagePickerTarget.startsWith('swatch-'))
+    ) {
+      handleOpenCropper(imagePath, imagePickerTarget);
+    } else {
+      applyImageToTarget(imagePickerTarget, imagePath);
+      showToast('Gambar berhasil dipilih!');
+    }
   };
 
   // ── Auto-save sections debounce ──
@@ -1350,6 +1412,8 @@ export default function AdminPage() {
         }}
         onFileUpload={handleFileUpload}
         onFileUploadDirect={handleFileUploadDirect}
+        onOpenCropper={handleOpenCropper}
+        onFileSelectForCrop={handleFileSelectForCrop}
         isLoading={isLoading}
         isUploading={isUploading}
       />
@@ -1377,6 +1441,16 @@ export default function AdminPage() {
         onClose={() => setIsImagePickerOpen(false)}
         onSelectImage={handleSelectPredefinedImage}
         currentImage={currentPickerImage}
+      />
+
+      {/* Manual Framing & Cropper Modal (User View 3:4 & 4:5) */}
+      <ImageCropperModal
+        isOpen={isCropperOpen}
+        onClose={() => setIsCropperOpen(false)}
+        imageSrc={cropperSourceUrl}
+        title="Sesuaikan Tampilan Foto Pembeli"
+        initialRatio="3:4"
+        onApplyCrop={handleApplyCrop}
       />
     </div>
   );
