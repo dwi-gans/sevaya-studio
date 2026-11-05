@@ -33,7 +33,7 @@ import { AdminHeader } from '@/components/admin/shared/AdminHeader';
 import { ProductModal, ProductFormData } from '@/components/admin/modals/ProductModal';
 import { ArticleModal, ArticleFormData } from '@/components/admin/modals/ArticleModal';
 import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
-import { ImageCropperModal, AspectRatioType } from '@/components/admin/modals/ImageCropperModal';
+import { ImageCropperModal, AspectRatioType, CardTargetInfo } from '@/components/admin/modals/ImageCropperModal';
 
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
@@ -45,6 +45,32 @@ import { LookbookTab } from '@/components/admin/tabs/LookbookTab';
 import { ConsciousTab } from '@/components/admin/tabs/ConsciousTab';
 import { MediaLibraryTab } from '@/components/admin/tabs/MediaLibraryTab';
 import { SettingsTab } from '@/components/admin/tabs/SettingsTab';
+
+export function getCardTargetInfo(target: ImagePickerTarget): CardTargetInfo {
+  const t = String(target || '');
+  if (t === 'home-about-1') return { name: 'About SEVAYA (Foto #1 Kiri)', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t === 'home-about-2') return { name: 'About SEVAYA (Foto #2 Kanan)', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t === 'product') return { name: 'Sampul Produk Utama', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t.startsWith('swatch-')) return { name: 'Foto Varian Warna', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t === 'hero') return { name: 'Hero Banner Beranda', ratio: '16:9', ratioDescription: 'Card Banner Layar Lebar 16:9', exactRatioValue: 16 / 9 };
+  if (t === 'home-video-poster') return { name: 'Cover Poster Video', ratio: '16:9', ratioDescription: 'Card Video 16:9', exactRatioValue: 16 / 9 };
+  if (t === 'spotlight-0') return { name: 'Spotlight Kategori Abaya', ratio: '4:3', ratioDescription: 'Card Etalase 4:3', exactRatioValue: 4 / 3 };
+  if (t === 'spotlight-1') return { name: 'Spotlight Kategori Khimar', ratio: '4:3', ratioDescription: 'Card Etalase 4:3', exactRatioValue: 4 / 3 };
+  if (t === 'journal-0' || t === 'journal-1') return { name: 'Kartu Artikel Jurnal', ratio: '4:3', ratioDescription: 'Card Jurnal 4:3', exactRatioValue: 4 / 3 };
+  if (t === 'lbpage-heroImage') return { name: 'Lookbook Campaign Hero', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t === 'lbpage-collagePortrait') return { name: 'Lookbook Kolase Portrait', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t === 'lbpage-collageDetail1') return { name: 'Lookbook Kolase Detail', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t === 'lbpage-panorama1') return { name: 'Lookbook Panorama', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t.startsWith('lbpage-triptych')) return { name: 'Lookbook Triptych (3 Foto)', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t === 'lbpage-fullDress') return { name: 'Lookbook Full Dress', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t.startsWith('lookbook-')) return { name: 'Lookbook Carousel Kartu', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t === 'conscious-hero') return { name: 'Conscious Hero Banner', ratio: '16:9', ratioDescription: 'Card Banner 16:9', exactRatioValue: 16 / 9 };
+  if (t === 'conscious-founder') return { name: 'Foto Founder SEVAYA', ratio: '3:4', ratioDescription: 'Card Portrait 3:4', exactRatioValue: 3 / 4 };
+  if (t === 'conscious-inspo') return { name: 'Inspirasi Desain', ratio: '4:5', ratioDescription: 'Card Portrait 4:5', exactRatioValue: 4 / 5 };
+  if (t.startsWith('conscious-')) return { name: 'Bahan Kain Conscious', ratio: '4:3', ratioDescription: 'Card Persegi Panjang 4:3', exactRatioValue: 4 / 3 };
+  if (t.startsWith('article')) return { name: 'Cover Berita & Artikel', ratio: '16:9', ratioDescription: 'Card Berita 16:9', exactRatioValue: 16 / 9 };
+  return { name: 'Card Foto', ratio: '3:4', ratioDescription: 'Rasio Standar 3:4', exactRatioValue: 3 / 4 };
+}
 
 export default function AdminPage() {
   const { showToast } = useToast();
@@ -284,13 +310,15 @@ export default function AdminPage() {
     handleOpenCropper(objectUrl, target);
   };
 
-  const cropperInitialRatio = useMemo<AspectRatioType>(() => {
-    const t = String(cropperTarget || '');
-    if (t.includes('hero') || t.includes('video-poster')) return '16:9';
-    if (t.includes('about') || t.includes('product') || t.includes('swatch') || t.includes('founder')) return '3:4';
-    if (t.includes('spotlight') || t.includes('lookbook')) return '4:5';
-    return '3:4';
+  const cropperTargetInfo = useMemo<CardTargetInfo | undefined>(() => {
+    if (!cropperTarget) return undefined;
+    return getCardTargetInfo(cropperTarget);
   }, [cropperTarget]);
+
+  const cropperInitialRatio = useMemo<AspectRatioType>(() => {
+    if (cropperTargetInfo) return cropperTargetInfo.ratio;
+    return '3:4';
+  }, [cropperTargetInfo]);
 
   const handleApplyCrop = async (croppedBlob: Blob, previewUrl: string) => {
     const target = cropperTarget;
@@ -782,89 +810,111 @@ export default function AdminPage() {
       const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
       handleUpdateSwatch(swatchIdx, 'image', urlOrPath);
     } else if (target === 'hero') {
-      const next = { ...sections, hero: { ...sections.hero, image: urlOrPath } };
-      setSections(next);
-      saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      setSections((prev) => {
+        const next = { ...prev, hero: { ...prev.hero, image: urlOrPath } };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Hero tersimpan otomatis!');
     } else if (target === 'spotlight-0') {
-      const nextSpotlight = [...sections.spotlight];
-      if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
-      const next = { ...sections, spotlight: nextSpotlight };
-      setSections(next);
-      saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      setSections((prev) => {
+        const nextSpotlight = [...prev.spotlight];
+        if (nextSpotlight[0]) nextSpotlight[0] = { ...nextSpotlight[0], image: urlOrPath };
+        const next = { ...prev, spotlight: nextSpotlight };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Spotlight Abaya tersimpan otomatis!');
     } else if (target === 'spotlight-1') {
-      const nextSpotlight = [...sections.spotlight];
-      if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
-      const next = { ...sections, spotlight: nextSpotlight };
-      setSections(next);
-      saveSiteSections(next);
-      showToast('Foto tersimpan otomatis!');
+      setSections((prev) => {
+        const nextSpotlight = [...prev.spotlight];
+        if (nextSpotlight[1]) nextSpotlight[1] = { ...nextSpotlight[1], image: urlOrPath };
+        const next = { ...prev, spotlight: nextSpotlight };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Spotlight Khimar tersimpan otomatis!');
     } else if (target === 'home-about-1') {
-      const nextNarrative = { ...(sections.narrative || {}), aboutImage1: urlOrPath };
-      const next = { ...sections, narrative: nextNarrative };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextNarrative = { ...(prev.narrative || {}), aboutImage1: urlOrPath };
+        const next = { ...prev, narrative: nextNarrative };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto About SEVAYA #1 tersimpan otomatis!');
     } else if (target === 'home-about-2') {
-      const nextNarrative = { ...(sections.narrative || {}), aboutImage2: urlOrPath };
-      const next = { ...sections, narrative: nextNarrative };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextNarrative = { ...(prev.narrative || {}), aboutImage2: urlOrPath };
+        const next = { ...prev, narrative: nextNarrative };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto About SEVAYA #2 tersimpan otomatis!');
     } else if (target === 'home-video-poster') {
-      const nextNarrative = { ...(sections.narrative || {}), videoPoster: urlOrPath };
-      const next = { ...sections, narrative: nextNarrative };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextNarrative = { ...(prev.narrative || {}), videoPoster: urlOrPath };
+        const next = { ...prev, narrative: nextNarrative };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Cover video beranda tersimpan otomatis!');
     } else if (target === 'textiles') {
-      const next = {
-        ...sections,
-        missionTextiles: { ...sections.missionTextiles, image: urlOrPath },
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          missionTextiles: { ...prev.missionTextiles, image: urlOrPath },
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto tersimpan otomatis!');
     } else if (target === 'journal-0') {
-      const nextJournal = [...sections.journal];
-      if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
-      const next = { ...sections, journal: nextJournal };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextJournal = [...prev.journal];
+        if (nextJournal[0]) nextJournal[0] = { ...nextJournal[0], image: urlOrPath };
+        const next = { ...prev, journal: nextJournal };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto tersimpan otomatis!');
     } else if (target === 'journal-1') {
-      const nextJournal = [...sections.journal];
-      if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
-      const next = { ...sections, journal: nextJournal };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextJournal = [...prev.journal];
+        if (nextJournal[1]) nextJournal[1] = { ...nextJournal[1], image: urlOrPath };
+        const next = { ...prev, journal: nextJournal };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto tersimpan otomatis!');
     } else if (target.startsWith('lookbook-')) {
       const idx = parseInt(target.replace('lookbook-', ''), 10);
-      const nextLb = [...sections.lookbook];
-      if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
-      const next = { ...sections, lookbook: nextLb };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const nextLb = [...prev.lookbook];
+        if (nextLb[idx]) nextLb[idx] = { ...nextLb[idx]!, image: urlOrPath };
+        const next = { ...prev, lookbook: nextLb };
+        saveSiteSections(next);
+        return next;
+      });
       showToast('Foto tersimpan otomatis!');
     } else if (target.startsWith('lbpage-')) {
       const key = target.replace('lbpage-', '');
-      const currentVolConfig =
-        sections.lookbookVolumesConfig?.[selectedLookbookVolId] ||
-        sections.lookbookPage ||
-        DEFAULT_SITE_SECTIONS.lookbookPage!;
-      const updatedVolConfig = { ...currentVolConfig, [key]: urlOrPath };
-      const next = {
-        ...sections,
-        lookbookVolumesConfig: {
-          ...(sections.lookbookVolumesConfig || {}),
-          [selectedLookbookVolId]: updatedVolConfig,
-        },
-        lookbookPage: selectedLookbookVolId === 'vol-1' ? updatedVolConfig : sections.lookbookPage,
-      };
-      setSections(next);
-      saveSiteSections(next);
+      setSections((prev) => {
+        const currentVolConfig =
+          prev.lookbookVolumesConfig?.[selectedLookbookVolId] ||
+          prev.lookbookPage ||
+          DEFAULT_SITE_SECTIONS.lookbookPage!;
+        const updatedVolConfig = { ...currentVolConfig, [key]: urlOrPath };
+        const next = {
+          ...prev,
+          lookbookVolumesConfig: {
+            ...(prev.lookbookVolumesConfig || {}),
+            [selectedLookbookVolId]: updatedVolConfig,
+          },
+          lookbookPage: selectedLookbookVolId === 'vol-1' ? updatedVolConfig : prev.lookbookPage,
+        };
+        saveSiteSections(next);
+        return next;
+      });
       showToast(`Foto tersimpan otomatis untuk ${selectedLookbookVolId.toUpperCase()}!`);
     } else if (target === 'conscious-hero') {
       setSections((prev) => {
@@ -1371,6 +1421,7 @@ export default function AdminPage() {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);
             }}
+            onFileSelectForCrop={handleFileSelectForCrop}
             showToast={showToast}
           />
         )}
@@ -1421,7 +1472,6 @@ export default function AdminPage() {
         }}
         onFileUpload={handleFileUpload}
         onFileUploadDirect={handleFileUploadDirect}
-        onOpenCropper={handleOpenCropper}
         onFileSelectForCrop={handleFileSelectForCrop}
         isLoading={isLoading}
         isUploading={isUploading}
@@ -1452,12 +1502,13 @@ export default function AdminPage() {
         currentImage={currentPickerImage}
       />
 
-      {/* Manual Framing & Cropper Modal (User View 3:4 & 4:5 & 16:9) */}
+      {/* Manual Framing & Cropper Modal (User View) */}
       <ImageCropperModal
         isOpen={isCropperOpen}
         onClose={() => setIsCropperOpen(false)}
         imageSrc={cropperSourceUrl}
         title="Sesuaikan Tampilan Foto Pembeli"
+        cardInfo={cropperTargetInfo}
         initialRatio={cropperInitialRatio}
         onApplyCrop={handleApplyCrop}
       />

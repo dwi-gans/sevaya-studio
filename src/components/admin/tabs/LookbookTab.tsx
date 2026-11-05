@@ -15,6 +15,7 @@ interface LookbookTabProps {
   selectedLookbookVolId: string;
   setSelectedLookbookVolId: (id: string) => void;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
+  onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   showToast: (msg: string) => void;
 }
 
@@ -24,6 +25,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   selectedLookbookVolId,
   setSelectedLookbookVolId,
   onOpenImagePicker,
+  onFileSelectForCrop,
   showToast,
 }) => {
   const [viewMode, setViewMode] = useState<'list' | 'edit'>('list');
@@ -55,6 +57,41 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   const getVolKey = (link: { id?: string; href: string }) => {
     return link.id || (link.href === '/lookbook' ? 'vol-1' : link.href.replace('/lookbook/', ''));
   };
+
+  const LookbookUploadGroup = ({
+    target,
+    ratioLabel = '4:5',
+    selectLabel = 'Pilih Galeri',
+  }: {
+    target: ImagePickerTarget;
+    ratioLabel?: string;
+    selectLabel?: string;
+  }) => (
+    <div className="flex items-center gap-1.5 w-full">
+      <label className="flex-1 inline-flex items-center justify-center gap-1 rounded-full bg-black py-1.5 px-2 text-[10px] font-semibold text-white transition hover:bg-black/85 active:scale-95 cursor-pointer shadow-2xs">
+        <Icon name="upload" size={11} />
+        <span>Unggah & Sesuaikan ({ratioLabel})</span>
+        <input
+          type="file"
+          accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onFileSelectForCrop) onFileSelectForCrop(file, target);
+            e.target.value = '';
+          }}
+        />
+      </label>
+      <button
+        type="button"
+        onClick={() => onOpenImagePicker(target)}
+        className="flex-1 inline-flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 px-2 text-[10px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer"
+      >
+        <Icon name="image" size={11} />
+        <span>{selectLabel}</span>
+      </button>
+    </div>
+  );
 
   const getVolConfig = (volKey: string): LookbookPageConfig => {
     if (volKey === 'vol-1') {
@@ -851,14 +888,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               className="object-cover"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenImagePicker('lbpage-heroImage')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/20 bg-white py-2 text-xs font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-          >
-            <Icon name="image" size={14} />
-            <span>Ganti Foto Hero Utama</span>
-          </button>
+          <LookbookUploadGroup target="lbpage-heroImage" ratioLabel="4:5" selectLabel="Pilih Galeri" />
         </div>
       </div>
 
@@ -983,14 +1013,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 className="object-cover"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('lbpage-collagePortrait')}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-[11px] font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-            >
-              <Icon name="image" size={13} />
-              <span>Ganti Foto Kiri</span>
-            </button>
+            <LookbookUploadGroup target="lbpage-collagePortrait" ratioLabel="4:5" selectLabel="Pilih Galeri" />
           </div>
 
           {/* Kolase Kanan */}
@@ -1006,14 +1029,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 className="object-cover"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('lbpage-collageDetail1')}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white py-1.5 text-[11px] font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-            >
-              <Icon name="image" size={13} />
-              <span>Ganti Foto Kanan</span>
-            </button>
+            <LookbookUploadGroup target="lbpage-collageDetail1" ratioLabel="4:5" selectLabel="Pilih Galeri" />
           </div>
         </div>
       </div>
@@ -1078,14 +1094,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               className="object-cover"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenImagePicker('lbpage-panorama1')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/20 bg-white py-2 text-xs font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-          >
-            <Icon name="image" size={14} />
-            <span>Ganti Foto Feature Editorial</span>
-          </button>
+          <LookbookUploadGroup target="lbpage-panorama1" ratioLabel="4:5" selectLabel="Pilih Galeri" />
         </div>
       </div>
 
@@ -1167,14 +1176,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 className="object-cover"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('lbpage-triptych1')}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-[10px] font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-            >
-              <Icon name="image" size={12} />
-              <span>Ganti</span>
-            </button>
+            <LookbookUploadGroup target="lbpage-triptych1" ratioLabel="3:4" selectLabel="Pilih" />
           </div>
 
           {/* Detail 2 */}
@@ -1190,14 +1192,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 className="object-cover"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('lbpage-triptych2')}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-[10px] font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-            >
-              <Icon name="image" size={12} />
-              <span>Ganti</span>
-            </button>
+            <LookbookUploadGroup target="lbpage-triptych2" ratioLabel="3:4" selectLabel="Pilih" />
           </div>
 
           {/* Detail 3 */}
@@ -1213,14 +1208,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 className="object-cover"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('lbpage-triptych3')}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-black/20 bg-white py-1.5 text-[10px] font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-            >
-              <Icon name="image" size={12} />
-              <span>Ganti</span>
-            </button>
+            <LookbookUploadGroup target="lbpage-triptych3" ratioLabel="3:4" selectLabel="Pilih" />
           </div>
         </div>
       </div>
@@ -1245,14 +1233,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               className="object-cover"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenImagePicker('lbpage-fullDress')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/20 bg-white py-2 text-xs font-semibold text-black transition hover:border-black hover:bg-black/5 active:scale-95"
-          >
-            <Icon name="image" size={14} />
-            <span>Ganti Foto Penutup</span>
-          </button>
+          <LookbookUploadGroup target="lbpage-fullDress" ratioLabel="4:5" selectLabel="Pilih Galeri" />
         </div>
       </div>
 

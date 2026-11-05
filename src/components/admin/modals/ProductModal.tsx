@@ -42,8 +42,6 @@ interface ProductModalProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   /** Upload langsung dengan target eksplisit — tidak perlu membuka galeri */
   onFileUploadDirect: (e: React.ChangeEvent<HTMLInputElement>, target: ImagePickerTarget) => Promise<void>;
-  /** Buka cropper untuk menyesuaikan framing/posisi foto manual */
-  onOpenCropper?: (imageSrc: string, target: ImagePickerTarget) => void;
   /** Pilih file lalu langsung buka cropper tanpa upload dulu */
   onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   isLoading: boolean;
@@ -67,7 +65,6 @@ export function ProductModal({
   onSetImageTarget,
   onFileUpload,
   onFileUploadDirect,
-  onOpenCropper,
   onFileSelectForCrop,
   isLoading,
   isUploading,
@@ -408,27 +405,14 @@ export function ProductModal({
               <span className="text-[11px] font-semibold text-black">
                 Foto Sampul Utama Produk
               </span>
-              <div className="flex items-center gap-1.5">
-                {productForm.image && onOpenCropper && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCropper(productForm.image, 'product')}
-                    className="inline-flex h-7 items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer shadow-2xs"
-                    title="Sesuaikan posisi / crop foto ini sesuai rasio tampilan pembeli"
-                  >
-                    <Icon name="search" size={11} />
-                    <span>Sesuaikan (3:4)</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => onOpenImagePicker('product')}
-                  className="inline-flex h-7 items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer"
-                >
-                  <Icon name="image" size={12} />
-                  <span>Pilih Galeri</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => onOpenImagePicker('product')}
+                className="inline-flex h-7 items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer"
+              >
+                <Icon name="image" size={12} />
+                <span>Pilih Galeri</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
@@ -701,22 +685,6 @@ export function ProductModal({
 
                     <div className="flex flex-1 flex-col gap-0.5 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {(sw.image || productForm.image) && onOpenCropper && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onOpenCropper(
-                                sw.image || productForm.image,
-                                `swatch-${idx}` as ImagePickerTarget
-                              )
-                            }
-                            className="h-6 rounded-full border border-black/20 bg-white px-2 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer shadow-2xs"
-                            title="Sesuaikan posisi foto varian ini"
-                          >
-                            <span>Sesuaikan</span>
-                          </button>
-                        )}
-
                         <button
                           type="button"
                           onClick={() => onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget)}

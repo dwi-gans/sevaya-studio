@@ -3,7 +3,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 
-export type AspectRatioType = '3:4' | '4:5' | '1:1' | '16:9' | 'free';
+export type AspectRatioType = '3:4' | '4:5' | '1:1' | '4:3' | '16:9' | 'free';
+
+export interface CardTargetInfo {
+  name: string;
+  ratio: AspectRatioType;
+  ratioDescription: string;
+  exactRatioValue: number | null;
+}
 
 interface AspectRatioOption {
   id: AspectRatioType;
@@ -13,10 +20,11 @@ interface AspectRatioOption {
 }
 
 const RATIO_OPTIONS: AspectRatioOption[] = [
-  { id: '3:4', label: '3:4 (Portrait)', description: 'Standar produk & About', ratio: 3 / 4 },
-  { id: '4:5', label: '4:5 (Katalog)', description: 'Standar kartu etalase', ratio: 4 / 5 },
+  { id: '3:4', label: '3:4 (Portrait)', description: 'Standar Produk, About SEVAYA, & Triptych', ratio: 3 / 4 },
+  { id: '4:5', label: '4:5 (Lookbook)', description: 'Standar Kartu Lookbook & Etalase', ratio: 4 / 5 },
   { id: '1:1', label: '1:1 (Persegi)', description: 'Rasio bujur sangkar', ratio: 1 },
-  { id: '16:9', label: '16:9 (Landscape)', description: 'Hero banner & cover video', ratio: 16 / 9 },
+  { id: '4:3', label: '4:3 (Spotlight)', description: 'Spotlight Kategori & Jurnal', ratio: 4 / 3 },
+  { id: '16:9', label: '16:9 (Landscape)', description: 'Hero banner & Cover video', ratio: 16 / 9 },
   { id: 'free', label: 'Asli', description: 'Gunakan rasio asli foto', ratio: null },
 ];
 
@@ -25,8 +33,52 @@ interface ImageCropperModalProps {
   onClose: () => void;
   imageSrc: string;
   title?: string;
+  cardInfo?: CardTargetInfo;
   initialRatio?: AspectRatioType;
   onApplyCrop: (croppedBlob: Blob, previewUrl: string) => Promise<void> | void;
+}
+
+/**
+ * Loads an image into a 100% safe, same-origin Blob URL so canvas is never tainted by CORS.
+ */
+async function loadSafeSameOriginImage(src: string): Promise<HTMLImageElement> {
+  let safeSrc = src;
+
+  // If external HTTP/HTTPS URL, convert to local blob to avoid canvas tainting
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    try {
+      // Direct fetch first
+      const res = await fetch(src, { mode: 'cors', cache: 'no-cache' });
+      if (res.ok) {
+        const b = await res.blob();
+        safeSrc = URL.createObjectURL(b);
+      } else {
+        throw new Error('Direct fetch failed');
+      }
+    } catch {
+      // Fallback: server proxy to bypass CORS completely
+      try {
+        const proxyRes = await fetch(`/api/admin/proxy-image?url=${encodeURIComponent(src)}`);
+        if (proxyRes.ok) {
+          const b = await proxyRes.blob();
+          safeSrc = URL.createObjectURL(b);
+        }
+      } catch {
+        // If proxy fails, use original src
+      }
+    }
+  }
+
+  const img = new window.Image();
+  img.crossOrigin = 'anonymous';
+
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error('Gagal memuat gambar untuk penyesuaian.'));
+    img.src = safeSrc;
+  });
+
+  return img;
 }
 
 export function ImageCropperModal({
@@ -34,10 +86,13 @@ export function ImageCropperModal({
   onClose,
   imageSrc,
   title = 'Sesuaikan Tampilan Foto Pembeli',
+  cardInfo,
   initialRatio = '3:4',
   onApplyCrop,
 }: ImageCropperModalProps) {
-  const [selectedRatio, setSelectedRatio] = useState<AspectRatioType>(initialRatio);
+  // Use cardInfo's ratio if available, otherwise initialRatio
+  const effectiveRatio = cardInfo?.ratio || initialRatio;
+  const [selectedRatio, setSelectedRatio] = useState<AspectRatioType>(effectiveRatio);
   const [zoom, setZoom] = useState<number>(1);
   const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -45,19 +100,22 @@ export function ImageCropperModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  // Reset state when a new image is loaded
+  // Reset state when a new image is loaded or target changes
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedRatio(initialRatio);
+    const targetRatio = cardInfo?.ratio || initialRatio;
+    setSelectedRatio(targetRatio);
     setZoom(1);
     setOffset({ x: 0, y: 0 });
     setIsDragging(false);
     setImageLoaded(false);
-  }, [isOpen, imageSrc, initialRatio]);
+    setErrorMessage(null);
+  }, [isOpen, imageSrc, cardInfo, initialRatio]);
 
   // Load image to get natural dimensions
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -142,6 +200,7 @@ export function ImageCropperModal({
   const handleApply = async () => {
     if (!imageRef.current || !containerRef.current) return;
     setIsProcessing(true);
+    setErrorMessage(null);
 
     try {
       const container = containerRef.current;
@@ -180,28 +239,10 @@ export function ImageCropperModal({
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Load original image into an HTMLImageElement to draw onto canvas
-      const sourceImage = new window.Image();
-      sourceImage.crossOrigin = 'anonymous';
-
-      await new Promise<void>((resolve, reject) => {
-        sourceImage.onload = () => resolve();
-        sourceImage.onerror = () => {
-          // Fallback if crossOrigin fails: fetch as blob
-          fetch(imageSrc)
-            .then((res) => res.blob())
-            .then((blob) => {
-              const localUrl = URL.createObjectURL(blob);
-              sourceImage.onload = () => resolve();
-              sourceImage.src = localUrl;
-            })
-            .catch(reject);
-        };
-        sourceImage.src = imageSrc;
-      });
+      // Load original image using our safe same-origin loader
+      const sourceImage = await loadSafeSameOriginImage(imageSrc);
 
       // Calculate source image rendering coordinates relative to crop box
-      // Container center to crop box center is identical since both are centered
       const scaleToFit = Math.max(cropWidth / img.naturalWidth, cropHeight / img.naturalHeight);
       const currentScale = scaleToFit * zoom;
 
@@ -235,7 +276,7 @@ export function ImageCropperModal({
         canvas.toBlob(
           (b) => {
             if (b) resolve(b);
-            else reject(new Error('Gagal menghasilkan file gambar'));
+            else reject(new Error('Canvas gagal menghasilkan blob gambar'));
           },
           'image/webp',
           0.9
@@ -245,10 +286,10 @@ export function ImageCropperModal({
       const previewUrl = URL.createObjectURL(blob);
       await onApplyCrop(blob, previewUrl);
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error cropping image:', err);
-      // Fallback: still close and notify
-      onClose();
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat memotong foto';
+      setErrorMessage(msg);
     } finally {
       setIsProcessing(false);
     }
@@ -272,7 +313,7 @@ export function ImageCropperModal({
               {title}
             </h3>
             <p className="text-[11px] text-black/60">
-              Geser (drag) foto dan atur zoom agar tampilan baju pas persis dengan mata pembeli.
+              Geser (drag) foto dan atur zoom agar pas persis dengan ukuran kartu yang dilihat pembeli.
             </p>
           </div>
           <button
@@ -285,8 +326,26 @@ export function ImageCropperModal({
           </button>
         </div>
 
+        {/* Card Target Identification Banner */}
+        {cardInfo && (
+          <div className="flex items-center gap-2.5 border-b border-black/10 bg-black/[0.04] px-4 sm:px-6 py-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-white text-[10px] font-bold">
+              ✓
+            </span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+              <span className="font-semibold text-black uppercase tracking-wider text-[10px]">
+                Target Card: {cardInfo.name}
+              </span>
+              <span className="text-black/30 hidden sm:inline">•</span>
+              <span className="text-[11px] text-black/70 font-medium">
+                Ukuran Frame: <strong className="text-black bg-black/10 px-1.5 py-0.5 rounded text-[10px] uppercase font-mono">{cardInfo.ratioDescription}</strong>
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Aspect Ratio Selector Bar */}
-        <div className="flex flex-wrap items-center gap-1.5 border-b border-black/10 bg-black/[0.02] px-4 sm:px-6 py-2.5">
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-black/10 bg-white px-4 sm:px-6 py-2.5">
           <span className="text-[10px] font-semibold text-black/60 uppercase tracking-wider mr-1 shrink-0">
             Rasio Tampilan:
           </span>
@@ -311,9 +370,17 @@ export function ImageCropperModal({
           </div>
         </div>
 
+        {/* Error message banner if any */}
+        {errorMessage && (
+          <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-xs text-red-700 flex items-center justify-between">
+            <span>{errorMessage}</span>
+            <button type="button" onClick={() => setErrorMessage(null)} className="text-red-500 font-bold ml-2">×</button>
+          </div>
+        )}
+
         {/* Interactive Cropper Area */}
         <div className="relative flex items-center justify-center bg-[#151515] p-4 sm:p-6 overflow-hidden min-h-[340px] sm:min-h-[420px] select-none">
-          {/* Visual framing container */}
+          {/* Visual framing container locked to exact card ratio */}
           <div
             ref={containerRef}
             onMouseDown={handleMouseDown}
@@ -321,20 +388,20 @@ export function ImageCropperModal({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onWheel={handleWheel}
-            className={`relative overflow-hidden shadow-2xl rounded-sm border-2 border-white/80 ${
+            className={`relative overflow-hidden shadow-2xl rounded-sm border-2 border-white/90 ${
               isDragging ? 'cursor-grabbing' : 'cursor-grab'
             }`}
             style={{
               width: targetRatio
                 ? targetRatio <= 1
-                  ? `${Math.round(260 * targetRatio)}px`
+                  ? `${Math.round(270 * targetRatio)}px`
                   : '340px'
                 : '280px',
               height: targetRatio
                 ? targetRatio <= 1
-                  ? '346px'
+                  ? '360px'
                   : `${Math.round(340 / targetRatio)}px`
-                : '346px',
+                : '360px',
               maxWidth: '85vw',
               maxHeight: '52vh',
             }}
@@ -368,14 +435,14 @@ export function ImageCropperModal({
               <div className="border-r border-b border-white/40" />
               <div className="border-r border-b border-white/40" />
               <div className="border-b border-white/40" />
-              <div className="border-r border-white/40" />
-              <div className="border-r border-white/40" />
+              <div className="border-r border-b border-white/40" />
+              <div className="border-r border-b border-white/40" />
               <div />
             </div>
 
-            {/* Hint overlay on first render */}
+            {/* Hint overlay */}
             <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex justify-center">
-              <span className="rounded-full bg-black/60 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium text-white/90 shadow-xs">
+              <span className="rounded-full bg-black/75 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-medium text-white/95 shadow-xs">
                 Klik & geser untuk atur posisi foto
               </span>
             </div>
