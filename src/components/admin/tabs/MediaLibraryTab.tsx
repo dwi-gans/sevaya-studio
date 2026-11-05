@@ -146,12 +146,17 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file && file.type.startsWith('image/')) {
+      if (!file) continue;
+      // Mac / Safari / HEIC / Screenshots compatibility
+      const isImg =
+        (file.type && (file.type.startsWith('image/') || file.type === 'application/octet-stream')) ||
+        /\.(jpe?g|png|webp|gif|avif|heic|heif|svg)$/i.test(file.name);
+      if (isImg) {
         validFiles.push(file);
       }
     }
     if (validFiles.length === 0) {
-      showToast('Harap pilih berkas gambar (JPG, PNG, WebP, dsb).');
+      showToast('Harap pilih berkas gambar (JPG, PNG, WebP, HEIC).');
       return;
     }
     setStagedFiles((prev) => [...prev, ...validFiles]);
@@ -820,7 +825,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                   <span>Ganti File / Versi Baru</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                     className="hidden"
                     onChange={handleSingleFileReplace}
                   />
@@ -914,7 +919,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                 className="hidden"
                 onChange={(e) => {
                   handleAddFiles(e.target.files);

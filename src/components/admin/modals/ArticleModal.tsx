@@ -220,7 +220,7 @@ export function ArticleModal({
                   <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto'}</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                     disabled={isUploading}
                     onChange={(e) => {
                       onOpenImagePicker('article');
@@ -398,7 +398,7 @@ export function ArticleModal({
                 <span>{isUploading ? 'Mengunggah...' : 'Unggah File Foto Baru'}</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                   disabled={isUploading}
                   onChange={async (e) => {
                     const file = e.target.files?.[0];

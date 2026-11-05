@@ -1145,6 +1145,8 @@ export default function AdminPage() {
         {activeTab === 'section-conscious' && (
           <ConsciousTab
             sections={sections}
+            setSections={setSections}
+            showToast={showToast}
             onOpenImagePicker={(target) => {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -10,6 +10,7 @@ import {
   HomeNarrativeConfig,
   HomeJournalHeaderConfig,
 } from '@/integrations/supabase';
+import { uploadFileToStorage } from '@/integrations/supabase/storage';
 import type { Article } from '@/integrations/supabase/articles';
 import { INITIAL_ARTICLES } from '@/data/newsArticles';
 import type { ImagePickerTarget } from '../adminTypes';
@@ -41,6 +42,102 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
     ...(sections.journalHeader || {}),
   };
   const journal = sections.journal?.length ? sections.journal : DEFAULT_SITE_SECTIONS.journal;
+
+  // ── Direct Upload Handler ──────────────────────────────────────────────
+  const [uploadingTarget, setUploadingTarget] = useState<ImagePickerTarget | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const handleDirectUpload = async (target: ImagePickerTarget, file: File) => {
+    if (!file) return;
+    setUploadingTarget(target);
+    showToast(`Mengunggah ${file.name}...`);
+    try {
+      const publicUrl = await uploadFileToStorage(file, 'uploads');
+      setSections((prev) => {
+        let next = { ...prev };
+        if (target === 'hero') {
+          next = { ...next, hero: { ...(next.hero || DEFAULT_SITE_SECTIONS.hero), image: publicUrl } };
+        } else if (target === 'home-video-poster') {
+          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), videoPoster: publicUrl } };
+        } else if (target === 'home-about-1') {
+          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage1: publicUrl } };
+        } else if (target === 'home-about-2') {
+          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage2: publicUrl } };
+        } else if (target === 'spotlight-0') {
+          const sp = [...(next.spotlight?.length ? next.spotlight : DEFAULT_SITE_SECTIONS.spotlight)];
+          if (sp[0]) sp[0] = { ...sp[0], image: publicUrl };
+          next = { ...next, spotlight: sp };
+        } else if (target === 'spotlight-1') {
+          const sp = [...(next.spotlight?.length ? next.spotlight : DEFAULT_SITE_SECTIONS.spotlight)];
+          if (sp[1]) sp[1] = { ...sp[1], image: publicUrl };
+          next = { ...next, spotlight: sp };
+        } else if (target === 'textiles') {
+          next = { ...next, missionTextiles: { ...(next.missionTextiles || DEFAULT_SITE_SECTIONS.missionTextiles), image: publicUrl } };
+        } else if (target === 'journal-0') {
+          const j = [...(next.journal?.length ? next.journal : DEFAULT_SITE_SECTIONS.journal)];
+          if (j[0]) j[0] = { ...j[0], image: publicUrl };
+          next = { ...next, journal: j };
+        } else if (target === 'journal-1') {
+          const j = [...(next.journal?.length ? next.journal : DEFAULT_SITE_SECTIONS.journal)];
+          if (j[1]) j[1] = { ...j[1], image: publicUrl };
+          next = { ...next, journal: j };
+        }
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('✓ Foto berhasil diunggah & langsung tersimpan di Cloud Beranda!');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah foto';
+      showToast(`Upload gagal: ${msg}`);
+    } finally {
+      setUploadingTarget(null);
+      const inputEl = fileInputRefs.current[String(target)];
+      if (inputEl) inputEl.value = '';
+    }
+  };
+
+  const UploadActionGroup = ({
+    target,
+    label = 'Pilih Galeri',
+  }: {
+    target: ImagePickerTarget;
+    label?: string;
+  }) => {
+    const isUploadingThis = uploadingTarget === target;
+    const key = String(target);
+    return (
+      <div className="flex items-center gap-1.5">
+        <input
+          type="file"
+          ref={(el) => { fileInputRefs.current[key] = el; }}
+          accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleDirectUpload(target, file);
+          }}
+        />
+        <button
+          type="button"
+          disabled={isUploadingThis || uploadingTarget !== null}
+          onClick={() => fileInputRefs.current[key]?.click()}
+          className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[9px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+          title="Unggah foto langsung dari laptop / Mac"
+        >
+          <Icon name="upload" size={11} />
+          <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpenImagePicker(target)}
+          className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer"
+        >
+          <Icon name="image" size={11} />
+          <span>{label}</span>
+        </button>
+      </div>
+    );
+  };
 
   const availableArticles: Article[] =
     articles && articles.length > 0
@@ -199,14 +296,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
               Foto Latar Hero (Utama)
             </label>
-            <button
-              type="button"
-              onClick={() => onOpenImagePicker('hero')}
-              className="inline-flex items-center gap-1 text-[10px] font-semibold text-black hover:underline"
-            >
-              <Icon name="image" size={12} />
-              <span>Ganti Foto Hero</span>
-            </button>
+            <UploadActionGroup target="hero" label="Pilih Galeri" />
           </div>
 
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
@@ -318,14 +408,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kiri #1
               </span>
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker('spotlight-0')}
-                className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-              >
-                <Icon name="image" size={11} />
-                <span>Ganti Gambar</span>
-              </button>
+              <UploadActionGroup target="spotlight-0" label="Pilih" />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
@@ -365,14 +448,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kanan #2
               </span>
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker('spotlight-1')}
-                className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-              >
-                <Icon name="image" size={11} />
-                <span>Ganti Gambar</span>
-              </button>
+              <UploadActionGroup target="spotlight-1" label="Pilih" />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
@@ -520,14 +596,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
                 Cover Poster Video (Sebelum Dimainkan)
               </label>
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker('home-video-poster')}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold text-black hover:underline"
-              >
-                <Icon name="image" size={12} />
-                <span>Ganti Cover Video</span>
-              </button>
+              <UploadActionGroup target="home-video-poster" label="Pilih Galeri" />
             </div>
 
             <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black">
@@ -726,14 +795,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #1 (KIRI)</span>
-                <button
-                  type="button"
-                  onClick={() => onOpenImagePicker('home-about-1')}
-                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-                >
-                  <Icon name="image" size={11} />
-                  <span>Ganti Foto</span>
-                </button>
+                <UploadActionGroup target="home-about-1" label="Pilih" />
               </div>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
                 <Image
@@ -750,14 +812,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #2 (KANAN)</span>
-                <button
-                  type="button"
-                  onClick={() => onOpenImagePicker('home-about-2')}
-                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-                >
-                  <Icon name="image" size={11} />
-                  <span>Ganti Foto</span>
-                </button>
+                <UploadActionGroup target="home-about-2" label="Pilih" />
               </div>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
                 <Image
@@ -946,14 +1001,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #1</span>
-                <button
-                  type="button"
-                  onClick={() => onOpenImagePicker('journal-0')}
-                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-                >
-                  <Icon name="image" size={11} />
-                  <span>Ganti Gambar</span>
-                </button>
+                <UploadActionGroup target="journal-0" label="Pilih" />
               </div>
 
               {/* Selector dari News */}
@@ -1024,14 +1072,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #2</span>
-                <button
-                  type="button"
-                  onClick={() => onOpenImagePicker('journal-1')}
-                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-black hover:underline"
-                >
-                  <Icon name="image" size={11} />
-                  <span>Ganti Gambar</span>
-                </button>
+                <UploadActionGroup target="journal-1" label="Pilih" />
               </div>
 
               {/* Selector dari News */}

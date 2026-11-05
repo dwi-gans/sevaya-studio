@@ -113,10 +113,15 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
-      if (f && f.type.startsWith('image/')) validFiles.push(f);
+      if (!f) continue;
+      // Robust check for Mac / Safari / HEIC / Screenshots
+      const isImg =
+        (f.type && (f.type.startsWith('image/') || f.type === 'application/octet-stream')) ||
+        /\.(jpe?g|png|webp|gif|avif|heic|heif|svg)$/i.test(f.name);
+      if (isImg) validFiles.push(f);
     }
     if (validFiles.length === 0) {
-      showToast('Harap pilih berkas gambar (JPG, PNG, WebP).');
+      showToast('Harap pilih berkas gambar (JPG, PNG, WebP, HEIC).');
       return;
     }
 
@@ -140,6 +145,11 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         const firstNew = newUploaded[0];
         if (firstNew?.src) {
           setSelectedSrc(firstNew.src);
+          // Langsung terapkan foto baru & tutup modal agar pengguna tidak bingung
+          onSelectImage(firstNew.src);
+          onClose();
+          showToast('✓ Foto berhasil diunggah ke cloud dan langsung diterapkan!');
+          return;
         }
 
         showToast(`${newUploaded.length} foto berhasil diunggah dan siap digunakan!`);
@@ -318,7 +328,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
               ref={fileInputRef}
               onChange={(e) => handleFileUpload(e.target.files)}
               multiple
-              accept="image/*"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
               className="hidden"
             />
             <button

@@ -346,7 +346,7 @@ export function ProductModal({
                   <span>{isUploading ? 'Mengunggah...' : 'Unggah File'}</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                     disabled={isUploading}
                     onChange={(e) => {
                       onOpenImagePicker('product');
@@ -451,7 +451,7 @@ export function ProductModal({
                           <span>Unggah</span>
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                             disabled={isUploading}
                             onChange={(e) => {
                               onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget);

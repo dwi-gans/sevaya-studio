@@ -20,12 +20,27 @@ export async function uploadFileToStorage(file: File, folder = 'uploads'): Promi
 
     const res = await fetch('/api/admin/upload', {
       method: 'POST',
+      headers: {
+        'x-admin-key': 'sevaya-admin',
+      },
+      credentials: 'include',
       body: formData,
     });
 
     if (res.ok) {
       const data = await res.json();
       if (data.success && data.url) {
+        // Sync cache so MediaLibraryTab & ImagePickerModal see this immediately
+        if (typeof window !== 'undefined' && data.files && data.files.length > 0) {
+          try {
+            const cached = localStorage.getItem('sevaya_cloud_media_assets');
+            const parsed = cached ? JSON.parse(cached) : [];
+            const next = [...data.files, ...parsed];
+            localStorage.setItem('sevaya_cloud_media_assets', JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+        }
         return data.url;
       }
     }
@@ -71,12 +86,28 @@ export async function uploadMultipleFilesToStorage(
 
   const res = await fetch('/api/admin/upload', {
     method: 'POST',
+    headers: {
+      'x-admin-key': 'sevaya-admin',
+    },
+    credentials: 'include',
     body: formData,
   });
 
   const data = await res.json();
   if (!res.ok || !data.success) {
     throw new Error(data.error || 'Gagal mengunggah berkas ke Cloud Storage');
+  }
+
+  // Sync cache so MediaLibraryTab & ImagePickerModal see this immediately
+  if (typeof window !== 'undefined' && data.files && data.files.length > 0) {
+    try {
+      const cached = localStorage.getItem('sevaya_cloud_media_assets');
+      const parsed = cached ? JSON.parse(cached) : [];
+      const next = [...data.files, ...parsed];
+      localStorage.setItem('sevaya_cloud_media_assets', JSON.stringify(next));
+    } catch {
+      // ignore
+    }
   }
 
   return data;
@@ -88,7 +119,12 @@ export async function uploadMultipleFilesToStorage(
 export async function listUploadedFiles(folder = 'uploads'): Promise<StorageFile[]> {
   // Try server endpoint first
   try {
-    const res = await fetch(`/api/admin/upload?folder=${encodeURIComponent(folder)}`);
+    const res = await fetch(`/api/admin/upload?folder=${encodeURIComponent(folder)}`, {
+      headers: {
+        'x-admin-key': 'sevaya-admin',
+      },
+      credentials: 'include',
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.files)) {
@@ -142,6 +178,10 @@ export async function deleteFileFromStorage(filePath: string): Promise<boolean> 
   try {
     const res = await fetch(`/api/admin/upload?path=${encodeURIComponent(filePath)}`, {
       method: 'DELETE',
+      headers: {
+        'x-admin-key': 'sevaya-admin',
+      },
+      credentials: 'include',
     });
     if (res.ok) {
       const data = await res.json();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -9,16 +9,21 @@ import {
   type SiteSectionsConfig,
   type ConsciousPageConfig,
 } from '@/integrations/supabase';
+import { uploadFileToStorage } from '@/integrations/supabase/storage';
 import type { ImagePickerTarget } from '../adminTypes';
 
 interface ConsciousTabProps {
   sections: SiteSectionsConfig;
+  setSections?: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
+  showToast?: (msg: string) => void;
 }
 
 export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   sections,
+  setSections,
   onOpenImagePicker,
+  showToast,
 }) => {
   const [cfg, setCfg] = useState<ConsciousPageConfig>(() => ({
     ...DEFAULT_CONSCIOUS_PAGE,
@@ -26,6 +31,8 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   }));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingTarget, setUploadingTarget] = useState<ImagePickerTarget | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Sync when parent sections update (e.g. after image picker saves)
   useEffect(() => {
@@ -38,6 +45,63 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   function set(key: keyof ConsciousPageConfig, value: string) {
     setCfg((prev) => ({ ...prev, [key]: value }));
   }
+
+  /**
+   * Direct upload for any photo in Halaman About.
+   * Uploads to cloud storage CDN, updates preview, and automatically saves to Supabase.
+   */
+  const handleDirectUpload = async (target: ImagePickerTarget, file: File) => {
+    if (!file) return;
+    setUploadingTarget(target);
+    if (showToast) showToast(`Mengunggah ${file.name} ke Cloud Storage...`);
+
+    try {
+      const publicUrl = await uploadFileToStorage(file, 'uploads');
+
+      // Map target to config key
+      let key: keyof ConsciousPageConfig | null = null;
+      if (target === 'conscious-hero') key = 'heroImage';
+      else if (target === 'conscious-inspo') key = 'inspoImage';
+      else if (target === 'conscious-founder') key = 'founderImage';
+      else if (target === 'conscious-bemberg') key = 'bembergImage';
+      else if (target === 'conscious-tencel') key = 'tencelImage';
+      else if (target === 'conscious-linen') key = 'linenImage';
+      else if (target === 'conscious-modal') key = 'modalImage';
+
+      if (key) {
+        const nextCfg = { ...cfg, [key]: publicUrl };
+        setCfg(nextCfg);
+
+        // Langsung simpan otomatis ke Supabase database
+        const updated: SiteSectionsConfig = {
+          ...sections,
+          consciousPage: nextCfg,
+          conscious: {
+            heroImage: nextCfg.heroImage || DEFAULT_CONSCIOUS_PAGE.heroImage || '/images/figma_about_1.png',
+            bembergImage: nextCfg.bembergImage || '/images/catalog/catalog-06.jpg',
+            tencelImage: nextCfg.tencelImage || '/images/catalog/catalog-16.jpg',
+            linenImage: nextCfg.linenImage || '/images/catalog/catalog-15.jpg',
+            modalImage: nextCfg.modalImage || '/images/catalog/catalog-04.jpg',
+          },
+        };
+
+        if (setSections) setSections(updated);
+        await saveSiteSections(updated);
+
+        if (showToast) {
+          showToast('✓ Foto berhasil diunggah & langsung tersimpan di Cloud Halaman About!');
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah foto';
+      if (showToast) showToast(`Upload gagal: ${msg}`);
+      else alert(`Upload gagal: ${msg}`);
+    } finally {
+      setUploadingTarget(null);
+      const inputEl = fileInputRefs.current[String(target)];
+      if (inputEl) inputEl.value = '';
+    }
+  };
 
   async function handleSaveAll() {
     setSaving(true);
@@ -54,10 +118,12 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
         modalImage: cfg.modalImage || '/images/catalog/catalog-04.jpg',
       },
     };
+    if (setSections) setSections(updated);
     const ok = await saveSiteSections(updated);
     setSaving(false);
     if (ok) {
       setSaved(true);
+      if (showToast) showToast('✓ Semua perubahan Halaman About berhasil disimpan!');
       setTimeout(() => setSaved(false), 3000);
     }
   }
@@ -111,21 +177,57 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
     target: ImagePickerTarget;
     label: string;
     aspect?: string;
-  }) => (
-    <div className="flex flex-col gap-2">
-      <div className={`relative ${aspect} w-full overflow-hidden rounded-xl border border-black/15 bg-black/5`}>
-        <Image src={src || '/images/figma_about_1.png'} alt={alt} fill className="object-cover" />
+  }) => {
+    const isUploadingThis = uploadingTarget === target;
+    return (
+      <div className="flex flex-col gap-2">
+        <div className={`relative ${aspect} w-full overflow-hidden rounded-xl border border-black/15 bg-black/5`}>
+          <Image src={src || '/images/figma_about_1.png'} alt={alt} fill className="object-cover" />
+          {isUploadingThis && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/75 text-white backdrop-blur-xs">
+              <Icon name="refresh" size={24} className="animate-spin text-white mb-1.5" />
+              <span className="text-[10px] font-bold tracking-wider uppercase">Mengunggah ke Cloud...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons: Direct Upload + Gallery Picker */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Direct Upload input (Mac/Safari/Windows compatible) */}
+          <input
+            type="file"
+            ref={(el) => { fileInputRefs.current[String(target)] = el; }}
+            accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleDirectUpload(target, file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={isUploadingThis || uploadingTarget !== null}
+            onClick={() => fileInputRefs.current[String(target)]?.click()}
+            className="inline-flex items-center gap-1.5 rounded-full bg-black px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
+            title="Pilih foto langsung dari laptop/Mac dan simpan otomatis"
+          >
+            <Icon name="upload" size={13} />
+            <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah Foto'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onOpenImagePicker(target)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3.5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95 cursor-pointer"
+            title="Pilih dari pustaka foto yang sudah diunggah"
+          >
+            <Icon name="image" size={13} />
+            <span>Pilih Galeri</span>
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        onClick={() => onOpenImagePicker(target)}
-        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
-      >
-        <Icon name="image" size={13} />
-        <span>{label}</span>
-      </button>
-    </div>
-  );
+    );
+  };
 
   const SectionCard = ({
     num,
@@ -243,21 +345,52 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
             { label: 'TENCEL™ Lyocell', src: cfg.tencelImage || '/images/catalog/catalog-16.jpg', target: 'conscious-tencel' as ImagePickerTarget },
             { label: 'Pure Flax Linen', src: cfg.linenImage || '/images/catalog/catalog-15.jpg', target: 'conscious-linen' as ImagePickerTarget },
             { label: 'Eco Modal', src: cfg.modalImage || '/images/catalog/catalog-04.jpg', target: 'conscious-modal' as ImagePickerTarget },
-          ].map((item) => (
-            <div key={item.target} className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15">
-              <span className="truncate text-xs font-semibold text-black">{item.label}</span>
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
-                <Image src={item.src} alt={item.label} fill className="object-cover" />
+          ].map((item) => {
+            const isUploadingThis = uploadingTarget === item.target;
+            return (
+              <div key={item.target} className="flex flex-col gap-2 rounded-xl bg-black/5 p-3 border border-black/15">
+                <span className="truncate text-xs font-semibold text-black">{item.label}</span>
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-black/15 bg-white">
+                  <Image src={item.src} alt={item.label} fill className="object-cover" />
+                  {isUploadingThis && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/75 text-white backdrop-blur-xs">
+                      <Icon name="refresh" size={20} className="animate-spin text-white mb-1" />
+                      <span className="text-[9px] font-bold tracking-wider uppercase">Mengunggah...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <input
+                    type="file"
+                    ref={(el) => { fileInputRefs.current[String(item.target)] = el; }}
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleDirectUpload(item.target, file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={isUploadingThis || uploadingTarget !== null}
+                    onClick={() => fileInputRefs.current[String(item.target)]?.click()}
+                    className="inline-flex items-center justify-center gap-1 rounded-full bg-black py-1.5 text-center text-[10px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+                  >
+                    <Icon name="upload" size={11} />
+                    <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenImagePicker(item.target)}
+                    className="rounded-full border border-black/20 bg-white py-1 text-center text-[10px] font-medium text-black hover:border-black active:scale-95 cursor-pointer"
+                  >
+                    Pilih Galeri
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => onOpenImagePicker(item.target)}
-                className="rounded-full border border-black/20 bg-white py-1.5 text-center text-[11px] font-medium text-black hover:border-black"
-              >
-                Ganti Foto
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </SectionCard>
 
