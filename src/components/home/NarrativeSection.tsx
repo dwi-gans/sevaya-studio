@@ -19,20 +19,19 @@ interface NarrativeSectionProps {
 
 export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {}) {
   const { t } = useLanguage();
-  const [narrative, setNarrative] = useState<HomeNarrativeConfig>(() => {
-    if (initialNarrative) return initialNarrative;
-    const cached = getCachedSiteSections();
-    return cached?.narrative || DEFAULT_HOME_NARRATIVE;
-  });
-
-  useLayoutEffect(() => {
-    const cached = getCachedSiteSections();
-    if (cached?.narrative) setNarrative(cached.narrative);
-  }, []);
+  const [narrative, setNarrative] = useState<HomeNarrativeConfig>(
+    () => initialNarrative || DEFAULT_HOME_NARRATIVE
+  );
 
   useEffect(() => {
+    const cached = getCachedSiteSections();
+    if (cached?.narrative) {
+      setNarrative(cached.narrative);
+    }
     getSiteSections().then((sections) => {
-      if (sections.narrative) setNarrative(sections.narrative);
+      if (sections?.narrative) {
+        setNarrative(sections.narrative);
+      }
     });
   }, []);
 
