@@ -24,7 +24,7 @@ export function AdminHeader({
 }: AdminHeaderProps) {
   return (
     <header
-      className={`fixed top-0 right-0 h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3 sm:px-6 flex items-center justify-between gap-2.5 sm:gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed top-0 right-0 h-14 sm:h-16 bg-white/95 backdrop-blur-xl border-b border-[#d5c2c5]/30 z-40 px-3 sm:px-5 lg:px-6 xl:px-8 flex items-center justify-between gap-2.5 sm:gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isSidebarOpen ? 'left-0 md:left-[260px]' : 'left-0'
       }`}
     >

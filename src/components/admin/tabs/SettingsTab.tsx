@@ -2,7 +2,7 @@ import React from 'react';
 
 export const SettingsTab: React.FC = () => {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4">
       <div className="flex flex-col gap-1 pb-2">
         <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
           Sistem &amp; Konfigurasi

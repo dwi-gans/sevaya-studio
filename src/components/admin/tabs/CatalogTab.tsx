@@ -45,7 +45,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
   }, [localQuery, setSearchQuery]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4">
+    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-3 sm:space-y-4">
       {/* Top Toolbar */}
       <div className="flex items-center justify-between gap-2 pb-1 sm:pb-2">
         <div className="min-w-0">
@@ -133,7 +133,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
           {filteredProducts.map((product) => (
             <div
               key={product.id}

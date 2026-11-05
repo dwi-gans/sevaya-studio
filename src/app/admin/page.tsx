@@ -1155,7 +1155,7 @@ export default function AdminPage() {
 
       {/* Main Tab Content */}
       <main
-        className={`relative min-h-screen bg-[#f9f9f8] px-3 pb-16 pt-16 sm:px-6 sm:pt-20 lg:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative min-h-screen bg-[#f9f9f8] px-3 pb-16 pt-16 sm:px-5 sm:pt-20 lg:px-6 xl:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >

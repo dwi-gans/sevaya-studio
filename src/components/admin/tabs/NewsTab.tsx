@@ -39,7 +39,7 @@ export const NewsTab: React.FC<NewsTabProps> = ({
   });
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4">
       {/* Top Toolbar */}
       <div className="pb-2">
         <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">

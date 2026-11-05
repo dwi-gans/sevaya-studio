@@ -263,7 +263,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({ showToast }) =
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4">
       {/* Top Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div>

@@ -349,7 +349,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 pb-20">
+    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4 pb-20">
       {/* ══ MODAL TAMBAH VOLUME BARU (Shared) ══ */}
       {isAddVolumeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
