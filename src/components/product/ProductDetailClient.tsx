@@ -7,7 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { getDbProducts, DbProduct } from '@/integrations/supabase';
 import { ProductVariant } from '@/integrations/supabase/inventory';
-import { SEARCH_CATALOG } from '@/data/searchCatalog';
+import { mapDbProductToProduct } from '@/features/catalog';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Footer } from '@/components/layout/Footer';
 
@@ -68,6 +68,8 @@ export function ProductDetailClient({
 
   const [dbProduct, setDbProduct] = useState<DbProduct>(initialProduct);
   const [variants, setVariants] = useState<ProductVariant[]>(initialVariants);
+  // Semua produk dari DB (untuk Related Products)
+  const [allDbProducts, setAllDbProducts] = useState<DbProduct[]>([]);
 
   // Warna awal dihitung sekali dari SSR data
   const [colors, setColors] = useState<ProductColorOption[]>(() =>
@@ -97,10 +99,11 @@ export function ProductDetailClient({
   const [sizingOpen, setSizingOpen] = useState(false);
 
   const [galleryImages, setGalleryImages] = useState<string[]>(() => {
+    // Hanya gunakan foto utama produk + koleksi foto tambahan (images[])
+    // TIDAK termasuk swatch images agar gallery tidak membanjir
     const list = [
       initialProduct.image || '',
       ...(initialProduct.images || []),
-      ...(initialProduct.swatches || []).map((s) => s.image || ''),
     ].filter(Boolean);
     const unique = Array.from(new Set(list));
     return unique.length > 0 ? unique : [initialProduct.image || '/images/catalog/catalog-01.jpg'];
@@ -159,6 +162,10 @@ export function ProductDetailClient({
     // Refresh data produk
     getDbProducts(true).then((prodList) => {
       if (!isMounted) return;
+
+      // Simpan semua produk untuk Related Products
+      setAllDbProducts(prodList);
+
       const found = prodList.find((p) => p.slug === slug);
       if (!found) return;
 
@@ -188,12 +195,11 @@ export function ProductDetailClient({
         setSelectedColor(freshColors[0]!);
         setActiveImage(freshColors[0]!.image);
 
+        // Hanya foto utama + images[] — TIDAK include swatch images
         const thumbs = Array.from(
-          new Set([
-            found.image || '',
-            ...freshColors.map((c) => c.image),
-            ...(found.images || []),
-          ].filter(Boolean) as string[])
+          new Set(
+            [found.image || '', ...(found.images || [])].filter(Boolean) as string[]
+          )
         );
         if (thumbs.length > 0) {
           setGalleryImages(thumbs);
@@ -278,33 +284,20 @@ export function ProductDetailClient({
   };
 
   const relatedProducts: Product[] = useMemo(() => {
+    // Gunakan produk DB asli jika sudah tersedia, fallback ke produk awal
+    const sourceList = allDbProducts.length > 0 ? allDbProducts : [initialProduct];
     const list: Product[] = [];
     const seenSlugs = new Set([slug]);
 
-    for (const item of SEARCH_CATALOG) {
-      if (!seenSlugs.has(item.slug)) {
-        seenSlugs.add(item.slug);
-        list.push({
-          id: String(item.id),
-          slug: item.slug,
-          title: item.title,
-          edition: item.edition || 'Classic Cupro',
-          price: item.price,
-          originalPrice: item.originalPrice,
-          badge: item.badge,
-          image: item.image,
-          images: [item.image],
-          swatches: [
-            { name: 'Black', color: '#1A1A1A', image: item.image },
-            { name: 'Mocha', color: '#B28E78', image: item.image },
-            { name: 'Dusty Pink', color: '#DCAEAA', image: item.image },
-          ],
-        });
-        if (list.length >= 4) break;
-      }
+    for (const dbProd of sourceList) {
+      if (dbProd.hidden) continue; // skip produk tersembunyi
+      if (seenSlugs.has(dbProd.slug)) continue;
+      seenSlugs.add(dbProd.slug);
+      list.push(mapDbProductToProduct(dbProd));
+      if (list.length >= 4) break;
     }
     return list;
-  }, [slug]);
+  }, [slug, allDbProducts, initialProduct]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
