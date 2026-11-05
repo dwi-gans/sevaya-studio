@@ -278,7 +278,21 @@ export function invalidateProductsCache(): void {
 export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> {
   const now = Date.now();
 
-  // 0. Cek shared globalThis cache di Node.js server
+  // 0. Di Server (SSR): selalu baca disk lokal .data/products.json terlebih dahulu agar SSR selalu sinkron dengan data produk yang diedit admin
+  if (typeof window === 'undefined') {
+    const fromDisk = await loadServerDiskProducts();
+    if (fromDisk && fromDisk.length > 0) {
+      _cachedProducts = fromDisk;
+      _cachedTime = now;
+      if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache) {
+        globalThis.__sevayaProductsCache.products = fromDisk;
+        globalThis.__sevayaProductsCache.timestamp = now;
+      }
+      return fromDisk;
+    }
+  }
+
+  // 1. Cek shared globalThis cache di Node.js server
   if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache?.products && !forceRefresh) {
     if (now - globalThis.__sevayaProductsCache.timestamp < CACHE_TTL_MS) {
       _cachedProducts = globalThis.__sevayaProductsCache.products;
@@ -298,7 +312,7 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     _cachedTime = 0;
   }
 
-  // 1. In browser: check localStorage for instant fallback (only when NOT force refreshing)
+  // 2. In browser: check localStorage for instant fallback (only when NOT force refreshing)
   if (!forceRefresh && typeof window !== 'undefined' && !_cachedProducts) {
     const lsData = loadFromLocalStorage();
     if (lsData && lsData.length > 0) {
@@ -307,7 +321,7 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
     }
   }
 
-  // 2. Fetch fresh catalog — always bypass browser HTTP cache
+  // 3. Fetch fresh catalog — always bypass browser HTTP cache
   if (typeof window !== 'undefined') {
     try {
       const res = await fetch('/api/products', { cache: 'no-store' });
@@ -322,20 +336,6 @@ export async function getDbProducts(forceRefresh = false): Promise<DbProduct[]> 
       }
     } catch {
       // Fallback to storage or cache
-    }
-  }
-
-  // 3. Di Server: langsung baca disk lokal .data/products.json (tercepat & paling sinkron)
-  if (typeof window === 'undefined') {
-    const fromDisk = await loadServerDiskProducts();
-    if (fromDisk && fromDisk.length > 0) {
-      _cachedProducts = fromDisk;
-      _cachedTime = Date.now();
-      if (typeof globalThis !== 'undefined' && globalThis.__sevayaProductsCache) {
-        globalThis.__sevayaProductsCache.products = fromDisk;
-        globalThis.__sevayaProductsCache.timestamp = Date.now();
-      }
-      return fromDisk;
     }
   }
 

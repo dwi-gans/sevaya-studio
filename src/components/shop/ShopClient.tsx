@@ -43,7 +43,23 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
         if (!isMounted) return;
         if (Array.isArray(items) && items.length > 0) {
           const visible = items.filter((p) => !p.hidden).map(mapDbProductToProduct);
-          setCatalogProducts(visible);
+          // Only update state if products have actually changed to avoid unnecessary re-render flashes
+          setCatalogProducts((prev) => {
+            const hasChanged =
+              prev.length !== visible.length ||
+              prev.some((p, i) => {
+                const v = visible[i];
+                return (
+                  !v ||
+                  v.id !== p.id ||
+                  v.image !== p.image ||
+                  v.price !== p.price ||
+                  v.title !== p.title ||
+                  v.badge !== p.badge
+                );
+              });
+            return hasChanged ? visible : prev;
+          });
         }
       } catch (e) {
         console.error('Failed to load shop products:', e);
@@ -201,8 +217,8 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
         {/* Responsive Grid */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-            {filteredProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {filteredProducts.map((p, idx) => (
+              <ProductCard key={p.id} product={p} priority={idx < 4} />
             ))}
           </div>
         ) : (

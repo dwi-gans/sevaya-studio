@@ -22,62 +22,50 @@ export interface Product {
   swatches: { name: string; color: string; image?: string }[];
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { t, formatPrice } = useLanguage();
   const [selectedSwatch, setSelectedSwatch] = useState<string | null>(null);
   const [hoveredSwatch, setHoveredSwatch] = useState<string | null>(null);
-  const [activeSwatchIndex, setActiveSwatchIndex] = useState(0);
-  const [isCardHovered, setIsCardHovered] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const swatchesCount = product.swatches?.length || 0;
 
-  // Auto-cycle through swatches every 3.5 seconds
-  useEffect(() => {
-    // Stop auto-cycling if:
-    // 1. Product has 0 or 1 swatch
-    // 2. User clicked/locked a specific swatch
-    // 3. User is hovering a swatch dot
-    // 4. User is hovering the product card
-    if (swatchesCount <= 1 || selectedSwatch !== null || hoveredSwatch !== null || isCardHovered) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setActiveSwatchIndex((prev) => (prev + 1) % swatchesCount);
-    }, 3500);
-
-    return () => clearInterval(interval);
-  }, [swatchesCount, selectedSwatch, hoveredSwatch, isCardHovered]);
-
-  // Determine active swatch:
-  // 1. Swatch currently hovered by user
-  // 2. Swatch clicked/locked by user
-  // 3. Current auto-cycled swatch from interval
+  // Swatch aktif: prioritas ke swatch yang di-hover oleh kursor, lalu swatch yang diklik/dipilih
   const activeSwatch = hoveredSwatch
-    ? product.swatches.find((s) => s.name === hoveredSwatch)
+    ? product.swatches?.find((s) => s.name === hoveredSwatch)
     : selectedSwatch
-    ? product.swatches.find((s) => s.name === selectedSwatch)
-    : product.swatches && product.swatches.length > 0
-    ? product.swatches[activeSwatchIndex % product.swatches.length]
+    ? product.swatches?.find((s) => s.name === selectedSwatch)
     : null;
 
   const currentActiveName = activeSwatch?.name || product.swatches?.[0]?.name;
 
-  // Always show the photo matching the active color swatch
-  const displayImage = activeSwatch?.image || product.image;
+  // Foto yang ditampilkan: jika swatch dipilih & punya foto, tampilkan; jika tidak, tampilkan foto utama produk
+  const displayImage = activeSwatch?.image || product.image || '/images/catalog/catalog-01.jpg';
 
-  // Track previous image for ultra-smooth backdrop crossfade without any blank/gray flash
-  const [underlyingImage, setUnderlyingImage] = useState(product.image);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setUnderlyingImage(displayImage);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [displayImage]);
+  // Format gambar: Supabase dan Unsplash didukung langsung oleh Next.js optimizer (WebP otomatis)
+  const isOptimizableRemote =
+    !displayImage.startsWith('http') ||
+    displayImage.includes('supabase.co') ||
+    displayImage.includes('unsplash.com') ||
+    displayImage.includes('googleusercontent.com');
+  const shouldBeUnoptimized = !isOptimizableRemote;
 
-  // Only show secondary hover image if product has no multiple swatches to cycle through
+  // Reset loaded status saat displayImage berganti agar transisi fade-in mulus tanpa glitch
+  const [renderedSrc, setRenderedSrc] = useState(displayImage);
+  if (renderedSrc !== displayImage) {
+    setRenderedSrc(displayImage);
+    setIsLoaded(false);
+  }
+
+  // Foto kedua saat hover (hanya jika produk tidak memiliki banyak swatch warna)
   const secondaryImage =
     swatchesCount <= 1 && product.images && product.images.length > 1
       ? product.images[1]
@@ -105,14 +93,20 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article
       className="group relative flex flex-col bg-transparent"
-      onMouseEnter={() => setIsCardHovered(true)}
-      onMouseLeave={() => {
-        setIsCardHovered(false);
-        setHoveredSwatch(null);
-      }}
+      onMouseLeave={() => setHoveredSwatch(null)}
     >
       {/* Product Image Frame: 2:3 Portrait Aspect Ratio — clean subtle backdrop, zero gray flash */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#FBFBFB]">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#F6F4F0]">
+        {/* Soft luxury linen shimmer placeholder while image is downloading */}
+        <div
+          className={`absolute inset-0 z-0 bg-[#F6F4F0] transition-opacity duration-500 ease-out ${
+            isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+          aria-hidden="true"
+        >
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-t from-black/[0.03] to-transparent" />
+        </div>
+
         <Link href={`/product/${product.slug}`} prefetch={true} className="relative block h-full w-full">
           {/* Badge */}
           {product.badge && (
@@ -130,27 +124,18 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           )}
 
-          {/* Underlying image prevents any blank/gray flash during image switching */}
-          {underlyingImage && underlyingImage !== displayImage && (
-            <Image
-              src={underlyingImage}
-              alt={product.title}
-              fill
-              unoptimized={underlyingImage.startsWith('http')}
-              sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
-              className="pointer-events-none select-none object-cover"
-              draggable={false}
-            />
-          )}
-
-          {/* Primary Product Image — smoothly updates as color cycles or on interaction */}
+          {/* Primary Product Image — smoothly fades in on load */}
           <Image
             src={displayImage}
-            alt={`${product.title} - ${currentActiveName}`}
+            alt={`${product.title} - ${currentActiveName || 'Busana'}`}
             fill
-            unoptimized={displayImage.startsWith('http')}
-            sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
+            priority={priority}
+            unoptimized={shouldBeUnoptimized}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onLoad={() => setIsLoaded(true)}
             className={`pointer-events-none select-none object-cover transition-all duration-500 ease-out ${
+              isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.01]'
+            } ${
               secondaryImage
                 ? 'group-hover:opacity-0 group-hover:scale-105'
                 : 'group-hover:scale-105'
@@ -164,8 +149,8 @@ export function ProductCard({ product }: { product: Product }) {
               src={secondaryImage}
               alt={`${product.title} alternate view`}
               fill
-              unoptimized={secondaryImage.startsWith('http')}
-              sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 25vw"
+              unoptimized={!secondaryImage.startsWith('/') && !secondaryImage.includes('supabase.co')}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="pointer-events-none select-none object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
               draggable={false}
             />
@@ -221,11 +206,9 @@ export function ProductCard({ product }: { product: Product }) {
                     e.preventDefault();
                     e.stopPropagation();
                     if (selectedSwatch === swatch.name) {
-                      // Click again to unlock auto-cycling
                       setSelectedSwatch(null);
                     } else {
                       setSelectedSwatch(swatch.name);
-                      setActiveSwatchIndex(idx);
                     }
                     setHoveredSwatch(null);
                   }}
