@@ -37,7 +37,11 @@ interface ProductModalProps {
   onRemoveSwatch: (index: number) => void;
   onUpdateSwatch: (index: number, field: 'name' | 'color' | 'image', value: string) => void;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
+  /** Hanya set target upload tanpa membuka modal galeri (dipakai saat klik "Unggah File") */
+  onSetImageTarget: (target: ImagePickerTarget) => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  /** Upload langsung dengan target eksplisit — tidak perlu membuka galeri */
+  onFileUploadDirect: (e: React.ChangeEvent<HTMLInputElement>, target: ImagePickerTarget) => Promise<void>;
   isLoading: boolean;
   isUploading: boolean;
 }
@@ -56,7 +60,9 @@ export function ProductModal({
   onRemoveSwatch,
   onUpdateSwatch,
   onOpenImagePicker,
+  onSetImageTarget,
   onFileUpload,
+  onFileUploadDirect,
   isLoading,
   isUploading,
 }: ProductModalProps) {
@@ -434,8 +440,8 @@ export function ProductModal({
                     accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                     disabled={isUploading}
                     onChange={(e) => {
-                      onOpenImagePicker('product');
-                      onFileUpload(e);
+                      // Upload langsung dengan target eksplisit — galeri tidak dibuka
+                      onFileUploadDirect(e, 'product');
                     }}
                     className="hidden"
                   />
@@ -675,8 +681,8 @@ export function ProductModal({
                             accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
                             disabled={isUploading}
                             onChange={(e) => {
-                              onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget);
-                              onFileUpload(e);
+                              // Upload langsung dengan target swatch eksplisit — galeri tidak dibuka
+                              onFileUploadDirect(e, `swatch-${idx}` as ImagePickerTarget);
                             }}
                             className="hidden"
                           />

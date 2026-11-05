@@ -1107,6 +1107,37 @@ export default function AdminPage() {
     }
   };
 
+  /**
+   * Upload langsung dengan target yang diberikan secara eksplisit (sinkron),
+   * dipakai saat tombol "Unggah File" di form produk/swatch diklik —
+   * sehingga galeri TIDAK perlu dibuka dulu.
+   */
+  const handleFileUploadDirect = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: ImagePickerTarget
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const publicUrl = await uploadFileToStorage(file);
+      showToast('Gambar berhasil diunggah!');
+
+      // Gunakan target yang diberikan langsung (bukan dari state yang mungkin belum ter-update)
+      applyImageToTarget(target, publicUrl);
+
+      const updatedFiles = await listUploadedFiles();
+      setMediaFiles(updatedFiles);
+      setIsImagePickerOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah file';
+      showToast(msg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const currentPickerImage = useMemo(() => {
     if (!imagePickerTarget) return undefined;
     if (imagePickerTarget === 'product') return productForm.image;
@@ -1313,7 +1344,12 @@ export default function AdminPage() {
           setImagePickerTarget(target);
           setIsImagePickerOpen(true);
         }}
+        onSetImageTarget={(target) => {
+          // Hanya set target upload tanpa membuka galeri
+          setImagePickerTarget(target);
+        }}
         onFileUpload={handleFileUpload}
+        onFileUploadDirect={handleFileUploadDirect}
         isLoading={isLoading}
         isUploading={isUploading}
       />
