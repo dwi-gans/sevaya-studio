@@ -33,6 +33,7 @@ import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
 import { CatalogTab } from '@/components/admin/tabs/CatalogTab';
+import InventoryTab from '@/components/admin/tabs/InventoryTab';
 import { HomeSectionsTab } from '@/components/admin/tabs/HomeSectionsTab';
 import { NewsTab } from '@/components/admin/tabs/NewsTab';
 import { LookbookTab } from '@/components/admin/tabs/LookbookTab';
@@ -1053,6 +1054,10 @@ export default function AdminPage() {
         }`}
       >
         {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
+
+        {activeTab === 'inventory' && (
+          <InventoryTab products={products} />
+        )}
 
         {activeTab === 'catalog' && (
           <CatalogTab

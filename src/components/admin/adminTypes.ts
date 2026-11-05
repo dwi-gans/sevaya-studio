@@ -2,6 +2,7 @@ import { IconName } from '@/components/ui/Icon';
 
 export type AdminTab =
   | 'orders'
+  | 'inventory'
   | 'catalog'
   | 'section-home'
   | 'section-news'
@@ -54,6 +55,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: 'orders', label: 'Pesanan & Resi', icon: 'receipt_long', countBadge: 12 },
       { id: 'catalog', label: 'Katalog Koleksi Abaya', icon: 'checkroom', countBadge: 4 },
+      { id: 'inventory', label: 'Inventaris & Stok Varian', icon: 'inventory_2' },
     ],
   },
   {

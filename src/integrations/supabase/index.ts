@@ -46,3 +46,16 @@ export {
   deleteFileFromStorage,
   type StorageFile,
 } from './storage';
+export {
+  getInventoryVariants,
+  saveInventoryVariants,
+  getStockMutations,
+  saveStockMutations,
+  executeStockMutation,
+  generateVariantSku,
+  generateDefaultVariantsForProduct,
+  type ProductVariant,
+  type StockMutation,
+  type MutationType,
+  type MutationReason,
+} from './inventory';
