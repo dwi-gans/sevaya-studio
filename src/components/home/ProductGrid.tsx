@@ -158,20 +158,6 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
 
   const displayList = sortedList.length >= 8 ? sortedList.slice(0, 8) : sortedList;
 
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 300;
-      scrollRef.current.scrollBy({ left: -(cardWidth * 2), behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 300;
-      scrollRef.current.scrollBy({ left: cardWidth * 2, behavior: 'smooth' });
-    }
-  };
-
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const container = scrollRef.current;
@@ -233,19 +219,8 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
           </h2>
         </RevealOnScroll>
 
-        {/* Relative container with arrows & horizontal scroll */}
-        <RevealOnScroll variant="editorial" delayMs={80} className="group relative">
-          {/* Left Arrow (Desktop & Tablet) */}
-          <button
-            type="button"
-            aria-label="Scroll left"
-            onClick={scrollLeft}
-            className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
-          >
-            <Icon name="chevron_left" size={20} />
-          </button>
-
-          {/* Product Cards Row */}
+        {/* Product Cards Row */}
+        <RevealOnScroll variant="editorial" delayMs={80} className="relative">
           <div
             ref={scrollRef}
             onScroll={handleScroll}
@@ -274,16 +249,6 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
               </div>
             ))}
           </div>
-
-          {/* Right Arrow (Desktop & Tablet) */}
-          <button
-            type="button"
-            aria-label="Scroll right"
-            onClick={scrollRight}
-            className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-md transition-all hover:scale-105 hover:bg-black/5 sm:flex"
-          >
-            <Icon name="chevron_right" size={20} />
-          </button>
         </RevealOnScroll>
 
         {/* Mobile Dot indicators */}

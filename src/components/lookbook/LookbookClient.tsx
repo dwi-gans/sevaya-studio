@@ -34,20 +34,6 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
     });
   }, []);
 
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 300;
-      scrollRef.current.scrollBy({ left: -(cardWidth * 2), behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 300;
-      scrollRef.current.scrollBy({ left: cardWidth * 2, behavior: 'smooth' });
-    }
-  };
-
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
@@ -274,18 +260,8 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
           </p>
         </div>
 
-        {/* Desktop: arrow wrapper */}
+        {/* Product Cards Row */}
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            aria-label="Scroll left"
-            onClick={scrollLeft}
-            className="absolute -left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex cursor-pointer"
-          >
-            <Icon name="chevron_left" size={20} />
-          </button>
-
-          {/* Carousel Track */}
           <div
             ref={scrollRef}
             onScroll={handleScroll}
@@ -328,15 +304,6 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               ))
             )}
           </div>
-
-          <button
-            type="button"
-            aria-label="Scroll right"
-            onClick={scrollRight}
-            className="absolute -right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#CCCCCC] bg-white text-[#000000] shadow-md transition-all hover:scale-105 hover:bg-[#FFFFFF] sm:flex cursor-pointer"
-          >
-            <Icon name="chevron_right" size={20} />
-          </button>
         </div>
 
         {/* Dot indicators — mobile only */}
