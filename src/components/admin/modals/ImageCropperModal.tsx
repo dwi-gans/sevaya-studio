@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 
-export type AspectRatioType = '3:4' | '4:5' | '1:1' | 'free';
+export type AspectRatioType = '3:4' | '4:5' | '1:1' | '16:9' | 'free';
 
 interface AspectRatioOption {
   id: AspectRatioType;
@@ -13,9 +13,10 @@ interface AspectRatioOption {
 }
 
 const RATIO_OPTIONS: AspectRatioOption[] = [
-  { id: '3:4', label: '3:4 (Detail Produk)', description: 'Standar galeri & detail', ratio: 3 / 4 },
+  { id: '3:4', label: '3:4 (Portrait)', description: 'Standar produk & About', ratio: 3 / 4 },
   { id: '4:5', label: '4:5 (Katalog)', description: 'Standar kartu etalase', ratio: 4 / 5 },
   { id: '1:1', label: '1:1 (Persegi)', description: 'Rasio bujur sangkar', ratio: 1 },
+  { id: '16:9', label: '16:9 (Landscape)', description: 'Hero banner & cover video', ratio: 16 / 9 },
   { id: 'free', label: 'Asli', description: 'Gunakan rasio asli foto', ratio: null },
 ];
 
@@ -51,11 +52,12 @@ export function ImageCropperModal({
   // Reset state when a new image is loaded
   useEffect(() => {
     if (!isOpen) return;
+    setSelectedRatio(initialRatio);
     setZoom(1);
     setOffset({ x: 0, y: 0 });
     setIsDragging(false);
     setImageLoaded(false);
-  }, [isOpen, imageSrc]);
+  }, [isOpen, imageSrc, initialRatio]);
 
   // Load image to get natural dimensions
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -326,12 +328,12 @@ export function ImageCropperModal({
               width: targetRatio
                 ? targetRatio <= 1
                   ? `${Math.round(260 * targetRatio)}px`
-                  : '300px'
+                  : '340px'
                 : '280px',
               height: targetRatio
                 ? targetRatio <= 1
                   ? '346px'
-                  : `${Math.round(300 / targetRatio)}px`
+                  : `${Math.round(340 / targetRatio)}px`
                 : '346px',
               maxWidth: '85vw',
               maxHeight: '52vh',

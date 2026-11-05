@@ -20,6 +20,8 @@ interface HomeSectionsTabProps {
   setSections: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   articles?: Article[];
   onOpenImagePicker: (target: ImagePickerTarget) => void;
+  onOpenCropper?: (imageSrc: string, target: ImagePickerTarget) => void;
+  onFileSelectForCrop?: (file: File, target: ImagePickerTarget) => void;
   showToast: (msg: string) => void;
 }
 
@@ -28,6 +30,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   setSections,
   articles,
   onOpenImagePicker,
+  onOpenCropper,
+  onFileSelectForCrop,
   showToast,
 }) => {
   const hero = sections.hero || DEFAULT_SITE_SECTIONS.hero;
@@ -99,14 +103,16 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   const UploadActionGroup = ({
     target,
     label = 'Pilih Galeri',
+    currentImage,
   }: {
     target: ImagePickerTarget;
     label?: string;
+    currentImage?: string;
   }) => {
     const isUploadingThis = uploadingTarget === target;
     const key = String(target);
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
         <input
           type="file"
           ref={(el) => { fileInputRefs.current[key] = el; }}
@@ -114,7 +120,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleDirectUpload(target, file);
+            if (file) {
+              if (onFileSelectForCrop) {
+                onFileSelectForCrop(file, target);
+              } else {
+                handleDirectUpload(target, file);
+              }
+            }
+            if (e.target) e.target.value = '';
           }}
         />
         <button
@@ -122,11 +135,24 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           disabled={isUploadingThis || uploadingTarget !== null}
           onClick={() => fileInputRefs.current[key]?.click()}
           className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[9px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
-          title="Unggah foto langsung dari laptop / Mac"
+          title="Unggah foto langsung dan sesuaikan posisi"
         >
           <Icon name="upload" size={11} />
-          <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah'}</span>
+          <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah & Sesuaikan'}</span>
         </button>
+
+        {currentImage && onOpenCropper && (
+          <button
+            type="button"
+            onClick={() => onOpenCropper(currentImage, target)}
+            className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer shadow-2xs"
+            title="Sesuaikan posisi / crop foto ini"
+          >
+            <Icon name="search" size={10} />
+            <span>Sesuaikan</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => onOpenImagePicker(target)}
@@ -296,7 +322,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
               Foto Latar Hero (Utama)
             </label>
-            <UploadActionGroup target="hero" label="Pilih Galeri" />
+            <UploadActionGroup target="hero" label="Pilih Galeri" currentImage={hero.image} />
           </div>
 
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
@@ -408,7 +434,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kiri #1
               </span>
-              <UploadActionGroup target="spotlight-0" label="Pilih" />
+              <UploadActionGroup target="spotlight-0" label="Pilih" currentImage={spotlight[0]?.image} />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
@@ -448,7 +474,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kanan #2
               </span>
-              <UploadActionGroup target="spotlight-1" label="Pilih" />
+              <UploadActionGroup target="spotlight-1" label="Pilih" currentImage={spotlight[1]?.image} />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
@@ -596,7 +622,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
                 Cover Poster Video (Sebelum Dimainkan)
               </label>
-              <UploadActionGroup target="home-video-poster" label="Pilih Galeri" />
+              <UploadActionGroup target="home-video-poster" label="Pilih Galeri" currentImage={narrative.videoPoster} />
             </div>
 
             <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black">
@@ -795,7 +821,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #1 (KIRI)</span>
-                <UploadActionGroup target="home-about-1" label="Pilih" />
+                <UploadActionGroup target="home-about-1" label="Pilih" currentImage={narrative.aboutImage1} />
               </div>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
                 <Image
@@ -812,7 +838,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #2 (KANAN)</span>
-                <UploadActionGroup target="home-about-2" label="Pilih" />
+                <UploadActionGroup target="home-about-2" label="Pilih" currentImage={narrative.aboutImage2} />
               </div>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
                 <Image
@@ -1001,7 +1027,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #1</span>
-                <UploadActionGroup target="journal-0" label="Pilih" />
+                <UploadActionGroup target="journal-0" label="Pilih" currentImage={journal[0]?.image} />
               </div>
 
               {/* Selector dari News */}
@@ -1072,7 +1098,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #2</span>
-                <UploadActionGroup target="journal-1" label="Pilih" />
+                <UploadActionGroup target="journal-1" label="Pilih" currentImage={journal[1]?.image} />
               </div>
 
               {/* Selector dari News */}

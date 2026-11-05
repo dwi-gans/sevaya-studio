@@ -33,7 +33,7 @@ import { AdminHeader } from '@/components/admin/shared/AdminHeader';
 import { ProductModal, ProductFormData } from '@/components/admin/modals/ProductModal';
 import { ArticleModal, ArticleFormData } from '@/components/admin/modals/ArticleModal';
 import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
-import { ImageCropperModal } from '@/components/admin/modals/ImageCropperModal';
+import { ImageCropperModal, AspectRatioType } from '@/components/admin/modals/ImageCropperModal';
 
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
@@ -283,6 +283,14 @@ export default function AdminPage() {
     const objectUrl = URL.createObjectURL(file);
     handleOpenCropper(objectUrl, target);
   };
+
+  const cropperInitialRatio = useMemo<AspectRatioType>(() => {
+    const t = String(cropperTarget || '');
+    if (t.includes('hero') || t.includes('video-poster')) return '16:9';
+    if (t.includes('about') || t.includes('product') || t.includes('swatch') || t.includes('founder')) return '3:4';
+    if (t.includes('spotlight') || t.includes('lookbook')) return '4:5';
+    return '3:4';
+  }, [cropperTarget]);
 
   const handleApplyCrop = async (croppedBlob: Blob, previewUrl: string) => {
     const target = cropperTarget;
@@ -1211,14 +1219,11 @@ export default function AdminPage() {
   const handleSelectPredefinedImage = (imagePath: string) => {
     setIsImagePickerOpen(false);
 
-    // Jika target adalah produk atau swatch warna, buka modal penyesuaian framing
-    if (
-      imagePickerTarget === 'product' ||
-      (imagePickerTarget && imagePickerTarget.startsWith('swatch-'))
-    ) {
+    // Buka modal penyesuaian framing (cropper) untuk SEMUA target foto:
+    // Produk, Swatch, About SEVAYA (home-about-1 & 2), Hero, Conscious, Lookbook, Berita, dll.
+    if (imagePickerTarget) {
       handleOpenCropper(imagePath, imagePickerTarget);
     } else {
-      applyImageToTarget(imagePickerTarget, imagePath);
       showToast('Gambar berhasil dipilih!');
     }
   };
@@ -1336,6 +1341,8 @@ export default function AdminPage() {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);
             }}
+            onOpenCropper={handleOpenCropper}
+            onFileSelectForCrop={handleFileSelectForCrop}
             showToast={showToast}
           />
         )}
@@ -1377,6 +1384,8 @@ export default function AdminPage() {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);
             }}
+            onOpenCropper={handleOpenCropper}
+            onFileSelectForCrop={handleFileSelectForCrop}
           />
         )}
 
@@ -1443,13 +1452,13 @@ export default function AdminPage() {
         currentImage={currentPickerImage}
       />
 
-      {/* Manual Framing & Cropper Modal (User View 3:4 & 4:5) */}
+      {/* Manual Framing & Cropper Modal (User View 3:4 & 4:5 & 16:9) */}
       <ImageCropperModal
         isOpen={isCropperOpen}
         onClose={() => setIsCropperOpen(false)}
         imageSrc={cropperSourceUrl}
         title="Sesuaikan Tampilan Foto Pembeli"
-        initialRatio="3:4"
+        initialRatio={cropperInitialRatio}
         onApplyCrop={handleApplyCrop}
       />
     </div>
