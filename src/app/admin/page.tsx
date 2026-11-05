@@ -54,33 +54,78 @@ export default function AdminPage() {
     () => true,
     () => false,
   );
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('sevaya_admin_logged_in') === '1';
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
   const [authChecked, setAuthChecked] = useState(false);
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Secure server-side admin session check
+  // Secure server-side admin session check dengan hard-timeout agar tidak pernah stuck di loading unlimited
   useEffect(() => {
-    let isMounted = true;
+    let isFinished = false;
+
+    // Hard fallback timer: maksimal 2 detik, loading screen wajib selesai
+    const hardTimeout = setTimeout(() => {
+      if (!isFinished) {
+        setAuthChecked(true);
+      }
+    }, 2000);
+
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 2500);
+
     async function checkSession() {
       try {
-        const res = await fetch('/api/admin/auth');
+        const res = await fetch('/api/admin/auth', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        clearTimeout(fetchTimeout);
+
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && data.authenticated) {
+          if (data && data.authenticated) {
             setIsAuthenticated(true);
+            try { localStorage.setItem('sevaya_admin_logged_in', '1'); } catch {}
+          } else {
+            setIsAuthenticated(false);
+            try { localStorage.removeItem('sevaya_admin_logged_in'); } catch {}
           }
+        } else {
+          setIsAuthenticated(false);
+          try { localStorage.removeItem('sevaya_admin_logged_in'); } catch {}
         }
       } catch {
-        // ignore
+        // Jika offline atau fetch gagal/timeout, cek localStorage sebagai fallback lokal
+        try {
+          if (localStorage.getItem('sevaya_admin_logged_in') === '1') {
+            setIsAuthenticated(true);
+          }
+        } catch {}
       } finally {
-        if (isMounted) setAuthChecked(true);
+        isFinished = true;
+        clearTimeout(fetchTimeout);
+        clearTimeout(hardTimeout);
+        setAuthChecked(true);
       }
     }
+
     checkSession();
+
     return () => {
-      isMounted = false;
+      isFinished = true;
+      clearTimeout(fetchTimeout);
+      clearTimeout(hardTimeout);
+      controller.abort();
     };
   }, []);
 
@@ -297,6 +342,7 @@ export default function AdminPage() {
 
       if (res.ok && data.success) {
         setIsAuthenticated(true);
+        try { localStorage.setItem('sevaya_admin_logged_in', '1'); } catch {}
         setAdminPassword('');
         showToast('Login Admin Berhasil. Selamat datang di Sevaya Studio.');
       } else {
@@ -315,6 +361,7 @@ export default function AdminPage() {
       // ignore
     }
     setIsAuthenticated(false);
+    try { localStorage.removeItem('sevaya_admin_logged_in'); } catch {}
     setAdminUsername('');
     setAdminPassword('');
     showToast('Admin logged out.');

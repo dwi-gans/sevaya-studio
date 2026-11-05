@@ -80,6 +80,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, isLoaded]);
 
   const addToCart = useCallback((newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+    if (typeof newItem.stock === 'number' && newItem.stock <= 0) {
+      return; // Tolak produk jika stok habis (out of stock)
+    }
+
     setItems((prev) => {
       const existingIndex = prev.findIndex(
         (i) => i.id === newItem.id && i.color === newItem.color && i.size === newItem.size,
@@ -92,6 +96,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const existing = updated[existingIndex];
         if (existing) {
           const cap = typeof maxStock === 'number' ? maxStock : existing.stock;
+          if (typeof cap === 'number' && cap <= 0) {
+            return prev;
+          }
           let newQty = existing.quantity + qtyToAdd;
           if (typeof cap === 'number' && newQty > cap) {
             newQty = Math.max(existing.quantity, cap);
@@ -105,7 +112,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return updated;
       }
 
-      const initialQty = typeof maxStock === 'number' ? Math.min(qtyToAdd, Math.max(1, maxStock)) : qtyToAdd;
+      if (typeof maxStock === 'number' && maxStock <= 0) {
+        return prev;
+      }
+      const initialQty = typeof maxStock === 'number' ? Math.min(qtyToAdd, maxStock) : qtyToAdd;
+      if (initialQty <= 0) return prev;
       return [...prev, { ...newItem, quantity: initialQty }];
     });
   }, []);

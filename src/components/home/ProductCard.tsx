@@ -19,6 +19,8 @@ export interface Product {
   image: string;
   images?: string[];
   category?: string;
+  inStock?: boolean;
+  stock?: number;
   swatches: { name: string; color: string; image?: string }[];
 }
 
@@ -37,6 +39,9 @@ export function ProductCard({
   const [isLoaded, setIsLoaded] = useState(false);
 
   const swatchesCount = product.swatches?.length || 0;
+  const isOutOfStock =
+    product.inStock === false ||
+    (typeof product.stock === 'number' && product.stock <= 0);
 
   // Swatch aktif: prioritas ke swatch yang di-hover oleh kursor, lalu swatch yang diklik/dipilih
   const activeSwatch = hoveredSwatch
@@ -76,6 +81,12 @@ export function ProductCard({
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isOutOfStock) {
+      showToast('Mohon maaf, produk ini sedang habis (Out of Stock).');
+      return;
+    }
+
     addToCart({
       id: product.slug,
       title: product.title,
@@ -86,6 +97,7 @@ export function ProductCard({
       size: 'S–M',
       image: displayImage,
       quantity: 1,
+      stock: typeof product.stock === 'number' ? product.stock : 25,
     });
     showToast(t('product.added_to_bag', { title: product.title, color: currentSelectedColor }));
   };
@@ -124,6 +136,13 @@ export function ProductCard({
             </span>
           )}
 
+          {/* Out of Stock indicator badge */}
+          {isOutOfStock && (
+            <span className="absolute top-3 right-3 z-10 rounded-full bg-black/75 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.2em] text-white uppercase backdrop-blur-xs shadow-xs">
+              Out of Stock
+            </span>
+          )}
+
           {/* Primary Product Image — smoothly fades in on load */}
           <Image
             src={displayImage}
@@ -135,7 +154,7 @@ export function ProductCard({
             onLoad={() => setIsLoaded(true)}
             className={`pointer-events-none select-none object-cover transition-all duration-500 ease-out ${
               isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.01]'
-            } ${
+            } ${isOutOfStock ? 'grayscale-[15%] opacity-90' : ''} ${
               secondaryImage
                 ? 'group-hover:opacity-0 group-hover:scale-105'
                 : 'group-hover:scale-105'
@@ -144,7 +163,7 @@ export function ProductCard({
           />
 
           {/* Secondary Image on Hover (only when no multiple color swatches) */}
-          {secondaryImage && (
+          {secondaryImage && !isOutOfStock && (
             <Image
               src={secondaryImage}
               alt={`${product.title} alternate view`}
@@ -157,16 +176,24 @@ export function ProductCard({
           )}
         </Link>
 
-        {/* Floating Quick Buy Circle Button */}
-        <button
-          type="button"
-          aria-label={t('product.quick_add')}
-          onClick={handleQuickAdd}
-          className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
-          title={t('product.quick_add')}
-        >
-          <Icon name="add" size={18} />
-        </button>
+        {/* Floating Quick Buy Circle Button (Hanya aktif jika barang tersedia) */}
+        {!isOutOfStock ? (
+          <button
+            type="button"
+            aria-label={t('product.quick_add')}
+            onClick={handleQuickAdd}
+            className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 cursor-pointer"
+            title={t('product.quick_add')}
+          >
+            <Icon name="add" size={18} />
+          </button>
+        ) : (
+          <div
+            className="absolute right-3 bottom-3 z-20 flex h-7 items-center justify-center rounded-full bg-[#1C1917]/85 backdrop-blur-xs px-2.5 text-[8.5px] font-medium tracking-wider text-white/90 uppercase shadow-xs sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
+          >
+            Habis
+          </div>
+        )}
       </div>
 
       {/* Typography & Price below image */}

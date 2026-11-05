@@ -9,6 +9,7 @@ import { Product } from '@/components/home/ProductCard';
 
 export function mapDbProductToProduct(item: DbProduct): Product {
   const fallbackImage = item.image || '/images/catalog/catalog-01.jpg';
+  const isInStock = item.inStock !== false && (typeof item.stock !== 'number' || item.stock > 0);
   return {
     id: String(item.id),
     slug: item.slug || 'fina-abaya-stripe-2',
@@ -24,6 +25,8 @@ export function mapDbProductToProduct(item: DbProduct): Product {
     badge: item.badge || undefined,
     image: fallbackImage,
     images: item.images,
+    inStock: isInStock,
+    stock: typeof item.stock === 'number' ? item.stock : (item.inStock === false ? 0 : 25),
     swatches:
       item.swatches && item.swatches.length > 0
         ? item.swatches.map((s) => ({

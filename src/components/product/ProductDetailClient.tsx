@@ -125,7 +125,10 @@ export function ProductDetailClient({
   }, [variants, selectedColor, selectedSize, dbProduct]);
 
   const availableStock = selectedVariantStock;
-  const isOutOfStock = availableStock <= 0 || dbProduct.inStock === false;
+  const isOutOfStock =
+    availableStock <= 0 ||
+    dbProduct.inStock === false ||
+    (typeof dbProduct.stock === 'number' && dbProduct.stock <= 0);
 
   const sizeOptions = useMemo(() => {
     if (dbProduct?.sizes && dbProduct.sizes.length > 0) {
