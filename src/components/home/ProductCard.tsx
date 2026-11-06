@@ -197,7 +197,7 @@ export function ProductCard({
       </div>
 
       {/* Typography & Price below image */}
-      <div className="flex flex-col items-center pt-3.5 pb-2 text-center">
+      <div className="flex flex-col items-center pt-3 pb-1 sm:pt-3.5 sm:pb-2 text-center">
         <Link href={`/product/${product.slug}`} className="w-full">
           <h3 className="line-clamp-1 font-sans text-[9px] font-medium tracking-[0.14em] text-black uppercase transition-colors hover:opacity-70 sm:text-[10px]">
             {product.title}

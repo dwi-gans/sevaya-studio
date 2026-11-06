@@ -188,7 +188,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   };
 
   return (
-    <section className="w-full bg-white py-8 text-black section--light" data-section="collections">
+    <section className="w-full bg-white pt-6 pb-6 sm:py-8 text-black section--light" data-section="collections">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top Header with subtle fade-up reveal - konsisten rata kiri di mobile & desktop */}
         <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-left">
@@ -209,7 +209,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar -mx-4 flex gap-3.5 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar flex gap-3.5 overflow-x-auto px-3 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
