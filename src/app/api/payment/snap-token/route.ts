@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     try {
       const { data: dbOrder } = await supabaseAdmin
         .from('orders')
-        .select('grand_total, items, customer_name, customer_email, customer_phone, user_id, status')
+        .select('grand_total, items, customer_name, customer_email, customer_phone, status')
         .eq('order_number', order_id)
         .maybeSingle();
 
@@ -60,16 +60,15 @@ export async function POST(req: NextRequest) {
         }
 
         // Validasi kepemilikan (Ownership check)
-        if (authenticatedUserId || authenticatedEmail) {
-          const matchUser = authenticatedUserId && dbOrder.user_id && dbOrder.user_id === authenticatedUserId;
-          const matchEmail = authenticatedEmail && dbOrder.customer_email && dbOrder.customer_email.toLowerCase() === authenticatedEmail;
-          if (dbOrder.user_id && !matchUser && !matchEmail) {
+        if (authenticatedEmail) {
+          const matchEmail = dbOrder.customer_email && dbOrder.customer_email.toLowerCase() === authenticatedEmail;
+          if (dbOrder.customer_email && !matchEmail) {
             return NextResponse.json(
               { success: false, error: 'Akses ditolak: Anda tidak memiliki akses ke pesanan ini.' },
               { status: 403 },
             );
           }
-        } else {
+        } else if (!authenticatedUserId) {
           // Jika tidak ada Bearer token, wajib mencocokkan email pemesan
           const providedEmail = clientCustomer?.email?.trim().toLowerCase();
           const dbEmail = dbOrder.customer_email?.trim().toLowerCase();

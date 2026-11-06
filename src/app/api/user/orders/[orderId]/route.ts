@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
 
 const ORDER_DETAIL_COLUMNS =
-  'id, order_number, user_id, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at';
+  'id, order_number, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at';
 
 export async function GET(
   req: NextRequest,
