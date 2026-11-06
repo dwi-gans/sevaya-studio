@@ -46,6 +46,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   // ── Direct Upload Handler ──────────────────────────────────────────────
   const [uploadingTarget, setUploadingTarget] = useState<ImagePickerTarget | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [showCustomSlot0, setShowCustomSlot0] = useState(false);
+  const [showCustomSlot1, setShowCustomSlot1] = useState(false);
 
   const handleDirectUpload = async (target: ImagePickerTarget, file: File) => {
     if (!file) return;
@@ -287,8 +289,11 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Hero Banner Utama
             </h3>
+            <p className="text-[11px] text-black/60 mt-0.5">
+              Banner visual utama toko: foto latar, tagline atas, dan 2 tombol CTA (Shop & Lookbook). Didesain minimalis mewah tanpa paragraf teks panjang.
+            </p>
           </div>
-          <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
+          <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10 shrink-0">
             Layar Penuh
           </span>
         </div>
@@ -995,32 +1000,41 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
 
         {/* 2 Articles Side-by-Side (Menyamping) */}
-        <div className="space-y-2 pt-1">
-          <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-            2 Kartu Artikel Jurnal (Ditampilkan Berdampingan di Beranda)
+        <div className="space-y-3 pt-1">
+          <div className="rounded-xl border border-black/10 bg-black/[0.02] p-3 text-xs text-black/70 flex items-start gap-2.5">
+            <span className="text-sm shrink-0">💡</span>
+            <p className="text-[11px] leading-relaxed">
+              <strong>Pilih Artikel yang Ditampilkan:</strong> Di bagian ini Anda cukup memilih artikel mana dari daftar berita/jurnal yang ingin dipajang pada 2 slot kartu di Beranda. Judul, tanggal, ringkasan, foto, dan tautan akan terhubung otomatis. Untuk menulis artikel baru atau mengedit isi lengkapnya, silakan buka tab <strong>News / Jurnal</strong>.
+            </p>
+          </div>
+
+          <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase block">
+            2 Slot Kartu Artikel (Tampil Berdampingan di Beranda Toko)
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Article 1 */}
-            <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #1</span>
-                <UploadActionGroup target="journal-0" label="Pilih" currentImage={journal[0]?.image} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Article Slot 1 */}
+            <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/[0.03] p-3.5">
+              <div className="flex items-center justify-between border-b border-black/10 pb-2">
+                <span className="text-[10px] font-bold tracking-widest text-black/70 uppercase">
+                  SLOT ARTIKEL #1 (KIRI)
+                </span>
+                <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  {selectedArt0 ? '✓ Terhubung' : 'Belum Dipilih'}
+                </span>
               </div>
 
               {/* Selector dari News */}
-              <div className="space-y-1 bg-white p-2.5 rounded-lg border border-black/15 shadow-2xs">
-                <label className="text-[9px] font-bold text-black/70 uppercase flex items-center justify-between">
-                  <span>Pilih dari Berita / Event (News)</span>
-                  <span className="text-[8px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                    Otomatis
-                  </span>
+              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <label className="text-[10px] font-bold text-black uppercase block">
+                  Pilih Artikel untuk Slot #1:
                 </label>
                 <select
                   value={selectedArt0?.id || ''}
                   onChange={(e) => handleSelectArticleForSlot(0, e.target.value)}
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black font-medium focus:border-black focus:outline-none"
+                  className="w-full rounded-md border border-black/25 bg-white px-2.5 py-1.5 text-xs text-black font-medium focus:border-black focus:outline-none"
                 >
-                  <option value="">-- Pilih Artikel untuk Slot #1 --</option>
+                  <option value="">-- Pilih Artikel dari Database News --</option>
                   {availableArticles.map((art) => (
                     <option key={art.id} value={art.id}>
                       [{art.category}] {art.title} ({art.date})
@@ -1029,69 +1043,120 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </select>
               </div>
 
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-                <Image
-                  src={journal[0]?.image || '/images/catalog/catalog-11.jpg'}
-                  alt="Artikel 1"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+              {/* Live Preview Card */}
+              <div className="space-y-2 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-black/50 uppercase tracking-wider">
+                    Preview Tampilan di Beranda:
+                  </span>
+                  <UploadActionGroup target="journal-0" label="Ganti Foto" currentImage={journal[0]?.image} />
+                </div>
 
-              <div className="space-y-1.5 pt-1">
-                <input
-                  type="text"
-                  value={journal[0]?.date || ''}
-                  onChange={(e) => updateJournalItem(0, 'date', e.target.value)}
-                  placeholder="Tanggal & Kategori (misal: 5 Okt 2026 • Catatan Bab)"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-[11px] text-black/70 focus:border-black focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={journal[0]?.title || ''}
-                  onChange={(e) => updateJournalItem(0, 'title', e.target.value)}
-                  placeholder="Judul Artikel"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs font-semibold text-black focus:border-black focus:outline-none"
-                />
-                <textarea
-                  rows={2}
-                  value={journal[0]?.excerpt || ''}
-                  onChange={(e) => updateJournalItem(0, 'excerpt', e.target.value)}
-                  placeholder="Kutipan ringkasan..."
-                  className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black focus:border-black focus:outline-none leading-relaxed"
-                />
-                <input
-                  type="text"
-                  value={journal[0]?.href || ''}
-                  onChange={(e) => updateJournalItem(0, 'href', e.target.value)}
-                  placeholder="Tautan URL (/news/slug)"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-[11px] text-black/70 focus:border-black focus:outline-none"
-                />
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
+                  <Image
+                    src={journal[0]?.image || '/images/catalog/catalog-11.jpg'}
+                    alt="Artikel 1"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                    {journal[0]?.date || 'Tanggal & Kategori'}
+                  </span>
+                  <h4 className="text-xs font-bold text-black leading-snug line-clamp-2">
+                    {journal[0]?.title || 'Pilih artikel di atas...'}
+                  </h4>
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-2">
+                    {journal[0]?.excerpt || 'Ringkasan artikel akan tampil di sini...'}
+                  </p>
+                  <span className="text-[10px] text-black/40 font-mono block pt-0.5">
+                    Tautan: {journal[0]?.href || '/news'}
+                  </span>
+                </div>
+
+                {/* Collapsible Manual Override */}
+                <div className="pt-2 border-t border-black/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomSlot0((prev) => !prev)}
+                    className="text-[10px] font-semibold text-black/60 hover:text-black flex items-center gap-1 transition"
+                  >
+                    <span>{showCustomSlot0 ? '▼ Sembunyikan Kustomisasi Teks' : '▶ Kustomisasi Teks Khusus Beranda (Opsional)'}</span>
+                  </button>
+
+                  {showCustomSlot0 && (
+                    <div className="space-y-2 pt-2 mt-2 border-t border-black/10">
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Tanggal & Kategori</label>
+                        <input
+                          type="text"
+                          value={journal[0]?.date || ''}
+                          onChange={(e) => updateJournalItem(0, 'date', e.target.value)}
+                          placeholder="5 Okt 2026 • Catatan Bab"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Judul Khusus Beranda</label>
+                        <input
+                          type="text"
+                          value={journal[0]?.title || ''}
+                          onChange={(e) => updateJournalItem(0, 'title', e.target.value)}
+                          placeholder="Judul Artikel"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Kutipan Ringkas</label>
+                        <textarea
+                          rows={2}
+                          value={journal[0]?.excerpt || ''}
+                          onChange={(e) => updateJournalItem(0, 'excerpt', e.target.value)}
+                          placeholder="Kutipan ringkasan..."
+                          className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Tautan URL</label>
+                        <input
+                          type="text"
+                          value={journal[0]?.href || ''}
+                          onChange={(e) => updateJournalItem(0, 'href', e.target.value)}
+                          placeholder="/news/slug"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Article 2 */}
-            <div className="flex flex-col gap-2.5 rounded-xl border border-black/15 bg-black/5 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-black/50">SLOT ARTIKEL #2</span>
-                <UploadActionGroup target="journal-1" label="Pilih" currentImage={journal[1]?.image} />
+            {/* Article Slot 2 */}
+            <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/[0.03] p-3.5">
+              <div className="flex items-center justify-between border-b border-black/10 pb-2">
+                <span className="text-[10px] font-bold tracking-widest text-black/70 uppercase">
+                  SLOT ARTIKEL #2 (KANAN)
+                </span>
+                <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  {selectedArt1 ? '✓ Terhubung' : 'Belum Dipilih'}
+                </span>
               </div>
 
               {/* Selector dari News */}
-              <div className="space-y-1 bg-white p-2.5 rounded-lg border border-black/15 shadow-2xs">
-                <label className="text-[9px] font-bold text-black/70 uppercase flex items-center justify-between">
-                  <span>Pilih dari Berita / Event (News)</span>
-                  <span className="text-[8px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                    Otomatis
-                  </span>
+              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <label className="text-[10px] font-bold text-black uppercase block">
+                  Pilih Artikel untuk Slot #2:
                 </label>
                 <select
                   value={selectedArt1?.id || ''}
                   onChange={(e) => handleSelectArticleForSlot(1, e.target.value)}
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black font-medium focus:border-black focus:outline-none"
+                  className="w-full rounded-md border border-black/25 bg-white px-2.5 py-1.5 text-xs text-black font-medium focus:border-black focus:outline-none"
                 >
-                  <option value="">-- Pilih Artikel untuk Slot #2 --</option>
+                  <option value="">-- Pilih Artikel dari Database News --</option>
                   {availableArticles.map((art) => (
                     <option key={art.id} value={art.id}>
                       [{art.category}] {art.title} ({art.date})
@@ -1100,45 +1165,95 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </select>
               </div>
 
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-                <Image
-                  src={journal[1]?.image || '/images/catalog/catalog-12.jpg'}
-                  alt="Artikel 2"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+              {/* Live Preview Card */}
+              <div className="space-y-2 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-black/50 uppercase tracking-wider">
+                    Preview Tampilan di Beranda:
+                  </span>
+                  <UploadActionGroup target="journal-1" label="Ganti Foto" currentImage={journal[1]?.image} />
+                </div>
 
-              <div className="space-y-1.5 pt-1">
-                <input
-                  type="text"
-                  value={journal[1]?.date || ''}
-                  onChange={(e) => updateJournalItem(1, 'date', e.target.value)}
-                  placeholder="Tanggal & Kategori (misal: 26 Sep 2026 • Refleksi)"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-[11px] text-black/70 focus:border-black focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={journal[1]?.title || ''}
-                  onChange={(e) => updateJournalItem(1, 'title', e.target.value)}
-                  placeholder="Judul Artikel"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs font-semibold text-black focus:border-black focus:outline-none"
-                />
-                <textarea
-                  rows={2}
-                  value={journal[1]?.excerpt || ''}
-                  onChange={(e) => updateJournalItem(1, 'excerpt', e.target.value)}
-                  placeholder="Kutipan ringkasan..."
-                  className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black focus:border-black focus:outline-none leading-relaxed"
-                />
-                <input
-                  type="text"
-                  value={journal[1]?.href || ''}
-                  onChange={(e) => updateJournalItem(1, 'href', e.target.value)}
-                  placeholder="Tautan URL (/news/slug)"
-                  className="w-full rounded border border-black/20 bg-white px-2 py-1 text-[11px] text-black/70 focus:border-black focus:outline-none"
-                />
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
+                  <Image
+                    src={journal[1]?.image || '/images/catalog/catalog-12.jpg'}
+                    alt="Artikel 2"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                    {journal[1]?.date || 'Tanggal & Kategori'}
+                  </span>
+                  <h4 className="text-xs font-bold text-black leading-snug line-clamp-2">
+                    {journal[1]?.title || 'Pilih artikel di atas...'}
+                  </h4>
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-2">
+                    {journal[1]?.excerpt || 'Ringkasan artikel akan tampil di sini...'}
+                  </p>
+                  <span className="text-[10px] text-black/40 font-mono block pt-0.5">
+                    Tautan: {journal[1]?.href || '/news'}
+                  </span>
+                </div>
+
+                {/* Collapsible Manual Override */}
+                <div className="pt-2 border-t border-black/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomSlot1((prev) => !prev)}
+                    className="text-[10px] font-semibold text-black/60 hover:text-black flex items-center gap-1 transition"
+                  >
+                    <span>{showCustomSlot1 ? '▼ Sembunyikan Kustomisasi Teks' : '▶ Kustomisasi Teks Khusus Beranda (Opsional)'}</span>
+                  </button>
+
+                  {showCustomSlot1 && (
+                    <div className="space-y-2 pt-2 mt-2 border-t border-black/10">
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Tanggal & Kategori</label>
+                        <input
+                          type="text"
+                          value={journal[1]?.date || ''}
+                          onChange={(e) => updateJournalItem(1, 'date', e.target.value)}
+                          placeholder="26 Sep 2026 • Refleksi"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Judul Khusus Beranda</label>
+                        <input
+                          type="text"
+                          value={journal[1]?.title || ''}
+                          onChange={(e) => updateJournalItem(1, 'title', e.target.value)}
+                          placeholder="Judul Artikel"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Kutipan Ringkas</label>
+                        <textarea
+                          rows={2}
+                          value={journal[1]?.excerpt || ''}
+                          onChange={(e) => updateJournalItem(1, 'excerpt', e.target.value)}
+                          placeholder="Kutipan ringkasan..."
+                          className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-black/60 uppercase">Tautan URL</label>
+                        <input
+                          type="text"
+                          value={journal[1]?.href || ''}
+                          onChange={(e) => updateJournalItem(1, 'href', e.target.value)}
+                          placeholder="/news/slug"
+                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

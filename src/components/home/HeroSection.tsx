@@ -70,24 +70,24 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-10 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-14 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
-        <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
+        <p className="animate-hero-fadeup-title mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
           {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
         {/* CTA Buttons - Selalu menyamping berdampingan (flex-row) di mobile & desktop */}
-        <div className="animate-hero-fadeup-link flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-md px-2">
+        <div className="animate-hero-fadeup-link flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2">
           <Link
             href="/shop"
-            className="flex-1 sm:flex-none inline-flex min-w-[125px] sm:min-w-[160px] items-center justify-center bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 text-[9px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 active:scale-95 whitespace-nowrap text-center"
+            className="flex-1 sm:flex-none inline-flex min-w-[118px] sm:min-w-[160px] items-center justify-center bg-white px-3 py-2 sm:px-5 sm:py-3 text-[8.5px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 active:scale-95 whitespace-nowrap text-center shadow-xs"
           >
             {hero.ctaShop || 'Shop The Collection'}
           </Link>
 
           <Link
             href="/lookbook"
-            className="flex-1 sm:flex-none inline-flex min-w-[125px] sm:min-w-[160px] items-center justify-center border border-white bg-transparent px-3.5 py-2.5 sm:px-5 sm:py-3 text-[9px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-white uppercase transition-all duration-300 hover:bg-white hover:text-black active:scale-95 whitespace-nowrap text-center"
+            className="flex-1 sm:flex-none inline-flex min-w-[118px] sm:min-w-[160px] items-center justify-center border border-white bg-transparent px-3 py-2 sm:px-5 sm:py-3 text-[8.5px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-white uppercase transition-all duration-300 hover:bg-white hover:text-black active:scale-95 whitespace-nowrap text-center shadow-xs"
           >
             {hero.ctaLookbook || 'Lookbook'}
           </Link>

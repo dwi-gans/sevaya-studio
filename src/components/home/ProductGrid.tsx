@@ -209,17 +209,17 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   return (
     <section className="w-full bg-white py-8 text-black section--light" data-section="collections">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Top Header with subtle fade-up reveal */}
-        <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-center sm:text-left">
-          <span className="text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
+        {/* Top Header with subtle fade-up reveal - konsisten rata kiri di mobile & desktop */}
+        <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-left">
+          <span className="text-[8.5px] sm:text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
             SHOP THE COLLECTION
           </span>
-          <h2 className="font-sans text-sm font-medium tracking-wider text-black/85 uppercase">
+          <h2 className="font-sans text-[13px] sm:text-sm font-medium tracking-wider text-black/85 uppercase">
             BEST-LOVED COLLECTIONS
           </h2>
         </RevealOnScroll>
 
-        {/* Product Cards Row */}
+        {/* Product Cards Row - langsung menampilkan kartu dari tengah di mobile */}
         <RevealOnScroll variant="editorial" delayMs={80} className="relative">
           <div
             ref={scrollRef}
@@ -229,7 +229,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[10vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[21vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
