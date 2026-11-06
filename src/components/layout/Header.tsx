@@ -247,13 +247,13 @@ export function Header() {
                 </Link>
               </div>
 
-              {/* Center: Desktop Navigation Links */}
-              <nav aria-label="Primary Navigation" className="absolute left-1/2 -translate-x-1/2 hidden items-center gap-7 lg:gap-8 md:flex">
+              {/* Center: Desktop Navigation Links (font terbaca 11.5px & gap dirapatkan ke 5.5 agar tidak melebar ke samping) */}
+              <nav aria-label="Primary Navigation" className="absolute left-1/2 -translate-x-1/2 hidden items-center gap-5 lg:gap-5.5 md:flex">
                 {/* 1. Home Link */}
                 <Link
                   href="/"
                   prefetch={true}
-                  className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
+                  className={`group relative py-2 text-[11.5px] tracking-wide transition-colors ${
                     pathname === "/"
                       ? "font-medium text-black"
                       : "text-black/60 hover:text-black"
@@ -278,7 +278,7 @@ export function Header() {
                   <button
                     type="button"
                     onClick={() => setLookbookOpen((prev) => !prev)}
-                    className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
+                    className={`group relative py-2 text-[11.5px] tracking-wide transition-colors ${
                       pathname.startsWith("/lookbook")
                         ? "font-medium text-black"
                         : "text-black/60 hover:text-black"
@@ -305,7 +305,7 @@ export function Header() {
                             href={link.href}
                             prefetch={true}
                             onClick={() => setLookbookOpen(false)}
-                            className={`flex items-center justify-between gap-3 px-5 py-2.5 text-[11px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
+                            className={`flex items-center justify-between gap-3 px-5 py-2 text-[11.5px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
                               pathname === link.href ? "font-medium text-black" : "text-[#555555]"
                             }`}
                           >
@@ -334,7 +334,7 @@ export function Header() {
                       key={item.href}
                       href={item.href}
                       prefetch={true}
-                      className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
+                      className={`group relative py-2 text-[11.5px] tracking-wide transition-colors ${
                         isActive
                           ? "font-medium text-black"
                           : "text-black/60 hover:text-black"
@@ -360,7 +360,7 @@ export function Header() {
                 >
                   <button
                     type="button"
-                    className={`group relative py-2 text-[11px] tracking-wide transition-colors ${
+                    className={`group relative py-2 text-[11.5px] tracking-wide transition-colors ${
                       pathname.startsWith("/customer")
                         ? "font-medium text-black"
                         : "text-black/60 hover:text-black"
@@ -385,7 +385,7 @@ export function Header() {
                             href={link.href}
                             prefetch={true}
                             onClick={() => setCustomerOpen(false)}
-                            className={`block px-5 py-2.5 text-[11px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
+                            className={`block px-5 py-2 text-[11.5px] tracking-wide transition-colors hover:bg-black/[0.04] hover:text-black ${
                               pathname === link.href ? "font-medium text-black" : "text-[#555555]"
                             }`}
                           >

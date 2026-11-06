@@ -12,6 +12,8 @@ interface HeroSectionProps {
 
 export function HeroSection({ initialHero }: HeroSectionProps) {
   const [hero, setHero] = useState<HeroSectionData>(() => initialHero || DEFAULT_SITE_SECTIONS.hero);
+  // animDone: setelah animasi selesai SEKALI, copot class animasi → tidak keulang saat scroll
+  const [animDone, setAnimDone] = useState(false);
 
   useEffect(() => {
     // Background refresh: update only if cloud data differs from current state
@@ -72,12 +74,22 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       {/* Content */}
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-14 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
-        <p className="animate-hero-fadeup-title mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
+        <p
+          onAnimationEnd={() => setAnimDone(true)}
+          className={`mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px] ${
+            animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-title'
+          }`}
+        >
           {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
         {/* CTA Buttons - Selalu menyamping berdampingan (flex-row) di mobile & desktop */}
-        <div className="animate-hero-fadeup-link flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2">
+        <div
+          onAnimationEnd={() => setAnimDone(true)}
+          className={`flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2 ${
+            animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-link'
+          }`}
+        >
           <Link
             href="/shop"
             className="flex-1 sm:flex-none inline-flex min-w-[118px] sm:min-w-[160px] items-center justify-center bg-white px-3 py-2 sm:px-5 sm:py-3 text-[8.5px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 active:scale-95 whitespace-nowrap text-center shadow-xs"

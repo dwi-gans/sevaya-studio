@@ -135,7 +135,6 @@ interface ProductGridProps {
 export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProps) {
   const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = React.useState(0);
   const [isDown, setIsDown] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeftPos, setScrollLeftPos] = React.useState(0);
@@ -157,24 +156,6 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   }, [products]);
 
   const displayList = sortedList.length >= 8 ? sortedList.slice(0, 8) : sortedList;
-
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const centerPoint = container.scrollLeft + container.clientWidth / 2;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-    Array.from(container.children).forEach((child, idx) => {
-      const el = child as HTMLElement;
-      const childCenter = el.offsetLeft + el.offsetWidth / 2;
-      const dist = Math.abs(childCenter - centerPoint);
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestIndex = idx;
-      }
-    });
-    setActiveIndex((prev) => (prev !== closestIndex ? closestIndex : prev));
-  };
 
   // Mouse drag-to-scroll handlers (butter-smooth with zero stutter)
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -219,17 +200,16 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
           </h2>
         </RevealOnScroll>
 
-        {/* Product Cards Row - langsung menampilkan kartu dari tengah di mobile */}
+        {/* Product Cards Row - sejajar rapi dengan header di kiri tanpa ruang kosong berlebih */}
         <RevealOnScroll variant="editorial" delayMs={80} className="relative">
           <div
             ref={scrollRef}
-            onScroll={handleScroll}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-[21vw] pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar -mx-4 flex gap-3.5 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
@@ -242,36 +222,14 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             {displayList.map((p, i) => (
               <div
                 key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
-                className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-center md:snap-start"
-                style={{ scrollSnapAlign: 'center' }}
+                className="w-[68vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
+                style={{ scrollSnapAlign: 'start' }}
               >
                 <ProductCard product={p} />
               </div>
             ))}
           </div>
         </RevealOnScroll>
-
-        {/* Mobile Dot indicators */}
-        <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-          {displayList.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Lihat produk ${i + 1}`}
-              onClick={() => {
-                if (!scrollRef.current) return;
-                const card = scrollRef.current.children[i] as HTMLElement;
-                if (card) {
-                  card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                }
-                setActiveIndex(i);
-              }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                activeIndex === i ? 'w-5 bg-black' : 'w-1.5 bg-black/20'
-              }`}
-            />
-          ))}
-        </div>
       </div>
     </section>
   );

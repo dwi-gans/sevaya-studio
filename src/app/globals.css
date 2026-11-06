@@ -439,10 +439,11 @@
   }
   .animate-hero-fadeup-title,
   .animate-hero-fadeup-link {
-    animation-duration: 0.4s;
+    animation-duration: 0.5s;
     animation-delay: 0.05s;
+    animation-fill-mode: forwards !important;
+    animation-iteration-count: 1 !important;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
   }
 }

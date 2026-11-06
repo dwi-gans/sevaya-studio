@@ -46,8 +46,6 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   // ── Direct Upload Handler ──────────────────────────────────────────────
   const [uploadingTarget, setUploadingTarget] = useState<ImagePickerTarget | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [showCustomSlot0, setShowCustomSlot0] = useState(false);
-  const [showCustomSlot1, setShowCustomSlot1] = useState(false);
 
   const handleDirectUpload = async (target: ImagePickerTarget, file: File) => {
     if (!file) return;
@@ -1020,14 +1018,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   SLOT ARTIKEL #1 (KIRI)
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {selectedArt0 ? '✓ Terhubung' : 'Belum Dipilih'}
+                  {selectedArt0 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
                 </span>
               </div>
 
               {/* Selector dari News */}
               <div className="space-y-1.5 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
                 <label className="text-[10px] font-bold text-black uppercase block">
-                  Pilih Artikel untuk Slot #1:
+                  Pilih Artikel untuk Ditampilkan:
                 </label>
                 <select
                   value={selectedArt0?.id || ''}
@@ -1043,19 +1041,21 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </select>
               </div>
 
-              {/* Live Preview Card */}
+              {/* Read-Only Live Preview Card (Terhubung langsung ke artikel) */}
               <div className="space-y-2 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-black/50 uppercase tracking-wider">
                     Preview Tampilan di Beranda:
                   </span>
-                  <UploadActionGroup target="journal-0" label="Ganti Foto" currentImage={journal[0]?.image} />
+                  <span className="text-[8.5px] font-medium text-black/40 italic">
+                    Read-only (sinkron otomatis)
+                  </span>
                 </div>
 
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
                   <Image
                     src={journal[0]?.image || '/images/catalog/catalog-11.jpg'}
-                    alt="Artikel 1"
+                    alt={journal[0]?.title || 'Artikel 1'}
                     fill
                     unoptimized
                     className="object-cover"
@@ -1069,68 +1069,12 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   <h4 className="text-xs font-bold text-black leading-snug line-clamp-2">
                     {journal[0]?.title || 'Pilih artikel di atas...'}
                   </h4>
-                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-2">
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">
                     {journal[0]?.excerpt || 'Ringkasan artikel akan tampil di sini...'}
                   </p>
-                  <span className="text-[10px] text-black/40 font-mono block pt-0.5">
-                    Tautan: {journal[0]?.href || '/news'}
-                  </span>
-                </div>
-
-                {/* Collapsible Manual Override */}
-                <div className="pt-2 border-t border-black/10">
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomSlot0((prev) => !prev)}
-                    className="text-[10px] font-semibold text-black/60 hover:text-black flex items-center gap-1 transition"
-                  >
-                    <span>{showCustomSlot0 ? '▼ Sembunyikan Kustomisasi Teks' : '▶ Kustomisasi Teks Khusus Beranda (Opsional)'}</span>
-                  </button>
-
-                  {showCustomSlot0 && (
-                    <div className="space-y-2 pt-2 mt-2 border-t border-black/10">
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Tanggal & Kategori</label>
-                        <input
-                          type="text"
-                          value={journal[0]?.date || ''}
-                          onChange={(e) => updateJournalItem(0, 'date', e.target.value)}
-                          placeholder="5 Okt 2026 • Catatan Bab"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Judul Khusus Beranda</label>
-                        <input
-                          type="text"
-                          value={journal[0]?.title || ''}
-                          onChange={(e) => updateJournalItem(0, 'title', e.target.value)}
-                          placeholder="Judul Artikel"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Kutipan Ringkas</label>
-                        <textarea
-                          rows={2}
-                          value={journal[0]?.excerpt || ''}
-                          onChange={(e) => updateJournalItem(0, 'excerpt', e.target.value)}
-                          placeholder="Kutipan ringkasan..."
-                          className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Tautan URL</label>
-                        <input
-                          type="text"
-                          value={journal[0]?.href || ''}
-                          onChange={(e) => updateJournalItem(0, 'href', e.target.value)}
-                          placeholder="/news/slug"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                    </div>
-                  )}
+                  <div className="pt-2 flex items-center justify-between border-t border-black/10 text-[10px] text-black/40 font-mono">
+                    <span className="truncate">Tautan: {journal[0]?.href || '/news'}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1142,14 +1086,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   SLOT ARTIKEL #2 (KANAN)
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {selectedArt1 ? '✓ Terhubung' : 'Belum Dipilih'}
+                  {selectedArt1 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
                 </span>
               </div>
 
               {/* Selector dari News */}
               <div className="space-y-1.5 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
                 <label className="text-[10px] font-bold text-black uppercase block">
-                  Pilih Artikel untuk Slot #2:
+                  Pilih Artikel untuk Ditampilkan:
                 </label>
                 <select
                   value={selectedArt1?.id || ''}
@@ -1165,19 +1109,21 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </select>
               </div>
 
-              {/* Live Preview Card */}
+              {/* Read-Only Live Preview Card (Terhubung langsung ke artikel) */}
               <div className="space-y-2 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-black/50 uppercase tracking-wider">
                     Preview Tampilan di Beranda:
                   </span>
-                  <UploadActionGroup target="journal-1" label="Ganti Foto" currentImage={journal[1]?.image} />
+                  <span className="text-[8.5px] font-medium text-black/40 italic">
+                    Read-only (sinkron otomatis)
+                  </span>
                 </div>
 
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
                   <Image
                     src={journal[1]?.image || '/images/catalog/catalog-12.jpg'}
-                    alt="Artikel 2"
+                    alt={journal[1]?.title || 'Artikel 2'}
                     fill
                     unoptimized
                     className="object-cover"
@@ -1191,68 +1137,12 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   <h4 className="text-xs font-bold text-black leading-snug line-clamp-2">
                     {journal[1]?.title || 'Pilih artikel di atas...'}
                   </h4>
-                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-2">
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">
                     {journal[1]?.excerpt || 'Ringkasan artikel akan tampil di sini...'}
                   </p>
-                  <span className="text-[10px] text-black/40 font-mono block pt-0.5">
-                    Tautan: {journal[1]?.href || '/news'}
-                  </span>
-                </div>
-
-                {/* Collapsible Manual Override */}
-                <div className="pt-2 border-t border-black/10">
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomSlot1((prev) => !prev)}
-                    className="text-[10px] font-semibold text-black/60 hover:text-black flex items-center gap-1 transition"
-                  >
-                    <span>{showCustomSlot1 ? '▼ Sembunyikan Kustomisasi Teks' : '▶ Kustomisasi Teks Khusus Beranda (Opsional)'}</span>
-                  </button>
-
-                  {showCustomSlot1 && (
-                    <div className="space-y-2 pt-2 mt-2 border-t border-black/10">
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Tanggal & Kategori</label>
-                        <input
-                          type="text"
-                          value={journal[1]?.date || ''}
-                          onChange={(e) => updateJournalItem(1, 'date', e.target.value)}
-                          placeholder="26 Sep 2026 • Refleksi"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Judul Khusus Beranda</label>
-                        <input
-                          type="text"
-                          value={journal[1]?.title || ''}
-                          onChange={(e) => updateJournalItem(1, 'title', e.target.value)}
-                          placeholder="Judul Artikel"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Kutipan Ringkas</label>
-                        <textarea
-                          rows={2}
-                          value={journal[1]?.excerpt || ''}
-                          onChange={(e) => updateJournalItem(1, 'excerpt', e.target.value)}
-                          placeholder="Kutipan ringkasan..."
-                          className="w-full rounded border border-black/20 bg-white p-2 text-xs text-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-black/60 uppercase">Tautan URL</label>
-                        <input
-                          type="text"
-                          value={journal[1]?.href || ''}
-                          onChange={(e) => updateJournalItem(1, 'href', e.target.value)}
-                          placeholder="/news/slug"
-                          className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black"
-                        />
-                      </div>
-                    </div>
-                  )}
+                  <div className="pt-2 flex items-center justify-between border-t border-black/10 text-[10px] text-black/40 font-mono">
+                    <span className="truncate">Tautan: {journal[1]?.href || '/news'}</span>
+                  </div>
                 </div>
               </div>
             </div>

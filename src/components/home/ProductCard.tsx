@@ -214,10 +214,10 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Color Swatches below price — synchronized with cycling image */}
+        {/* Color Swatches below price — synchronized with cycling image — hidden on mobile */}
         {product.swatches && product.swatches.length > 0 && (
           <div
-            className="mt-2.5 flex items-center justify-center gap-1.5"
+            className="mt-2.5 hidden sm:flex items-center justify-center gap-1.5"
             onMouseLeave={() => setHoveredSwatch(null)}
           >
             {product.swatches.map((swatch, idx) => {
