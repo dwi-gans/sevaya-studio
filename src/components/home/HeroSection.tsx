@@ -41,15 +41,13 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   return (
     <section
       suppressHydrationWarning
-      style={{ height: 'calc(100dvh - 4rem)', minHeight: '520px' }}
-      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark h-[calc(100vh-4rem)] h-[calc(100dvh-4rem)] min-h-[520px]"
+      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
     >
-      {/* Background Hero Image with smooth Ken Burns animation */}
+      {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
-          className="relative h-full w-full animate-kenburns bg-cover bg-[center_30%] sm:bg-[center_35%] bg-no-repeat"
-          style={{ backgroundImage: `url("${heroImage}")` }}
+          className="relative h-full w-full sm:animate-kenburns bg-[#111111]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -68,28 +66,28 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
             }}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 pb-12 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-10 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
-        <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
+        <p className="animate-hero-fadeup-title mb-4 text-[9px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px]">
           {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
-        {/* CTA Buttons */}
-        <div className="animate-hero-fadeup-link flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5">
+        {/* CTA Buttons - Selalu menyamping berdampingan (flex-row) di mobile & desktop */}
+        <div className="animate-hero-fadeup-link flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-md px-2">
           <Link
             href="/shop"
-            className="inline-flex min-w-[160px] items-center justify-center bg-white px-5 py-3 text-[10px] font-semibold tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 hover:scale-[1.02]"
+            className="flex-1 sm:flex-none inline-flex min-w-[125px] sm:min-w-[160px] items-center justify-center bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 text-[9px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 active:scale-95 whitespace-nowrap text-center"
           >
             {hero.ctaShop || 'Shop The Collection'}
           </Link>
 
           <Link
             href="/lookbook"
-            className="inline-flex min-w-[160px] items-center justify-center border border-white bg-transparent px-5 py-3 text-[10px] font-semibold tracking-[0.2em] text-white uppercase transition-all duration-300 hover:bg-white hover:text-black"
+            className="flex-1 sm:flex-none inline-flex min-w-[125px] sm:min-w-[160px] items-center justify-center border border-white bg-transparent px-3.5 py-2.5 sm:px-5 sm:py-3 text-[9px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-white uppercase transition-all duration-300 hover:bg-white hover:text-black active:scale-95 whitespace-nowrap text-center"
           >
             {hero.ctaLookbook || 'Lookbook'}
           </Link>

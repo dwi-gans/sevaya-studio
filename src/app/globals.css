@@ -429,3 +429,20 @@
 .animate-hero-fadeup-link {
   animation: heroFadeUp 0.8s ease-out 0.5s both;
 }
+
+/* Stabilisasi mobile: cegah kedut-kedut & redraw glitch saat scroll */
+@media (max-width: 640px) {
+  .animate-kenburns {
+    animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+  }
+  .animate-hero-fadeup-title,
+  .animate-hero-fadeup-link {
+    animation-duration: 0.4s;
+    animation-delay: 0.05s;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+}
