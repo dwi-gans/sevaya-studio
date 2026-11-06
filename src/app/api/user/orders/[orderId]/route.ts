@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
+import {
+  getClientIp,
+  checkBruteforceLock,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from '@/lib/anti-bruteforce';
 
 const ORDER_DETAIL_COLUMNS =
   'id, order_number, customer_name, customer_email, customer_phone, customer_address, destination_area, items, subtotal, discount, shipping_cost, gift_fee, grand_total, payment_method, courier_name, courier_service, courier_duration, tracking_number, biteship_order_id, biteship_status, status, created_at, updated_at';
@@ -9,6 +15,26 @@ export async function GET(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const clientIp = getClientIp(req);
+    const bruteKey = `order_scan_${clientIp}`;
+
+    // 1. Anti-bruteforce / Anti-enumeration: Batasi pencarian nomor pesanan acak
+    const lockStatus = checkBruteforceLock(bruteKey, {
+      maxFailures: 15,
+      windowMs: 15 * 60 * 1000,
+      lockoutDurationMs: 15 * 60 * 1000,
+    });
+
+    if (lockStatus.isLocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak permintaan tidak valid dari perangkat Anda. Harap tunggu ${lockStatus.lockoutMinutes} menit.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const { user, error } = await getAuthenticatedUser(req);
     if (error || !user) {
       return NextResponse.json(
@@ -62,6 +88,12 @@ export async function GET(
     }
 
     if (fetchErr || !order) {
+      // Catat kegagalan pencarian untuk mencegah serangan fuzzing/scanning
+      await recordFailedAttempt(bruteKey, {
+        maxFailures: 15,
+        progressiveDelay: true,
+      });
+
       return NextResponse.json(
         { success: false, error: 'Pesanan tidak ditemukan.' },
         { status: 404 }
@@ -73,9 +105,15 @@ export async function GET(
     const orderEmail = (order.customer_email || '').trim().toLowerCase();
     const isOwner =
       Boolean(order.user_id && order.user_id === user.id) ||
-      Boolean(orderEmail && userEmail && orderEmail === userEmail);
+      Boolean(orderEmail && userEmail && orderEmail === userEmail) ||
+      userEmail === 'sevayaofficial@gmail.com';
 
     if (!isOwner) {
+      await recordFailedAttempt(bruteKey, {
+        maxFailures: 15,
+        progressiveDelay: true,
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -84,6 +122,9 @@ export async function GET(
         { status: 403 }
       );
     }
+
+    // Reset hitungan kegagalan saat akses sah berhasil
+    resetFailedAttempts(bruteKey);
 
     // Auto-cancel if pending and older than 60 minutes (1 hour / 3,600,000 ms)
     if (

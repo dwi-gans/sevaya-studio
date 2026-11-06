@@ -6,6 +6,12 @@ import {
   clearAdminCookie,
   verifyAdminSession,
 } from '@/lib/auth-admin';
+import {
+  getClientIp,
+  checkBruteforceLock,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from '@/lib/anti-bruteforce';
 
 /**
  * GET /api/admin/auth — Check current admin session
@@ -23,10 +29,29 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/admin/auth — Login admin
+ * POST /api/admin/auth — Login admin with Anti-Bruteforce Protection
  */
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const bruteKey = `admin_login_${clientIp}`;
+
+    // 1. Cek apakah IP sedang dalam status lockout (terkunci)
+    const lockStatus = checkBruteforceLock(bruteKey, {
+      maxFailures: 5,
+      lockoutDurationMs: 15 * 60 * 1000, // 15 menit
+    });
+
+    if (lockStatus.isLocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak percobaan login gagal. Akses masuk admin diblokir sementara selama ${lockStatus.lockoutMinutes} menit demi keamanan.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const { username, password } = await req.json();
 
     if (!username || !password) {
@@ -37,12 +62,36 @@ export async function POST(req: NextRequest) {
     }
 
     const isValid = checkAdminCredentials(String(username), String(password));
+
     if (!isValid) {
+      // Catat kegagalan dan aktifkan progressive delay (tarpit)
+      const failStatus = await recordFailedAttempt(bruteKey, {
+        maxFailures: 5,
+        lockoutDurationMs: 15 * 60 * 1000,
+        progressiveDelay: true,
+      });
+
+      if (failStatus.isLocked) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Batas percobaan login tercapai. Akses masuk admin dikunci selama 15 menit.`,
+          },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
-        { success: false, error: 'Username atau password admin salah.' },
+        {
+          success: false,
+          error: `Username atau password admin salah. Sisa kesempatan: ${failStatus.remainingFailures} kali sebelum terkunci.`,
+        },
         { status: 401 }
       );
     }
+
+    // Login sukses: reset penghitung kegagalan brute-force
+    resetFailedAttempts(bruteKey);
 
     const token = generateAdminToken(username);
     const res = NextResponse.json({
@@ -68,7 +117,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const res = NextResponse.json({
     success: true,
-    message: 'Admin berhasil logout.',
+    message: 'Logout admin berhasil.',
   });
   clearAdminCookie(res);
   return res;

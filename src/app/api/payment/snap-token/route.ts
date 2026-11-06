@@ -1,10 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { createTripayTransaction } from '@/integrations/tripay';
+import {
+  getClientIp,
+  checkBruteforceLock,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from '@/lib/anti-bruteforce';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verifikasi autentikasi user
+    const clientIp = getClientIp(req);
+    const bruteKey = `pay_token_${clientIp}`;
+
+    // 1. Anti-bruteforce check: Maks 15 pembuatan transaksi per 15 menit per IP
+    const lockStatus = checkBruteforceLock(bruteKey, {
+      maxFailures: 15,
+      windowMs: 15 * 60 * 1000,
+      lockoutDurationMs: 15 * 60 * 1000,
+    });
+
+    if (lockStatus.isLocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak permintaan pembayaran dari perangkat Anda. Harap tunggu ${lockStatus.lockoutMinutes} menit.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    // 2. Verifikasi autentikasi user
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
     let authenticatedUserId: string | null = null;
     let authenticatedEmail: string | null = null;
@@ -63,6 +89,7 @@ export async function POST(req: NextRequest) {
         if (authenticatedEmail) {
           const matchEmail = dbOrder.customer_email && dbOrder.customer_email.toLowerCase() === authenticatedEmail;
           if (dbOrder.customer_email && !matchEmail) {
+            await recordFailedAttempt(bruteKey, { maxFailures: 15 });
             return NextResponse.json(
               { success: false, error: 'Akses ditolak: Anda tidak memiliki akses ke pesanan ini.' },
               { status: 403 },
@@ -73,6 +100,7 @@ export async function POST(req: NextRequest) {
           const providedEmail = clientCustomer?.email?.trim().toLowerCase();
           const dbEmail = dbOrder.customer_email?.trim().toLowerCase();
           if (!providedEmail || providedEmail !== dbEmail) {
+            await recordFailedAttempt(bruteKey, { maxFailures: 15 });
             return NextResponse.json(
               { success: false, error: 'Autentikasi atau verifikasi email pemesan diperlukan untuk mengakses pembayaran pesanan ini.' },
               { status: 401 },
@@ -175,7 +203,6 @@ export async function POST(req: NextRequest) {
     // Validasi akhir: pastikan sum == amount sebelum kirim ke TriPay
     const finalItemsTotal = builtItems.reduce((s, it) => s + it.price * it.quantity, 0);
     if (finalItemsTotal !== finalGrandTotal) {
-      // Paksa cocok dengan menyesuaikan item pertama
       const firstItem = builtItems[0];
       if (firstItem) {
         firstItem.price += (finalGrandTotal - finalItemsTotal);
@@ -193,6 +220,9 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(`[TriPay Transaction] Order: ${order_id}, Channel: ${tripayChannel}, URL: ${tripayResult.payment_url}`);
+
+    // Berhasil: reset failed attempts
+    resetFailedAttempts(bruteKey);
 
     return NextResponse.json({
       success: true,

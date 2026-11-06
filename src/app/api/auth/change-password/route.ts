@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser, supabaseAdmin } from '@/lib/auth-server';
 import { createClient } from '@supabase/supabase-js';
+import {
+  checkBruteforceLock,
+  recordFailedAttempt,
+  resetFailedAttempts,
+} from '@/lib/anti-bruteforce';
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +15,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: error || 'Tidak terautentikasi' },
         { status: 401 }
+      );
+    }
+
+    const bruteKey = `change_pass_${user.id}`;
+    const lockStatus = checkBruteforceLock(bruteKey, {
+      maxFailures: 5,
+      lockoutDurationMs: 15 * 60 * 1000,
+    });
+
+    if (lockStatus.isLocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak percobaan sandi yang salah. Silakan coba lagi dalam ${lockStatus.lockoutMinutes} menit.`,
+        },
+        { status: 429 }
       );
     }
 
@@ -35,12 +56,34 @@ export async function POST(req: NextRequest) {
       });
 
       if (verifyErr) {
+        const failStatus = await recordFailedAttempt(bruteKey, {
+          maxFailures: 5,
+          lockoutDurationMs: 15 * 60 * 1000,
+          progressiveDelay: true,
+        });
+
+        if (failStatus.isLocked) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Batas percobaan sandi terlampaui. Akun dikunci sementara selama 15 menit.',
+            },
+            { status: 429 }
+          );
+        }
+
         return NextResponse.json(
-          { success: false, error: 'Kata sandi saat ini tidak sesuai.' },
+          {
+            success: false,
+            error: `Kata sandi saat ini tidak sesuai. Sisa kesempatan: ${failStatus.remainingFailures} kali.`,
+          },
           { status: 400 }
         );
       }
     }
+
+    // Success: reset attempts
+    resetFailedAttempts(bruteKey);
 
     // Update password securely via Admin API
     const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
@@ -58,10 +101,10 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Kata sandi berhasil diperbarui.',
     });
-  } catch (err: unknown) {
-    console.error('Change password API error:', err);
+  } catch (err) {
+    console.error('[Change Password Error]:', err);
     return NextResponse.json(
-      { success: false, error: 'Terjadi kesalahan server saat memperbarui kata sandi.' },
+      { success: false, error: 'Terjadi kesalahan pada server saat memperbarui kata sandi.' },
       { status: 500 }
     );
   }
