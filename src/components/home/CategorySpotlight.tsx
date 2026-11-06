@@ -27,10 +27,12 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
   });
 
   useLayoutEffect(() => {
-    const cached = getCachedSiteSections();
-    if (cached?.spotlight?.length) setSpotlight(cached.spotlight);
-    if (cached?.spotlightIntro) setIntro(cached.spotlightIntro);
-  }, []);
+    if (!initialSpotlight || !initialSpotlight.length) {
+      const cached = getCachedSiteSections();
+      if (cached?.spotlight?.length) setSpotlight(cached.spotlight);
+      if (cached?.spotlightIntro && !initialIntro) setIntro(cached.spotlightIntro);
+    }
+  }, [initialSpotlight, initialIntro]);
 
   useEffect(() => {
     getSiteSections().then((sections) => {

@@ -210,6 +210,7 @@ export default function AdminPage() {
   // ── Data State ──
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [sections, setSections] = useState<SiteSectionsConfig>(getCachedSiteSections);
+  const isSectionsLoadedFromServer = useRef(false);
   const [selectedLookbookVolId, setSelectedLookbookVolId] = useState('vol-1');
   const [mediaFiles, setMediaFiles] = useState<StorageFile[]>([]);
   const [ordersCount, setOrdersCount] = useState<number>(0);
@@ -272,7 +273,7 @@ export default function AdminPage() {
     let isMounted = true;
     setSections(getCachedSiteSections());
 
-    Promise.all([getDbProducts(), getSiteSections(), getInventoryVariants()])
+    Promise.all([getDbProducts(true), getSiteSections(true), getInventoryVariants()])
       .then(([dbProds, siteSections, invVariants]) => {
         if (!isMounted) return;
         const syncedProds = dbProds.map((p) => {
@@ -289,6 +290,7 @@ export default function AdminPage() {
         });
         setProducts(syncedProds);
         setSections(siteSections);
+        isSectionsLoadedFromServer.current = true;
       })
       .catch(() => {
         showToast('Gagal memuat data dari Supabase');
@@ -1183,16 +1185,12 @@ export default function AdminPage() {
     showToast('Gambar berhasil dipilih!');
   };
 
-  // ── Auto-save sections debounce ──
-  const isFirstSectionsRender = useRef(true);
+  // ── Auto-save sections debounce (hanya aktif setelah data berhasil dimuat dari server) ──
   useEffect(() => {
-    if (isFirstSectionsRender.current) {
-      isFirstSectionsRender.current = false;
-      return;
-    }
+    if (!isSectionsLoadedFromServer.current) return;
     const timer = setTimeout(() => {
       saveSiteSections(sections);
-    }, 1000);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [sections]);
 

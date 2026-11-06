@@ -9,6 +9,7 @@ import {
   type ConsciousPageConfig,
 } from '@/integrations/supabase';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Always serve fresh data
 
 export default async function AboutPage() {

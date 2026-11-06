@@ -24,16 +24,18 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
   );
 
   useEffect(() => {
-    const cached = getCachedSiteSections();
-    if (cached?.narrative) {
-      setNarrative(cached.narrative);
+    if (!initialNarrative) {
+      const cached = getCachedSiteSections();
+      if (cached?.narrative) {
+        setNarrative(cached.narrative);
+      }
     }
     getSiteSections().then((sections) => {
       if (sections?.narrative) {
         setNarrative(sections.narrative);
       }
     });
-  }, []);
+  }, [initialNarrative]);
 
   return (
     <div className="w-full bg-white text-black section--light">

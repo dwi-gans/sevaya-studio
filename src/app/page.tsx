@@ -8,8 +8,11 @@ import { Footer } from '@/components/layout/Footer';
 import { fetchCatalogProducts } from '@/features/catalog';
 import { getSiteSections } from '@/integrations/supabase';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
-  const [products, sections] = await Promise.all([fetchCatalogProducts(), getSiteSections()]);
+  const [products, sections] = await Promise.all([fetchCatalogProducts(), getSiteSections(true)]);
 
   return (
     <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">

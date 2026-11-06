@@ -34,10 +34,12 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
   });
 
   useLayoutEffect(() => {
-    const cached = getCachedSiteSections();
-    if (cached?.journal?.length) setArticles(cached.journal);
-    if (cached?.journalHeader) setHeader(cached.journalHeader);
-  }, []);
+    if (!initialArticles || !initialArticles.length) {
+      const cached = getCachedSiteSections();
+      if (cached?.journal?.length) setArticles(cached.journal);
+      if (cached?.journalHeader && !initialHeader) setHeader(cached.journalHeader);
+    }
+  }, [initialArticles, initialHeader]);
 
   useEffect(() => {
     getSiteSections().then((sections) => {

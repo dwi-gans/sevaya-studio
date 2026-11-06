@@ -533,11 +533,10 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
     // In Node.js / Server Components, relative URLs fail with ERR_INVALID_URL.
     // Use the public Supabase Storage CDN directly on server as the single source of truth!
     const url = isServer
-      ? 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json' +
-        (forceRefresh ? `?t=${Date.now()}` : '')
+      ? `https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json?t=${Date.now()}`
       : forceRefresh
       ? `/api/sections?fresh=1&t=${Date.now()}`
-      : '/api/sections';
+      : `/api/sections?t=${Date.now()}`;
 
     const res = await fetch(url, { cache: 'no-store' });
     if (res.ok) {
@@ -690,8 +689,21 @@ export async function saveSiteSections(sections: SiteSectionsConfig): Promise<bo
     if (!res.ok) {
       const err = (await res.json().catch(() => ({}))) as { error?: string };
       console.warn('[sections] Save failed:', err.error ?? res.status);
+      return false;
     }
-    return res.ok;
+    const data = await res.json().catch(() => null);
+    if (data?.sections) {
+      _cachedSiteSections = data.sections;
+      _cachedSectionsTime = Date.now();
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data.sections));
+        } catch {
+          // ignore
+        }
+      }
+    }
+    return true;
   } catch (err) {
     console.warn('[sections] POST /api/sections failed:', err);
     return false;
