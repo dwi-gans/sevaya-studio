@@ -52,8 +52,13 @@ export function ProductCard({
 
   const currentActiveName = activeSwatch?.name || product.swatches?.[0]?.name;
 
-  // Foto yang ditampilkan: jika swatch dipilih & punya foto, tampilkan; jika tidak, tampilkan foto utama produk
-  const displayImage = activeSwatch?.image || product.image || '/images/catalog/catalog-01.jpg';
+  // Foto yang ditampilkan: jika swatch dipilih & punya foto, tampilkan; jika tidak punya foto sendiri, pakai gambar dari list images; jika tidak, tampilkan foto utama produk
+  const swatchFallbackImage =
+    activeSwatch && product.images && product.images.length > 0
+      ? product.images[Math.max(0, product.swatches.findIndex((s) => s.name === activeSwatch.name)) % product.images.length]
+      : undefined;
+
+  const displayImage = activeSwatch?.image || swatchFallbackImage || product.image || '/images/catalog/catalog-01.jpg';
 
   // Format gambar: Supabase dan Unsplash didukung langsung oleh Next.js optimizer (WebP otomatis)
   const isOptimizableRemote =
@@ -119,7 +124,11 @@ export function ProductCard({
           <div className="absolute inset-0 animate-pulse bg-gradient-to-t from-black/[0.03] to-transparent" />
         </div>
 
-        <Link href={`/product/${product.slug}`} prefetch={true} className="relative block h-full w-full">
+        <Link
+          href={`/product/${product.slug}${currentActiveName ? `?color=${encodeURIComponent(currentActiveName)}` : ''}`}
+          prefetch={true}
+          className="relative block h-full w-full"
+        >
           {/* Badge */}
           {product.badge && (
             <span
@@ -198,7 +207,10 @@ export function ProductCard({
 
       {/* Typography & Price below image */}
       <div className="flex flex-col items-center pt-3 pb-1 sm:pt-3.5 sm:pb-2 text-center">
-        <Link href={`/product/${product.slug}`} className="w-full">
+        <Link
+          href={`/product/${product.slug}${currentActiveName ? `?color=${encodeURIComponent(currentActiveName)}` : ''}`}
+          className="w-full"
+        >
           <h3 className="line-clamp-1 font-sans text-[9px] font-medium tracking-[0.14em] text-black uppercase transition-colors hover:opacity-70 sm:text-[10px]">
             {product.title}
           </h3>
@@ -214,24 +226,25 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Color Swatches below price — synchronized with cycling image — hidden on mobile */}
+        {/* Color Swatches below price — synchronized with cycling image — works flawlessly on mobile & desktop */}
         {product.swatches && product.swatches.length > 0 && (
           <div
-            className="mt-2.5 hidden sm:flex items-center justify-center gap-1.5"
+            className="mt-2 sm:mt-2.5 flex items-center justify-center gap-1 sm:gap-1.5"
             onMouseLeave={() => setHoveredSwatch(null)}
           >
-            {product.swatches.map((swatch, idx) => {
+            {product.swatches.map((swatch) => {
               const isSelected = swatch.name === currentActiveName;
               return (
                 <button
                   key={swatch.name}
                   type="button"
                   title={swatch.name}
-                  aria-label={swatch.name}
+                  aria-label={`Pilih warna ${swatch.name}`}
                   onMouseEnter={() => setHoveredSwatch(swatch.name)}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    // Di mobile & desktop: tap/klik untuk memilih warna
                     if (selectedSwatch === swatch.name) {
                       setSelectedSwatch(null);
                     } else {
@@ -239,13 +252,17 @@ export function ProductCard({
                     }
                     setHoveredSwatch(null);
                   }}
-                  className={`h-3.5 w-3.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    isSelected
-                      ? 'scale-110 ring-1 ring-black ring-offset-1 opacity-100'
-                      : 'opacity-70 ring-1 ring-black/10 hover:opacity-100 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: swatch.color }}
-                />
+                  className="p-1 sm:p-0.5 rounded-full flex items-center justify-center cursor-pointer touch-manipulation focus:outline-none"
+                >
+                  <span
+                    className={`block h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full transition-all duration-300 ${
+                      isSelected
+                        ? 'scale-110 ring-1.5 ring-black ring-offset-1 sm:ring-offset-2 opacity-100 shadow-xs'
+                        : 'opacity-70 ring-1 ring-black/15 hover:opacity-100 hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: swatch.color }}
+                  />
+                </button>
               );
             })}
           </div>

@@ -18,10 +18,10 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-01.jpg',
     images: ['/images/catalog/catalog-01.jpg', '/images/catalog/catalog-02.jpg'],
     swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA' },
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Soft Rose', color: '#EBB4B0' },
+      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-01.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-02.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-08.jpg' },
     ],
   },
   {
@@ -34,10 +34,10 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-03.jpg',
     images: ['/images/catalog/catalog-03.jpg', '/images/catalog/catalog-04.jpg'],
     swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA' },
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Soft Rose', color: '#EBB4B0' },
+      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-03.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-04.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-05.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-07.jpg' },
     ],
   },
   {
@@ -49,10 +49,10 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-18.jpg',
     images: ['/images/catalog/catalog-18.jpg', '/images/catalog/catalog-17.jpg'],
     swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA' },
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Soft Rose', color: '#EBB4B0' },
+      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-18.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-17.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-10.jpg' },
     ],
   },
   {
@@ -64,10 +64,10 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-13.jpg',
     images: ['/images/catalog/catalog-13.jpg', '/images/catalog/catalog-14.jpg'],
     swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA' },
-      { name: 'Mocha', color: '#B28E78' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Soft Rose', color: '#EBB4B0' },
+      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-13.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-14.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-15.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-16.jpg' },
     ],
   },
   {
@@ -79,9 +79,9 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-05.jpg',
     images: ['/images/catalog/catalog-05.jpg', '/images/catalog/catalog-06.jpg'],
     swatches: [
-      { name: 'Sage Green', color: '#889A84' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Rose', color: '#DBA8A0' },
+      { name: 'Sage Green', color: '#889A84', image: '/images/catalog/catalog-05.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
+      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-01.jpg' },
     ],
   },
   {
@@ -93,9 +93,9 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-07.jpg',
     images: ['/images/catalog/catalog-07.jpg', '/images/catalog/catalog-08.jpg'],
     swatches: [
-      { name: 'Beige', color: '#D2BFA6' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Mocha', color: '#B28E78' },
+      { name: 'Beige', color: '#D2BFA6', image: '/images/catalog/catalog-07.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-08.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-02.jpg' },
     ],
   },
   {
@@ -107,9 +107,9 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-10.jpg',
     images: ['/images/catalog/catalog-10.jpg', '/images/catalog/catalog-09.jpg'],
     swatches: [
-      { name: 'Grey', color: '#4A4E53' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Cream', color: '#E5D6C5' },
+      { name: 'Grey', color: '#4A4E53', image: '/images/catalog/catalog-10.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
+      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-03.jpg' },
     ],
   },
   {
@@ -121,9 +121,9 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     image: '/images/catalog/catalog-15.jpg',
     images: ['/images/catalog/catalog-15.jpg', '/images/catalog/catalog-16.jpg'],
     swatches: [
-      { name: 'Espresso', color: '#3A271E' },
-      { name: 'Black', color: '#1A1A1A' },
-      { name: 'Camel', color: '#A98263' },
+      { name: 'Espresso', color: '#3A271E', image: '/images/catalog/catalog-15.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-16.jpg' },
+      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-12.jpg' },
     ],
   },
 ];
@@ -209,7 +209,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar flex gap-3.5 overflow-x-auto px-3 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar flex gap-3 overflow-x-auto px-3 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
@@ -222,7 +222,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             {displayList.map((p, i) => (
               <div
                 key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
-                className="w-[68vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
+                className="w-[54vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
                 style={{ scrollSnapAlign: 'start' }}
               >
                 <ProductCard product={p} />
