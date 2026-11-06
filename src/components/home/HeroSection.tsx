@@ -12,27 +12,32 @@ interface HeroSectionProps {
 
 export function HeroSection({ initialHero }: HeroSectionProps) {
   const [hero, setHero] = useState<HeroSectionData>(() => initialHero || DEFAULT_SITE_SECTIONS.hero);
-  // animDone: setelah animasi selesai SEKALI, copot class animasi → tidak keulang saat scroll
+  // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
+  // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
   const [animDone, setAnimDone] = useState(false);
 
   useEffect(() => {
-    // Background refresh: update only if cloud data differs from current state
+    const timer = setTimeout(() => {
+      setAnimDone(true);
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Background refresh: update hanya jika data Supabase berbeda
     getSiteSections().then((sections) => {
       if (sections?.hero) {
         setHero((prev) => {
-          const newImg = sections.hero.image?.trim();
+          const s = sections.hero;
           if (
-            newImg &&
-            !newImg.startsWith('blob:') &&
-            newImg !== 'undefined' &&
-            (newImg !== prev.image ||
-              sections.hero.title !== prev.title ||
-              sections.hero.ctaShop !== prev.ctaShop ||
-              sections.hero.ctaLookbook !== prev.ctaLookbook)
+            s.image === prev.image &&
+            s.badge === prev.badge &&
+            s.ctaShop === prev.ctaShop &&
+            s.ctaLookbook === prev.ctaLookbook
           ) {
-            return sections.hero;
+            return prev;
           }
-          return prev;
+          return s;
         });
       }
     });
@@ -49,7 +54,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
-          className="relative h-full w-full sm:animate-kenburns bg-[#111111]"
+          className="relative h-full w-full bg-[#111111]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -58,7 +63,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
             loading="eager"
             decoding="async"
-            className="h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
+            className="animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
             onError={(e) => {
               const target = e.currentTarget;
               if (!target.src.endsWith(PRIMARY_HERO)) {
@@ -71,11 +76,10 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-14 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
+      {/* Content — dinaikkan di mobile via pb-24 (sebelumnya pb-14) sesuai panah merah user */}
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-24 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
         <p
-          onAnimationEnd={() => setAnimDone(true)}
           className={`mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px] ${
             animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-title'
           }`}
@@ -85,7 +89,6 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
 
         {/* CTA Buttons - Selalu menyamping berdampingan (flex-row) di mobile & desktop */}
         <div
-          onAnimationEnd={() => setAnimDone(true)}
           className={`flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2 ${
             animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-link'
           }`}
