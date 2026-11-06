@@ -99,6 +99,10 @@ export function verifyAdminSession(req: NextRequest): AdminSession | null {
  * Validates username and password using timing-safe comparison
  */
 export function checkAdminCredentials(user: string, pass: string): boolean {
+  if (process.env.NODE_ENV === 'production' && (!process.env.ADMIN_PASSWORD || ADMIN_PASSWORD === 'sevayaStudio1!')) {
+    console.error('[SECURITY WARNING] ADMIN_PASSWORD default terdeteksi di production! Harap set ADMIN_PASSWORD unik di environment variables.');
+  }
+
   const userMatch = crypto.timingSafeEqual(
     Buffer.from(user.padEnd(64).slice(0, 64)),
     Buffer.from(ADMIN_USERNAME.padEnd(64).slice(0, 64))

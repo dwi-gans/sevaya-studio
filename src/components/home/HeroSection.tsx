@@ -76,8 +76,8 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
       </div>
 
-      {/* Content — diturunkan sedikit di mobile sesuai permintaan user */}
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-14 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
+      {/* Content — posisi seimbang di mobile sesuai permintaan user */}
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-11 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
         <p
           className={`mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px] ${

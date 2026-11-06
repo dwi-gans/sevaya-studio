@@ -58,14 +58,12 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
 
 function getPaymentMethodLabel(method: string) {
   switch (method) {
+    case 'qris': return 'QRIS (Semua Pembayaran)';
+    case 'va_bca': return 'Virtual Account BCA';
+    case 'va_mandiri': return 'Virtual Account Mandiri';
     case 'va_bri': return 'Virtual Account BRI (BRIVA)';
     case 'va_bni': return 'Virtual Account BNI';
-    case 'va_bsi': return 'Virtual Account BSI (Syariah)';
-    case 'va_mandiri': return 'Virtual Account Mandiri';
-    case 'retail_alfamart': return 'Alfamart / Alfamidi';
-    case 'retail_indomaret': return 'Indomaret';
-    case 'va_other': return 'TriPay VA (Bank Lainnya)';
-    default: return 'TriPay Virtual Account';
+    default: return 'TriPay Payment';
   }
 }
 
@@ -330,7 +328,7 @@ function OrderConfirmationContent() {
                 <div className="space-y-3">
                   <p className="text-xs text-neutral-600 leading-relaxed">
                     Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>TriPay</strong>.
-                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, Mandiri, BCA) dan <strong>Gerai Ritel</strong> (Alfamart &amp; Indomaret).
+                    Tersedia pilihan <strong>QRIS</strong> dan <strong>Virtual Account</strong> (BCA, Mandiri, BRI, BNI).
                   </p>
 
                   {payError && (

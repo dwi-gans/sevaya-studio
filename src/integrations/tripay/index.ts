@@ -55,11 +55,23 @@ export function generateTripaySignature(merchantRef: string, amount: number): st
  */
 export function verifyTripayCallback(rawBody: string, receivedSignature: string): boolean {
   if (!TRIPAY_PRIVATE_KEY || !receivedSignature) return false;
-  const expected = crypto
-    .createHmac('sha256', TRIPAY_PRIVATE_KEY)
-    .update(rawBody)
-    .digest('hex');
-  return expected === receivedSignature;
+  try {
+    const expected = crypto
+      .createHmac('sha256', TRIPAY_PRIVATE_KEY)
+      .update(rawBody)
+      .digest('hex');
+
+    const expectedBuf = Buffer.from(expected, 'hex');
+    const receivedBuf = Buffer.from(receivedSignature, 'hex');
+
+    if (expectedBuf.length === 0 || expectedBuf.length !== receivedBuf.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -15,6 +15,7 @@ export interface ArticleFormData {
   excerpt: string;
   content: string;
   image: string;
+  hero_caption: string; // keterangan/caption foto sampul (hero)
   images: string[];
   image_captions: string[]; // penjelasan/keterangan tiap foto isi artikel
   featured: boolean;
@@ -232,6 +233,23 @@ export function ArticleModal({
               </div>
             </div>
 
+            {/* Caption / Keterangan Foto Sampul (Hero Photo) */}
+            <div className="flex flex-col gap-1.5 pt-1 border-t border-black/10">
+              <label className="text-xs font-semibold text-black">
+                Caption / Keterangan Foto Sampul (Hero Photo)
+              </label>
+              <input
+                type="text"
+                value={articleForm.hero_caption}
+                onChange={(e) => setArticleForm((prev) => ({ ...prev, hero_caption: e.target.value }))}
+                placeholder="Atelier notes, an intimate gathering and honest reflections on modest grace."
+                className="w-full min-h-[34px] rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black italic focus:border-black focus:outline-none"
+              />
+              <span className="text-[10px] text-black/50">
+                Teks keterangan miring elegan yang tampil tepat di bawah foto sampul (hero) di halaman artikel jurnal.
+              </span>
+            </div>
+
             {/* Featured checkbox */}
             <label className="mt-1 flex cursor-pointer items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3">
               <input
@@ -351,9 +369,11 @@ export function ArticleModal({
                         disabled={idx === 0}
                         title="Geser ke atas"
                         onClick={() => {
-                          const next = [...articleForm.images];
-                          [next[idx - 1], next[idx]] = [next[idx]!, next[idx - 1]!];
-                          setArticleForm((prev) => ({ ...prev, images: next }));
+                          const nextImgs = [...articleForm.images];
+                          const nextCaps = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
+                          [nextImgs[idx - 1], nextImgs[idx]] = [nextImgs[idx]!, nextImgs[idx - 1]!];
+                          [nextCaps[idx - 1], nextCaps[idx]] = [nextCaps[idx] ?? '', nextCaps[idx - 1] ?? ''];
+                          setArticleForm((prev) => ({ ...prev, images: nextImgs, image_captions: nextCaps }));
                         }}
                         className="flex h-7 w-7 items-center justify-center rounded-full border border-black/15 bg-white text-black/50 hover:text-black disabled:opacity-20 transition cursor-pointer"
                       >
@@ -364,9 +384,11 @@ export function ArticleModal({
                         disabled={idx === articleForm.images.length - 1}
                         title="Geser ke bawah"
                         onClick={() => {
-                          const next = [...articleForm.images];
-                          [next[idx + 1], next[idx]] = [next[idx]!, next[idx + 1]!];
-                          setArticleForm((prev) => ({ ...prev, images: next }));
+                          const nextImgs = [...articleForm.images];
+                          const nextCaps = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
+                          [nextImgs[idx + 1], nextImgs[idx]] = [nextImgs[idx]!, nextImgs[idx + 1]!];
+                          [nextCaps[idx + 1], nextCaps[idx]] = [nextCaps[idx] ?? '', nextCaps[idx + 1] ?? ''];
+                          setArticleForm((prev) => ({ ...prev, images: nextImgs, image_captions: nextCaps }));
                         }}
                         className="flex h-7 w-7 items-center justify-center rounded-full border border-black/15 bg-white text-black/50 hover:text-black disabled:opacity-20 transition cursor-pointer"
                       >
@@ -380,6 +402,7 @@ export function ArticleModal({
                         setArticleForm((prev) => ({
                           ...prev,
                           images: prev.images.filter((_, i) => i !== idx),
+                          image_captions: (prev.image_captions ?? prev.images.map(() => '')).filter((_, i) => i !== idx),
                         }));
                       }}
                       className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition cursor-pointer"

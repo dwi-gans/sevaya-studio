@@ -18,15 +18,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    // 1. Verifikasi signature TriPay dari header X-Callback-Signature
+    // 1. Verifikasi signature TriPay dari header X-Callback-Signature (Wajib valid di SEMUA environment)
     const receivedSignature = req.headers.get('X-Callback-Signature') || '';
     const isValid = verifyTripayCallback(rawBody, receivedSignature);
 
     if (!isValid) {
       console.warn('[TriPay Webhook] Signature mismatch atau notifikasi tidak terverifikasi');
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ success: false, message: 'Invalid signature' }, { status: 401 });
-      }
+      return NextResponse.json({ success: false, message: 'Invalid signature' }, { status: 401 });
     }
 
     // 2. Parse payload TriPay
@@ -73,7 +71,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const wasAlreadyPaid = existingOrder.status === 'paid' || existingOrder.status === 'processing';
+    const wasAlreadyPaid =
+      existingOrder.status === 'paid' ||
+      existingOrder.status === 'processing' ||
+      existingOrder.status === 'shipped' ||
+      existingOrder.status === 'delivered';
+
+    // Idempotency: Jika order sudah pernah tercatat lunas di database, segera return 200
+    // untuk mencegah duplikasi pengurangan stok dan spam pengiriman email
+    if (internalStatus === 'paid' && (wasAlreadyPaid || existingOrder.receipt_sent_at || dispatchedReceipts.has(orderNumber))) {
+      console.log(`[TriPay Webhook] Order ${orderNumber} sudah berstatus paid sebelumnya. Webhook diakui (idempotent).`);
+      return NextResponse.json({ success: true, message: 'Order already processed (idempotent)' });
+    }
 
     // 6. Update order di Supabase
     const { data: updatedOrder, error } = await supabaseAdmin
@@ -89,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[TriPay Webhook] DB update error:', error.message);
-    } else if (internalStatus === 'paid' && updatedOrder && !wasAlreadyPaid && !dispatchedReceipts.has(orderNumber)) {
+    } else if (internalStatus === 'paid' && updatedOrder && !wasAlreadyPaid && !existingOrder.receipt_sent_at && !dispatchedReceipts.has(orderNumber)) {
       dispatchedReceipts.add(orderNumber);
       // Hapus dari cache setelah 1 jam untuk mencegah memory leak
       setTimeout(() => dispatchedReceipts.delete(orderNumber), 60 * 60 * 1000);

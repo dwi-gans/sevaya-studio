@@ -52,28 +52,36 @@ export function ProductCard({
 
   const currentActiveName = activeSwatch?.name || product.swatches?.[0]?.name;
 
-  // Foto yang ditampilkan: jika swatch dipilih & punya foto, tampilkan; jika tidak punya foto sendiri, pakai gambar dari list images; jika tidak, tampilkan foto utama produk
+  // Foto yang ditampilkan: jika swatch dipilih & punya foto valid, tampilkan; jika tidak punya foto sendiri, pakai gambar dari list images; jika tidak, tampilkan foto utama produk
+  const validSwatchImage =
+    activeSwatch?.image && !activeSwatch.image.includes('logo_ibey') && activeSwatch.image.trim() !== ''
+      ? activeSwatch.image
+      : undefined;
+
   const swatchFallbackImage =
     activeSwatch && product.images && product.images.length > 0
       ? product.images[Math.max(0, product.swatches.findIndex((s) => s.name === activeSwatch.name)) % product.images.length]
       : undefined;
 
-  const displayImage = activeSwatch?.image || swatchFallbackImage || product.image || '/images/catalog/catalog-01.jpg';
+  const targetDisplayImage = validSwatchImage || swatchFallbackImage || product.image || '/images/catalog/catalog-01.jpg';
+
+  const [activeSrc, setActiveSrc] = useState<string>(targetDisplayImage);
+
+  // Selalu perbarui activeSrc saat swatch yang dipilih/di-hover berganti
+  useEffect(() => {
+    setActiveSrc(targetDisplayImage);
+    setIsLoaded(true);
+  }, [targetDisplayImage]);
 
   // Format gambar: Supabase dan Unsplash didukung langsung oleh Next.js optimizer (WebP otomatis)
   const isOptimizableRemote =
-    !displayImage.startsWith('http') ||
-    displayImage.includes('supabase.co') ||
-    displayImage.includes('unsplash.com') ||
-    displayImage.includes('googleusercontent.com');
+    !activeSrc.startsWith('http') ||
+    activeSrc.includes('supabase.co') ||
+    activeSrc.includes('unsplash.com') ||
+    activeSrc.includes('googleusercontent.com');
   const shouldBeUnoptimized = !isOptimizableRemote;
 
-  // Reset loaded status saat displayImage berganti agar transisi fade-in mulus tanpa glitch
-  const [renderedSrc, setRenderedSrc] = useState(displayImage);
-  if (renderedSrc !== displayImage) {
-    setRenderedSrc(displayImage);
-    setIsLoaded(false);
-  }
+  const displayImage = activeSrc;
 
   // Foto kedua saat hover (hanya jika produk tidak memiliki banyak swatch warna)
   const secondaryImage =
@@ -152,17 +160,25 @@ export function ProductCard({
             </span>
           )}
 
-          {/* Primary Product Image — smoothly fades in on load */}
+          {/* Primary Product Image — smoothly transitions on swatch change */}
           <Image
-            src={displayImage}
+            src={activeSrc}
             alt={`${product.title} - ${currentActiveName || 'Busana'}`}
             fill
             priority={priority}
             unoptimized={shouldBeUnoptimized}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onLoad={() => setIsLoaded(true)}
-            className={`pointer-events-none select-none object-cover transition-all duration-500 ease-out ${
-              isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.01]'
+            onError={() => {
+              // Jika foto varian corrupt/404, otomatis fallback ke foto produk utama
+              const fallback = product.image || '/images/catalog/catalog-01.jpg';
+              if (activeSrc !== fallback) {
+                setActiveSrc(fallback);
+              }
+              setIsLoaded(true);
+            }}
+            className={`pointer-events-none select-none object-cover transition-all duration-300 ease-out ${
+              isLoaded ? 'opacity-100 scale-100' : 'opacity-90 scale-[1.01]'
             } ${isOutOfStock ? 'grayscale-[15%] opacity-90' : ''} ${
               secondaryImage
                 ? 'group-hover:opacity-0 group-hover:scale-105'
@@ -226,10 +242,10 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Color Swatches below price — synchronized with cycling image — works flawlessly on mobile & desktop */}
+        {/* Color Swatches below price — synchronized with cycling image */}
         {product.swatches && product.swatches.length > 0 && (
           <div
-            className="mt-2 sm:mt-2.5 flex items-center justify-center gap-1 sm:gap-1.5"
+            className="mt-2.5 flex items-center justify-center gap-1.5"
             onMouseLeave={() => setHoveredSwatch(null)}
           >
             {product.swatches.map((swatch) => {
@@ -239,12 +255,11 @@ export function ProductCard({
                   key={swatch.name}
                   type="button"
                   title={swatch.name}
-                  aria-label={`Pilih warna ${swatch.name}`}
+                  aria-label={swatch.name}
                   onMouseEnter={() => setHoveredSwatch(swatch.name)}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Di mobile & desktop: tap/klik untuk memilih warna
                     if (selectedSwatch === swatch.name) {
                       setSelectedSwatch(null);
                     } else {
@@ -252,17 +267,13 @@ export function ProductCard({
                     }
                     setHoveredSwatch(null);
                   }}
-                  className="p-1 sm:p-0.5 rounded-full flex items-center justify-center cursor-pointer touch-manipulation focus:outline-none"
-                >
-                  <span
-                    className={`block h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full transition-all duration-300 ${
-                      isSelected
-                        ? 'scale-110 ring-1.5 ring-black ring-offset-1 sm:ring-offset-2 opacity-100 shadow-xs'
-                        : 'opacity-70 ring-1 ring-black/15 hover:opacity-100 hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: swatch.color }}
-                  />
-                </button>
+                  className={`h-3.5 w-3.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    isSelected
+                      ? 'scale-110 ring-1 ring-black ring-offset-1 opacity-100'
+                      : 'opacity-70 ring-1 ring-black/10 hover:opacity-100 hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: swatch.color }}
+                />
               );
             })}
           </div>

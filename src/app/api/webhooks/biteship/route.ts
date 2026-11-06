@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+import crypto from 'crypto';
+import { supabaseAdmin } from '@/lib/auth-server';
 
 /**
- * Biteship Webhook Handler with Signature / Token Verification
+ * Biteship Webhook Handler with Timing-Safe Secret Verification
  */
 export async function POST(req: NextRequest) {
   try {
@@ -21,9 +16,20 @@ export async function POST(req: NextRequest) {
     if (expectedSecret) {
       const authHeader = req.headers.get('authorization') || req.headers.get('x-biteship-secret') || req.headers.get('x-webhook-token');
       const queryToken = req.nextUrl.searchParams.get('token');
-      const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim() || queryToken;
+      const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim() || queryToken || '';
 
-      if (!providedSecret || providedSecret !== expectedSecret) {
+      let isSecretValid = false;
+      try {
+        const expectedBuf = Buffer.from(expectedSecret);
+        const providedBuf = Buffer.from(providedSecret);
+        if (expectedBuf.length > 0 && expectedBuf.length === providedBuf.length && crypto.timingSafeEqual(expectedBuf, providedBuf)) {
+          isSecretValid = true;
+        }
+      } catch {
+        isSecretValid = false;
+      }
+
+      if (!isSecretValid) {
         console.warn('[Biteship Webhook] Unauthorized attempt with invalid or missing secret.');
         return NextResponse.json({ success: false, error: 'Unauthorized webhook' }, { status: 401 });
       }
@@ -68,8 +74,14 @@ export async function POST(req: NextRequest) {
       .eq('biteship_order_id', biteshipOrderId)
       .maybeSingle();
 
-    if (existingOrd && (existingOrd.status === 'shipped' || existingOrd.status === 'delivered')) {
-      if (['confirmed', 'allocated', 'picking_up', 'picked'].includes(status)) {
+    if (existingOrd) {
+      if (['shipped', 'delivered'].includes(existingOrd.status)) {
+        if (['confirmed', 'allocated', 'picking_up', 'picked'].includes(status)) {
+          finalStatus = existingOrd.status;
+        }
+      }
+      // Jangan pernah downgrade order yang sudah paid / processing / shipped / delivered menjadi cancelled secara otomatis
+      if (['paid', 'processing', 'shipped', 'delivered'].includes(existingOrd.status) && ['cancelled', 'returned'].includes(status)) {
         finalStatus = existingOrd.status;
       }
     }

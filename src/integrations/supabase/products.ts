@@ -45,7 +45,7 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
       { name: 'Garnet', color: '#6B2D2B', image: '/images/catalog/catalog-06.jpg' },
       { name: 'Caramel', color: '#C68B59', image: '/images/catalog/catalog-08.jpg' },
-      { name: 'Peach', color: '#E5A894', image: '/images/catalog/catalog-10.jpg' },
+      { name: 'Peach', color: '#E5A894', image: '/images/catalog/catalog-01.jpg' },
     ],
   },
   {
@@ -63,8 +63,8 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     swatches: [
       { name: 'Black', color: '#202020', image: '/images/catalog/catalog-03.jpg' },
       { name: 'Navy', color: '#1C2833', image: '/images/catalog/catalog-05.jpg' },
-      { name: 'Dark Choco', color: '#4A2E1B', image: '/images/catalog/catalog-07.jpg' },
-      { name: 'Olive Brown', color: '#5D5341', image: '/images/catalog/catalog-09.jpg' },
+      { name: 'Dark Choco', color: '#4A2E1B', image: '/images/catalog/catalog-03.jpg' },
+      { name: 'Olive Brown', color: '#5D5341', image: '/images/catalog/catalog-05.jpg' },
     ],
   },
   {
@@ -83,8 +83,8 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     swatches: [
       { name: 'Emerald', color: '#2E5A44', image: '/images/catalog/catalog-18.jpg' },
       { name: 'Brown Taupe', color: '#4C3B32', image: '/images/catalog/catalog-17.jpg' },
-      { name: 'Dove Grey', color: '#A29A90', image: '/images/catalog/catalog-16.jpg' },
-      { name: 'Bay Leaf', color: '#7D8876', image: '/images/catalog/catalog-15.jpg' },
+      { name: 'Dove Grey', color: '#A29A90', image: '/images/catalog/catalog-18.jpg' },
+      { name: 'Bay Leaf', color: '#7D8876', image: '/images/catalog/catalog-17.jpg' },
     ],
   },
   {
@@ -100,8 +100,8 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     hidden: false,
     swatches: [
       { name: 'Black Stripe', color: '#2C2B29', image: '/images/catalog/catalog-13.jpg' },
-      { name: 'Oatmeal Stripe', color: '#C2B8AA', image: '/images/catalog/catalog-04.jpg' },
-      { name: 'Clay Stripe', color: '#8C675B', image: '/images/catalog/catalog-02.jpg' },
+      { name: 'Oatmeal Stripe', color: '#C2B8AA', image: '/images/catalog/catalog-14.jpg' },
+      { name: 'Clay Stripe', color: '#8C675B', image: '/images/catalog/catalog-13.jpg' },
     ],
   },
   {
@@ -117,8 +117,8 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     hidden: false,
     swatches: [
       { name: 'Sage Green', color: '#889A84', image: '/images/catalog/catalog-05.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
-      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-06.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
+      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-05.jpg' },
     ],
   },
   {
@@ -151,8 +151,8 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     hidden: false,
     swatches: [
       { name: 'Grey', color: '#4A4E53', image: '/images/catalog/catalog-10.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
-      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-03.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
+      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-10.jpg' },
     ],
   },
   {
@@ -168,14 +168,14 @@ export const DEFAULT_DB_PRODUCTS: DbProduct[] = [
     hidden: false,
     swatches: [
       { name: 'Espresso', color: '#3A271E', image: '/images/catalog/catalog-15.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
-      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-07.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-16.jpg' },
+      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-15.jpg' },
     ],
   },
 ];
 
 const PRODUCTS_FILE = 'products.json';
-const LS_KEY = 'sevaya_products_v1';
+const LS_KEY = 'sevaya_products_v3';
 
 /**
  * Save products to localStorage (client-side persistent fallback).
@@ -198,7 +198,14 @@ export function loadFromLocalStorage(): DbProduct[] | null {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DbProduct[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    // Sanitasi: jika ada logo_ibey atau data korup lama, hapus cache lama
+    const rawStr = JSON.stringify(parsed);
+    if (rawStr.includes('logo_ibey')) {
+      localStorage.removeItem(LS_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }

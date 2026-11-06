@@ -104,11 +104,11 @@ export async function getVerifiedProductPrice(productIdOrSlug: string, fallbackP
   if (STATIC_PRICE_MAP.has(slug)) return STATIC_PRICE_MAP.get(slug)!;
   if (STATIC_PRICE_MAP.has(cleanedId)) return STATIC_PRICE_MAP.get(cleanedId)!;
 
-  // 5. Use client-provided price if it looks reasonable (>= Rp 50.000)
-  if (typeof fallbackPrice === 'number' && fallbackPrice >= 50000) {
+  // 5. Use client-provided price only if it meets catalog minimum threshold (>= Rp 450.000)
+  if (typeof fallbackPrice === 'number' && fallbackPrice >= 450000) {
     return Math.round(fallbackPrice);
   }
 
-  // 6. Last-resort default
+  // 6. Last-resort default (SEVAYA signature abaya price)
   return 1339000;
 }

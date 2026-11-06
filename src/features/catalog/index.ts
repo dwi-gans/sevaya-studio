@@ -32,7 +32,7 @@ export function mapDbProductToProduct(item: DbProduct): Product {
         ? item.swatches.map((s) => ({
             name: s.name,
             color: s.color,
-            image: s.image || fallbackImage,
+            image: s.image && !s.image.includes('logo_ibey') ? s.image : fallbackImage,
           }))
         : [
             { name: 'Black', color: '#1A1A1A', image: fallbackImage },

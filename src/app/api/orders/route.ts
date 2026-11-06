@@ -212,34 +212,21 @@ export async function POST(req: NextRequest) {
       error = retryRes.error;
     }
 
+    // Pastikan pesanan benar-benar berhasil masuk database sebelum mengirim email atau memanggil kurir
+    if (error || !data) {
+      console.error('Supabase insert error:', error?.message);
+      return NextResponse.json(
+        { success: false, error: 'Gagal menyimpan pesanan ke database. Silakan coba beberapa saat lagi.' },
+        { status: 500 }
+      );
+    }
+
     // Background asynchronous Biteship & Email creation (Does NOT block the user)
     const biteshipKey = process.env.BITESHIP_TEST_API_KEY || process.env.BITESHIP_API_KEY;
     const biteshipBaseUrl = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
     (async () => {
       try {
-        // Send order pending payment email to customer
-        try {
-          await sendOrderPendingPaymentEmail({
-            orderNumber,
-            customerName,
-            customerEmail: email,
-            customerPhone: String(phone || ''),
-            customerAddress,
-            items: verifiedItems,
-            subtotal: serverSubtotal,
-            discount: safeDiscount,
-            shippingCost: safeShipping,
-            giftFee: safeGiftFee,
-            grandTotal: serverGrandTotal,
-            paymentMethod,
-            courierName: selectedRate ? `${selectedRate.courier_name} ${selectedRate.courier_service_name}` : undefined,
-            createdAt: new Date().toISOString(),
-          });
-        } catch (emailErr) {
-          console.warn('[Checkout Pending Email Error]:', emailErr);
-        }
-
         // Only book courier in Biteship immediately if COD (Cash On Delivery)
         // For online payment (Midtrans, Transfer, etc.), courier is booked once payment is confirmed or manually via Admin.
         if (biteshipKey && paymentMethod === 'cod') {
@@ -366,14 +353,6 @@ export async function POST(req: NextRequest) {
         console.warn('Background email warning:', mailErr);
       }
     })();
-
-    if (error || !data) {
-      console.error('Supabase insert error:', error?.message);
-      return NextResponse.json(
-        { success: false, error: 'Gagal menyimpan pesanan ke database. Silakan coba beberapa saat lagi.' },
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json({
       success: true,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdminSession } from '@/lib/auth-admin';
 
 const TRIPAY_API_KEY = process.env.TRIPAY_API_KEY!;
 const TRIPAY_MERCHANT_CODE = process.env.TRIPAY_MERCHANT_CODE!;
@@ -8,10 +9,10 @@ const TRIPAY_BASE_URL = IS_PRODUCTION
   : 'https://tripay.co.id/api-sandbox';
 
 export async function GET(req: NextRequest) {
-  // Only allow admin
-  const adminKey = req.headers.get('x-admin-key') || req.nextUrl.searchParams.get('key');
-  if (adminKey !== 'sevaya-admin') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Only allow verified admin session
+  const adminSession = verifyAdminSession(req);
+  if (!adminSession) {
+    return NextResponse.json({ error: 'Akses ditolak: Autentikasi admin diperlukan.' }, { status: 401 });
   }
 
   // Test koneksi TriPay: ambil daftar channel pembayaran

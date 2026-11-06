@@ -232,6 +232,7 @@ export default function AdminPage() {
     excerpt: '',
     content: '',
     image: '/images/catalog/catalog-11.jpg',
+    hero_caption: 'Atelier notes, an intimate gathering and honest reflections on modest grace.',
     images: [],
     image_captions: [],
     featured: false,
@@ -954,6 +955,7 @@ export default function AdminPage() {
       day: 'numeric',
       year: 'numeric',
     });
+    const defaultCaption = 'Atelier notes, an intimate gathering and honest reflections on modest grace.';
     setArticleForm({
       title: '',
       slug: '',
@@ -963,6 +965,7 @@ export default function AdminPage() {
       excerpt: '',
       content: '',
       image: '/images/catalog/catalog-11.jpg',
+      hero_caption: defaultCaption,
       images: [],
       image_captions: [],
       featured: false,
@@ -972,6 +975,22 @@ export default function AdminPage() {
 
   const handleOpenEditArticleModal = (art: Article) => {
     setEditingArticle(art);
+    const defaultCaption = 'Atelier notes, an intimate gathering and honest reflections on modest grace.';
+    const heroCaption =
+      art.hero_caption && art.hero_caption.trim() !== ''
+        ? art.hero_caption
+        : defaultCaption;
+
+    const initialImages =
+      Array.isArray(art.images) && art.images.length > 0
+        ? art.images
+        : ['/images/catalog/catalog-12.jpg'];
+
+    const initialCaptions = initialImages.map((_, i) => {
+      const existing = (art as any).image_captions?.[i];
+      return existing && existing.trim() !== '' ? existing : defaultCaption;
+    });
+
     setArticleForm({
       title: art.title,
       slug: art.slug,
@@ -983,12 +1002,10 @@ export default function AdminPage() {
         ? art.content.join('\n\n')
         : ((art.content as unknown as string) || ''),
       image: art.image || '/images/catalog/catalog-11.jpg',
+      hero_caption: heroCaption,
       featured: Boolean(art.featured),
-      images:
-        Array.isArray(art.images) && art.images.length > 0
-          ? art.images
-          : ['/images/catalog/catalog-12.jpg'],
-      image_captions: Array.isArray((art as any).image_captions) ? (art as any).image_captions : [],
+      images: initialImages,
+      image_captions: initialCaptions,
     });
     setIsArticleModalOpen(true);
   };
@@ -1018,6 +1035,7 @@ export default function AdminPage() {
             excerpt: articleForm.excerpt.trim(),
             content: paragraphs.length > 0 ? paragraphs : editingArticle.content,
             image: articleForm.image,
+            hero_caption: articleForm.hero_caption?.trim() || '',
             images: articleForm.images,
             image_captions: articleForm.image_captions ?? [],
             featured: articleForm.featured,
@@ -1043,6 +1061,7 @@ export default function AdminPage() {
             excerpt: articleForm.excerpt.trim(),
             content: paragraphs.length > 0 ? paragraphs : [articleForm.excerpt.trim()],
             image: articleForm.image,
+            hero_caption: articleForm.hero_caption?.trim() || '',
             images: articleForm.images,
             image_captions: articleForm.image_captions ?? [],
             featured: articleForm.featured,

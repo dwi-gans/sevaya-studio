@@ -1,34 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/auth-server';
+import { verifyAdminSession } from '@/lib/auth-admin';
 import { checkMidtransStatus } from '@/integrations/midtrans';
 import { sendOrderPaidReceiptEmail } from '@/lib/order-email';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
-
 export async function POST(req: NextRequest) {
   try {
+    // 1. Verifikasi autentikasi user atau admin
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
+    let authenticatedUserId: string | null = null;
+    let authenticatedEmail: string | null = null;
+    const adminSession = verifyAdminSession(req);
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      try {
+        const { data: authData } = await supabaseAdmin.auth.getUser(token);
+        if (authData?.user) {
+          authenticatedUserId = authData.user.id;
+          authenticatedEmail = authData.user.email?.toLowerCase() || null;
+        }
+      } catch {
+        // Invalid token
+      }
+    }
+
+    if (!adminSession && !authenticatedUserId && !authenticatedEmail) {
+      return NextResponse.json({ success: false, error: 'Autentikasi diperlukan.' }, { status: 401 });
+    }
+
     const { order_id } = await req.json();
     if (!order_id) {
       return NextResponse.json({ success: false, error: 'Order ID is required' }, { status: 400 });
+    }
+
+    const { data: order } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('order_number', order_id)
+      .maybeSingle();
+
+    if (!order) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
+    // Ownership check jika bukan admin
+    if (!adminSession) {
+      const matchUser = authenticatedUserId && order.user_id && order.user_id === authenticatedUserId;
+      const matchEmail = authenticatedEmail && order.customer_email && order.customer_email.toLowerCase() === authenticatedEmail;
+      if (order.user_id && !matchUser && !matchEmail) {
+        return NextResponse.json({ success: false, error: 'Akses ditolak.' }, { status: 403 });
+      }
     }
 
     const midtransData = await checkMidtransStatus(order_id);
     const transStatus = midtransData?.transaction_status;
 
     if (transStatus === 'settlement' || transStatus === 'capture') {
-      const { data: order } = await supabaseAdmin
-        .from('orders')
-        .select('*')
-        .eq('order_number', order_id)
-        .single();
-
-      if (!order) {
-        return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
-      }
-
       // Verify gross amount paid in Midtrans matches database grand total
       const paidAmount = Math.round(Number(midtransData?.gross_amount) || 0);
       const expectedAmount = Math.round(Number(order.grand_total) || 0);

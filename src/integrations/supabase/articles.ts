@@ -11,6 +11,7 @@ export interface Article {
   excerpt: string;
   content: string[];
   image: string;           // cover / thumbnail utama
+  hero_caption?: string;   // keterangan / caption foto sampul (hero)
   images: string[];        // foto-foto isi artikel (bisa lebih dari 1)
   image_captions?: string[]; // keterangan / penjelasan tiap foto
   featured: boolean;
@@ -93,11 +94,25 @@ export async function getAllArticlesAdmin(): Promise<Article[]> {
 // ── CREATE ────────────────────────────────────────────────────────────────────
 
 export async function createArticle(article: ArticleInsert): Promise<Article | null> {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('articles')
     .insert([article])
     .select()
     .single();
+
+  if (error && error.message && error.message.toLowerCase().includes('hero_caption')) {
+    const { hero_caption: _hc, ...fallbackArticle } = article;
+    const fallbackRes = await supabase
+      .from('articles')
+      .insert([fallbackArticle])
+      .select()
+      .single();
+    data = fallbackRes.data;
+    error = fallbackRes.error;
+    if (data && _hc) {
+      (data as Record<string, unknown>).hero_caption = _hc;
+    }
+  }
 
   if (error) {
     console.error('[articles] createArticle error:', error.message);
@@ -122,7 +137,26 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
     query = query.eq('slug', updates.slug || idOrSlug);
   }
 
-  const { data, error } = await query.select().maybeSingle();
+  let { data, error } = await query.select().maybeSingle();
+
+  // Jika error karena kolom hero_caption belum ditambahkan di Postgres, ulangi tanpa hero_caption
+  if (error && error.message && error.message.toLowerCase().includes('hero_caption')) {
+    const { hero_caption: _hc, ...fallbackUpdates } = updates;
+    let fallbackQuery = supabase
+      .from('articles')
+      .update({ ...fallbackUpdates, updated_at: new Date().toISOString() });
+    if (isUuid) {
+      fallbackQuery = fallbackQuery.eq('id', idOrSlug);
+    } else {
+      fallbackQuery = fallbackQuery.eq('slug', updates.slug || idOrSlug);
+    }
+    const fallbackRes = await fallbackQuery.select().maybeSingle();
+    data = fallbackRes.data;
+    error = fallbackRes.error;
+    if (data && _hc) {
+      (data as Record<string, unknown>).hero_caption = _hc;
+    }
+  }
 
   if (error) {
     console.error('[articles] updateArticle error:', error.message);
@@ -185,6 +219,39 @@ export async function deleteArticle(id: string): Promise<boolean> {
   return true;
 }
 
+// ── JOURNAL SECTION BRIDGE ────────────────────────────────────────────────────
+
+/**
+ * Fetch the latest N published articles and convert them to JournalArticleData
+ * shape so the homepage JournalSection can display them dynamically from DB.
+ * Falls back to empty array if DB is unreachable (homepage will use sections.json default).
+ */
+export async function getLatestArticlesForJournal(limit = 2): Promise<
+  Array<{ id: string; title: string; date: string; excerpt: string; image: string; href: string }>
+> {
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, slug, title, date, excerpt, image, featured')
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error || !data || data.length === 0) return [];
+
+    return data.map((a) => ({
+      id: String(a.id),
+      title: String(a.title ?? ''),
+      date: String(a.date ?? ''),
+      excerpt: String(a.excerpt ?? ''),
+      image: String(a.image ?? '/images/catalog/catalog-11.jpg'),
+      href: `/news/${String(a.slug ?? '')}`,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
 // Normalize content field: DB stores as TEXT (JSON string) or JSONB array
@@ -235,6 +302,7 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
     excerpt: String(raw.excerpt ?? ''),
     content,
     image: String(raw.image ?? ''),
+    hero_caption: raw.hero_caption != null ? String(raw.hero_caption) : undefined,
     images,
     image_captions,
     featured: Boolean(raw.featured),

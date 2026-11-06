@@ -42,8 +42,30 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
   }, [initialArticles, initialHeader]);
 
   useEffect(() => {
+    // Fetch artikel terbaru dari DB (via /api/journal) — override sections.journal
+    fetch('/api/journal')
+      .then((r) => r.json())
+      .then((data: { articles?: JournalArticleData[] }) => {
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          setArticles(data.articles);
+        } else {
+          // Fallback: ambil dari sections config
+          getSiteSections().then((sections) => {
+            if (sections.journal?.length) setArticles(sections.journal);
+            if (sections.journalHeader) setHeader(sections.journalHeader);
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback jika fetch gagal
+        getSiteSections().then((sections) => {
+          if (sections.journal?.length) setArticles(sections.journal);
+          if (sections.journalHeader) setHeader(sections.journalHeader);
+        });
+      });
+
+    // Tetap refresh journalHeader dari sections
     getSiteSections().then((sections) => {
-      if (sections.journal?.length) setArticles(sections.journal);
       if (sections.journalHeader) setHeader(sections.journalHeader);
     });
   }, []);

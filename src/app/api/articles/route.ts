@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, category, excerpt, content, image, images, image_captions, featured, published, date, read_time } = body;
+    const { title, category, excerpt, content, image, hero_caption, images, image_captions, featured, published, date, read_time } = body;
 
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Judul artikel wajib diisi' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       excerpt: excerpt?.trim() || '',
       content: Array.isArray(content) ? content : [content || ''],
       image: image || '/images/catalog/catalog-01.jpg',
+      hero_caption: hero_caption?.trim() || undefined,
       images: Array.isArray(images) ? images : [],
       image_captions: Array.isArray(image_captions) ? image_captions : [],
       featured: Boolean(featured),

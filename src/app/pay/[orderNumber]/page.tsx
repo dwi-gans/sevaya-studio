@@ -105,7 +105,7 @@ export default function SimplePaymentPage({
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  // Open Payment Gateway (DOKU)
+  // Open Payment Gateway (TriPay)
   const handlePayNow = async () => {
     setIsOpeningSnap(true);
     setErrorMessage(null);
@@ -207,7 +207,7 @@ export default function SimplePaymentPage({
             <div className="border border-black/10 bg-[#FAFAFA] p-4 text-xs text-black/70 space-y-2">
               <p className="font-semibold text-black">Pembayaran Online (TriPay Checkout)</p>
               <p className="text-[11px] text-black/60">
-                Mendukung Virtual Account (BRI, BNI, BSI, Mandiri, BCA) dan Gerai Ritel (Alfamart &amp; Indomaret).
+                Mendukung QRIS (Semua Bank &amp; E-Wallet) dan Virtual Account (BCA, Mandiri, BRI, BNI).
               </p>
             </div>
 

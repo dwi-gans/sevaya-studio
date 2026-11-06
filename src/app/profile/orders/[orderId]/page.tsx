@@ -643,23 +643,19 @@ export default function OrderDetailPage({
               </div>
               <div className="space-y-1 text-xs text-[#554C48]">
                 <p className="font-semibold text-black">
-                  {order.payment_method === 'va_bri'
+                  {order.payment_method === 'qris'
+                    ? 'QRIS (Semua Pembayaran)'
+                    : order.payment_method === 'va_bca'
+                    ? 'Virtual Account BCA'
+                    : order.payment_method === 'va_mandiri'
+                    ? 'Virtual Account Mandiri'
+                    : order.payment_method === 'va_bri'
                     ? 'Virtual Account BRI (BRIVA)'
                     : order.payment_method === 'va_bni'
                     ? 'Virtual Account BNI'
-                    : order.payment_method === 'va_bsi'
-                    ? 'Virtual Account BSI (Syariah)'
-                    : order.payment_method === 'va_mandiri'
-                    ? 'Virtual Account Mandiri'
-                    : order.payment_method === 'retail_alfamart'
-                    ? 'Alfamart / Alfamidi'
-                    : order.payment_method === 'retail_indomaret'
-                    ? 'Indomaret'
-                    : order.payment_method === 'va_other'
-                    ? 'TriPay VA (Bank Lainnya)'
                     : order.payment_method?.startsWith('TriPay')
                     ? order.payment_method
-                    : 'Virtual Account (TriPay)'}
+                    : 'TriPay Payment'}
                 </p>
                 <p className="text-black/70">
                   Email: {order.customer_email || '—'}

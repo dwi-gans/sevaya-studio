@@ -63,7 +63,7 @@ function buildColorOptions(
   });
 }
 
-/** Susun seluruh foto galeri produk secara unik (foto utama + galeri + foto setiap varian warna) */
+/** Susun foto galeri asli milik produk (foto utama + foto galeri produk asli) */
 function buildGalleryList(
   mainImage?: string,
   extraImages?: string[],
@@ -73,14 +73,23 @@ function buildGalleryList(
   const pushUnique = (img?: string) => {
     if (!img) return;
     const clean = img.trim();
-    if (clean && !result.includes(clean)) {
+    // Abaikan URL yang rusak atau dummy corrupt
+    if (clean && !clean.includes('logo_ibey') && !result.includes(clean)) {
       result.push(clean);
     }
   };
 
   pushUnique(mainImage);
-  if (Array.isArray(extraImages)) extraImages.forEach(pushUnique);
-  if (Array.isArray(swatches)) swatches.forEach((s) => pushUnique(s.image));
+  if (Array.isArray(extraImages) && extraImages.length > 0) {
+    extraImages.forEach(pushUnique);
+  } else if (Array.isArray(swatches)) {
+    // Hanya jika produk belum memiliki extraImages tersendiri, gunakan foto swatch
+    swatches.forEach((s) => {
+      if (s.image && !s.image.includes('logo_ibey')) {
+        pushUnique(s.image);
+      }
+    });
+  }
 
   return result.length > 0 ? result : ['/images/catalog/catalog-01.jpg'];
 }
@@ -143,12 +152,14 @@ export function ProductDetailClient({
 
   // Handler saat user mengklik Swatch Warna:
   // 1. Ubah warna terpilih
-  // 2. Ubah gambar utama ke foto varian warna tersebut
+  // 2. Ubah gambar utama ke foto varian warna tersebut (dengan validasi anti-corrupt)
   const handleSelectColor = (colorOption: ProductColorOption) => {
     setSelectedColor(colorOption);
-    if (colorOption.image) {
-      setActiveImage(colorOption.image);
-    }
+    const validImage =
+      colorOption.image && !colorOption.image.includes('logo_ibey')
+        ? colorOption.image
+        : dbProduct.image || '/images/catalog/catalog-01.jpg';
+    setActiveImage(validImage);
   };
 
   // Handler saat user mengklik thumbnail di galeri bawah (Two-way sync):
@@ -644,6 +655,12 @@ export function ProductDetailClient({
                   alt={`${title} - ${selectedColor.name}`}
                   fill
                   priority
+                  onError={() => {
+                    const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
+                    if (activeImage !== fallback) {
+                      setActiveImage(fallback);
+                    }
+                  }}
                   unoptimized={
                     !activeImage.startsWith('/') &&
                     !activeImage.includes('supabase.co') &&
@@ -674,6 +691,12 @@ export function ProductDetailClient({
                           src={imgSrc}
                           alt={`Thumbnail ${idx + 1}`}
                           fill
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLElement;
+                            if (target?.parentElement) {
+                              target.parentElement.style.display = 'none';
+                            }
+                          }}
                           unoptimized={
                             !imgSrc.startsWith('/') &&
                             !imgSrc.includes('supabase.co') &&

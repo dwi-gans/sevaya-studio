@@ -20,8 +20,8 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-01.jpg' },
       { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-02.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-08.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-02.jpg' },
     ],
   },
   {
@@ -36,8 +36,8 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-03.jpg' },
       { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-04.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-05.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-07.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-03.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-04.jpg' },
     ],
   },
   {
@@ -51,8 +51,8 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-18.jpg' },
       { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-17.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-10.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-18.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-17.jpg' },
     ],
   },
   {
@@ -66,8 +66,8 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-13.jpg' },
       { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-14.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-15.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-16.jpg' },
+      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-13.jpg' },
+      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-14.jpg' },
     ],
   },
   {
@@ -81,7 +81,7 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Sage Green', color: '#889A84', image: '/images/catalog/catalog-05.jpg' },
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
-      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-01.jpg' },
+      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-05.jpg' },
     ],
   },
   {
@@ -95,7 +95,7 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Beige', color: '#D2BFA6', image: '/images/catalog/catalog-07.jpg' },
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-08.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-02.jpg' },
+      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-07.jpg' },
     ],
   },
   {
@@ -109,7 +109,7 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Grey', color: '#4A4E53', image: '/images/catalog/catalog-10.jpg' },
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
-      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-03.jpg' },
+      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-10.jpg' },
     ],
   },
   {
@@ -123,7 +123,7 @@ export const DEFAULT_BEST_SELLERS: Product[] = [
     swatches: [
       { name: 'Espresso', color: '#3A271E', image: '/images/catalog/catalog-15.jpg' },
       { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-16.jpg' },
-      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-12.jpg' },
+      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-15.jpg' },
     ],
   },
 ];
@@ -222,7 +222,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             {displayList.map((p, i) => (
               <div
                 key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
-                className="w-[54vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
+                className="w-[44vw] shrink-0 sm:w-[40vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
                 style={{ scrollSnapAlign: 'start' }}
               >
                 <ProductCard product={p} />

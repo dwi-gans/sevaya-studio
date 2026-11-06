@@ -7,6 +7,7 @@ export {
   updateArticle,
   deleteArticle,
   generateSlug,
+  getLatestArticlesForJournal,
   ARTICLE_CATEGORIES,
   type Article,
   type ArticleInsert,

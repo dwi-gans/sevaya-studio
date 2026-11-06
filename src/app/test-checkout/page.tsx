@@ -12,32 +12,6 @@ import { useAuth } from '@/context/AuthContext';
 import type { BiteshipArea, BiteshipRateOption } from '@/integrations/biteship';
 import type { IconName } from '@/components/ui/Icon';
 
-declare global {
-  interface Window {
-    snap?: any;
-  }
-}
-
-function loadSnapScript(): Promise<any> {
-  if (typeof window !== 'undefined' && window.snap) {
-    return Promise.resolve(window.snap);
-  }
-  return new Promise((resolve, reject) => {
-    const existing = document.getElementById('midtrans-snap-script');
-    if (existing) {
-      existing.onload = () => resolve(window.snap);
-      return;
-    }
-    const script = document.createElement('script');
-    script.id = 'midtrans-snap-script';
-    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-    script.setAttribute('data-client-key', 'Mid-client-3hvHlo_u41mlnJKP');
-    script.onload = () => resolve(window.snap);
-    script.onerror = () => reject(new Error('Gagal memuat pop-up pembayaran Midtrans'));
-    document.body.appendChild(script);
-  });
-}
-
 const INDONESIA_PROVINCES = [
   'Aceh', 'Bali', 'Banten', 'Bengkulu', 'DI Yogyakarta', 'DKI Jakarta',
   'Gorontalo', 'Jambi', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur',
@@ -50,6 +24,27 @@ const INDONESIA_PROVINCES = [
 ];
 
 const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string; icon: IconName }[] = [
+  {
+    id: 'qris',
+    label: 'QRIS (Semua Pembayaran)',
+    desc: 'Scan via GoPay, OVO, Dana, ShopeePay, BCA, Livin, BRImo, dll.',
+    badge: 'Instan',
+    icon: 'payments' as IconName,
+  },
+  {
+    id: 'va_bca',
+    label: 'Virtual Account BCA',
+    desc: 'Transfer via BCA mobile, myBCA, KlikBCA, atau ATM BCA.',
+    badge: 'Otomatis',
+    icon: 'receipt_long' as IconName,
+  },
+  {
+    id: 'va_mandiri',
+    label: 'Virtual Account Mandiri',
+    desc: 'Transfer via Livin by Mandiri, ATM Mandiri, atau internet banking.',
+    badge: 'Otomatis',
+    icon: 'receipt_long' as IconName,
+  },
   {
     id: 'va_bri',
     label: 'Virtual Account BRI (BRIVA)',
@@ -64,49 +59,6 @@ const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string
     badge: 'Otomatis',
     icon: 'receipt_long' as IconName,
   },
-  {
-    id: 'va_bsi',
-    label: 'Virtual Account BSI',
-    desc: 'Transfer via BSI Mobile, Net Banking BSI, atau ATM BSI.',
-    badge: 'Syariah',
-    icon: 'receipt_long' as IconName,
-  },
-  {
-    id: 'va_mandiri',
-    label: 'Virtual Account Mandiri',
-    desc: 'Transfer via Livin by Mandiri, ATM Mandiri, atau internet banking.',
-    badge: 'Otomatis',
-    icon: 'receipt_long' as IconName,
-  },
-  {
-    id: 'va_other',
-    label: 'TriPay VA (Bank Lainnya)',
-    desc: 'Transfer dari BCA, Permata, Danamon, CIMB, dan seluruh bank Indonesia.',
-    badge: 'Multi-Bank',
-    icon: 'receipt_long' as IconName,
-  },
-  {
-    id: 'retail_alfamart',
-    label: 'Alfamart / Alfamidi',
-    desc: 'Bayar tunai di kasir Alfamart, Alfamidi, atau Dan+Dan terdekat.',
-    badge: 'Tunai',
-    icon: 'store' as IconName,
-  },
-  {
-    id: 'retail_indomaret',
-    label: 'Indomaret',
-    desc: 'Bayar tunai di kasir Indomaret terdekat dengan kode bayar.',
-    badge: 'Tunai',
-    icon: 'store' as IconName,
-  },
-];
-
-// Sub-pilihan metode Midtrans (untuk UI saja — Midtrans Snap tetap menampilkan semua)
-const MIDTRANS_SUB_METHODS: { id: string; icon: IconName; label: string; desc: string }[] = [
-  { id: 'qris',    icon: 'payments',     label: 'QRIS',            desc: 'GoPay, OVO, Shopee, BCA' },
-  { id: 'va',      icon: 'receipt_long', label: 'Virtual Account', desc: 'BCA, Mandiri, BRI, BNI' },
-  { id: 'ewallet', icon: 'payments',     label: 'E-Wallet',        desc: 'GoPay & ShopeePay' },
-  { id: 'cc',      icon: 'credit_card',  label: 'Kartu Kredit',    desc: 'Visa, Mastercard, JCB' },
 ];
 
 const formatIDR = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
@@ -127,7 +79,7 @@ export default function CheckoutPage() {
   const [postalCode, setPostalCode] = useState('');
   const [phone, setPhone] = useState('');
   const [saveInfo, setSaveInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('va_bri');
+  const [paymentMethod, setPaymentMethod] = useState('qris');
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
@@ -185,53 +137,6 @@ export default function CheckoutPage() {
       });
     }
   }, [user, getAccessToken]);
-
-  // ── Embedded Midtrans Payment state ──────────────────────────────────────────
-  const [snapToken, setSnapToken] = useState<string | null>(null);
-  const [embeddedOrderNumber, setEmbeddedOrderNumber] = useState<string | null>(null);
-  const [copiedBank, setCopiedBank] = useState<string | null>(null);
-  const [midtransSubMethod, setMidtransSubMethod] = useState<string>('qris');
-
-  const copyBankToClipboard = (text: string, id: string) => {
-    try {
-      navigator.clipboard.writeText(text);
-      setCopiedBank(id);
-      setTimeout(() => setCopiedBank(null), 2000);
-    } catch {
-      // ignore
-    }
-  };
-
-  // ── Restore in-progress payment from sessionStorage (survives reload) ─────────
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('sevaya_checkout_pending');
-      if (!saved) return;
-      const data = JSON.parse(saved);
-      if (data.snapToken && data.orderNumber && data.expiresAt && Date.now() < data.expiresAt) {
-        setSnapToken(data.snapToken);
-        setEmbeddedOrderNumber(data.orderNumber);
-        setPaymentMethod('midtrans');
-        // Restore form fields so user sees context
-        if (data.email) setEmail(data.email);
-        if (data.firstName) setFirstName(data.firstName);
-        if (data.lastName) setLastName(data.lastName);
-        if (data.phone) setPhone(data.phone);
-        if (data.address) setAddress(data.address);
-        if (data.apartment) setApartment(data.apartment);
-        if (data.city) setCity(data.city);
-        if (data.province) setProvince(data.province);
-        if (data.postalCode) setPostalCode(data.postalCode);
-        if (data.selectedArea) setSelectedArea(data.selectedArea);
-        if (data.selectedRate) setSelectedRate(data.selectedRate);
-      } else {
-        sessionStorage.removeItem('sevaya_checkout_pending');
-      }
-    } catch {
-      // ignore
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Biteship shipping state ──────────────────────────────────────────────────
   const [areaQuery, setAreaQuery] = useState('');
@@ -345,11 +250,14 @@ export default function CheckoutPage() {
         items: JSON.stringify(orderItems),
       });
 
-      // Jika online payment (TriPay VA / Retail), request session lalu redirect langsung
-      if (paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'tripay' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
+      // Jika online payment (TriPay QRIS / VA / Retail), request transaksi lalu redirect langsung
+      if (paymentMethod === 'qris' || paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'tripay') {
         const snapRes = await fetch('/api/payment/snap-token', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({
             order_id: data.orderNumber,
             grand_total: displayTotal,
@@ -371,36 +279,15 @@ export default function CheckoutPage() {
 
         const snapData = await snapRes.json();
 
-        // TriPay gateway — langsung redirect ke halaman pembayaran TriPay
-        if (snapData.success && snapData.gateway === 'tripay' && snapData.payment_url) {
+        // TriPay gateway — langsung redirect ke halaman pembayaran resmi TriPay
+        if (snapData.success && snapData.payment_url) {
           if (items.length > 0 && clearCart) clearCart();
+          try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
           window.location.href = snapData.payment_url;
           return;
         }
 
-        if (!snapData.success || !snapData.token) {
-          throw new Error(snapData.error || 'Gagal menghubungi gateway pembayaran');
-        }
-
-        // Clear cart now
-        if (items.length > 0 && clearCart) clearCart();
-
-        // Store snap token in sessionStorage so confirmation page can open popup
-        try {
-          sessionStorage.setItem('sevaya_snap_pending', JSON.stringify({
-            snapToken: snapData.token,
-            orderNumber: data.orderNumber,
-            createdAt: Date.now(),
-            expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes timeout
-          }));
-        } catch { /* ignore */ }
-
-        // Invalidate profile orders cache so next visit shows fresh orders
-        try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
-
-        // Redirect to order-confirmation — Pay Now button lives there
-        router.push(`/order-confirmation?${queryParams.toString()}`);
-        return;
+        throw new Error(snapData.error || 'Gagal membuat sesi pembayaran TriPay');
       }
 
       // Fallback for manual transfer / COD
@@ -452,41 +339,6 @@ export default function CheckoutPage() {
     }, 600);
     return () => clearTimeout(timer);
   }, [areaQuery]);
-
-  // ── Re-mount Midtrans embed when snapToken changes (including after restore) ───
-  useEffect(() => {
-    if (!snapToken) return;
-    const token = snapToken;
-    const timer = setTimeout(async () => {
-      try {
-        const snapInstance = await loadSnapScript();
-        if (!snapInstance) return;
-        const embedContainer = document.getElementById('snap-embed-container');
-        if (embedContainer && typeof snapInstance.embed === 'function') {
-          snapInstance.embed(token, {
-            embedId: 'snap-embed-container',
-            onSuccess: () => {
-              try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
-              if (items.length > 0 && clearCart) clearCart();
-              window.location.href = `/order-confirmation?orderNumber=${embeddedOrderNumber}&payment_status=settlement`;
-            },
-            onPending: () => {
-              try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
-              window.location.href = `/order-confirmation?orderNumber=${embeddedOrderNumber}&payment_status=pending`;
-            },
-            onError: () => {
-              setSubmitError('Pembayaran gagal. Silakan coba lagi.');
-            },
-            onClose: () => { /* user closed */ },
-          });
-          const embedEl = document.getElementById('section-payment-embed');
-          if (embedEl) embedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } catch { /* ignore */ }
-    }, 400);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapToken]);
 
   // ── Fetch shipping rates when address + area ready ───────────────────────────
   useEffect(() => {
@@ -678,16 +530,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      {/* Midtrans Snap JS */}
-      <Script
-        src={
-          process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
-            ? 'https://app.midtrans.com/snap/snap.js'
-            : 'https://app.sandbox.midtrans.com/snap/snap.js'
-        }
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'Mid-client-3hvHlo_u41mlnJKP'}
-        strategy="afterInteractive"
-      />
       {/* ── Checkout Header ── */}
       <header className="sticky top-0 z-40 border-b border-black/15 bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -827,34 +669,6 @@ export default function CheckoutPage() {
 
           {/* ═══════════ LEFT — Form ═══════════ */}
           <div className="order-last lg:order-first space-y-8">
-
-            {/* ── PAYMENT LOCK BANNER — shown when Midtrans embed is active ── */}
-            {snapToken && (
-              <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <Icon name="lock" size={15} className="mt-0.5 shrink-0 text-amber-600" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-amber-800">Pembayaran sedang berlangsung</p>
-                  <p className="mt-0.5 text-[11px] text-amber-700">
-                    Detail pesanan dikunci. Selesaikan pembayaran atau{' '}
-                    <button
-                      type="button"
-                      className="underline hover:text-amber-900 font-medium"
-                      onClick={() => {
-                        setSnapToken(null);
-                        setEmbeddedOrderNumber(null);
-                        try { sessionStorage.removeItem('sevaya_checkout_pending'); } catch { /* ignore */ }
-                      }}
-                    >
-                      batalkan untuk mengubah
-                    </button>
-                    .
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Wrap seluruh form dengan fieldset — disabled otomatis mengunci semua input saat bayar */}
-            <fieldset disabled={!!snapToken} className="contents">{/* contents = no box, just semantic group */}
 
             {/* 1. Contact */}
             <section>
@@ -1158,10 +972,6 @@ export default function CheckoutPage() {
                           onClick={() => {
                             setPaymentMethod(m.id);
                             setPaymentDropdownOpen(false);
-                            if (m.id !== 'midtrans') {
-                              setSnapToken(null);
-                              setEmbeddedOrderNumber(null);
-                            }
                           }}
                           className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-black/5 ${
                             isSel ? 'bg-black/5 font-medium' : ''
@@ -1190,48 +1000,42 @@ export default function CheckoutPage() {
               </div>
 
               {/* KONTEN METODE TERPILIH */}
-              {/* Bayar via TriPay (Virtual Account / Gerai Ritel) */}
-              {(paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
+              {/* Bayar via TriPay (QRIS / Virtual Account) */}
+              {(paymentMethod === 'qris' || paymentMethod.startsWith('va') || paymentMethod === 'tripay') && (
                 <div className="rounded-lg border border-black/15 bg-black/[0.02] p-4 text-xs text-[#554C48] space-y-2.5">
                   <div className="flex items-start gap-2.5">
                     <Icon name="verified_user" size={16} className="text-black shrink-0 mt-0.5" />
                     <div className="space-y-1">
                       <p className="text-[12px] font-semibold text-black leading-snug">
-                        {paymentMethod === 'va_bri'
-                          ? 'Virtual Account BRI (BRIVA) — Verifikasi Otomatis 24 Jam'
-                          : paymentMethod === 'va_bni'
-                          ? 'Virtual Account BNI — Verifikasi Otomatis 24 Jam'
-                          : paymentMethod === 'va_bsi'
-                          ? 'Virtual Account BSI (Syariah) — Verifikasi Otomatis 24 Jam'
+                        {paymentMethod === 'qris'
+                          ? 'QRIS Real-Time — Verifikasi Otomatis Seketika'
+                          : paymentMethod === 'va_bca'
+                          ? 'Virtual Account BCA — Verifikasi Otomatis 24 Jam'
                           : paymentMethod === 'va_mandiri'
                           ? 'Virtual Account Mandiri — Verifikasi Otomatis 24 Jam'
-                          : paymentMethod === 'retail_alfamart'
-                          ? 'Alfamart / Alfamidi — Bayar Tunai di Kasir'
-                          : paymentMethod === 'retail_indomaret'
-                          ? 'Indomaret — Bayar Tunai di Kasir'
-                          : 'TriPay VA (Bank Lainnya) — Verifikasi Otomatis'}
+                          : paymentMethod === 'va_bri'
+                          ? 'Virtual Account BRI (BRIVA) — Verifikasi Otomatis 24 Jam'
+                          : 'Virtual Account BNI — Verifikasi Otomatis 24 Jam'}
                       </p>
                       <p className="text-[11px] text-[#554C48] leading-relaxed">
-                        {paymentMethod === 'va_bri'
-                          ? 'Dapat dibayar melalui BRImo, ATM BRI, Mini ATM / Agen BRILink, atau transfer dari bank lain.'
-                          : paymentMethod === 'va_bni'
-                          ? 'Dapat dibayar melalui BNI Mobile Banking, BNI Internet Banking, ATM BNI, atau transfer dari bank lain.'
-                          : paymentMethod === 'va_bsi'
-                          ? 'Dapat dibayar melalui BSI Mobile, Net Banking BSI, ATM BSI, atau transfer dari bank lain.'
+                        {paymentMethod === 'qris'
+                          ? 'Buka aplikasi e-wallet atau mobile banking favoritmu (GoPay, OVO, ShopeePay, Dana, BCA, Livin, BRImo, dll), scan kode QRIS, dan bayar. Transaksi diverifikasi otomatis detik itu juga.'
+                          : paymentMethod === 'va_bca'
+                          ? 'Dapat dibayar melalui BCA mobile, myBCA, KlikBCA, atau ATM BCA.'
                           : paymentMethod === 'va_mandiri'
                           ? 'Dapat dibayar melalui Livin by Mandiri, ATM Mandiri, ATM Bersama, atau internet banking Mandiri.'
-                          : paymentMethod === 'retail_alfamart'
-                          ? 'Setelah checkout, kamu akan mendapat kode bayar. Tunjukkan ke kasir Alfamart, Alfamidi, atau Dan+Dan terdekat. Berlaku 60 menit.'
-                          : paymentMethod === 'retail_indomaret'
-                          ? 'Setelah checkout, kamu akan mendapat kode bayar. Tunjukkan ke kasir Indomaret terdekat. Berlaku 60 menit.'
-                          : 'Dapat dibayar dari Mandiri, Danamon, Permata, CIMB Niaga, dan seluruh rekening bank di Indonesia.'}
+                          : paymentMethod === 'va_bri'
+                          ? 'Dapat dibayar melalui BRImo, ATM BRI, Mini ATM / Agen BRILink, atau transfer dari bank lain.'
+                          : 'Dapat dibayar melalui BNI Mobile Banking, BNI Internet Banking, ATM BNI, atau transfer dari bank lain.'}
                       </p>
                     </div>
                   </div>
                   <div className="border-t border-black/10 pt-2 text-[10px] text-[#7C726E] flex items-center justify-between">
                     <span>Ditenagai oleh gateway pembayaran resmi <strong>TriPay</strong></span>
                     <span className="font-medium text-emerald-700">
-                      {paymentMethod.startsWith('retail') ? 'Bayar Tunai — Tanpa Rekening Bank' : 'Verifikasi Instan Tanpa Upload Bukti'}
+                      {paymentMethod === 'qris'
+                        ? 'Scan & Bayar — Verifikasi Seketika'
+                        : 'Verifikasi Otomatis Tanpa Upload Bukti'}
                     </span>
                   </div>
                 </div>
@@ -1247,26 +1051,15 @@ export default function CheckoutPage() {
               )}
               <button
                 type="button"
-                onClick={
-                  snapToken
-                    ? () => {
-                        const el = document.getElementById('section-payment-embed');
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    : handleSubmitOrder
-                }
+                onClick={handleSubmitOrder}
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50 cursor-pointer"
               >
-                {isSubmitting
-                  ? 'Memproses Pesanan...'
-                  : snapToken
-                    ? 'Lanjutkan Pembayaran'
-                    : 'Bayar Sekarang'}
+                {isSubmitting ? 'Memproses Pesanan...' : 'Bayar Sekarang'}
               </button>
               <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
-                Pembayaran aman &amp; terenkripsi
+                Pembayaran aman &amp; terenkripsi via TriPay
               </p>
             </div>
 
@@ -1277,32 +1070,19 @@ export default function CheckoutPage() {
                   {submitError}
                 </div>
               )}
-              {/* CTA — mobile */}
               <button
                 type="button"
-                onClick={
-                  snapToken
-                    ? () => {
-                        const el = document.getElementById('section-payment-embed');
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    : handleSubmitOrder
-                }
+                onClick={handleSubmitOrder}
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-sm font-medium tracking-[0.1em] text-white uppercase transition hover:bg-[#322D29] disabled:opacity-50 cursor-pointer"
               >
-                {isSubmitting
-                  ? 'Memproses Pesanan...'
-                  : snapToken
-                    ? 'Lanjutkan Pembayaran'
-                    : 'Bayar Sekarang'}
+                {isSubmitting ? 'Memproses Pesanan...' : 'Bayar Sekarang'}
               </button>
               <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
-                Pembayaran aman &amp; terenkripsi
+                Pembayaran aman &amp; terenkripsi via TriPay
               </p>
             </div>
-            </fieldset>
           </div>
         </div>
       </main>

@@ -46,7 +46,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
         </header>
 
         {/* Hero Photo */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-black/5 mb-8">
+        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-black/5 mb-2">
           <Image
             src={article.image}
             alt={article.title}
@@ -56,6 +56,10 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
             sizes="(max-width: 768px) 100vw, 800px"
           />
         </div>
+        {/* Hero Caption */}
+        <p className="text-[10px] text-center text-[#777777] italic tracking-wide mb-8">
+          {article.hero_caption || t('news.atelier_caption')}
+        </p>
 
         {/* Article Body Content */}
         <article className="prose prose-neutral max-w-none space-y-6 text-[#222222] text-xs sm:text-[13px] leading-relaxed">
