@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
-import { createDokuCheckoutSession } from '@/integrations/doku';
+import { createTripayTransaction } from '@/integrations/tripay';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
       items: clientItems,
       customer: clientCustomer,
       payment_method,
-      payment_method_types,
     } = body;
 
     if (!order_id) {
@@ -69,44 +68,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // DOKU Payment Gateway
-    let selectedMethodTypes = payment_method_types;
-    if (!selectedMethodTypes) {
-      if (payment_method === 'va_bri')              selectedMethodTypes = ['VIRTUAL_ACCOUNT_BRI'];
-      else if (payment_method === 'va_bni')         selectedMethodTypes = ['VIRTUAL_ACCOUNT_BNI'];
-      else if (payment_method === 'va_bsi')         selectedMethodTypes = ['VIRTUAL_ACCOUNT_BSI'];
-      else if (payment_method === 'va_mandiri')     selectedMethodTypes = ['VIRTUAL_ACCOUNT_BANK_MANDIRI'];
-      else if (payment_method === 'va_other')       selectedMethodTypes = ['VIRTUAL_ACCOUNT_DOKU'];
-      else if (payment_method === 'retail_alfamart')   selectedMethodTypes = ['ONLINE_TO_OFFLINE_ALFA'];
-      else if (payment_method === 'retail_indomaret')  selectedMethodTypes = ['ONLINE_TO_OFFLINE_INDOMARET'];
-    }
+    // Mapping payment_method → TriPay channel code
+    const tripayChannelMap: Record<string, string> = {
+      va_bri:            'BRIVA',
+      va_bni:            'BNIVA',
+      va_bsi:            'BSIVA',
+      va_mandiri:        'MANDIRIVA',
+      va_other:          'BCAVA',
+      retail_alfamart:   'ALFAMART',
+      retail_indomaret:  'INDOMARET',
+    };
+
+    const tripayChannel = tripayChannelMap[payment_method] || 'BRIVA';
 
     const customerFullName =
       [finalCustomer?.first_name, finalCustomer?.last_name].filter(Boolean).join(' ') ||
       'Pelanggan SEVAYA';
 
-    const dokuSession = await createDokuCheckoutSession({
-      order_id,
+    const tripayResult = await createTripayTransaction({
+      merchant_ref: order_id,
+      method: tripayChannel,
       amount: finalGrandTotal,
-      payment_method_types: selectedMethodTypes,
-      items: finalItems?.map((it: any) => ({
+      customer_name: customerFullName,
+      customer_email: finalCustomer?.email || 'customer@sevaya.id',
+      customer_phone: finalCustomer?.phone || '',
+      order_items: (finalItems || []).map((it: any) => ({
         name: it.name || it.title || 'Produk SEVAYA',
         price: Math.round(Number(it.price) || finalGrandTotal),
         quantity: Math.max(1, Math.round(Number(it.quantity) || 1)),
       })),
-      customer: {
-        name: customerFullName,
-        email: finalCustomer?.email || 'customer@sevaya.id',
-        phone: finalCustomer?.phone || '',
-      },
     });
 
-    console.log(`[DOKU Session] Order: ${order_id}, URL: ${dokuSession.payment_url}`);
+    console.log(`[TriPay Transaction] Order: ${order_id}, Channel: ${tripayChannel}, URL: ${tripayResult.payment_url}`);
 
     return NextResponse.json({
       success: true,
-      gateway: 'doku',
-      payment_url: dokuSession.payment_url,
+      gateway: 'tripay',
+      payment_url: tripayResult.payment_url,
+      reference: tripayResult.reference,
       gross_amount: finalGrandTotal,
     });
 

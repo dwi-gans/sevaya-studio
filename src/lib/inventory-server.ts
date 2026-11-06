@@ -370,7 +370,7 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
 
 /**
  * Kurangi stok secara otomatis untuk setiap item dalam pesanan yang sudah dibayar.
- * Dipanggil dari DOKU webhook dan admin PATCH order status → 'paid'.
+ * Dipanggil dari TriPay webhook dan admin PATCH order status → 'paid'.
  * Aman dijalankan lebih dari sekali karena idempotent per variantId (tidak re-deduct jika stok sudah 0).
  */
 export async function deductStockForOrder(

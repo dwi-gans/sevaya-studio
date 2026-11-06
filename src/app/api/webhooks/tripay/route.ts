@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
-import { verifyDokuWebhookSignature } from '@/integrations/doku';
+import { verifyTripayCallback } from '@/integrations/tripay';
 import { sendOrderCancelledEmail, sendOrderPaidReceiptEmail } from '@/lib/order-email';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { deductStockForOrder } from '@/lib/inventory-server';
 
-// In-memory idempotency cache to prevent concurrent webhook duplicate emails
+// In-memory idempotency cache untuk mencegah duplikasi email dari webhook ganda
 const dispatchedReceipts = new Set<string>();
 
 export async function POST(req: NextRequest) {
@@ -15,75 +15,43 @@ export async function POST(req: NextRequest) {
     try {
       notification = JSON.parse(rawBody);
     } catch {
-      return NextResponse.json({ message: 'Invalid JSON payload' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    const clientId = req.headers.get('client-id');
-    const requestId = req.headers.get('request-id');
-    const requestTimestamp = req.headers.get('request-timestamp');
-    const signature = req.headers.get('signature');
-
-    // 1. Verify DOKU signature
-    const isValid = verifyDokuWebhookSignature(
-      rawBody,
-      { clientId, requestId, requestTimestamp, signature },
-      '/api/webhooks/doku',
-    );
+    // 1. Verifikasi signature TriPay dari header X-Callback-Signature
+    const receivedSignature = req.headers.get('X-Callback-Signature') || '';
+    const isValid = verifyTripayCallback(rawBody, receivedSignature);
 
     if (!isValid) {
-      console.warn('[DOKU Webhook] Signature mismatch or unverified notification:', {
-        clientId,
-        requestId,
-      });
+      console.warn('[TriPay Webhook] Signature mismatch atau notifikasi tidak terverifikasi');
       if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ message: 'Invalid or missing signature' }, { status: 401 });
+        return NextResponse.json({ success: false, message: 'Invalid signature' }, { status: 401 });
       }
     }
 
-    // 2. Parse DOKU payload format (supports Standard DOKU Checkout & SNAP format)
-    const orderNumber =
-      notification.order?.invoice_number ||
-      notification.originalPartnerReferenceNo ||
-      notification.invoice_number;
-
-    const transactionStatus =
-      notification.transaction?.status ||
-      notification.order?.status ||
-      notification.latestTransactionStatus ||
-      notification.transactionStatusDesc ||
-      '';
-
-    const paymentChannel =
-      notification.transaction?.payment_channel ||
-      notification.additionalInfo?.channel ||
-      notification.payment_channel ||
-      'DOKU Online';
-
-    const paidAmount =
-      Number(notification.order?.amount) ||
-      Number(notification.amount?.value) ||
-      Number(notification.amount) ||
-      0;
+    // 2. Parse payload TriPay
+    const orderNumber = notification.merchant_ref;
+    const tripayStatus = String(notification.status || '').toUpperCase();
+    const paymentChannel = notification.payment_method || notification.payment_method_code || 'TriPay';
+    const paidAmount = Number(notification.amount_received || notification.total_amount || 0);
 
     if (!orderNumber) {
-      console.warn('[DOKU Webhook] Missing order number in payload:', notification);
-      return NextResponse.json({ message: 'Missing invoice number' }, { status: 400 });
+      console.warn('[TriPay Webhook] merchant_ref tidak ada dalam payload:', notification);
+      return NextResponse.json({ success: false, message: 'Missing merchant_ref' }, { status: 400 });
     }
 
-    console.log(`[DOKU Webhook] Order: ${orderNumber}, Status: ${transactionStatus}, Channel: ${paymentChannel}`);
+    console.log(`[TriPay Webhook] Order: ${orderNumber}, Status: ${tripayStatus}, Channel: ${paymentChannel}`);
 
-    // Map DOKU status to internal order status
-    // DOKU success codes: 'SUCCESS', '00', 'SETTLEMENT', 'COMPLETED'
-    const statusNormalized = String(transactionStatus).toUpperCase();
+    // 3. Map status TriPay → status internal
+    // PAID = lunas, EXPIRED/FAILED = batal, UNPAID/WAITING = pending
     let internalStatus = 'pending_payment';
-
-    if (['SUCCESS', '00', 'SETTLEMENT', 'COMPLETED', 'CAPTURE'].includes(statusNormalized)) {
+    if (tripayStatus === 'PAID') {
       internalStatus = 'paid';
-    } else if (['FAILED', 'EXPIRED', 'CANCELLED', '06', '07'].includes(statusNormalized)) {
+    } else if (['EXPIRED', 'FAILED', 'CANCELLED'].includes(tripayStatus)) {
       internalStatus = 'cancelled';
     }
 
-    // 3. Check existing order
+    // 4. Cek order di database
     const { data: existingOrder } = await supabaseAdmin
       .from('orders')
       .select('*')
@@ -91,28 +59,28 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (!existingOrder) {
-      console.warn(`[DOKU Webhook] Order ${orderNumber} not found in database.`);
-      return NextResponse.json({ responseCode: '2000700', responseMessage: 'Order not found, acknowledged' });
+      console.warn(`[TriPay Webhook] Order ${orderNumber} tidak ditemukan di database.`);
+      return NextResponse.json({ success: true, message: 'Order not found, acknowledged' });
     }
 
-    // Prevent amount tampering
+    // 5. Proteksi amount tampering
     if (internalStatus === 'paid' && existingOrder.grand_total > 0 && paidAmount > 0) {
       if (paidAmount < Math.round(existingOrder.grand_total)) {
         console.error(
-          `[DOKU Security Alert] Paid amount (${paidAmount}) is less than expected (${existingOrder.grand_total}) for order ${orderNumber}!`,
+          `[TriPay Security Alert] Jumlah dibayar (${paidAmount}) kurang dari yang diharapkan (${existingOrder.grand_total}) untuk order ${orderNumber}!`,
         );
-        return NextResponse.json({ message: 'Amount mismatch' }, { status: 400 });
+        return NextResponse.json({ success: false, message: 'Amount mismatch' }, { status: 400 });
       }
     }
 
     const wasAlreadyPaid = existingOrder.status === 'paid' || existingOrder.status === 'processing';
 
-    // 4. Update order in Supabase
+    // 6. Update order di Supabase
     const { data: updatedOrder, error } = await supabaseAdmin
       .from('orders')
       .update({
         status: internalStatus,
-        payment_method: `DOKU (${paymentChannel})`,
+        payment_method: `TriPay (${paymentChannel})`,
         updated_at: new Date().toISOString(),
       })
       .eq('order_number', orderNumber)
@@ -120,10 +88,10 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[DOKU Webhook] DB update error:', error.message);
+      console.error('[TriPay Webhook] DB update error:', error.message);
     } else if (internalStatus === 'paid' && updatedOrder && !wasAlreadyPaid && !dispatchedReceipts.has(orderNumber)) {
       dispatchedReceipts.add(orderNumber);
-      // Prune after 1 hour to prevent memory leaks
+      // Hapus dari cache setelah 1 jam untuk mencegah memory leak
       setTimeout(() => dispatchedReceipts.delete(orderNumber), 60 * 60 * 1000);
 
       let items: any[] = [];
@@ -133,18 +101,18 @@ export async function POST(req: NextRequest) {
         items = [];
       }
 
-      // 5. Auto-deduct inventory stock for each purchased variant
+      // 7. Kurangi stok otomatis
       try {
         await deductStockForOrder(
           items,
           orderNumber,
-          updatedOrder.customer_name || 'Pelanggan'
+          updatedOrder.customer_name || 'Pelanggan',
         );
       } catch (stockErr) {
-        console.warn('[DOKU Webhook] Stock deduction warning:', stockErr);
+        console.warn('[TriPay Webhook] Stock deduction warning:', stockErr);
       }
 
-      // 6. Send receipt email to customer (strictly isolated in try/catch)
+      // 8. Kirim email bukti pembayaran ke pelanggan
       try {
         await sendOrderPaidReceiptEmail({
           orderNumber: updatedOrder.order_number,
@@ -157,25 +125,25 @@ export async function POST(req: NextRequest) {
           discount: Number(updatedOrder.discount || 0),
           shippingCost: Number(updatedOrder.shipping_cost || 0),
           grandTotal: Number(updatedOrder.grand_total || 0),
-          paymentMethod: updatedOrder.payment_method || 'DOKU',
+          paymentMethod: updatedOrder.payment_method || 'TriPay',
           courierName: updatedOrder.courier_name,
           createdAt: updatedOrder.created_at,
         });
 
-        // Record receipt sent timestamp in database if column exists
+        // Catat timestamp email terkirim
         try {
           await supabaseAdmin
             .from('orders')
             .update({ receipt_sent_at: new Date().toISOString() })
             .eq('order_number', orderNumber);
         } catch {
-          // Non-critical if column doesn't exist
+          // Non-critical jika kolom belum ada
         }
       } catch (mailErr) {
-        console.warn('[DOKU Webhook Paid Email Error]:', mailErr);
+        console.warn('[TriPay Webhook Paid Email Error]:', mailErr);
       }
 
-      // 6. Send admin order notification
+      // 9. Kirim notifikasi ke admin
       try {
         await sendAdminOrderNotification({
           orderNumber: updatedOrder.order_number,
@@ -190,16 +158,16 @@ export async function POST(req: NextRequest) {
           shippingCost: Number(updatedOrder.shipping_cost || 0),
           discount: Number(updatedOrder.discount || 0),
           grandTotal: Number(updatedOrder.grand_total || 0),
-          paymentMethod: updatedOrder.payment_method || 'DOKU',
+          paymentMethod: updatedOrder.payment_method || 'TriPay',
           courierName: updatedOrder.courier_name,
         });
       } catch (adminMailErr) {
-        console.warn('[DOKU Admin Email Error]:', adminMailErr);
+        console.warn('[TriPay Admin Email Error]:', adminMailErr);
       }
     } else if (internalStatus === 'cancelled' && updatedOrder && existingOrder.status !== 'cancelled') {
-      // Send cancellation email
+      // Kirim email pembatalan
       try {
-        let items = [];
+        let items: any[] = [];
         try {
           items = typeof updatedOrder.items === 'string' ? JSON.parse(updatedOrder.items) : updatedOrder.items || [];
         } catch {
@@ -216,10 +184,10 @@ export async function POST(req: NextRequest) {
           discount: Number(updatedOrder.discount || 0),
           shippingCost: Number(updatedOrder.shipping_cost || 0),
           grandTotal: Number(updatedOrder.grand_total || 0),
-          paymentMethod: updatedOrder.payment_method || 'DOKU',
+          paymentMethod: updatedOrder.payment_method || 'TriPay',
           courierName: updatedOrder.courier_name,
           createdAt: updatedOrder.created_at,
-          cancelReason: `Dibatalkan dari DOKU: ${statusNormalized}`,
+          cancelReason: `Dibatalkan dari TriPay: ${tripayStatus}`,
         });
         await sendAdminOrderNotification({
           orderNumber: updatedOrder.order_number,
@@ -234,22 +202,19 @@ export async function POST(req: NextRequest) {
           shippingCost: Number(updatedOrder.shipping_cost || 0),
           discount: Number(updatedOrder.discount || 0),
           grandTotal: Number(updatedOrder.grand_total || 0),
-          paymentMethod: updatedOrder.payment_method || 'DOKU',
+          paymentMethod: updatedOrder.payment_method || 'TriPay',
           courierName: updatedOrder.courier_name,
-          cancelReason: `Status DOKU: ${statusNormalized}`,
+          cancelReason: `Status TriPay: ${tripayStatus}`,
         });
       } catch (cancelMailErr) {
-        console.warn('[DOKU Webhook Cancel Email Error]:', cancelMailErr);
+        console.warn('[TriPay Webhook Cancel Email Error]:', cancelMailErr);
       }
     }
 
-    // Official DOKU acknowledgement response
-    return NextResponse.json({
-      responseCode: '2000700',
-      responseMessage: 'Successful',
-    });
+    // Response wajib TriPay: { success: true }
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[DOKU Webhook Handler Fatal Error]:', err);
+    console.error('[TriPay Webhook Handler Fatal Error]:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -189,8 +189,8 @@ export default function OrderDetailPage({
       });
       const snapData = await snapRes.json();
 
-      // DOKU gateway — redirect langsung ke halaman pembayaran DOKU
-      if (snapData.success && snapData.gateway === 'doku' && snapData.payment_url) {
+      // TriPay gateway — redirect langsung ke halaman pembayaran TriPay
+      if (snapData.success && snapData.gateway === 'tripay' && snapData.payment_url) {
         window.location.href = snapData.payment_url;
         return;
       }
@@ -656,10 +656,10 @@ export default function OrderDetailPage({
                     : order.payment_method === 'retail_indomaret'
                     ? 'Indomaret'
                     : order.payment_method === 'va_other'
-                    ? 'DOKU VA (Bank Lainnya)'
-                    : order.payment_method?.startsWith('DOKU')
+                    ? 'TriPay VA (Bank Lainnya)'
+                    : order.payment_method?.startsWith('TriPay')
                     ? order.payment_method
-                    : 'Virtual Account (DOKU)'}
+                    : 'Virtual Account (TriPay)'}
                 </p>
                 <p className="text-black/70">
                   Email: {order.customer_email || '—'}

@@ -80,8 +80,8 @@ const PAYMENT_METHODS: { id: string; label: string; desc: string; badge?: string
   },
   {
     id: 'va_other',
-    label: 'DOKU VA (Bank Lainnya)',
-    desc: 'Transfer dari Permata, Danamon, CIMB, dan seluruh bank Indonesia.',
+    label: 'TriPay VA (Bank Lainnya)',
+    desc: 'Transfer dari BCA, Permata, Danamon, CIMB, dan seluruh bank Indonesia.',
     badge: 'Multi-Bank',
     icon: 'receipt_long' as IconName,
   },
@@ -345,8 +345,8 @@ export default function CheckoutPage() {
         items: JSON.stringify(orderItems),
       });
 
-      // If online payment (DOKU VA / Retail), request session then redirect directly
-      if (paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'doku' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
+      // Jika online payment (TriPay VA / Retail), request session lalu redirect langsung
+      if (paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'tripay' || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') {
         const snapRes = await fetch('/api/payment/snap-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -371,8 +371,8 @@ export default function CheckoutPage() {
 
         const snapData = await snapRes.json();
 
-        // DOKU gateway — langsung redirect ke halaman pembayaran DOKU
-        if (snapData.success && snapData.gateway === 'doku' && snapData.payment_url) {
+        // TriPay gateway — langsung redirect ke halaman pembayaran TriPay
+        if (snapData.success && snapData.gateway === 'tripay' && snapData.payment_url) {
           if (items.length > 0 && clearCart) clearCart();
           window.location.href = snapData.payment_url;
           return;
@@ -1190,7 +1190,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* KONTEN METODE TERPILIH */}
-              {/* Bayar via DOKU (Virtual Account / Gerai Ritel) */}
+              {/* Bayar via TriPay (Virtual Account / Gerai Ritel) */}
               {(paymentMethod.startsWith('va') || paymentMethod.startsWith('retail') || paymentMethod === 'midtrans' || paymentMethod === 'qris' || paymentMethod === 'va') && (
                 <div className="rounded-lg border border-black/15 bg-black/[0.02] p-4 text-xs text-[#554C48] space-y-2.5">
                   <div className="flex items-start gap-2.5">
@@ -1209,7 +1209,7 @@ export default function CheckoutPage() {
                           ? 'Alfamart / Alfamidi — Bayar Tunai di Kasir'
                           : paymentMethod === 'retail_indomaret'
                           ? 'Indomaret — Bayar Tunai di Kasir'
-                          : 'DOKU Virtual Account (Bank Lainnya) — Verifikasi Otomatis'}
+                          : 'TriPay VA (Bank Lainnya) — Verifikasi Otomatis'}
                       </p>
                       <p className="text-[11px] text-[#554C48] leading-relaxed">
                         {paymentMethod === 'va_bri'
@@ -1229,7 +1229,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <div className="border-t border-black/10 pt-2 text-[10px] text-[#7C726E] flex items-center justify-between">
-                    <span>Ditenagai oleh gateway pembayaran resmi <strong>DOKU</strong></span>
+                    <span>Ditenagai oleh gateway pembayaran resmi <strong>TriPay</strong></span>
                     <span className="font-medium text-emerald-700">
                       {paymentMethod.startsWith('retail') ? 'Bayar Tunai — Tanpa Rekening Bank' : 'Verifikasi Instan Tanpa Upload Bukti'}
                     </span>

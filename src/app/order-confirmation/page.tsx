@@ -64,8 +64,8 @@ function getPaymentMethodLabel(method: string) {
     case 'va_mandiri': return 'Virtual Account Mandiri';
     case 'retail_alfamart': return 'Alfamart / Alfamidi';
     case 'retail_indomaret': return 'Indomaret';
-    case 'va_other': return 'DOKU VA (Bank Lainnya)';
-    default: return 'DOKU Virtual Account';
+    case 'va_other': return 'TriPay VA (Bank Lainnya)';
+    default: return 'TriPay Virtual Account';
   }
 }
 
@@ -326,11 +326,11 @@ function OrderConfirmationContent() {
                   </div>
                 </div>
 
-                {/* DOKU Online payment */}
+                {/* TriPay Online payment */}
                 <div className="space-y-3">
                   <p className="text-xs text-neutral-600 leading-relaxed">
-                    Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>DOKU</strong>.
-                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, Mandiri, DOKU VA) dan <strong>Gerai Ritel</strong> (Alfamart &amp; Indomaret).
+                    Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>TriPay</strong>.
+                    Tersedia pilihan <strong>Virtual Account</strong> (BRI, BNI, BSI, Mandiri, BCA) dan <strong>Gerai Ritel</strong> (Alfamart &amp; Indomaret).
                   </p>
 
                   {payError && (
@@ -350,7 +350,7 @@ function OrderConfirmationContent() {
                   </button>
 
                   <p className="text-[10px] text-neutral-400 text-center">
-                    Anda akan diarahkan ke halaman pembayaran aman DOKU. Setelah bayar, status otomatis diperbarui.
+                    Anda akan diarahkan ke halaman pembayaran aman TriPay. Setelah bayar, status otomatis diperbarui.
                   </p>
                 </div>
 

@@ -133,10 +133,10 @@ export default function SimplePaymentPage({
 
       const snapData = await res.json();
       if (!snapData.success || !snapData.payment_url) {
-        throw new Error(snapData.error || 'Gagal memuat sesi pembayaran DOKU');
+        throw new Error(snapData.error || 'Gagal memuat sesi pembayaran TriPay');
       }
 
-      // Redirect directly to DOKU Checkout
+      // Redirect langsung ke TriPay Checkout
       window.location.href = snapData.payment_url;
     } catch (err: any) {
       setErrorMessage(err.message || 'Terjadi gangguan saat membuka pembayaran');
@@ -205,9 +205,9 @@ export default function SimplePaymentPage({
 
           <div className="space-y-4">
             <div className="border border-black/10 bg-[#FAFAFA] p-4 text-xs text-black/70 space-y-2">
-              <p className="font-semibold text-black">Pembayaran Online (DOKU Checkout)</p>
+              <p className="font-semibold text-black">Pembayaran Online (TriPay Checkout)</p>
               <p className="text-[11px] text-black/60">
-                Mendukung Virtual Account (BRI, BNI, BSI, Mandiri, DOKU VA) dan Gerai Ritel (Alfamart &amp; Indomaret).
+                Mendukung Virtual Account (BRI, BNI, BSI, Mandiri, BCA) dan Gerai Ritel (Alfamart &amp; Indomaret).
               </p>
             </div>
 

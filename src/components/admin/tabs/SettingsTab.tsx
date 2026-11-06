@@ -45,17 +45,17 @@ export const SettingsTab: React.FC = () => {
 
           <div className="rounded-xl bg-black/5 p-4 text-xs border border-black/15/60 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-sm text-black">DOKU Gateway</span>
+              <span className="font-semibold text-sm text-black">TriPay Gateway</span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-800">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                 Active Gateway
               </span>
             </div>
             <p className="text-[11px] text-black/70">
-              BRN-0202-1793525474119 • QRIS, Virtual Account, Cards
+              T53774 • QRIS, Virtual Account, Ritel
             </p>
             <div className="pt-2 border-t border-black/15/70 text-[11px] text-[#554C48]">
-              Konfirmasi pembayaran otomatis via webhook /api/webhooks/doku.
+              Konfirmasi pembayaran otomatis via webhook /api/webhooks/tripay.
             </div>
           </div>
         </div>
