@@ -29,27 +29,60 @@ const DEFAULT_COLOR_OPTIONS: ProductColorOption[] = [
 
 const QUALITY_OPTIONS = ['Top Notch', 'Almost Perfect', 'Visible Marks'];
 
-/** Buat daftar warna awal dari swatches produk, dengan status sold-out dari data varian */
+/** Buat daftar warna awal dari swatches produk, dengan status sold-out dari data varian dan foto cerdas */
 function buildColorOptions(
   swatches: Array<{ name: string; color: string; image?: string }> | undefined,
   fallbackImage: string,
-  variants: ProductVariant[]
+  variants: ProductVariant[],
+  extraImages?: string[]
 ): ProductColorOption[] {
   if (!swatches || swatches.length === 0) return DEFAULT_COLOR_OPTIONS;
 
-  return swatches.map((s) => {
+  return swatches.map((s, idx) => {
     const colorVariants = variants.filter(
       (v) => v.colorName.toLowerCase() === s.name.toLowerCase()
     );
     const isColorSoldOut =
       colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
+
+    // Ambil foto yang tepat:
+    // 1. s.image jika ada
+    // 2. Jika s.image kosong, gunakan foto galeri produk sesuai index (extraImages?.[idx])
+    // 3. Fallback ke fallbackImage (foto utama produk)
+    const photo =
+      (s.image && s.image.trim()) ||
+      (extraImages && extraImages[idx] && extraImages[idx].trim()) ||
+      fallbackImage;
+
     return {
       name: s.name,
       hex: s.color,
-      image: s.image || fallbackImage,
+      image: photo,
       outOfStock: isColorSoldOut,
     };
   });
+}
+
+/** Susun seluruh foto galeri produk secara unik (foto utama + galeri + foto setiap varian warna) */
+function buildGalleryList(
+  mainImage?: string,
+  extraImages?: string[],
+  swatches?: Array<{ image?: string }>
+): string[] {
+  const result: string[] = [];
+  const pushUnique = (img?: string) => {
+    if (!img) return;
+    const clean = img.trim();
+    if (clean && !result.includes(clean)) {
+      result.push(clean);
+    }
+  };
+
+  pushUnique(mainImage);
+  if (Array.isArray(extraImages)) extraImages.forEach(pushUnique);
+  if (Array.isArray(swatches)) swatches.forEach((s) => pushUnique(s.image));
+
+  return result.length > 0 ? result : ['/images/catalog/catalog-01.jpg'];
 }
 
 interface ProductDetailClientProps {
@@ -71,12 +104,13 @@ export function ProductDetailClient({
   // Semua produk dari DB (untuk Related Products)
   const [allDbProducts, setAllDbProducts] = useState<DbProduct[]>([]);
 
-  // Warna awal dihitung sekali dari SSR data
+  // Warna awal dihitung sekali dari SSR data (dengan fallback cerdas ke foto galeri)
   const [colors, setColors] = useState<ProductColorOption[]>(() =>
     buildColorOptions(
       initialProduct.swatches,
       initialProduct.image || '/images/catalog/catalog-01.jpg',
-      initialVariants
+      initialVariants,
+      initialProduct.images
     )
   );
 
@@ -92,22 +126,41 @@ export function ProductDetailClient({
   const [selectedQuality, setSelectedQuality] = useState<string>(QUALITY_OPTIONS[0]!);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<string>(
-    () => initialProduct.image || colors[0]?.image || '/images/catalog/catalog-01.jpg'
+    () => colors[0]?.image || initialProduct.image || '/images/catalog/catalog-01.jpg'
   );
 
   const [fabricOpen, setFabricOpen] = useState(false);
   const [sizingOpen, setSizingOpen] = useState(false);
 
-  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
-    // Hanya gunakan foto utama produk + koleksi foto tambahan (images[])
-    // TIDAK termasuk swatch images agar gallery tidak membanjir
-    const list = [
-      initialProduct.image || '',
-      ...(initialProduct.images || []),
-    ].filter(Boolean);
-    const unique = Array.from(new Set(list));
-    return unique.length > 0 ? unique : [initialProduct.image || '/images/catalog/catalog-01.jpg'];
-  });
+  // Galeri foto lengkap: foto utama + semua foto tambahan + foto tiap varian warna
+  const [galleryImages, setGalleryImages] = useState<string[]>(() =>
+    buildGalleryList(
+      initialProduct.image,
+      initialProduct.images,
+      initialProduct.swatches
+    )
+  );
+
+  // Handler saat user mengklik Swatch Warna:
+  // 1. Ubah warna terpilih
+  // 2. Ubah gambar utama ke foto varian warna tersebut
+  const handleSelectColor = (colorOption: ProductColorOption) => {
+    setSelectedColor(colorOption);
+    if (colorOption.image) {
+      setActiveImage(colorOption.image);
+    }
+  };
+
+  // Handler saat user mengklik thumbnail di galeri bawah (Two-way sync):
+  // 1. Ubah gambar utama ke thumbnail yang diklik
+  // 2. Jika foto ini adalah foto salah satu warna, otomatis pilih warna tersebut
+  const handleSelectGalleryImage = (imgSrc: string) => {
+    setActiveImage(imgSrc);
+    const matchedColor = colors.find((c) => c.image === imgSrc);
+    if (matchedColor && matchedColor.name.toLowerCase() !== selectedColor.name.toLowerCase()) {
+      setSelectedColor(matchedColor);
+    }
+  };
 
   // Stok varian spesifik yang dipilih (warna + size)
   const selectedVariantStock = useMemo(() => {
@@ -185,28 +238,25 @@ export function ProductDetailClient({
       if (!hasChanged) return;
 
       setDbProduct(found);
-      if (found.swatches && found.swatches.length > 0) {
-        const freshColors = buildColorOptions(
-          found.swatches,
-          found.image || '/images/catalog/catalog-01.jpg',
-          variants
-        );
-        setColors(freshColors);
-        setSelectedColor(freshColors[0]!);
-        setActiveImage(freshColors[0]!.image);
+      const freshColors = buildColorOptions(
+        found.swatches,
+        found.image || '/images/catalog/catalog-01.jpg',
+        variants,
+        found.images
+      );
+      setColors(freshColors);
 
-        // Hanya foto utama + images[] — TIDAK include swatch images
-        const thumbs = Array.from(
-          new Set(
-            [found.image || '', ...(found.images || [])].filter(Boolean) as string[]
-          )
+      // PERBAIKAN BUG: Pertahankan warna yang SEDANG DIPILIH oleh user (jangan di-reset ke warna pertama!)
+      setSelectedColor((prevSelected) => {
+        const matched = freshColors.find(
+          (c) => c.name.toLowerCase() === prevSelected.name.toLowerCase()
         );
-        if (thumbs.length > 0) {
-          setGalleryImages(thumbs);
-        }
-      } else if (found.image) {
-        setActiveImage(found.image);
-      }
+        return matched || freshColors[0]!;
+      });
+
+      // Perbarui galeri foto lengkap
+      const thumbs = buildGalleryList(found.image, found.images, found.swatches);
+      setGalleryImages(thumbs);
     });
 
     // Refresh data varian dari API
@@ -358,24 +408,18 @@ export function ProductDetailClient({
                       <div key={c.name} className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => {
-                            if (!c.outOfStock) {
-                              setSelectedColor(c);
-                              setActiveImage(c.image);
-                            }
-                          }}
-                          disabled={c.outOfStock}
-                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+                          onClick={() => handleSelectColor(c)}
+                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 cursor-pointer ${
                             c.outOfStock
-                              ? 'opacity-40 cursor-not-allowed'
-                              : 'cursor-pointer'
+                              ? 'opacity-70'
+                              : ''
                           } ${
                             isSelected
                               ? 'ring-1 ring-black ring-offset-2 ring-offset-white scale-105'
                               : 'ring-1 ring-black/20 hover:ring-black/60'
                           }`}
-                          title={c.outOfStock ? `${c.name} — Habis` : c.name}
-                          aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Habis)' : ''}`}
+                          title={c.outOfStock ? `${c.name} — Stok Habis` : c.name}
+                          aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Stok Habis)' : ''}`}
                         >
                           <span
                             className="h-full w-full rounded-full border border-black/10 transition-transform duration-150"
@@ -600,7 +644,12 @@ export function ProductDetailClient({
                   alt={`${title} - ${selectedColor.name}`}
                   fill
                   priority
-                  className="object-cover object-top transition-all duration-300"
+                  unoptimized={
+                    !activeImage.startsWith('/') &&
+                    !activeImage.includes('supabase.co') &&
+                    !activeImage.includes('unsplash.com')
+                  }
+                  className="object-cover object-top transition-opacity duration-300"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </div>
@@ -613,11 +662,11 @@ export function ProductDetailClient({
                       <button
                         key={`${imgSrc}-${idx}`}
                         type="button"
-                        onClick={() => setActiveImage(imgSrc)}
+                        onClick={() => handleSelectGalleryImage(imgSrc)}
                         className={`relative h-16 w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
                           isActive
-                            ? 'ring-2 ring-black ring-offset-1'
-                            : 'opacity-70 hover:opacity-100 border border-black/10'
+                            ? 'ring-2 ring-black ring-offset-1 opacity-100 scale-102'
+                            : 'opacity-65 hover:opacity-100 border border-black/10'
                         }`}
                         aria-label={`Thumbnail photo ${idx + 1}`}
                       >
@@ -625,6 +674,11 @@ export function ProductDetailClient({
                           src={imgSrc}
                           alt={`Thumbnail ${idx + 1}`}
                           fill
+                          unoptimized={
+                            !imgSrc.startsWith('/') &&
+                            !imgSrc.includes('supabase.co') &&
+                            !imgSrc.includes('unsplash.com')
+                          }
                           className="object-cover object-top"
                           sizes="64px"
                         />
