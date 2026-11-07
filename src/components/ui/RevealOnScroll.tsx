@@ -35,22 +35,31 @@ export function RevealOnScroll({
       return;
     }
 
+    // Safety fallback: auto-reveal after 450ms so content is never blank
+    const safetyTimer = setTimeout(() => {
+      setIsVisible(true);
+    }, 450);
+
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (entry && entry.isIntersecting) {
           setIsVisible(true);
+          clearTimeout(safetyTimer);
           observer.unobserve(el);
         }
       },
       {
-        threshold: 0.08,
-        rootMargin: '0px 0px -40px 0px',
+        threshold: 0.01,
+        rootMargin: '100px 0px 100px 0px',
       }
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(safetyTimer);
+      observer.disconnect();
+    };
   }, []);
 
   const getVariantStyles = () => {

@@ -57,6 +57,7 @@ export {
   executeStockMutation,
   ensureVariantsForProduct,
   addCustomVariant,
+  deleteInventoryVariantsForProduct,
   generateVariantSku,
   generateDefaultVariantsForProduct,
   type ProductVariant,

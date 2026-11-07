@@ -49,10 +49,6 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="en" className={`${dmSans.variable} ${inter.variable}`}>
       <head>
         <link rel="preload" as="image" href="/images/hero_optimized.jpg" fetchPriority="high" />
-        <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.cdnfonts.com" />
-        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/avenir" />
-        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/avenir-next-lt-pro" />
       </head>
       <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FFFFFF] text-[#000000] antialiased">
         <Providers>

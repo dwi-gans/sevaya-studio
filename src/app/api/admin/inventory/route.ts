@@ -6,6 +6,7 @@ import {
   getServerStockMutations,
   ensureServerVariantsForProduct,
   addServerCustomVariant,
+  deleteServerProductVariants,
 } from '@/lib/inventory-server';
 import { ProductVariant } from '@/integrations/supabase';
 
@@ -94,6 +95,12 @@ export async function POST(req: NextRequest) {
     if (body.action === 'ensure_product' && body.product) {
       const allVariants = await ensureServerVariantsForProduct(body.product);
       return NextResponse.json({ success: true, variants: allVariants });
+    }
+
+    // 3. Action: Delete variants for a product
+    if (body.action === 'delete_product_variants' && body.productId) {
+      const remainingVariants = await deleteServerProductVariants(String(body.productId));
+      return NextResponse.json({ success: true, variants: remainingVariants });
     }
 
     // 3. Batch save

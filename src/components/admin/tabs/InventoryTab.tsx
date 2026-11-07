@@ -192,19 +192,12 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
       });
     });
 
-    // Populate variants
+    // Populate variants (hanya masukkan jika produk induk masih aktif di katalog, jangan buat entri untuk produk yang sudah dihapus)
     variants.forEach((v) => {
       let entry = productMap.get(v.productId);
       if (!entry) {
-        entry = {
-          id: v.productId,
-          title: v.productTitle,
-          slug: v.productSlug,
-          totalStock: 0,
-          variants: [],
-          colorsSummary: [],
-        };
-        productMap.set(v.productId, entry);
+        // Produk telah dihapus dari katalog, jangan tampilkan lagi di tab stok
+        return;
       }
       entry.variants.push(v);
       entry.totalStock += v.stock;

@@ -65,23 +65,24 @@ export function ProductCard({
 
   const targetDisplayImage = validSwatchImage || swatchFallbackImage || product.image || '/images/catalog/catalog-01.jpg';
 
-  const [activeSrc, setActiveSrc] = useState<string>(targetDisplayImage);
+  const [imageError, setImageError] = useState<string | null>(null);
 
-  // Selalu perbarui activeSrc saat swatch yang dipilih/di-hover berganti
+  // Reset error jika target gambar berganti
   useEffect(() => {
-    setActiveSrc(targetDisplayImage);
-    setIsLoaded(true);
+    setImageError(null);
   }, [targetDisplayImage]);
+
+  const displayImage = (imageError && imageError === targetDisplayImage)
+    ? (product.image || '/images/catalog/catalog-01.jpg')
+    : targetDisplayImage;
 
   // Format gambar: Supabase dan Unsplash didukung langsung oleh Next.js optimizer (WebP otomatis)
   const isOptimizableRemote =
-    !activeSrc.startsWith('http') ||
-    activeSrc.includes('supabase.co') ||
-    activeSrc.includes('unsplash.com') ||
-    activeSrc.includes('googleusercontent.com');
+    !displayImage.startsWith('http') ||
+    displayImage.includes('supabase.co') ||
+    displayImage.includes('unsplash.com') ||
+    displayImage.includes('googleusercontent.com');
   const shouldBeUnoptimized = !isOptimizableRemote;
-
-  const displayImage = activeSrc;
 
   // Foto kedua saat hover (hanya jika produk tidak memiliki banyak swatch warna)
   const secondaryImage =
@@ -118,6 +119,7 @@ export function ProductCard({
   return (
     <article
       className="group relative flex flex-col bg-transparent"
+      onPointerLeave={() => setHoveredSwatch(null)}
       onMouseLeave={() => setHoveredSwatch(null)}
     >
       {/* Product Image Frame: 2:3 Portrait Aspect Ratio — clean subtle backdrop, zero gray flash */}
@@ -162,7 +164,7 @@ export function ProductCard({
 
           {/* Primary Product Image — smoothly transitions on swatch change */}
           <Image
-            src={activeSrc}
+            src={displayImage}
             alt={`${product.title} - ${currentActiveName || 'Busana'}`}
             fill
             priority={priority}
@@ -171,10 +173,7 @@ export function ProductCard({
             onLoad={() => setIsLoaded(true)}
             onError={() => {
               // Jika foto varian corrupt/404, otomatis fallback ke foto produk utama
-              const fallback = product.image || '/images/catalog/catalog-01.jpg';
-              if (activeSrc !== fallback) {
-                setActiveSrc(fallback);
-              }
+              setImageError(displayImage);
               setIsLoaded(true);
             }}
             className={`pointer-events-none select-none object-cover transition-all duration-300 ease-out ${
@@ -244,38 +243,49 @@ export function ProductCard({
 
         {/* Color Swatches below price — synchronized with cycling image */}
         {product.swatches && product.swatches.length > 0 && (
-          <div
-            className="mt-2.5 flex items-center justify-center gap-1.5"
-            onMouseLeave={() => setHoveredSwatch(null)}
-          >
-            {product.swatches.map((swatch) => {
-              const isSelected = swatch.name === currentActiveName;
-              return (
-                <button
-                  key={swatch.name}
-                  type="button"
-                  title={swatch.name}
-                  aria-label={swatch.name}
-                  onMouseEnter={() => setHoveredSwatch(swatch.name)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (selectedSwatch === swatch.name) {
-                      setSelectedSwatch(null);
-                    } else {
-                      setSelectedSwatch(swatch.name);
-                    }
-                    setHoveredSwatch(null);
-                  }}
-                  className={`h-3.5 w-3.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    isSelected
-                      ? 'scale-110 ring-1 ring-black ring-offset-1 opacity-100'
-                      : 'opacity-70 ring-1 ring-black/10 hover:opacity-100 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: swatch.color }}
-                />
-              );
-            })}
+          <div className="mt-1.5 flex flex-col items-center">
+            {/* Color name feedback */}
+            <span className="text-[7.5px] sm:text-[8px] font-normal tracking-[0.16em] uppercase text-black/50 h-3">
+              {currentActiveName || ''}
+            </span>
+
+            {/* Swatch dots container */}
+            <div
+              className="mt-0.5 flex items-center justify-center gap-0.5"
+              onPointerLeave={() => setHoveredSwatch(null)}
+              onMouseLeave={() => setHoveredSwatch(null)}
+            >
+              {product.swatches.map((swatch) => {
+                const isSelected = swatch.name === currentActiveName;
+                return (
+                  <button
+                    key={swatch.name}
+                    type="button"
+                    title={swatch.name}
+                    aria-label={swatch.name}
+                    onPointerEnter={() => setHoveredSwatch(swatch.name)}
+                    onMouseEnter={() => setHoveredSwatch(swatch.name)}
+                    onFocus={() => setHoveredSwatch(swatch.name)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedSwatch((prev) => (prev === swatch.name ? null : swatch.name));
+                      setHoveredSwatch(swatch.name);
+                    }}
+                    className="group/swatch relative p-1 cursor-pointer flex items-center justify-center outline-none"
+                  >
+                    <span
+                      className={`block h-3.5 w-3.5 rounded-full transition-all duration-200 ${
+                        isSelected
+                          ? 'scale-110 outline outline-1.5 outline-black outline-offset-1.5 opacity-100 shadow-xs'
+                          : 'opacity-70 outline outline-1 outline-black/15 group-hover/swatch:opacity-100 group-hover/swatch:scale-105'
+                      }`}
+                      style={{ backgroundColor: swatch.color }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

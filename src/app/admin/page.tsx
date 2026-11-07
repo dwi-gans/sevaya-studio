@@ -9,6 +9,7 @@ import {
   updateDbProduct,
   deleteDbProduct,
   ensureVariantsForProduct,
+  deleteInventoryVariantsForProduct,
   getInventoryVariants,
   invalidateInventoryCache,
   DbProduct,
@@ -558,13 +559,37 @@ export default function AdminPage() {
   };
 
   const handleDeleteProduct = async (id: string | number, title: string) => {
-    if (!window.confirm(`Yakin ingin menghapus produk "${title}"?`)) return;
+    if (!window.confirm(`Yakin ingin menghapus produk "${title}"? Seluruh varian stok produk ini juga akan dibersihkan.`)) return;
 
     setIsLoading(true);
     try {
+      // 1. Hapus dari katalog produk
       await deleteDbProduct(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      showToast(`Produk "${title}" telah dihapus.`);
+
+      // 2. Hapus seluruh varian inventaris di server & client
+      try {
+        await fetch('/api/admin/inventory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': 'sevaya-admin',
+          },
+          body: JSON.stringify({
+            action: 'delete_product_variants',
+            productId: String(id),
+          }),
+        });
+      } catch (invErr) {
+        console.warn('Gagal menghapus varian via API:', invErr);
+      }
+      await deleteInventoryVariantsForProduct(id);
+
+      // Invalidate cache
+      invalidateProductsCache();
+      invalidateInventoryCache();
+
+      setProducts((prev) => prev.filter((p) => String(p.id) !== String(id)));
+      showToast(`Produk "${title}" dan seluruh varian stoknya telah berhasil dihapus.`);
     } catch {
       showToast('Gagal menghapus produk');
     } finally {

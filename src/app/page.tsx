@@ -1,48 +1,63 @@
 import React from 'react';
 import { HeroSection } from '@/components/home/HeroSection';
-import { ProductGrid } from '@/components/home/ProductGrid';
+import { ProductGrid, DEFAULT_BEST_SELLERS } from '@/components/home/ProductGrid';
 import { CategorySpotlight } from '@/components/home/CategorySpotlight';
 import { NarrativeSection } from '@/components/home/NarrativeSection';
 import { JournalSection } from '@/components/home/JournalSection';
 import { Footer } from '@/components/layout/Footer';
 import { fetchCatalogProducts } from '@/features/catalog';
-import { getSiteSections, getLatestArticlesForJournal } from '@/integrations/supabase';
+import { getSiteSections, getLatestArticlesForJournal, DEFAULT_SITE_SECTIONS } from '@/integrations/supabase';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HomePage() {
   const [products, sections, latestArticles] = await Promise.all([
-    fetchCatalogProducts(),
-    getSiteSections(true),
-    getLatestArticlesForJournal(2),
+    fetchCatalogProducts().catch((err) => {
+      console.warn('fetchCatalogProducts fallback error:', err);
+      return [];
+    }),
+    getSiteSections(true).catch((err) => {
+      console.warn('getSiteSections fallback error:', err);
+      return DEFAULT_SITE_SECTIONS;
+    }),
+    getLatestArticlesForJournal(2).catch((err) => {
+      console.warn('getLatestArticlesForJournal fallback error:', err);
+      return [];
+    }),
   ]);
 
-  // Gunakan artikel terbaru dari DB jika ada; fallback ke sections.journal (manual config)
+  const activeProducts =
+    Array.isArray(products) && products.length > 0 ? products : DEFAULT_BEST_SELLERS;
+  const activeSections = sections || DEFAULT_SITE_SECTIONS;
+
+  // Gunakan artikel terbaru dari DB jika ada; fallback ke activeSections.journal (manual config)
   const journalArticles =
-    latestArticles.length > 0 ? latestArticles : sections?.journal;
+    latestArticles && latestArticles.length > 0
+      ? latestArticles
+      : activeSections?.journal || DEFAULT_SITE_SECTIONS.journal;
 
   return (
     <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">
       {/* 1. Hero Section matching Figma: TIMELESS • INTENTIONAL • EFFORTLESS */}
-      <HeroSection initialHero={sections?.hero} />
+      <HeroSection initialHero={activeSections?.hero} />
 
       {/* 2. Best Sellers Carousel */}
-      <ProductGrid products={products} />
+      <ProductGrid products={activeProducts} />
 
       {/* 3. Category Split Banners: ABAYA & KHIMAR */}
       <CategorySpotlight
-        initialSpotlight={sections?.spotlight}
-        initialIntro={sections?.spotlightIntro}
+        initialSpotlight={activeSections?.spotlight}
+        initialIntro={activeSections?.spotlightIntro}
       />
 
       {/* 4. Narrative: Elegance in Simplicity, Video Showcase, Brand Pillars, About SEVAYA 2-photo split, Trust Badges */}
-      <NarrativeSection initialNarrative={sections?.narrative} />
+      <NarrativeSection initialNarrative={activeSections?.narrative} />
 
       {/* 5. Our Reading Corner — artikel otomatis dari DB articles terbaru */}
       <JournalSection
         initialArticles={journalArticles}
-        initialHeader={sections?.journalHeader}
+        initialHeader={activeSections?.journalHeader}
       />
 
       {/* 6. Footer (4 Columns + Newsletter) */}

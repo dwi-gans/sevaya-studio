@@ -484,3 +484,13 @@ export async function addServerCustomVariant(params: {
 
   return newVariant;
 }
+
+/**
+ * Hapus seluruh varian inventaris untuk produk yang dihapus di katalog.
+ */
+export async function deleteServerProductVariants(productId: string): Promise<ProductVariant[]> {
+  const existing = await getServerInventoryVariants();
+  const updated = existing.filter((v) => String(v.productId) !== String(productId));
+  await saveServerInventoryVariants(updated);
+  return updated;
+}
