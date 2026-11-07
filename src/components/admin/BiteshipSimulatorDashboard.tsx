@@ -155,6 +155,21 @@ function OrderDetailModal({
     }
   };
 
+  const handleSaveTrackingNumber = async () => {
+    setLoading(true);
+    addLog(`Menyimpan nomor resi: ${trackingInput.trim() || '(kosong)'}...`);
+    try {
+      await onStatusUpdate(order.id, order.status, {
+        tracking_number: trackingInput.trim() || undefined,
+      });
+      addLog(`✅ Nomor resi berhasil disimpan: ${trackingInput.trim()}`);
+    } catch (e) {
+      addLog(`❌ Gagal menyimpan resi: ${e instanceof Error ? e.message : 'Error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateBiteship = async () => {
     setLoading(true);
     addLog(`Membuat test order Biteship (${selectedCourier} ${selectedService})...`);
@@ -305,16 +320,26 @@ function OrderDetailModal({
                 Ubah Status Internal
               </h4>
               <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 space-y-3">
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider">
-                    Nomor Resi (opsional)
+                    Nomor Resi
                   </label>
-                  <input
-                    value={trackingInput}
-                    onChange={(e) => setTrackingInput(e.target.value)}
-                    placeholder="Masukkan nomor resi..."
-                    className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      value={trackingInput}
+                      onChange={(e) => setTrackingInput(e.target.value)}
+                      placeholder="Masukkan nomor resi..."
+                      className="flex-1 rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
+                    />
+                    <button
+                      type="button"
+                      disabled={loading || trackingInput === (order.tracking_number || '')}
+                      onClick={handleSaveTrackingNumber}
+                      className="px-4 bg-black text-white text-[10px] font-bold tracking-wider uppercase hover:bg-black/85 disabled:opacity-40 transition cursor-pointer shrink-0"
+                    >
+                      Simpan
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   {INTERNAL_STATUSES.map((s) => (
