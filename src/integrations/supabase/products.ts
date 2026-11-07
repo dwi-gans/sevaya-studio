@@ -20,7 +20,8 @@ export interface DbProduct {
   swatches: ProductSwatch[];
   sizes?: string[];      // daftar ukuran yang tersedia, cth: ['S', 'M', 'L'] atau ['All Size']
   description?: string;  // deskripsi produk utama
-  fabric?: string;       // informasi bahan / kain
+  fabric?: string;       // informasi bahan / kain lengkap
+  material?: string;     // jenis material ringkas untuk label spesifikasi (cth: "100% Cupro Silk Linen")
   sizing?: string;       // panduan ukuran / size chart
   inStock?: boolean;
   stock?: number; // available inventory quantity

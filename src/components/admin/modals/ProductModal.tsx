@@ -22,6 +22,7 @@ export interface ProductFormData {
   swatches: ProductSwatch[];
   description: string;  // deskripsi produk
   fabric: string;       // informasi bahan / kain
+  material?: string;    // jenis material ringkas yang ditampilkan di halaman detail produk
   sizing: string;       // panduan ukuran
 }
 
@@ -735,10 +736,24 @@ export function ProductModal({
               />
             </div>
 
+            {/* Material */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-black/70">
+                Jenis Material (Tampil di Halaman Produk)
+              </label>
+              <input
+                type="text"
+                value={productForm.material || ''}
+                onChange={(e) => setProductForm((prev) => ({ ...prev, material: e.target.value }))}
+                placeholder="cth. 100% Cupro Silk Linen, Bemberg Silk, Cotton Rayon"
+                className="w-full rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs h-8 sm:h-9 text-black focus:border-black focus:outline-none"
+              />
+            </div>
+
             {/* Fabric */}
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-medium text-black/70">
-                Informasi Bahan / Fabric
+                Informasi Bahan Lengkap / Fabric
               </label>
               <textarea
                 rows={2}

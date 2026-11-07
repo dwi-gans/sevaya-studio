@@ -27,8 +27,6 @@ const DEFAULT_COLOR_OPTIONS: ProductColorOption[] = [
   { name: 'Chai', hex: '#DDD2C3', image: '/images/catalog/catalog-06.jpg' },
 ];
 
-const QUALITY_OPTIONS = ['Top Notch', 'Almost Perfect', 'Visible Marks'];
-
 /** Buat daftar warna awal dari swatches produk, dengan status sold-out dari data varian dan foto cerdas */
 function buildColorOptions(
   swatches: Array<{ name: string; color: string; image?: string }> | undefined,
@@ -132,7 +130,6 @@ export function ProductDetailClient({
     }
     return 'S';
   });
-  const [selectedQuality, setSelectedQuality] = useState<string>(QUALITY_OPTIONS[0]!);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<string>(
     () => colors[0]?.image || initialProduct.image || '/images/catalog/catalog-01.jpg'
@@ -303,7 +300,7 @@ export function ProductDetailClient({
       return;
     }
 
-    const cartItemId = `${slug}-${selectedColor.name}-${selectedSize}-${selectedQuality}`;
+    const cartItemId = `${slug}-${selectedColor.name}-${selectedSize}`;
     const existingInCart = items.find((i) => i.id === cartItemId)?.quantity || 0;
 
     if (existingInCart + quantity > availableStock) {
@@ -316,7 +313,7 @@ export function ProductDetailClient({
       addToCart({
         id: cartItemId,
         title,
-        edition: selectedQuality,
+        edition: dbProduct.material || dbProduct.fabric || dbProduct.edition || '100% Cupro',
         price,
         color: selectedColor.name,
         colorHex: selectedColor.hex,
@@ -331,7 +328,7 @@ export function ProductDetailClient({
     addToCart({
       id: cartItemId,
       title,
-      edition: selectedQuality,
+      edition: dbProduct.material || dbProduct.fabric || dbProduct.edition || '100% Cupro',
       price,
       color: selectedColor.name,
       colorHex: selectedColor.hex,
@@ -457,7 +454,7 @@ export function ProductDetailClient({
 
               {/* Pilihan Ukuran */}
               <div>
-                <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
+                <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
                   SIZE
                 </span>
                 <div className="mt-2.5 flex flex-wrap gap-2">
@@ -478,12 +475,12 @@ export function ProductDetailClient({
                         type="button"
                         onClick={() => !isSzSoldOut && setSelectedSize(sz)}
                         disabled={isSzSoldOut}
-                        className={`border px-5 py-2 text-[10px] tracking-wider uppercase transition-colors ${
+                        className={`h-9 min-w-[46px] border px-4 text-[10px] tracking-wider uppercase font-normal inline-flex items-center justify-center transition-colors ${
                           isSzSoldOut
-                            ? 'border-black/10 bg-white text-black/25 cursor-not-allowed line-through'
+                            ? 'border-black/[0.08] bg-white text-black/25 cursor-not-allowed line-through'
                             : isSelected
-                            ? 'border-black bg-white text-black font-semibold cursor-pointer'
-                            : 'border-black/20 bg-white text-black/60 hover:border-black hover:text-black cursor-pointer'
+                            ? 'border-black bg-white text-black font-medium ring-1 ring-black cursor-pointer'
+                            : 'border-black/[0.12] bg-white text-black/75 hover:border-black hover:text-black cursor-pointer'
                         }`}
                       >
                         {sz}
@@ -493,66 +490,52 @@ export function ProductDetailClient({
                 </div>
               </div>
 
-              {/* Pilihan Kualitas */}
+              {/* Material Produk (Spesifikasi Material) */}
               <div>
-                <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
-                  QUALITY
+                <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
+                  MATERIAL
                 </span>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {QUALITY_OPTIONS.map((q) => {
-                    const isSelected = selectedQuality === q;
-                    return (
-                      <button
-                        key={q}
-                        type="button"
-                        onClick={() => setSelectedQuality(q)}
-                        className={`border px-4 py-2 text-[10px] tracking-wider transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'border-black bg-white text-black font-semibold'
-                            : 'border-black/20 bg-white text-black/60 hover:border-black hover:text-black'
-                        }`}
-                      >
-                        {q}
-                      </button>
-                    );
-                  })}
+                <div className="mt-2.5">
+                  <div className="inline-flex items-center justify-center h-9 border border-black/[0.12] bg-white px-4 text-[10px] font-normal tracking-wider text-black select-none uppercase">
+                    {dbProduct.material || dbProduct.fabric || '100% Cupro Silk Linen'}
+                  </div>
                 </div>
               </div>
 
               {/* Kuantitas */}
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
+                  <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
                     QUANTITY
                   </span>
                   {isOutOfStock ? (
-                    <span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">
+                    <span className="text-[9.5px] font-normal text-rose-600 uppercase tracking-wider">
                       Stok Habis
                     </span>
                   ) : availableStock <= 5 ? (
-                    <span className="text-[10px] font-medium text-amber-700">
+                    <span className="text-[9.5px] font-normal text-amber-700">
                       Sisa {availableStock} lagi
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-2.5 inline-flex items-center border border-black/20 bg-white">
+                <div className="mt-2.5 inline-flex items-center h-9 border border-black/[0.12] bg-white">
                   <button
                     type="button"
                     disabled={isOutOfStock || quantity <= 1}
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center"
                     aria-label="Kurangi kuantitas"
                   >
                     &minus;
                   </button>
-                  <span className="w-10 text-center text-[11px] font-semibold text-black">
+                  <span className="h-full w-10 flex items-center justify-center text-[11px] font-normal text-black border-x border-black/[0.08]">
                     {isOutOfStock ? 0 : quantity}
                   </span>
                   <button
                     type="button"
                     disabled={isOutOfStock || quantity >= availableStock}
                     onClick={() => setQuantity((prev) => Math.min(availableStock, prev + 1))}
-                    className="px-3 py-2 text-[11px] text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center"
                     aria-label="Tambah kuantitas"
                   >
                     &#43;

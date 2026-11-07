@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Icon } from '@/components/ui/Icon';
+import { QuickAddModal } from './QuickAddModal';
 
 export interface Product {
   id: string;
@@ -22,6 +23,9 @@ export interface Product {
   inStock?: boolean;
   stock?: number;
   swatches: { name: string; color: string; image?: string }[];
+  sizes?: string[];
+  fabric?: string;
+  material?: string;
 }
 
 export function ProductCard({
@@ -37,6 +41,7 @@ export function ProductCard({
   const [selectedSwatch, setSelectedSwatch] = useState<string | null>(null);
   const [hoveredSwatch, setHoveredSwatch] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const swatchesCount = product.swatches?.length || 0;
   const isOutOfStock =
@@ -101,19 +106,7 @@ export function ProductCard({
       return;
     }
 
-    addToCart({
-      id: product.slug,
-      title: product.title,
-      edition: product.edition || 'Sevilla Cupro',
-      price: product.price,
-      originalPrice: product.originalPrice,
-      color: currentSelectedColor,
-      size: 'S–M',
-      image: displayImage,
-      quantity: 1,
-      stock: typeof product.stock === 'number' ? product.stock : 25,
-    });
-    showToast(t('product.added_to_bag', { title: product.title, color: currentSelectedColor }));
+    setIsQuickAddOpen(true);
   };
 
   return (
@@ -289,6 +282,14 @@ export function ProductCard({
           </div>
         )}
       </div>
+
+      {/* Quick Add / Select Options Modal */}
+      <QuickAddModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        product={product}
+        initialColor={currentActiveName}
+      />
     </article>
   );
 }

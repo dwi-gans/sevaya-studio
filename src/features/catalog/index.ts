@@ -27,6 +27,9 @@ export function mapDbProductToProduct(item: DbProduct): Product {
     images: item.images,
     inStock: isInStock,
     stock: typeof item.stock === 'number' ? item.stock : (item.inStock === false ? 0 : 25),
+    sizes: item.sizes && item.sizes.length > 0 ? item.sizes : ['S', 'M', 'L', 'XL'],
+    fabric: item.fabric,
+    material: item.material,
     swatches:
       item.swatches && item.swatches.length > 0
         ? item.swatches.map((s) => ({

@@ -260,6 +260,7 @@ export default function AdminPage() {
     ],
     description: '',
     fabric: '',
+    material: '',
     sizing: '',
   });
 
@@ -395,6 +396,7 @@ export default function AdminPage() {
       ],
       description: '',
       fabric: '',
+      material: '',
       sizing: '',
     });
     setIsProductModalOpen(true);
@@ -432,6 +434,7 @@ export default function AdminPage() {
             ],
       description: product.description || '',
       fabric: (product as any).fabric || '',
+      material: (product as any).material || '',
       sizing: (product as any).sizing || '',
     });
     setIsProductModalOpen(true);
