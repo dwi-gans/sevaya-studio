@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDrawer } from '@/context/DrawerContext';
@@ -8,7 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
-import { LOOKBOOK_LINKS } from '@/data/lookbookNav';
+import { LOOKBOOK_LINKS, LookbookLink } from '@/data/lookbookNav';
+import { getSiteSections, getCachedSiteSections } from '@/integrations/supabase';
 
 type SubmenuKey = 'collection' | 'lookbook' | 'conscious' | 'customer' | null;
 
@@ -20,6 +21,32 @@ export function NavigationDrawer() {
   const { language, t } = useLanguage();
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey>(null);
   const [drawerSearch, setDrawerSearch] = useState('');
+  const [lookbookLinks, setLookbookLinks] = useState<LookbookLink[]>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedSiteSections();
+      if (cached?.lookbookLinks && cached.lookbookLinks.length > 0) {
+        return cached.lookbookLinks;
+      }
+    }
+    return LOOKBOOK_LINKS;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const cached = getCachedSiteSections();
+    if (cached?.lookbookLinks && cached.lookbookLinks.length > 0) {
+      setLookbookLinks(cached.lookbookLinks);
+    }
+    getSiteSections().then((live) => {
+      if (isMounted && live.lookbookLinks && live.lookbookLinks.length > 0) {
+        setLookbookLinks(live.lookbookLinks);
+      }
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const isId = language === 'id';
 
   if (!isOpen) return null;
@@ -175,20 +202,29 @@ export function NavigationDrawer() {
                 {isId ? 'Lihat Semua Lookbook' : 'View All Lookbooks'}
               </Link>
               <div className="flex flex-col gap-5 pt-1">
-                {LOOKBOOK_LINKS.map((lb, i) => (
-                  <Link
-                    key={lb.id}
-                    href={lb.href}
-                    onClick={handleClose}
-                    className="animate-luxury-fade-up flex items-center justify-between text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
-                    style={{ animationDelay: `${80 + i * 50}ms` }}
-                  >
-                    <span>{lb.label}</span>
-                    {lb.season && (
-                      <span className="font-mono text-[10px] text-white/50">{lb.season}</span>
-                    )}
-                  </Link>
-                ))}
+                {lookbookLinks
+                  .filter((lb) => !lb.hidden)
+                  .map((lb, i) => (
+                    <Link
+                      key={lb.id}
+                      href={lb.href}
+                      onClick={handleClose}
+                      className="animate-luxury-fade-up flex items-center justify-between text-[10px] font-medium tracking-widest text-white uppercase transition-colors hover:text-[#877274]"
+                      style={{ animationDelay: `${80 + i * 50}ms` }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{lb.label}</span>
+                        {lb.badge && (
+                          <span className="rounded-full bg-[#6b1d2f] px-1.5 py-0.5 text-[8px] font-semibold tracking-wider text-white">
+                            {lb.badge}
+                          </span>
+                        )}
+                      </div>
+                      {lb.season && (
+                        <span className="font-mono text-[10px] text-white/50">{lb.season}</span>
+                      )}
+                    </Link>
+                  ))}
               </div>
             </div>
           )}

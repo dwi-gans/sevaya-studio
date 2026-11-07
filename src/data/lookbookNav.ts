@@ -14,7 +14,7 @@ export interface LookbookLink {
 export const LOOKBOOK_LINKS: LookbookLink[] = [
   {
     id: 'vol-1',
-    label: 'Vol 1: Into a New Season',
+    label: 'Vol 1: Sevilla Abaya',
     season: "'26",
     href: '/lookbook',
     badge: 'NEW',
