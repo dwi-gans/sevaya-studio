@@ -8,6 +8,7 @@ import {
   addServerCustomVariant,
   deleteServerProductVariants,
   cleanServerOrphanedVariants,
+  invalidateServerInventoryCache,
 } from '@/lib/inventory-server';
 import { ProductVariant } from '@/integrations/supabase';
 
@@ -26,6 +27,10 @@ export async function GET(req: NextRequest) {
     }
 
     const forceRefresh = req.nextUrl.searchParams.get('refresh') === 'true';
+    // Jika forceRefresh, invalidate in-memory cache agar data diambil fresh dari Supabase Storage
+    if (forceRefresh) {
+      invalidateServerInventoryCache();
+    }
     // Otomatis bersihkan varian yatim (produk yang sudah dihapus / warna & ukuran yang dihapus dari katalog)
     const [variants, mutations] = await Promise.all([
       cleanServerOrphanedVariants(),

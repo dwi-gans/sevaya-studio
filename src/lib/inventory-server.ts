@@ -57,13 +57,17 @@ async function downloadFromStorage<T>(filename: string): Promise<T | null> {
     const { data, error } = await supabaseAdmin.storage
       .from('catalog')
       .download(filename);
-    if (!error && data) {
+    if (error) {
+      console.error(`[Storage] Download "${filename}" error:`, error.message);
+      return null;
+    }
+    if (data) {
       const text = await data.text();
       const parsed = JSON.parse(text) as T;
       return parsed;
     }
-  } catch {
-    // Remote storage might be unavailable or offline in sandbox/dev
+  } catch (err) {
+    console.error(`[Storage] Download "${filename}" exception:`, err);
   }
   return null;
 }
@@ -77,8 +81,13 @@ async function uploadToStorage(filename: string, data: unknown): Promise<boolean
         contentType: 'application/json',
         upsert: true,
       });
-    return !error;
-  } catch {
+    if (error) {
+      console.error(`[Storage] Upload "${filename}" error:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(`[Storage] Upload "${filename}" exception:`, err);
     return false;
   }
 }
@@ -87,25 +96,31 @@ async function uploadToStorage(filename: string, data: unknown): Promise<boolean
 let _serverCachedVariants: ProductVariant[] | null = null;
 let _serverCachedMutations: StockMutation[] | null = null;
 
+/** Invalidate cache in-memory agar request berikutnya ambil fresh dari Supabase Storage */
+export function invalidateServerInventoryCache() {
+  _serverCachedVariants = null;
+  _serverCachedMutations = null;
+}
+
 export async function getServerProducts(): Promise<DbProduct[]> {
   const { products: cached, expired } = getCachedProducts();
   if (cached && !expired && cached.length > 0) {
     return cached;
   }
 
-  // 1. Disk fallback (primary for dev/sandbox & fast persistence)
-  const fromLocal = readLocalFile<DbProduct[]>(PRODUCTS_FILE);
-  if (Array.isArray(fromLocal) && fromLocal.length > 0) {
-    setCachedProducts(fromLocal);
-    return fromLocal;
-  }
-
-  // 2. Storage
+  // 1. Supabase Storage (source of truth — always preferred on Vercel)
   const fromStorage = await downloadFromStorage<DbProduct[]>(PRODUCTS_FILE);
   if (Array.isArray(fromStorage) && fromStorage.length > 0) {
     setCachedProducts(fromStorage);
     writeLocalFile(PRODUCTS_FILE, fromStorage);
     return fromStorage;
+  }
+
+  // 2. Disk fallback (dev/sandbox only — ephemeral on Vercel)
+  const fromLocal = readLocalFile<DbProduct[]>(PRODUCTS_FILE);
+  if (Array.isArray(fromLocal) && fromLocal.length > 0) {
+    setCachedProducts(fromLocal);
+    return fromLocal;
   }
 
   setCachedProducts(DEFAULT_DB_PRODUCTS);
@@ -123,7 +138,7 @@ export async function getServerInventoryVariants(forceRefresh = false): Promise<
     return _serverCachedVariants;
   }
 
-  // 1. Storage
+  // 1. Supabase Storage (source of truth — selalu diutamakan agar data tidak stale di Vercel)
   const fromStorage = await downloadFromStorage<ProductVariant[]>(INVENTORY_FILE);
   if (Array.isArray(fromStorage) && fromStorage.length > 0) {
     _serverCachedVariants = fromStorage;
@@ -131,14 +146,15 @@ export async function getServerInventoryVariants(forceRefresh = false): Promise<
     return fromStorage;
   }
 
-  // 2. Disk fallback
+  // 2. Disk fallback (hanya dev/sandbox, ephemeral di Vercel)
   const fromLocal = readLocalFile<ProductVariant[]>(INVENTORY_FILE);
   if (Array.isArray(fromLocal) && fromLocal.length > 0) {
     _serverCachedVariants = fromLocal;
     return fromLocal;
   }
 
-  // 3. Fallback: generate default variants from catalog products
+  // 3. Last resort: generate default variants from catalog products (stock = 0)
+  console.warn('[getServerInventoryVariants] Storage dan disk kosong — generating default variants. Pastikan SUPABASE_SERVICE_ROLE_KEY valid.');
   const products = await getServerProducts();
   const allVariants: ProductVariant[] = [];
   for (const p of products) {
@@ -389,10 +405,10 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
  * Membersihkan semua varian inventaris yang produk induknya sudah dihapus,
  * atau yang warna/ukurannya sudah dihapus dari katalog produk.
  */
-export async function cleanServerOrphanedVariants(): Promise<ProductVariant[]> {
+export async function cleanServerOrphanedVariants(forceRefresh = false): Promise<ProductVariant[]> {
   const [products, variants] = await Promise.all([
     getServerProducts(),
-    getServerInventoryVariants(),
+    getServerInventoryVariants(forceRefresh),
   ]);
 
   const productMap = new Map<string, DbProduct>();
