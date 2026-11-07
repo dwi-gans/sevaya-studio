@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
@@ -84,6 +84,7 @@ export default function CheckoutPage() {
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false); // hard guard against double-submit
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { user, getAccessToken, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -158,6 +159,10 @@ export default function CheckoutPage() {
   const addressComplete = address.trim().length > 3 && city.trim().length > 1 && postalCode.length >= 5;
 
   const handleSubmitOrder = async () => {
+    // Hard guard: prevent duplicate orders even if button clicked multiple times
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     setSubmitError(null);
 
     if (!user) {
@@ -281,9 +286,11 @@ export default function CheckoutPage() {
 
         // TriPay gateway — langsung redirect ke halaman pembayaran resmi TriPay
         if (snapData.success && snapData.payment_url) {
+          // Clear cart BEFORE redirect so user never sees empty-cart state on return
           if (items.length > 0 && clearCart) clearCart();
           try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
-          window.location.href = snapData.payment_url;
+          // Small delay to let clearCart settle, then redirect
+          setTimeout(() => { window.location.href = snapData.payment_url; }, 50);
           return;
         }
 
@@ -303,6 +310,7 @@ export default function CheckoutPage() {
       setSubmitError(err.message || 'Gagal memproses pesanan. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 

@@ -120,9 +120,14 @@ export default function OrderDetailPage({
 
       try {
         const token = await getAccessToken();
+        if (!token) {
+          // Auth token not ready yet - wait for auth to settle
+          setIsLoading(false);
+          return;
+        }
         const res = await fetch(`/api/user/orders/${encodeURIComponent(orderId)}`, {
           headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -143,10 +148,11 @@ export default function OrderDetailPage({
       }
     }
 
-    if (isAuthenticated || user) {
+    // Wait until auth is fully loaded before fetching
+    if (!authLoading && (isAuthenticated || user)) {
       fetchOrderDetail();
     }
-  }, [orderId, isAuthenticated, user, getAccessToken]);
+  }, [orderId, isAuthenticated, user, authLoading, getAccessToken]);
 
   const handlePrint = () => {
     window.print();
@@ -255,7 +261,7 @@ export default function OrderDetailPage({
     </header>
   );
 
-  if (!order && (isLoading || (!user && authLoading))) {
+  if (!order && (isLoading || authLoading || (!user && !isAuthenticated))) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
         {renderMinimalHeader()}
