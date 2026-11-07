@@ -401,10 +401,10 @@ export default function CheckoutPage() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-black border-t-transparent mb-4" />
         <h1 className="font-sans text-sm font-semibold tracking-[0.2em] uppercase text-black">
-          Mengarahkan ke Pembayaran Resmi...
+          MEMPROSES PESANAN...
         </h1>
         <p className="mt-2 text-xs text-[#7C726E] max-w-sm">
-          Pesanan Anda telah berhasil dibuat. Mohon tunggu, Anda sedang dialihkan ke gateway pembayaran aman TriPay.
+          Mengalihkan ke gateway pembayaran resmi SEVAYA.
         </p>
       </div>
     );
@@ -1053,7 +1053,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <div className="border-t border-black/10 pt-2 text-[10px] text-[#7C726E] flex items-center justify-between">
-                    <span>Ditenagai oleh gateway pembayaran resmi <strong>TriPay</strong></span>
+                    <span>Sistem pembayaran resmi &amp; terenkripsi</span>
                     <span className="font-medium text-emerald-700">
                       {paymentMethod === 'qris'
                         ? 'Scan & Bayar — Verifikasi Seketika'
@@ -1081,7 +1081,7 @@ export default function CheckoutPage() {
               </button>
               <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
-                Pembayaran aman &amp; terenkripsi via TriPay
+                Pembayaran aman &amp; terenkripsi 256-bit SSL
               </p>
             </div>
 
@@ -1102,7 +1102,7 @@ export default function CheckoutPage() {
               </button>
               <p className="flex items-center justify-center gap-1.5 text-[10px] text-black/50">
                 <Icon name="lock" size={11} />
-                Pembayaran aman &amp; terenkripsi via TriPay
+                Pembayaran aman &amp; terenkripsi 256-bit SSL
               </p>
             </div>
           </div>

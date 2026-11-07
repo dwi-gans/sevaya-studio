@@ -64,7 +64,7 @@ function getPaymentMethodLabel(method: string) {
     case 'va_mandiri': return 'Virtual Account Mandiri';
     case 'va_bri': return 'Virtual Account BRI (BRIVA)';
     case 'va_bni': return 'Virtual Account BNI';
-    default: return 'TriPay Payment';
+    default: return 'Online Payment';
   }
 }
 
@@ -344,10 +344,10 @@ function OrderConfirmationContent() {
                   </div>
                 </div>
 
-                {/* TriPay Online payment */}
+                {/* Online payment */}
                 <div className="space-y-3">
                   <p className="text-xs text-neutral-600 leading-relaxed">
-                    Klik tombol di bawah untuk menyelesaikan pembayaran melalui halaman resmi <strong>TriPay</strong>.
+                    Klik tombol di bawah untuk menyelesaikan pembayaran melalui portal resmi <strong>SEVAYA</strong>.
                     Tersedia pilihan <strong>QRIS</strong> dan <strong>Virtual Account</strong> (BCA, Mandiri, BRI, BNI).
                   </p>
 
@@ -364,11 +364,11 @@ function OrderConfirmationContent() {
                     className="flex w-full items-center justify-center gap-2 rounded bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-60 cursor-pointer"
                   >
                     <Icon name="payments" size={16} />
-                    <span>{isRedirecting ? 'Membuka halaman pembayaran...' : 'Bayar Sekarang'}</span>
+                    <span>{isRedirecting ? 'Membuka portal pembayaran...' : 'Bayar Sekarang'}</span>
                   </button>
 
                   <p className="text-[10px] text-neutral-400 text-center">
-                    Anda akan diarahkan ke halaman pembayaran aman TriPay. Setelah bayar, status otomatis diperbarui.
+                    Anda akan diarahkan ke portal pembayaran aman. Setelah pembayaran terverifikasi, status otomatis diperbarui.
                   </p>
                 </div>
 
