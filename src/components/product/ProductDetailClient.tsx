@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { getDbProducts, DbProduct } from '@/integrations/supabase';
@@ -652,12 +652,12 @@ export function ProductDetailClient({
                     {dbProduct.badge}
                   </span>
                 )}
-                <Image
+                <StudioImage
                   src={activeImage}
                   alt={`${title} - ${selectedColor.name}`}
                   fill
                   priority
-                  quality={95}
+                  preset="spotlight"
                   onError={() => {
                     const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
                     if (activeImage !== fallback) {
@@ -670,7 +670,6 @@ export function ProductDetailClient({
                     !activeImage.includes('unsplash.com')
                   }
                   className="object-cover object-top transition-opacity duration-300"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 800px"
                 />
               </div>
 
@@ -690,11 +689,11 @@ export function ProductDetailClient({
                         }`}
                         aria-label={`Thumbnail photo ${idx + 1}`}
                       >
-                        <Image
+                        <StudioImage
                           src={imgSrc}
                           alt={`Thumbnail ${idx + 1}`}
                           fill
-                          quality={90}
+                          preset="thumbnail"
                           onError={(e) => {
                             const target = e.currentTarget as HTMLElement;
                             if (target?.parentElement) {
@@ -707,7 +706,6 @@ export function ProductDetailClient({
                             !imgSrc.includes('unsplash.com')
                           }
                           className="object-cover object-top"
-                          sizes="128px"
                         />
                       </button>
                     );

@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { Footer } from '@/components/layout/Footer';
@@ -38,14 +38,13 @@ export default async function AboutPage() {
 
         {/* Big Panoramic Landscape Banner */}
         <div className="relative mb-14 aspect-[16/7] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
-          <Image
+          <StudioImage
             src={c.heroImage || DEFAULT_CONSCIOUS_PAGE.heroImage!}
             alt="SEVAYA Landscape"
             fill
             className="object-cover"
             priority
-            quality={95}
-            sizes="(max-width: 1024px) 100vw, 1400px"
+            preset="full"
           />
           <div className="absolute top-6 left-6 z-10">
             <Logo variant="light" className="h-5 w-auto drop-shadow-md" />
@@ -70,13 +69,12 @@ export default async function AboutPage() {
         {/* Section 2: Our Inspiration (Image left, text right) */}
         <div className="my-16 grid grid-cols-1 items-center gap-10 md:grid-cols-2">
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none bg-black/5 shadow-xs sm:aspect-[1/1]">
-            <Image
+            <StudioImage
               src={c.inspoImage || DEFAULT_CONSCIOUS_PAGE.inspoImage!}
               alt="Our Inspiration Andalusia"
               fill
-              quality={95}
+              preset="spotlight"
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, 800px"
             />
           </div>
 
@@ -106,13 +104,12 @@ export default async function AboutPage() {
           </div>
 
           <div className="relative aspect-[16/8] w-full overflow-hidden rounded-none bg-black/5 shadow-xs">
-            <Image
+            <StudioImage
               src={c.founderImage || DEFAULT_CONSCIOUS_PAGE.founderImage!}
               alt="Founder Story"
               fill
-              quality={95}
+              preset="full"
               className="object-cover object-[center_30%]"
-              sizes="(max-width: 1024px) 100vw, 1400px"
             />
           </div>
 

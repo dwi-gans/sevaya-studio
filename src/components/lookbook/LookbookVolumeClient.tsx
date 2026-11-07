@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
@@ -108,14 +108,13 @@ export function LookbookVolumeClient({
         {/* Section 2: Editorial Hero Photo */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
-            <Image
+            <StudioImage
               src={cfg.heroImage || '/images/sevaya_hero_editorial.jpg'}
               alt={`${volTitle} Campaign Hero`}
               fill
               priority
-              quality={95}
+              preset="spotlight"
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -159,23 +158,21 @@ export function LookbookVolumeClient({
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
-              <Image
+              <StudioImage
                 src={cfg.collagePortrait || '/images/lookbook_figma_1.png'}
                 alt="Autumn Serenade Silhouette"
                 fill
-                quality={95}
+                preset="spotlight"
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
-              <Image
+              <StudioImage
                 src={cfg.collageDetail1 || '/images/figma_about_2.png'}
                 alt="Autumn Serenade Drapery"
                 fill
-                quality={95}
+                preset="spotlight"
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
           </div>
@@ -194,13 +191,12 @@ export function LookbookVolumeClient({
         {/* Centered Editorial Feature Image */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
-            <Image
+            <StudioImage
               src={cfg.panorama1 || '/images/lookbook_figma_6.png'}
               alt="SEVAYA Warm Silhouettes Editorial"
               fill
-              quality={95}
+              preset="spotlight"
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -222,33 +218,30 @@ export function LookbookVolumeClient({
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <Image
+              <StudioImage
                 src={cfg.triptych1 || '/images/lookbook_figma_8.png'}
                 alt="Autumn Tone 1"
                 fill
-                quality={95}
+                preset="thumbnail"
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <Image
+              <StudioImage
                 src={cfg.triptych2 || '/images/lookbook_figma_9.png'}
                 alt="Autumn Tone 2"
                 fill
-                quality={95}
+                preset="thumbnail"
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <Image
+              <StudioImage
                 src={cfg.triptych3 || '/images/lookbook_figma_0.png'}
                 alt="Autumn Tone 3"
                 fill
-                quality={95}
+                preset="thumbnail"
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
           </div>
@@ -257,13 +250,12 @@ export function LookbookVolumeClient({
         {/* Centered Final Movement Frame */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
-            <Image
+            <StudioImage
               src={cfg.fullDress || '/images/lookbook_figma_2.png'}
               alt="SEVAYA Movement in Rhythm"
               fill
-              quality={95}
+              preset="spotlight"
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>

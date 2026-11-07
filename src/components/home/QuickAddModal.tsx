@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { useCart } from '@/context/CartContext';
@@ -331,12 +331,11 @@ export function QuickAddModal({
                     key={`${img}-${i}`}
                     className="relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[#F7F7F7]"
                   >
-                    <Image
+                    <StudioImage
                       src={img}
                       alt={`${product.title} angle ${i + 1}`}
                       fill
-                      quality={95}
-                      sizes="(max-width: 640px) 100vw, 640px"
+                      preset="spotlight"
                       className="pointer-events-none object-cover"
                       priority={i === 0}
                       draggable={false}

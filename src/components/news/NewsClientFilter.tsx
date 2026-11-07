@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { Icon } from '@/components/ui/Icon';
 import type { Article } from '@/integrations/supabase/articles';
 
@@ -63,13 +63,13 @@ export function NewsClientFilter({
           >
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-8 items-center">
               <div className="relative aspect-[16/10] md:col-span-6 w-full overflow-hidden rounded-none bg-black/5">
-                <Image
+                <StudioImage
                   src={featuredArticle.image}
                   alt={featuredArticle.title}
                   fill
                   priority
+                  preset="spotlight"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <div className="md:col-span-6 flex flex-col justify-between self-stretch">
@@ -130,13 +130,12 @@ export function NewsClientFilter({
                 className="group block rounded-none border border-black/15 bg-white overflow-hidden shadow-xs hover:border-black/50 hover:shadow-md transition duration-200 flex flex-col justify-between"
               >
                 <div className="relative aspect-square w-full overflow-hidden bg-black/5">
-                  <Image
+                  <StudioImage
                     src={article.image}
                     alt={article.title}
                     fill
-                    quality={95}
+                    preset="catalog"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
                 <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-4">

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { VideoShowcase } from './VideoShowcase';
 import { useLanguage } from '@/context/LanguageContext';
 import {
@@ -153,25 +153,23 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
           <div className="order-2 md:order-2 grid grid-cols-2 gap-3 sm:gap-4 items-start">
             <RevealOnScroll variant="editorial" delayMs={0}>
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-                <Image
+                <StudioImage
                   src={narrative.aboutImage1 || '/images/figma_about_1.png'}
                   alt="SEVAYA editorial 1"
                   fill
-                  quality={95}
+                  preset="spotlight"
                   className="object-cover transition duration-700 hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 33vw"
                 />
               </div>
             </RevealOnScroll>
             <RevealOnScroll variant="editorial" delayMs={150}>
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-                <Image
+                <StudioImage
                   src={narrative.aboutImage2 || '/images/figma_about_2.png'}
                   alt="SEVAYA editorial 2"
                   fill
-                  quality={95}
+                  preset="spotlight"
                   className="object-cover transition duration-700 hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 33vw"
                 />
               </div>
             </RevealOnScroll>
