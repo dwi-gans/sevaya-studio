@@ -621,7 +621,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
       </div>
 
       {/* Loading State */}
-      {loading && variants.length === 0 ? (
+      {loading ? (
         <div className="flex h-64 flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
           <Icon name="refresh" size={24} className="animate-spin text-black/40" />
           <span className="text-xs font-semibold tracking-wider text-black/60 uppercase">
@@ -633,13 +633,18 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
            MODE 1: HIERARCHICAL / GROUPED BY PARENT PRODUCT (DEFAULT)
            ═══════════════════════════════════════════════════════════════ */
         <div className="space-y-3">
-          {groupedProducts.length === 0 ? (
+          {groupedProducts.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border border-black/15 bg-white">
               <Icon name="search_off" size={32} className="text-black/40 mb-2" />
               <p className="text-xs font-bold text-black">Tidak ada produk yang cocok dengan filter</p>
               <p className="text-[11px] text-black/50 mt-0.5">
                 Coba sesuaikan kata kunci pencarian atau ganti status filter stok.
               </p>
+            </div>
+          ) : groupedProducts.length === 0 ? (
+            <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border border-black/15 bg-white">
+              <Icon name="refresh" size={20} className="animate-spin text-black/30" />
+              <span className="text-xs text-black/40">Memuat produk...</span>
             </div>
           ) : (
             groupedProducts.map((prod) => {
@@ -925,10 +930,15 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
            MODE 2: FLAT SKU TABLE (BARCODE SCANNER & OPNAME)
            ═══════════════════════════════════════════════════════════════ */
         <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden">
-          {filteredVariants.length === 0 ? (
+          {filteredVariants.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <Icon name="search_off" size={32} className="text-black/40 mb-2" />
               <p className="text-xs font-bold text-black">Tidak ada varian yang cocok</p>
+            </div>
+          ) : filteredVariants.length === 0 ? (
+            <div className="flex h-48 flex-col items-center justify-center gap-2">
+              <Icon name="refresh" size={20} className="animate-spin text-black/30" />
+              <span className="text-xs text-black/40">Memuat varian...</span>
             </div>
           ) : (
             <div
