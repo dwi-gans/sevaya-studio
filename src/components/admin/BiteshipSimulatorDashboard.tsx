@@ -403,14 +403,31 @@ function OrderDetailModal({
                       </div>
                     </div>
 
-                    <a
-                      href="https://dashboard.biteship.com/orders"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-1 text-xs text-black underline hover:text-black/70"
-                    >
-                      Buka Biteship Dashboard →
-                    </a>
+                    <div className="flex items-center justify-between pt-1">
+                      <a
+                        href="https://dashboard.biteship.com/orders"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-black underline hover:text-black/70"
+                      >
+                        Buka Biteship Dashboard →
+                      </a>
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => {
+                          if (confirm('Putus ID Biteship lama agar Anda dapat memesan kurir baru dengan API Live?')) {
+                            onStatusUpdate(order.id, order.status, {
+                              biteship_order_id: null as any,
+                              biteship_status: null as any,
+                            });
+                          }
+                        }}
+                        className="text-[10px] text-red-600 underline hover:text-red-800 transition cursor-pointer"
+                      >
+                        Reset / Panggil Kurir Ulang
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">

@@ -7,16 +7,19 @@ import { deductStockForOrder } from '@/lib/inventory-server';
 
 const BITESHIP_BASE_URL = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
-// Dynamically select Biteship API key: prefers live if active, otherwise fallback to sandbox
+// Dynamically select Biteship API key: prioritizes live key for production, falls back to test key
 function getBiteshipAuthHeader(): { key: string; isLive: boolean } {
-  // If sandbox key is explicitly provided, use it for sandbox operations
-  if (process.env.BITESHIP_TEST_API_KEY) {
-    return { key: process.env.BITESHIP_TEST_API_KEY, isLive: false };
-  }
-  // Otherwise use default key
   const liveKey = process.env.BITESHIP_API_KEY || '';
-  const isLive = liveKey.startsWith('biteship_live');
-  return { key: liveKey, isLive };
+  const testKey = process.env.BITESHIP_TEST_API_KEY || '';
+
+  // Jika tersedia API key Live, utamakan untuk pembuatan pesanan nyata ke kurir
+  if (liveKey && liveKey.startsWith('biteship_live')) {
+    return { key: liveKey, isLive: true };
+  }
+  if (testKey) {
+    return { key: testKey, isLive: false };
+  }
+  return { key: liveKey, isLive: liveKey.startsWith('biteship_live') };
 }
 
 const { key: BITESHIP_TEST_KEY, isLive: IS_BITESHIP_LIVE } = getBiteshipAuthHeader();

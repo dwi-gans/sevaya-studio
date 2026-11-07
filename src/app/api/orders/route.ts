@@ -221,8 +221,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Background asynchronous Biteship & Email creation (Does NOT block the user)
-    const biteshipKey = process.env.BITESHIP_TEST_API_KEY || process.env.BITESHIP_API_KEY;
+    // Prioritaskan Live Key untuk pembuatan order nyata
+    const biteshipKey = process.env.BITESHIP_API_KEY || process.env.BITESHIP_TEST_API_KEY;
     const biteshipBaseUrl = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
     (async () => {
