@@ -84,6 +84,7 @@ export default function CheckoutPage() {
   const [sameAddress, setSameAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const isSubmittingRef = useRef(false); // hard guard against double-submit
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -286,11 +287,9 @@ export default function CheckoutPage() {
 
         // TriPay gateway — langsung redirect ke halaman pembayaran resmi TriPay
         if (snapData.success && snapData.payment_url) {
-          // Clear cart BEFORE redirect so user never sees empty-cart state on return
-          if (items.length > 0 && clearCart) clearCart();
+          setIsRedirecting(true);
           try { localStorage.removeItem('sevaya_profile_orders'); localStorage.removeItem('sevaya_profile_orders_ts'); } catch { /* ignore */ }
-          // Small delay to let clearCart settle, then redirect
-          setTimeout(() => { window.location.href = snapData.payment_url; }, 50);
+          window.location.href = snapData.payment_url;
           return;
         }
 
@@ -395,6 +394,21 @@ export default function CheckoutPage() {
   const shippingCost = selectedRate?.price ?? 0;
   const giftFee = giftPackaging ? 25000 : 0;
   const grandTotal = (totalPayable || subtotal) + shippingCost + giftFee;
+
+  // ── Show professional transition state when order is created and redirecting to TriPay ──
+  if (isSubmitting || isRedirecting) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-black border-t-transparent mb-4" />
+        <h1 className="font-sans text-sm font-semibold tracking-[0.2em] uppercase text-black">
+          Mengarahkan ke Pembayaran Resmi...
+        </h1>
+        <p className="mt-2 text-xs text-[#7C726E] max-w-sm">
+          Pesanan Anda telah berhasil dibuat. Mohon tunggu, Anda sedang dialihkan ke gateway pembayaran aman TriPay.
+        </p>
+      </div>
+    );
+  }
 
   // ── Wait for cart items to load from localStorage before checking empty ──
   if (!isLoaded || (!user && authLoading)) {

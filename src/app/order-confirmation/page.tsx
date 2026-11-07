@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 
 const formatIDR = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
@@ -69,9 +70,56 @@ function getPaymentMethodLabel(method: string) {
 
 function OrderConfirmationContent() {
   const params = useSearchParams();
-  const { getAccessToken } = useAuth();
+  const { user, getAccessToken, isLoading: authLoading } = useAuth();
+  const { clearCart } = useCart();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+
+  const orderNumber =
+    params.get('orderNumber') ||
+    params.get('tripay_merchant_ref') ||
+    params.get('merchant_ref') ||
+    params.get('order_id') ||
+    '';
+
+  const [dbOrder, setDbOrder] = useState<any>(null);
+
+  // Automatically clear cart once valid order confirmation is reached
+  useEffect(() => {
+    if (orderNumber) {
+      clearCart();
+    }
+  }, [orderNumber, clearCart]);
+
+  // Fetch verified order details from database
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchOrder() {
+      if (!orderNumber) return;
+      try {
+        const token = await getAccessToken();
+        const res = await fetch(`/api/user/orders/${encodeURIComponent(orderNumber)}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const data = await res.json();
+        if (isMounted && data.success && data.order) {
+          setDbOrder(data.order);
+        }
+      } catch {
+        // silent fallback
+      }
+    }
+
+    if (!authLoading) {
+      fetchOrder();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [orderNumber, authLoading, getAccessToken]);
 
   const handleBayar = async () => {
     setIsRedirecting(true);
@@ -109,47 +157,19 @@ function OrderConfirmationContent() {
     }
   };
 
-  const orderNumber = params.get('orderNumber') ?? 'SVY-261101-A4CC50';
-  const [dbOrder, setDbOrder] = useState<any>(null);
-
-  // Fetch verified order details from database
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchOrder() {
-      try {
-        const token = await getAccessToken();
-        const res = await fetch(`/api/user/orders/${encodeURIComponent(orderNumber)}`, {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        const data = await res.json();
-        if (isMounted && data.success && data.order) {
-          setDbOrder(data.order);
-        }
-      } catch {
-        // silent fallback
-      }
-    }
-    fetchOrder();
-    return () => {
-      isMounted = false;
-    };
-  }, [orderNumber, getAccessToken]);
-
-  const customerName = dbOrder?.customer_name || params.get('name') || 'mikel lim';
-  const customerEmail = dbOrder?.customer_email || params.get('email') || 'dr.vandals72@gmail.com';
-  const customerPhone = dbOrder?.customer_phone || params.get('phone') || '0893526621';
+  const customerName = dbOrder?.customer_name || params.get('name') || user?.name || 'Pelanggan SEVAYA';
+  const customerEmail = dbOrder?.customer_email || params.get('email') || user?.email || '';
+  const customerPhone = dbOrder?.customer_phone || params.get('phone') || user?.phone || '';
   
   // Payment method from database or params
   const rawPaymentMethod = (dbOrder?.payment_method || params.get('payment') || 'qris').toLowerCase();
   
-  const subtotal = dbOrder?.subtotal ?? Number(params.get('subtotal') ?? 1339000);
-  const shippingCost = dbOrder?.shipping_cost ?? Number(params.get('shipping') ?? 10000);
+  const subtotal = dbOrder?.subtotal ?? Number(params.get('subtotal') ?? 0);
+  const shippingCost = dbOrder?.shipping_cost ?? Number(params.get('shipping') ?? 0);
   const discount = dbOrder?.discount ?? Number(params.get('discount') ?? 0);
-  const grandTotal = dbOrder?.grand_total ?? Number(params.get('total') ?? subtotal + shippingCost - discount);
-  const courier = dbOrder?.courier_name || params.get('courier') || 'JNE Reguler (REG)';
-  const destination = dbOrder?.customer_address || params.get('destination') || 'kulonprogo, kos mk, Kalibawang, Kulon Progo, DI Yogyakarta 55672';
+  const grandTotal = dbOrder?.grand_total ?? Number(params.get('total') ?? (subtotal + shippingCost - discount));
+  const courier = dbOrder?.courier_name || params.get('courier') || 'Kurir Reguler';
+  const destination = dbOrder?.customer_address || params.get('destination') || '';
   const paymentStatus = params.get('payment_status') ?? '';
   const isPaid = dbOrder?.status === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture';
 
