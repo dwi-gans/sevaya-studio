@@ -282,28 +282,30 @@ export function QuickAddModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-6 md:p-8 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-6 md:p-8"
       onClick={onClose}
     >
-      {/* Modal Dialog: Expansive 2-Column Luxury Layout */}
+      {/* Modal Dialog: Mobile Bottom Sheet + Desktop Expansive 2-Column Luxury Layout */}
       <div
-        className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl h-[92vh] sm:h-[680px] max-h-[94vh] bg-white shadow-2xl border border-black/[0.10] flex flex-col sm:flex-row overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl h-[88vh] max-h-[88vh] sm:h-[680px] sm:max-h-[94vh] bg-white shadow-2xl border-t sm:border border-black/[0.10] rounded-t-2xl sm:rounded-none flex flex-col sm:flex-row overflow-y-auto sm:overflow-hidden animate-in fade-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button at top-right */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 z-30 flex h-8 w-8 items-center justify-center text-black/50 hover:text-black transition-colors cursor-pointer rounded-full bg-white/80 backdrop-blur-xs hover:bg-white"
-          aria-label="Tutup"
-        >
-          <Icon name="close" size={18} />
-        </button>
+        {/* Close Button: Sticky at top-right on mobile so it's always accessible, absolute on desktop */}
+        <div className="sticky top-0 z-30 flex justify-end p-3 pointer-events-none sm:absolute sm:top-4 sm:right-4 sm:p-0 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={onClose}
+            className="pointer-events-auto flex h-8 w-8 items-center justify-center text-black/60 hover:text-black transition-colors cursor-pointer rounded-full bg-white/90 shadow-2xs backdrop-blur-xs hover:bg-white border border-black/10 sm:border-0"
+            aria-label="Tutup"
+          >
+            <Icon name="close" size={17} />
+          </button>
+        </div>
 
-        {/* ── LEFT COLUMN: Swipeable / Scrollable Horizontal Photos (Full List from Start) ── */}
-        <div className="sm:w-1/2 md:w-[52%] bg-[#FAF8F5] p-5 sm:p-8 flex flex-col items-center justify-center relative select-none shrink-0 border-b sm:border-b-0 sm:border-r border-black/[0.08]">
+        {/* ── LEFT COLUMN: Swipeable / Scrollable Horizontal Photos (Pure White Background) ── */}
+        <div className="w-full sm:w-1/2 md:w-[52%] bg-white px-4 pt-1 sm:pt-8 pb-4 sm:p-8 flex flex-col items-center justify-center relative select-none shrink-0 border-b sm:border-b-0 sm:border-r border-black/[0.08]">
           <div
-            className="relative w-full max-w-[320px] sm:max-w-[420px] overflow-hidden bg-black/[0.02] shadow-2xs"
+            className="relative w-full max-w-[280px] sm:max-w-[420px] overflow-hidden bg-white shadow-2xs"
             onMouseDown={handlePhotoMouseDown}
             onMouseMove={handlePhotoMouseMove}
             onMouseUp={handlePhotoMouseUp}
@@ -324,7 +326,7 @@ export function QuickAddModal({
               {gallery.map((img, i) => (
                 <div
                   key={`${img}-${i}`}
-                  className="relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-black/5"
+                  className="relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[#F7F7F7]"
                 >
                   <Image
                     src={img}
@@ -346,7 +348,7 @@ export function QuickAddModal({
               ))}
             </div>
 
-            {/* Left & Right Chevron Arrows for easy desktop click */}
+            {/* Left & Right Chevron Arrows */}
             {gallery.length > 1 && (
               <>
                 <button
@@ -373,7 +375,7 @@ export function QuickAddModal({
 
           {/* Gallery Pagination Dots */}
           {gallery.length > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-1.5">
+            <div className="mt-3.5 flex items-center justify-center gap-1.5">
               {gallery.map((_, dotIdx) => (
                 <button
                   key={dotIdx}
@@ -392,7 +394,7 @@ export function QuickAddModal({
         </div>
 
         {/* ── RIGHT COLUMN: Content with Spacious Luxury Scrolling ── */}
-        <div className="sm:w-1/2 md:w-[48%] p-6 sm:p-9 md:p-10 flex flex-col justify-between overflow-y-auto scrollbar-thin">
+        <div className="w-full sm:w-1/2 md:w-[48%] p-5 sm:p-8 md:p-10 flex flex-col justify-between sm:overflow-y-auto scrollbar-thin bg-white">
           <div className="space-y-6">
             {/* Header: Title & Price */}
             <div>
@@ -548,7 +550,7 @@ export function QuickAddModal({
           </div>
 
           {/* Action Button & View Details */}
-          <div className="pt-6 mt-5 border-t border-black/[0.08]">
+          <div className="pt-6 mt-5 border-t border-black/[0.08] pb-8 sm:pb-0">
             <button
               type="button"
               disabled={isOutOfStock}
