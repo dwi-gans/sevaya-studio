@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
     const orderNumber = notification.merchant_ref;
     const tripayStatus = String(notification.status || '').toUpperCase();
     const paymentChannel = notification.payment_method || notification.payment_method_code || 'TriPay';
-    const paidAmount = Number(notification.amount_received || notification.total_amount || 0);
+    // total_amount = nominal kotor yang dibayar customer (sesuai grand_total)
+    // amount_received = nominal bersih setelah fee merchant TriPay
+    const paidAmount = Number(notification.total_amount ?? notification.amount ?? notification.amount_received ?? 0);
 
     if (!orderNumber) {
       console.warn('[TriPay Webhook] merchant_ref tidak ada dalam payload:', notification);
@@ -63,9 +65,11 @@ export async function POST(req: NextRequest) {
 
     // 5. Proteksi amount tampering
     if (internalStatus === 'paid' && existingOrder.grand_total > 0 && paidAmount > 0) {
-      if (paidAmount < Math.round(existingOrder.grand_total)) {
+      const expectedTotal = Math.round(Number(existingOrder.grand_total) || 0);
+      // Validasi: Pembayaran sah jika total pembayaran >= grand_total (toleransi 10 perak pembulatan sistem)
+      if (paidAmount < expectedTotal - 10) {
         console.error(
-          `[TriPay Security Alert] Jumlah dibayar (${paidAmount}) kurang dari yang diharapkan (${existingOrder.grand_total}) untuk order ${orderNumber}!`,
+          `[TriPay Security Alert] Jumlah dibayar (${paidAmount}) kurang dari yang diharapkan (${expectedTotal}) untuk order ${orderNumber}!`,
         );
         return NextResponse.json({ success: false, message: 'Amount mismatch' }, { status: 400 });
       }
