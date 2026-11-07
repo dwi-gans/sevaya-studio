@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSiteSections, getCachedSiteSections, DEFAULT_SITE_SECTIONS, SpotlightItem } from '@/integrations/supabase';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
@@ -64,13 +64,12 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
               href={abaya?.href || '/shop?category=abaya'}
               className="group relative block aspect-[3/4] w-full overflow-hidden sm:aspect-[4/3] bg-black/5 border border-black/10 shadow-xs"
             >
-              <Image
+              <StudioImage
                 src={abaya?.image || '/images/figma_abaya_banner.png'}
                 alt={abaya?.title || 'ABAYA Collection'}
                 fill
-                quality={95}
+                preset="spotlight"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">
@@ -87,13 +86,12 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
               href={khimar?.href || '/shop?category=khimar'}
               className="group relative block aspect-[3/4] w-full overflow-hidden sm:aspect-[4/3] bg-black/5 border border-black/10 shadow-xs"
             >
-              <Image
+              <StudioImage
                 src={khimar?.image || '/images/khiban-banner-v2.jpg'}
                 alt={khimar?.title || 'KHIMAR Collection'}
                 fill
-                quality={95}
+                preset="spotlight"
                 className="object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">

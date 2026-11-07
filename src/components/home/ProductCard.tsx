@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Icon } from '@/components/ui/Icon';
-import { QuickAddModal } from './QuickAddModal';
+import { QuickAddModal } from '@/features/quick-add';
 
 export interface Product {
   id: string;
@@ -156,14 +156,13 @@ export function ProductCard({
           )}
 
           {/* Primary Product Image — smoothly transitions on swatch change */}
-          <Image
+          <StudioImage
             src={displayImage}
             alt={`${product.title} - ${currentActiveName || 'Busana'}`}
             fill
             priority={priority}
-            quality={95}
+            preset="catalog"
             unoptimized={shouldBeUnoptimized}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onLoad={() => setIsLoaded(true)}
             onError={() => {
               // Jika foto varian corrupt/404, otomatis fallback ke foto produk utama
@@ -182,13 +181,12 @@ export function ProductCard({
 
           {/* Secondary Image on Hover (only when no multiple color swatches) */}
           {secondaryImage && !isOutOfStock && (
-            <Image
+            <StudioImage
               src={secondaryImage}
               alt={`${product.title} alternate view`}
               fill
-              quality={95}
+              preset="catalog"
               unoptimized={!secondaryImage.startsWith('/') && !secondaryImage.includes('supabase.co')}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="pointer-events-none select-none object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
               draggable={false}
             />

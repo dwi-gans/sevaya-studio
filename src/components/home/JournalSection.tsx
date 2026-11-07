@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { StudioImage } from '@/components/common';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   getSiteSections,
@@ -116,12 +116,11 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
             <RevealOnScroll key={`${item.id}-${idx}`} variant="editorial" delayMs={idx * 120}>
               <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-2.5 sm:p-4 md:p-5 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
                 <Link href={item.href || '/news'} className="relative aspect-[4/3] sm:aspect-[16/10] w-full overflow-hidden bg-black/5 block">
-                  <Image
+                  <StudioImage
                     src={item.image}
                     alt={item.title}
                     fill
-                    quality={95}
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    preset="journal"
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 </Link>

@@ -1,10 +1,13 @@
 import React from 'react';
-import { HeroSection } from '@/components/home/HeroSection';
-import { ProductGrid, DEFAULT_BEST_SELLERS } from '@/components/home/ProductGrid';
-import { CategorySpotlight } from '@/components/home/CategorySpotlight';
-import { NarrativeSection } from '@/components/home/NarrativeSection';
-import { JournalSection } from '@/components/home/JournalSection';
-import { Footer } from '@/components/layout/Footer';
+import {
+  HeroSection,
+  ProductGrid,
+  CategorySpotlight,
+  NarrativeSection,
+  JournalSection,
+  Footer,
+} from '@/components/sections';
+import { DEFAULT_BEST_SELLERS } from '@/components/home/ProductGrid';
 import { fetchCatalogProducts } from '@/features/catalog';
 import { getSiteSections, getLatestArticlesForJournal, DEFAULT_SITE_SECTIONS } from '@/integrations/supabase';
 
