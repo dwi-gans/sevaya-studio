@@ -161,8 +161,9 @@ export function ProductCard({
             alt={`${product.title} - ${currentActiveName || 'Busana'}`}
             fill
             priority={priority}
+            quality={95}
             unoptimized={shouldBeUnoptimized}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onLoad={() => setIsLoaded(true)}
             onError={() => {
               // Jika foto varian corrupt/404, otomatis fallback ke foto produk utama
@@ -185,8 +186,9 @@ export function ProductCard({
               src={secondaryImage}
               alt={`${product.title} alternate view`}
               fill
+              quality={95}
               unoptimized={!secondaryImage.startsWith('/') && !secondaryImage.includes('supabase.co')}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="pointer-events-none select-none object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
               draggable={false}
             />

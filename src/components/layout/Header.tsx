@@ -523,8 +523,9 @@ export function Header() {
                             src={item.image}
                             alt={item.title}
                             fill
+                            quality={90}
                             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                            sizes="48px"
+                            sizes="96px"
                           />
                         </div>
                         <div className="flex-1 min-w-0">

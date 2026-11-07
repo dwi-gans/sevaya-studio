@@ -44,7 +44,8 @@ export default async function AboutPage() {
             fill
             className="object-cover"
             priority
-            sizes="(max-width: 1024px) 100vw, 1024px"
+            quality={95}
+            sizes="(max-width: 1024px) 100vw, 1400px"
           />
           <div className="absolute top-6 left-6 z-10">
             <Logo variant="light" className="h-5 w-auto drop-shadow-md" />
@@ -73,8 +74,9 @@ export default async function AboutPage() {
               src={c.inspoImage || DEFAULT_CONSCIOUS_PAGE.inspoImage!}
               alt="Our Inspiration Andalusia"
               fill
+              quality={95}
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 800px"
             />
           </div>
 
@@ -108,8 +110,9 @@ export default async function AboutPage() {
               src={c.founderImage || DEFAULT_CONSCIOUS_PAGE.founderImage!}
               alt="Founder Story"
               fill
+              quality={95}
               className="object-cover object-[center_30%]"
-              sizes="(max-width: 1024px) 100vw, 1024px"
+              sizes="(max-width: 1024px) 100vw, 1400px"
             />
           </div>
 

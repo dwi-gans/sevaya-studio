@@ -113,8 +113,9 @@ export function LookbookVolumeClient({
               alt={`${volTitle} Campaign Hero`}
               fill
               priority
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -162,8 +163,9 @@ export function LookbookVolumeClient({
                 src={cfg.collagePortrait || '/images/lookbook_figma_1.png'}
                 alt="Autumn Serenade Silhouette"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 50vw, 336px"
+                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -171,8 +173,9 @@ export function LookbookVolumeClient({
                 src={cfg.collageDetail1 || '/images/figma_about_2.png'}
                 alt="Autumn Serenade Drapery"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 50vw, 336px"
+                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
           </div>
@@ -195,8 +198,9 @@ export function LookbookVolumeClient({
               src={cfg.panorama1 || '/images/lookbook_figma_6.png'}
               alt="SEVAYA Warm Silhouettes Editorial"
               fill
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -222,8 +226,9 @@ export function LookbookVolumeClient({
                 src={cfg.triptych1 || '/images/lookbook_figma_8.png'}
                 alt="Autumn Tone 1"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -231,8 +236,9 @@ export function LookbookVolumeClient({
                 src={cfg.triptych2 || '/images/lookbook_figma_9.png'}
                 alt="Autumn Tone 2"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -240,8 +246,9 @@ export function LookbookVolumeClient({
                 src={cfg.triptych3 || '/images/lookbook_figma_0.png'}
                 alt="Autumn Tone 3"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
           </div>
@@ -254,8 +261,9 @@ export function LookbookVolumeClient({
               src={cfg.fullDress || '/images/lookbook_figma_2.png'}
               alt="SEVAYA Movement in Rhythm"
               fill
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>

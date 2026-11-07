@@ -98,8 +98,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               alt="SEVAYA Floraison Campaign Hero"
               fill
               priority
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -143,8 +144,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 src={cfg.collagePortrait || '/images/lookbook_figma_0.png'}
                 alt="Floraison Botanical Silhouette"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 50vw, 336px"
+                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -152,8 +154,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 src={cfg.collageDetail1 || '/images/figma_about_1.png'}
                 alt="Floraison Textile Flow"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 50vw, 336px"
+                sizes="(max-width: 640px) 100vw, 512px"
               />
             </div>
           </div>
@@ -177,8 +180,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               src={cfg.panorama1 || '/images/figma_hero.png'}
               alt="SEVAYA Meet The Icon Editorial"
               fill
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>
@@ -205,8 +209,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 src={cfg.triptych1 || '/images/lookbook_figma_2.png'}
                 alt="Floraison Texture Detail 1"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -214,8 +219,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 src={cfg.triptych2 || '/images/lookbook_figma_3.png'}
                 alt="Floraison Texture Detail 2"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
@@ -223,8 +229,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 src={cfg.triptych3 || '/images/lookbook_figma_4.png'}
                 alt="Floraison Texture Detail 3"
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 hover:scale-105"
-                sizes="(max-width: 640px) 100vw, 224px"
+                sizes="(max-width: 640px) 100vw, 400px"
               />
             </div>
           </div>
@@ -237,8 +244,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               src={cfg.fullDress || '/images/lookbook_figma_5.png'}
               alt="SEVAYA Movement in Rhythm"
               fill
+              quality={95}
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 672px"
+              sizes="(max-width: 768px) 100vw, 1024px"
             />
           </div>
         </div>

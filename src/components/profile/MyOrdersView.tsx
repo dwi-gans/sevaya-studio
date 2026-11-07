@@ -285,6 +285,8 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                           src={firstItem.image || '/images/catalog/catalog-01.jpg'}
                           alt={firstItem.title || firstItem.name || 'Produk'}
                           fill
+                          quality={90}
+                          sizes="112px"
                           className="object-cover"
                           unoptimized={Boolean(firstItem.image && firstItem.image.startsWith('http'))}
                         />

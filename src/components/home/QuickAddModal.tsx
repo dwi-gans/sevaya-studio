@@ -335,7 +335,8 @@ export function QuickAddModal({
                       src={img}
                       alt={`${product.title} angle ${i + 1}`}
                       fill
-                      sizes="(max-width: 640px) 85vw, 480px"
+                      quality={95}
+                      sizes="(max-width: 640px) 100vw, 640px"
                       className="pointer-events-none object-cover"
                       priority={i === 0}
                       draggable={false}

@@ -657,6 +657,7 @@ export function ProductDetailClient({
                   alt={`${title} - ${selectedColor.name}`}
                   fill
                   priority
+                  quality={95}
                   onError={() => {
                     const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
                     if (activeImage !== fallback) {
@@ -669,7 +670,7 @@ export function ProductDetailClient({
                     !activeImage.includes('unsplash.com')
                   }
                   className="object-cover object-top transition-opacity duration-300"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 800px"
                 />
               </div>
 
@@ -693,6 +694,7 @@ export function ProductDetailClient({
                           src={imgSrc}
                           alt={`Thumbnail ${idx + 1}`}
                           fill
+                          quality={90}
                           onError={(e) => {
                             const target = e.currentTarget as HTMLElement;
                             if (target?.parentElement) {
@@ -705,7 +707,7 @@ export function ProductDetailClient({
                             !imgSrc.includes('unsplash.com')
                           }
                           className="object-cover object-top"
-                          sizes="64px"
+                          sizes="128px"
                         />
                       </button>
                     );

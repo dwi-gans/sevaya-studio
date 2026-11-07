@@ -94,8 +94,9 @@ export default function ShoppingBagPage() {
                               src={item.image}
                               alt={item.title}
                               fill
+                              quality={90}
                               className="object-cover object-top"
-                              sizes="96px"
+                              sizes="192px"
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-[10px] uppercase text-black/60">

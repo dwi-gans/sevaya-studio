@@ -68,8 +68,9 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
                 src={abaya?.image || '/images/figma_abaya_banner.png'}
                 alt={abaya?.title || 'ABAYA Collection'}
                 fill
+                quality={95}
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 768px) 50vw, 50vw"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">
@@ -90,8 +91,9 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
                 src={khimar?.image || '/images/khiban-banner-v2.jpg'}
                 alt={khimar?.title || 'KHIMAR Collection'}
                 fill
+                quality={95}
                 className="object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 768px) 50vw, 50vw"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">

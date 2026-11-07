@@ -157,8 +157,9 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
                   src={narrative.aboutImage1 || '/images/figma_about_1.png'}
                   alt="SEVAYA editorial 1"
                   fill
+                  quality={95}
                   className="object-cover transition duration-700 hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 25vw"
+                  sizes="(max-width: 768px) 50vw, 33vw"
                 />
               </div>
             </RevealOnScroll>
@@ -168,8 +169,9 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
                   src={narrative.aboutImage2 || '/images/figma_about_2.png'}
                   alt="SEVAYA editorial 2"
                   fill
+                  quality={95}
                   className="object-cover transition duration-700 hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, 25vw"
+                  sizes="(max-width: 768px) 50vw, 33vw"
                 />
               </div>
             </RevealOnScroll>

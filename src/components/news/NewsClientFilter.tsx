@@ -134,8 +134,9 @@ export function NewsClientFilter({
                     src={article.image}
                     alt={article.title}
                     fill
+                    quality={95}
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
                 <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-4">

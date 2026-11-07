@@ -595,6 +595,8 @@ export default function OrderDetailPage({
                           src={item.image || '/images/catalog/catalog-01.jpg'}
                           alt={title}
                           fill
+                          quality={90}
+                          sizes="112px"
                           className="object-cover"
                           unoptimized={Boolean(item.image && item.image.startsWith('http'))}
                         />

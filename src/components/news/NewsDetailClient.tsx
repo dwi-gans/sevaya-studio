@@ -52,8 +52,9 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
             alt={article.title}
             fill
             priority
+            quality={95}
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, 800px"
+            sizes="(max-width: 768px) 100vw, 1200px"
           />
         </div>
         {/* Hero Caption */}
@@ -82,8 +83,9 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       src={middleImage}
                       alt="SEVAYA Studio Detail"
                       fill
+                      quality={95}
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 800px"
+                      sizes="(max-width: 768px) 100vw, 1200px"
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
@@ -99,8 +101,9 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       src={extraImages[index - 1]!}
                       alt={`${article.title} — foto ${index + 1}`}
                       fill
+                      quality={95}
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 800px"
+                      sizes="(max-width: 768px) 100vw, 1200px"
                     />
                   </div>
                   <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
@@ -122,8 +125,9 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                         src={img}
                         alt={`${article.title} — foto ${i + 2}`}
                         fill
+                        quality={95}
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 800px"
+                        sizes="(max-width: 768px) 100vw, 1200px"
                       />
                     </div>
                     <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
@@ -162,8 +166,9 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       src={rel.image}
                       alt={rel.title}
                       fill
+                      quality={95}
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, 260px"
+                      sizes="(max-width: 640px) 100vw, 400px"
                     />
                   </div>
                   <span className="text-[9px] font-semibold tracking-wider text-[#888888] uppercase block">
