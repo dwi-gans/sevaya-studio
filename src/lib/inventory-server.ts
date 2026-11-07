@@ -460,7 +460,7 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
  * Aman dijalankan lebih dari sekali karena idempotent per variantId (tidak re-deduct jika stok sudah 0).
  */
 export async function deductStockForOrder(
-  items: Array<{ id: string; color?: string; size?: string; quantity: number }>,
+  items: Array<{ id: string; color?: string; size?: string; quantity?: number; qty?: number }>,
   orderNumber: string,
   customerName: string
 ): Promise<void> {
@@ -468,12 +468,20 @@ export async function deductStockForOrder(
 
   for (const item of items) {
     try {
-      const variant = allVariants.find(
+      const targetQty = Math.max(1, Number(item.quantity ?? item.qty ?? 1));
+
+      // 1. Cari varian yang cocok dengan warna dan ukuran spesifik
+      let variant = allVariants.find(
         (v) =>
           String(v.productId) === String(item.id) &&
           v.colorName.toLowerCase() === (item.color || '').toLowerCase() &&
           v.size.toUpperCase() === (item.size || '').toUpperCase()
       );
+
+      // 2. Fallback: jika warna/ukuran di item sedikit berbeda, cari varian pertama dari produk tersebut
+      if (!variant) {
+        variant = allVariants.find((v) => String(v.productId) === String(item.id));
+      }
 
       if (!variant) {
         console.warn(
@@ -492,7 +500,7 @@ export async function deductStockForOrder(
       await executeServerStockMutation({
         variantId: variant.id,
         type: 'out',
-        quantity: item.quantity,
+        quantity: targetQty,
         reason: 'ORDER_FULFILLMENT',
         reference: orderNumber,
         notes: `Pembelian oleh ${customerName} via Web`,
