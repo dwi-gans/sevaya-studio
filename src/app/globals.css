@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 :root {
+  --font-dm-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --color-white: #FFFFFF;
   --color-black: #000000;
   --text-muted-on-light: rgba(0, 0, 0, 0.64);

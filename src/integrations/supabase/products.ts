@@ -251,8 +251,8 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit in-memory cache
 async function loadServerDiskProducts(): Promise<DbProduct[] | null> {
   if (typeof window !== 'undefined') return null;
   try {
-    const fs = await import('fs');
-    const path = await import('path');
+    const fs = await import(/* webpackIgnore: true */ 'fs');
+    const path = await import(/* webpackIgnore: true */ 'path');
     const diskPath = path.join(process.cwd(), '.data', PRODUCTS_FILE);
     if (fs.existsSync(diskPath)) {
       const raw = fs.readFileSync(diskPath, 'utf-8');

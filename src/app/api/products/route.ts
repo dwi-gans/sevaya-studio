@@ -7,7 +7,6 @@ import { DEFAULT_DB_PRODUCTS, DbProduct } from '@/integrations/supabase';
 import {
   getCachedProducts,
   setCachedProducts,
-  invalidateCachedProducts,
 } from '@/lib/products-cache';
 
 export const runtime = 'nodejs';
@@ -144,6 +143,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-
-// Expose for direct server-side invalidation
-export { invalidateCachedProducts };
