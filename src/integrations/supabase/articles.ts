@@ -93,6 +93,17 @@ export async function getAllArticlesAdmin(): Promise<Article[]> {
 
 // ── CREATE ────────────────────────────────────────────────────────────────────
 
+function cleanPayloadForDb<T extends Record<string, any>>(payload: T, errMessage?: string): Partial<T> {
+  const cleaned: Record<string, any> = { ...payload };
+  const match = errMessage?.match(/Could not find the '([^']+)' column/i);
+  if (match && match[1]) {
+    delete cleaned[match[1]];
+  }
+  delete cleaned.hero_caption;
+  delete cleaned.image_captions;
+  return cleaned as Partial<T>;
+}
+
 export async function createArticle(article: ArticleInsert): Promise<Article | null> {
   let { data, error } = await supabase
     .from('articles')
@@ -100,8 +111,8 @@ export async function createArticle(article: ArticleInsert): Promise<Article | n
     .select()
     .single();
 
-  if (error && error.message && error.message.toLowerCase().includes('hero_caption')) {
-    const { hero_caption: _hc, ...fallbackArticle } = article;
+  if (error && (error.message.includes('schema cache') || error.message.includes('hero_caption') || error.message.includes('image_captions'))) {
+    const fallbackArticle = cleanPayloadForDb(article, error.message);
     const fallbackRes = await supabase
       .from('articles')
       .insert([fallbackArticle])
@@ -109,8 +120,9 @@ export async function createArticle(article: ArticleInsert): Promise<Article | n
       .single();
     data = fallbackRes.data;
     error = fallbackRes.error;
-    if (data && _hc) {
-      (data as Record<string, unknown>).hero_caption = _hc;
+    if (data) {
+      if (article.hero_caption) (data as Record<string, unknown>).hero_caption = article.hero_caption;
+      if (article.image_captions) (data as Record<string, unknown>).image_captions = article.image_captions;
     }
   }
 
@@ -139,9 +151,9 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
 
   let { data, error } = await query.select().maybeSingle();
 
-  // Jika error karena kolom hero_caption belum ditambahkan di Postgres, ulangi tanpa hero_caption
-  if (error && error.message && error.message.toLowerCase().includes('hero_caption')) {
-    const { hero_caption: _hc, ...fallbackUpdates } = updates;
+  // Jika error karena kolom opsional (hero_caption / image_captions) belum ada di skema Postgres
+  if (error && (error.message.includes('schema cache') || error.message.includes('hero_caption') || error.message.includes('image_captions'))) {
+    const fallbackUpdates = cleanPayloadForDb(updates, error.message);
     let fallbackQuery = supabase
       .from('articles')
       .update({ ...fallbackUpdates, updated_at: new Date().toISOString() });
@@ -153,8 +165,9 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
     const fallbackRes = await fallbackQuery.select().maybeSingle();
     data = fallbackRes.data;
     error = fallbackRes.error;
-    if (data && _hc) {
-      (data as Record<string, unknown>).hero_caption = _hc;
+    if (data) {
+      if (updates.hero_caption) (data as Record<string, unknown>).hero_caption = updates.hero_caption;
+      if (updates.image_captions) (data as Record<string, unknown>).image_captions = updates.image_captions;
     }
   }
 
@@ -167,7 +180,7 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
     // ── AUTO-UPSERT ──
     // Jika artikel belum ada di database Supabase, buatkan langsung (INSERT)
     const targetSlug = updates.slug || (isUuid ? generateSlug(updates.title || 'article') : idOrSlug);
-    const insertPayload = {
+    const insertPayload: Record<string, any> = {
       slug: targetSlug,
       title: updates.title || 'Untitled Article',
       category: updates.category || 'Journal',
@@ -178,16 +191,26 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
       image: updates.image || '/images/catalog/catalog-11.jpg',
       images: Array.isArray(updates.images) ? updates.images : [],
       image_captions: Array.isArray(updates.image_captions) ? updates.image_captions : [],
+      hero_caption: updates.hero_caption || '',
       featured: Boolean(updates.featured),
       published: updates.published !== false,
       updated_at: new Date().toISOString(),
     };
 
-    const inserted = await supabase
+    let inserted = await supabase
       .from('articles')
       .upsert(insertPayload, { onConflict: 'slug' })
       .select()
       .maybeSingle();
+
+    if (inserted.error && (inserted.error.message.includes('schema cache') || inserted.error.message.includes('hero_caption') || inserted.error.message.includes('image_captions'))) {
+      const fallbackInsertPayload = cleanPayloadForDb(insertPayload, inserted.error.message);
+      inserted = await supabase
+        .from('articles')
+        .upsert(fallbackInsertPayload, { onConflict: 'slug' })
+        .select()
+        .maybeSingle();
+    }
 
     if (inserted.error) {
       console.error('[articles] auto-upsert error:', inserted.error.message);
