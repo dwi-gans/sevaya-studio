@@ -459,8 +459,29 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
  * Dipanggil dari TriPay webhook dan admin PATCH order status → 'paid'.
  * Aman dijalankan lebih dari sekali karena idempotent per variantId (tidak re-deduct jika stok sudah 0).
  */
+function isVariantMatch(v: ProductVariant, item: { id?: string; title?: string; slug?: string }): boolean {
+  const itemId = String(item.id || '').toLowerCase().trim();
+  const itemTitle = String(item.title || '').toLowerCase().trim();
+  const vTitle = v.productTitle.toLowerCase().trim();
+  const vSlug = (v.productSlug || '').toLowerCase().trim();
+  const vProdId = String(v.productId).toLowerCase().trim();
+
+  // 1. Direct ID matches
+  if (v.id.toLowerCase() === itemId || vProdId === itemId) return true;
+
+  // 2. Slug prefix matches (e.g. item.id = "paloma-khiban-obsidian-black-s", vSlug = "paloma-khiban")
+  if (vSlug && (itemId === vSlug || itemId.startsWith(vSlug) || itemId.includes(vSlug))) return true;
+
+  // 3. Title matches
+  if (itemTitle && vTitle && (vTitle === itemTitle || itemTitle.includes(vTitle) || vTitle.includes(itemTitle))) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function deductStockForOrder(
-  items: Array<{ id: string; color?: string; size?: string; quantity?: number; qty?: number }>,
+  items: Array<{ id: string; title?: string; color?: string; size?: string; quantity?: number; qty?: number }>,
   orderNumber: string,
   customerName: string
 ): Promise<void> {
@@ -470,22 +491,32 @@ export async function deductStockForOrder(
     try {
       const targetQty = Math.max(1, Number(item.quantity ?? item.qty ?? 1));
 
-      // 1. Cari varian yang cocok dengan warna dan ukuran spesifik
+      // 1. Cari varian yang cocok produknya DAN warna + ukuran
       let variant = allVariants.find(
         (v) =>
-          String(v.productId) === String(item.id) &&
+          isVariantMatch(v, item) &&
           v.colorName.toLowerCase() === (item.color || '').toLowerCase() &&
           v.size.toUpperCase() === (item.size || '').toUpperCase()
       );
 
-      // 2. Fallback: jika warna/ukuran di item sedikit berbeda, cari varian pertama dari produk tersebut
+      // 2. Jika warna tidak cocok persis (misal warna sudah di-rename), cari kecocokan ukuran
       if (!variant) {
-        variant = allVariants.find((v) => String(v.productId) === String(item.id));
+        variant = allVariants.find(
+          (v) =>
+            isVariantMatch(v, item) &&
+            v.size.toUpperCase() === (item.size || '').toUpperCase()
+        );
+      }
+
+      // 3. Fallback: ambil varian pertama dari produk tersebut yang stoknya masih ada
+      if (!variant) {
+        variant = allVariants.find((v) => isVariantMatch(v, item) && v.stock > 0) ||
+                  allVariants.find((v) => isVariantMatch(v, item));
       }
 
       if (!variant) {
         console.warn(
-          `[deductStockForOrder] Varian tidak ditemukan: produk="${item.id}" warna="${item.color}" ukuran="${item.size}" — dilewati.`
+          `[deductStockForOrder] Varian tidak ditemukan untuk: id="${item.id}" title="${item.title}" warna="${item.color}" ukuran="${item.size}" — dilewati.`
         );
         continue;
       }

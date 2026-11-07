@@ -279,8 +279,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    // Auto-deduct inventory stok jika status diubah ke 'paid' dan sebelumnya belum paid
-    if (data && status === 'paid' && !wasAlreadyPaidForPatch) {
+    // Auto-deduct inventory stok jika status diubah ke 'paid', 'processing', atau 'shipped' dari 'pending_payment'
+    const isNowConfirmed = ['paid', 'processing', 'shipped'].includes(status);
+    const wasPending = !existingOrderForPatch?.status || existingOrderForPatch?.status === 'pending_payment';
+    if (data && isNowConfirmed && wasPending) {
       let itemsForDeduct: any[] = [];
       try {
         itemsForDeduct =
@@ -433,6 +435,21 @@ export async function POST(req: NextRequest) {
 
     if (updateErr) {
       console.error('Failed to link Biteship ID:', updateErr.message);
+    }
+
+    // Auto-deduct stock if this order was pending payment before courier pickup
+    if (order && order.status === 'pending_payment') {
+      let itemsForDeduct: any[] = [];
+      try {
+        itemsForDeduct = typeof order.items === 'string' ? JSON.parse(order.items) : order.items || [];
+      } catch {
+        itemsForDeduct = [];
+      }
+      deductStockForOrder(
+        itemsForDeduct,
+        order.order_number,
+        order.customer_name || 'Pelanggan'
+      ).catch((e: unknown) => console.warn('[Biteship POST] Stock deduction warning:', e));
     }
 
     return NextResponse.json({
