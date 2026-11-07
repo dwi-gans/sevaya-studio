@@ -80,8 +80,10 @@ function buildGalleryList(
   pushUnique(mainImage);
   if (Array.isArray(extraImages) && extraImages.length > 0) {
     extraImages.forEach(pushUnique);
-  } else if (Array.isArray(swatches)) {
-    // Hanya jika produk belum memiliki extraImages tersendiri, gunakan foto swatch
+  }
+
+  // Selalu tambahkan foto per-warna dari swatches ke galeri (agar swipe = ganti warna)
+  if (Array.isArray(swatches)) {
     swatches.forEach((s) => {
       if (s.image && !s.image.includes('logo_ibey')) {
         pushUnique(s.image);
@@ -108,6 +110,8 @@ export function ProductDetailClient({
 
   const [dbProduct, setDbProduct] = useState<DbProduct>(initialProduct);
   const [variants, setVariants] = useState<ProductVariant[]>(initialVariants);
+  // Track whether variants have been confirmed from live API (prevents flicker)
+  const [variantsReady, setVariantsReady] = useState(initialVariants.length > 0);
   // Semua produk dari DB (untuk Related Products)
   const [allDbProducts, setAllDbProducts] = useState<DbProduct[]>([]);
 
@@ -179,6 +183,14 @@ export function ProductDetailClient({
           vr.size.toUpperCase() === selectedSize.toUpperCase()
       );
       if (v !== undefined) return v.stock;
+      // Color found but no matching size variant = not configured, use product-level stock
+      const colorVariants = variants.filter(
+        (vr) => vr.colorName.toLowerCase() === selectedColor.name.toLowerCase()
+      );
+      if (colorVariants.length > 0) {
+        // Specific size not found but color variants exist = size is available, use max of color
+        return Math.max(...colorVariants.map((v) => v.stock));
+      }
     }
     // Fallback ke stok total produk jika tidak ada data varian
     return typeof dbProduct.stock === 'number'
@@ -280,9 +292,15 @@ export function ProductDetailClient({
         );
         if (productVariants.length > 0) {
           setVariants(productVariants);
+          setVariantsReady(true);
+        } else {
+          // No variants from API = rely on SSR data
+          setVariantsReady(true);
         }
       })
-      .catch(() => {/* ignore — SSR data masih tersedia */});
+      .catch(() => {
+        setVariantsReady(true); // fallback to SSR data on error
+      });
 
     return () => {
       isMounted = false;
@@ -461,7 +479,8 @@ export function ProductDetailClient({
                   {sizeOptions.map((sz) => {
                     const isSelected = selectedSize === sz;
                     // Cek apakah kombinasi warna+size ini habis
-                    const szVariant = variants.length > 0
+                    // Only mark sold-out after variants confirmed from live API (prevents 1s flicker)
+                    const szVariant = variantsReady && variants.length > 0
                       ? variants.find(
                           (v) =>
                             v.colorName.toLowerCase() === selectedColor.name.toLowerCase() &&
@@ -508,11 +527,11 @@ export function ProductDetailClient({
                   <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
                     QUANTITY
                   </span>
-                  {isOutOfStock ? (
+                  {isOutOfStock && variantsReady ? (
                     <span className="text-[9.5px] font-normal text-rose-600 uppercase tracking-wider">
                       Stok Habis
                     </span>
-                  ) : availableStock <= 5 ? (
+                  ) : variantsReady && availableStock <= 5 ? (
                     <span className="text-[9.5px] font-normal text-amber-700">
                       Sisa {availableStock} lagi
                     </span>

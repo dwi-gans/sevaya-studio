@@ -4,7 +4,7 @@
  * NEXT_PUBLIC_* variables must be referenced literally so Next.js can inline them.
  */
 export const publicEnv = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://sevaya-studio.com',
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vhoifosfdzcmtczizzrb.supabase.co',
   supabaseAnonKey:
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
