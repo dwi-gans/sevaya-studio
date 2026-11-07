@@ -413,16 +413,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Link the Biteship order ID back to our Supabase order
+    // Link the Biteship order ID and immediate waybill/tracking number back to our Supabase order
+    const waybillId = json.courier?.waybill_id || json.courier?.tracking_id;
+    const updatePayload: Record<string, unknown> = {
+      biteship_order_id: json.id,
+      biteship_status: json.status,
+      status: 'processing',
+      courier_name: `${courier_company?.toUpperCase() || 'JNE'} ${courier_type?.toUpperCase() || 'REG'}`,
+      updated_at: new Date().toISOString(),
+    };
+    if (waybillId) {
+      updatePayload.tracking_number = waybillId;
+    }
+
     const { error: updateErr } = await supabaseAdmin
       .from('orders')
-      .update({
-        biteship_order_id: json.id,
-        biteship_status: json.status,
-        status: 'processing',
-        courier_name: `${courier_company?.toUpperCase() || 'JNE'} ${courier_type?.toUpperCase() || 'REG'}`,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', order_id);
 
     if (updateErr) {
@@ -433,6 +439,7 @@ export async function POST(req: NextRequest) {
       success: true,
       biteship_order_id: json.id,
       biteship_status: json.status,
+      tracking_number: waybillId || undefined,
       order: json,
     });
   } catch (err) {
