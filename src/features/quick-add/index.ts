@@ -1,2 +1,2 @@
-export { QuickAddModal } from '@/components/home/QuickAddModal';
+export { QuickAddModal } from './QuickAddModal';
 export type { Product } from '@/components/home/ProductCard';
