@@ -109,7 +109,7 @@ export async function createTripayTransaction(
     })),
     return_url:
       params.return_url ||
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sevaya-studio.com'}/order-confirmation`,
+      `${(process.env.NEXT_PUBLIC_SITE_URL || 'https://sevaya-studio.com').replace(/\/$/, '')}/order-confirmation`,
     expired_time: expiredTime,
     signature,
   };

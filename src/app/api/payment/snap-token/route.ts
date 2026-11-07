@@ -209,6 +209,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://sevaya-studio.com';
+
     const tripayResult = await createTripayTransaction({
       merchant_ref: order_id,
       method: tripayChannel,
@@ -217,6 +219,7 @@ export async function POST(req: NextRequest) {
       customer_email: finalCustomer?.email || 'customer@sevaya.id',
       customer_phone: finalCustomer?.phone || '',
       order_items: builtItems,
+      return_url: `${siteUrl}/order-confirmation`,
     });
 
     console.log(`[TriPay Transaction] Order: ${order_id}, Channel: ${tripayChannel}, URL: ${tripayResult.payment_url}`);
