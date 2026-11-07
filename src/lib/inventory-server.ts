@@ -295,14 +295,31 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
     : [{ name: 'Default', color: '#1A1A1A' }];
   const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'];
 
-  const updatedList = [...existing];
+  const allowedColorNames = new Set(swatches.map((s) => s.name.trim().toLowerCase()));
+  const allowedSizes = new Set(sizes.map((sz) => sz.trim().toLowerCase()));
+
   let changed = false;
 
+  // 1. Hapus varian lama yang warna atau ukurannya sudah dihapus dari katalog produk
+  let updatedList = existing.filter((v) => {
+    if (v.productId !== String(product.id)) {
+      return true;
+    }
+    const isColorValid = allowedColorNames.has(v.colorName.trim().toLowerCase());
+    const isSizeValid = allowedSizes.has(v.size.trim().toLowerCase());
+    if (!isColorValid || !isSizeValid) {
+      changed = true;
+      return false; // Hapus varian ini dari inventaris
+    }
+    return true;
+  });
+
+  // 2. Pastikan setiap varian kombinasi aktif (swatch x size) sudah tersedia
   for (const sw of swatches) {
     for (const sz of sizes) {
       const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
       const foundIdx = updatedList.findIndex(
-        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size === sz)
+        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size.toLowerCase() === sz.toLowerCase())
       );
 
       if (foundIdx === -1) {
@@ -366,6 +383,59 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
   }
 
   return updatedList;
+}
+
+/**
+ * Membersihkan semua varian inventaris yang produk induknya sudah dihapus,
+ * atau yang warna/ukurannya sudah dihapus dari katalog produk.
+ */
+export async function cleanServerOrphanedVariants(): Promise<ProductVariant[]> {
+  const [products, variants] = await Promise.all([
+    getServerProducts(),
+    getServerInventoryVariants(),
+  ]);
+
+  const productMap = new Map<string, DbProduct>();
+  products.forEach((p) => {
+    productMap.set(String(p.id), p);
+  });
+
+  let changed = false;
+  const cleaned = variants.filter((v) => {
+    const parent = productMap.get(v.productId);
+    if (!parent) {
+      changed = true;
+      return false; // Produk induk sudah dihapus
+    }
+
+    if (parent.swatches && parent.swatches.length > 0) {
+      const colorValid = parent.swatches.some(
+        (s) => s.name.trim().toLowerCase() === v.colorName.trim().toLowerCase()
+      );
+      if (!colorValid) {
+        changed = true;
+        return false; // Warna sudah dihapus dari katalog
+      }
+    }
+
+    if (parent.sizes && parent.sizes.length > 0) {
+      const sizeValid = parent.sizes.some(
+        (sz) => sz.trim().toLowerCase() === v.size.trim().toLowerCase()
+      );
+      if (!sizeValid) {
+        changed = true;
+        return false; // Ukuran sudah dihapus dari katalog
+      }
+    }
+
+    return true;
+  });
+
+  if (changed) {
+    await saveServerInventoryVariants(cleaned);
+  }
+
+  return cleaned;
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   ensureServerVariantsForProduct,
   addServerCustomVariant,
   deleteServerProductVariants,
+  cleanServerOrphanedVariants,
 } from '@/lib/inventory-server';
 import { ProductVariant } from '@/integrations/supabase';
 
@@ -25,8 +26,9 @@ export async function GET(req: NextRequest) {
     }
 
     const forceRefresh = req.nextUrl.searchParams.get('refresh') === 'true';
+    // Otomatis bersihkan varian yatim (produk yang sudah dihapus / warna & ukuran yang dihapus dari katalog)
     const [variants, mutations] = await Promise.all([
-      getServerInventoryVariants(forceRefresh),
+      cleanServerOrphanedVariants(),
       getServerStockMutations(),
     ]);
 

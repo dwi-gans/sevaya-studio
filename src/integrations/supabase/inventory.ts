@@ -438,14 +438,31 @@ export async function ensureVariantsForProduct(product: DbProduct): Promise<Prod
     : [{ name: 'Default', color: '#1A1A1A' }];
   const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'];
 
-  let changed = false;
-  const updatedList = [...existing];
+  const allowedColorNames = new Set(swatches.map((s) => s.name.trim().toLowerCase()));
+  const allowedSizes = new Set(sizes.map((sz) => sz.trim().toLowerCase()));
 
+  let changed = false;
+
+  // 1. Hapus varian yang warna atau ukurannya sudah dihapus dari katalog produk
+  let updatedList = existing.filter((v) => {
+    if (v.productId !== String(product.id)) {
+      return true;
+    }
+    const isColorValid = allowedColorNames.has(v.colorName.trim().toLowerCase());
+    const isSizeValid = allowedSizes.has(v.size.trim().toLowerCase());
+    if (!isColorValid || !isSizeValid) {
+      changed = true;
+      return false; // Hapus varian yang warnanya/ukurannya sudah dihapus dari katalog
+    }
+    return true;
+  });
+
+  // 2. Pastikan setiap varian kombinasi aktif (swatch x size) sudah tersedia
   for (const sw of swatches) {
     for (const sz of sizes) {
       const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
       const foundIdx = updatedList.findIndex(
-        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size === sz)
+        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size.toLowerCase() === sz.toLowerCase())
       );
 
       if (foundIdx === -1) {

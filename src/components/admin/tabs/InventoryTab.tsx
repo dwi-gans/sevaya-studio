@@ -129,20 +129,48 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
     fetchInventory();
   }, [fetchInventory]);
 
+  // Helper untuk memvalidasi apakah varian masih aktif di katalog produk
+  const isVariantActiveInCatalog = useCallback(
+    (v: ProductVariant) => {
+      const parent = products.find((p) => String(p.id) === v.productId);
+      if (!parent) return false;
+      if (parent.swatches && parent.swatches.length > 0) {
+        const colorExists = parent.swatches.some(
+          (s) => s.name.trim().toLowerCase() === v.colorName.trim().toLowerCase()
+        );
+        if (!colorExists) return false;
+      }
+      if (parent.sizes && parent.sizes.length > 0) {
+        const sizeExists = parent.sizes.some(
+          (sz) => sz.trim().toLowerCase() === v.size.trim().toLowerCase()
+        );
+        if (!sizeExists) return false;
+      }
+      return true;
+    },
+    [products]
+  );
+
+  // Varian aktif (hanya yang produk, warna, dan ukurannya masih ada di katalog)
+  const activeCatalogVariants = useMemo(
+    () => variants.filter(isVariantActiveInCatalog),
+    [variants, isVariantActiveInCatalog]
+  );
+
   // Options
   const availableSizes = useMemo(
-    () => ['all', ...Array.from(new Set(variants.map((v) => v.size))).sort()],
-    [variants]
+    () => ['all', ...Array.from(new Set(activeCatalogVariants.map((v) => v.size))).sort()],
+    [activeCatalogVariants]
   );
   const availableColors = useMemo(
-    () => ['all', ...Array.from(new Set(variants.map((v) => v.colorName))).sort()],
-    [variants]
+    () => ['all', ...Array.from(new Set(activeCatalogVariants.map((v) => v.colorName))).sort()],
+    [activeCatalogVariants]
   );
 
   // Filtered variants (for flat list & telemetry)
   const filteredVariants = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return variants.filter((v) => {
+    return activeCatalogVariants.filter((v) => {
       const matchSearch =
         !q ||
         v.productTitle.toLowerCase().includes(q) ||
@@ -159,7 +187,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
       const matchColor = colorFilter === 'all' || v.colorName === colorFilter;
       return matchSearch && matchStock && matchSize && matchColor;
     });
-  }, [variants, searchQuery, stockFilter, sizeFilter, colorFilter]);
+  }, [activeCatalogVariants, searchQuery, stockFilter, sizeFilter, colorFilter]);
 
   // Group variants by parent product
   const groupedProducts = useMemo(() => {
@@ -192,11 +220,10 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
       });
     });
 
-    // Populate variants (hanya masukkan jika produk induk masih aktif di katalog, jangan buat entri untuk produk yang sudah dihapus)
-    variants.forEach((v) => {
-      let entry = productMap.get(v.productId);
+    // Populate variants (hanya masukkan jika varian aktif dan produk induk masih aktif di katalog)
+    activeCatalogVariants.forEach((v) => {
+      const entry = productMap.get(v.productId);
       if (!entry) {
-        // Produk telah dihapus dari katalog, jangan tampilkan lagi di tab stok
         return;
       }
       entry.variants.push(v);
