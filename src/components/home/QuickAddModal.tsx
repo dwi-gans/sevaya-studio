@@ -304,58 +304,62 @@ export function QuickAddModal({
 
         {/* ── LEFT COLUMN: Swipeable / Scrollable Horizontal Photos (Pure White Background) ── */}
         <div className="w-full sm:w-1/2 md:w-[52%] bg-white px-4 pt-1 sm:pt-8 pb-4 sm:p-8 flex flex-col items-center justify-center relative select-none shrink-0 border-b sm:border-b-0 sm:border-r border-black/[0.08]">
-          <div
-            className="relative w-full max-w-[280px] sm:max-w-[420px] overflow-hidden bg-white shadow-2xs"
-            onMouseDown={handlePhotoMouseDown}
-            onMouseMove={handlePhotoMouseMove}
-            onMouseUp={handlePhotoMouseUp}
-            onMouseLeave={handlePhotoMouseUp}
-          >
-            {/* Horizontal Scroll / Swipe Container */}
+          {/* Outer wrapper: relative, no overflow-hidden so arrows can sit at the edge */}
+          <div className="relative w-full max-w-[280px] sm:max-w-[420px]">
+            {/* Photo scroll area: overflow-hidden isolated here */}
             <div
-              ref={photoScrollRef}
-              onScroll={handlePhotoScroll}
-              className={`no-scrollbar flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x ${
-                isPhotoDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-              }`}
-              style={{
-                WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: 'none',
-              }}
+              className="relative overflow-hidden bg-white shadow-2xs"
+              onMouseDown={handlePhotoMouseDown}
+              onMouseMove={handlePhotoMouseMove}
+              onMouseUp={handlePhotoMouseUp}
+              onMouseLeave={handlePhotoMouseUp}
             >
-              {gallery.map((img, i) => (
-                <div
-                  key={`${img}-${i}`}
-                  className="relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[#F7F7F7]"
-                >
-                  <Image
-                    src={img}
-                    alt={`${product.title} angle ${i + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 85vw, 480px"
-                    className="pointer-events-none object-cover"
-                    priority={i === 0}
-                    draggable={false}
-                  />
+              {/* Horizontal Scroll / Swipe Container */}
+              <div
+                ref={photoScrollRef}
+                onScroll={handlePhotoScroll}
+                className={`no-scrollbar flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x ${
+                  isPhotoDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
+                }`}
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'none',
+                }}
+              >
+                {gallery.map((img, i) => (
+                  <div
+                    key={`${img}-${i}`}
+                    className="relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden bg-[#F7F7F7]"
+                  >
+                    <Image
+                      src={img}
+                      alt={`${product.title} angle ${i + 1}`}
+                      fill
+                      sizes="(max-width: 640px) 85vw, 480px"
+                      className="pointer-events-none object-cover"
+                      priority={i === 0}
+                      draggable={false}
+                    />
 
-                  {/* Out of Stock watermark badge on photo if current combination is out of stock */}
-                  {isOutOfStock && i === activePhotoIndex && (
-                    <span className="absolute top-3 right-3 z-10 rounded-full bg-black/75 px-2.5 py-1 text-[8px] font-normal tracking-[0.18em] text-white uppercase backdrop-blur-xs shadow-xs">
-                      Out of Stock
-                    </span>
-                  )}
-                </div>
-              ))}
+                    {/* Out of Stock watermark badge on photo if current combination is out of stock */}
+                    {isOutOfStock && i === activePhotoIndex && (
+                      <span className="absolute top-3 right-3 z-10 rounded-full bg-black/75 px-2.5 py-1 text-[8px] font-normal tracking-[0.18em] text-white uppercase backdrop-blur-xs shadow-xs">
+                        Out of Stock
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Left & Right Chevron Arrows */}
+            {/* Left & Right Chevron Arrows: outside overflow-hidden, sitting at the photo edge (half inside, half in white bg) */}
             {gallery.length > 1 && (
               <>
                 <button
                   type="button"
                   aria-label="Foto sebelumnya"
                   onClick={() => scrollToPhoto(activePhotoIndex - 1)}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-black shadow-xs hover:bg-white transition-opacity duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+                  className="absolute left-0 -translate-x-1/2 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-sm border border-black/[0.08] hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
                   disabled={activePhotoIndex === 0}
                 >
                   <Icon name="chevron_left" size={15} />
@@ -364,7 +368,7 @@ export function QuickAddModal({
                   type="button"
                   aria-label="Foto selanjutnya"
                   onClick={() => scrollToPhoto(activePhotoIndex + 1)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-black shadow-xs hover:bg-white transition-opacity duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+                  className="absolute right-0 translate-x-1/2 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-sm border border-black/[0.08] hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
                   disabled={activePhotoIndex === gallery.length - 1}
                 >
                   <Icon name="chevron_right" size={15} />
