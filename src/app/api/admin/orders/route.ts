@@ -5,6 +5,7 @@ import { verifyAdminSession } from '@/lib/auth-admin';
 import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { deductStockForOrder } from '@/lib/inventory-server';
 import { getShippingOriginSettings } from '@/lib/shipping-settings';
+import { detectOrderCourier } from '@/lib/courier-utils';
 
 const BITESHIP_BASE_URL = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
 
@@ -364,6 +365,9 @@ export async function POST(req: NextRequest) {
     }
 
     const originSettings = await getShippingOriginSettings();
+    const detectedCourier = detectOrderCourier(order);
+    const finalCourierCompany = courier_company || detectedCourier.company;
+    const finalCourierType = courier_type || detectedCourier.service;
 
     const payload = {
       shipper_contact_name: originSettings.shipper_name,
@@ -379,10 +383,11 @@ export async function POST(req: NextRequest) {
       destination_contact_name: destination_name || order.customer_name || 'Customer',
       destination_contact_phone: destination_phone || order.customer_phone || '08000000000',
       destination_address: destination_address || order.customer_address || 'Jakarta',
-      destination_postal_code: destination_postal_code || 12190,
+      destination_postal_code: destination_postal_code || order.destination_postal_code || 12190,
+      ...(order.destination_area_id ? { destination_area_id: order.destination_area_id } : {}),
       destination_note: `Order #${order.order_number}`,
-      courier_company: courier_company || 'jne',
-      courier_type: courier_type || 'reg',
+      courier_company: finalCourierCompany,
+      courier_type: finalCourierType,
       delivery_type: 'now',
       reference_id: order.order_number,
       order_note: `SEVAYA Order #${order.order_number}`,
@@ -425,7 +430,7 @@ export async function POST(req: NextRequest) {
       biteship_order_id: json.id,
       biteship_status: json.status,
       status: 'processing',
-      courier_name: `${courier_company?.toUpperCase() || 'JNE'} ${courier_type?.toUpperCase() || 'REG'}`,
+      courier_name: order.courier_name || `${finalCourierCompany.toUpperCase()} ${finalCourierType.toUpperCase()}`,
       updated_at: new Date().toISOString(),
     };
     if (waybillId) {

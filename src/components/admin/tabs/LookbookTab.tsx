@@ -1439,6 +1439,9 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
                 >
                   {selectedProductIds.length} / 4 Terpilih
                 </span>
+                <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-bold text-black/70 border border-black/10 uppercase tracking-wider">
+                  Layout: Center
+                </span>
               </div>
               <p className="text-[11px] text-black/60 mt-1">
                 {selectedProductIds.length === 0 ? (

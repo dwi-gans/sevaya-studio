@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
+import { detectOrderCourier } from '@/lib/courier-utils';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -107,16 +108,15 @@ function OrderDetailModal({
   onCreateBiteship: (order: AdminOrder, courier: string, service: string) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
-  const [selectedCourier, setSelectedCourier] = useState('jne');
-  const [selectedService, setSelectedService] = useState('reg');
   const [trackingInput, setTrackingInput] = useState(order.tracking_number || '');
   const [logs, setLogs] = useState<string[]>([]);
 
+  const orderCourier = useMemo(() => {
+    return detectOrderCourier(order);
+  }, [order]);
+
   const addLog = (msg: string) =>
     setLogs((p) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p]);
-
-  const courierServices =
-    COURIERS.find((c) => c.value === selectedCourier)?.services || ['reg'];
 
   // parse items safely
   let parsedItems: { productTitle?: string; color?: string; qty?: number; price?: number; name?: string }[] = [];
@@ -172,11 +172,11 @@ function OrderDetailModal({
 
   const handleCreateBiteship = async () => {
     setLoading(true);
-    addLog(`Membuat test order Biteship (${selectedCourier} ${selectedService})...`);
+    addLog(`Membuat pesanan pickup kurir ${orderCourier.companyName} (${orderCourier.serviceName})...`);
     try {
-      await onCreateBiteship(order, selectedCourier, selectedService);
-      addLog(`✅ Test order Biteship berhasil dibuat!`);
-      addLog(`   Cek dashboard.biteship.com/orders untuk update status simulasi`);
+      await onCreateBiteship(order, orderCourier.company, orderCourier.service);
+      addLog(`✅ Order pickup kurir ${orderCourier.companyName} berhasil dibuat!`);
+      addLog(`   Kurir akan menjemput paket di alamat toko.`);
     } catch (e) {
       addLog(`❌ Gagal: ${e instanceof Error ? e.message : 'Error'}`);
     } finally {
@@ -432,48 +432,41 @@ function OrderDetailModal({
                 ) : (
                   <div className="space-y-3">
                     <p className="text-xs text-black/70">
-                      Pilih kurir dan layanan untuk memproses resi pengiriman otomatis.
+                      Sistem otomatis mendeteksi ekspedisi yang dipilih & dibayar oleh pelanggan saat checkout.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider block mb-1">
-                          Kurir
-                        </label>
-                        <select
-                          value={selectedCourier}
-                          onChange={(e) => {
-                            setSelectedCourier(e.target.value);
-                            const firstService = COURIERS.find(c => c.value === e.target.value)?.services[0] || 'reg';
-                            setSelectedService(firstService);
-                          }}
-                          className="w-full rounded-none border border-black/20 bg-white px-2.5 py-2 text-base sm:text-xs text-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
-                        >
-                          {COURIERS.map((c) => (
-                            <option key={c.value} value={c.value}>{c.label}</option>
-                          ))}
-                        </select>
+
+                    {/* Informasi Ekspedisi Pilihan Pelanggan (Terkunci Sesuai Order) */}
+                    <div className="rounded-xl border border-black/15 bg-[#FAF9F6] p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between pb-2 border-b border-black/10">
+                        <span className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                          Ekspedisi Pilihan Pelanggan
+                        </span>
+                        <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-bold text-emerald-800 uppercase">
+                          ✓ Otomatis Dari Order
+                        </span>
                       </div>
-                      <div>
-                        <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider block mb-1">
-                          Layanan
-                        </label>
-                        <select
-                          value={selectedService}
-                          onChange={(e) => setSelectedService(e.target.value)}
-                          className="w-full rounded-none border border-black/20 bg-white px-2.5 py-2 text-base sm:text-xs text-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
-                        >
-                          {courierServices.map((s) => (
-                            <option key={s} value={s}>{s.toUpperCase()}</option>
-                          ))}
-                        </select>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs uppercase tracking-wider shrink-0">
+                          {orderCourier.company}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-bold text-black truncate">
+                            {orderCourier.companyName} · {orderCourier.serviceName}
+                          </p>
+                          <p className="text-[11px] text-black/60 mt-0.5">
+                            {order.courier_name || `${orderCourier.companyName} ${orderCourier.serviceName}`} {order.courier_duration ? `• Estimasi: ${order.courier_duration}` : ''}
+                          </p>
+                        </div>
                       </div>
                     </div>
+
                     <button
+                      type="button"
                       onClick={handleCreateBiteship}
                       disabled={loading}
-                      className="w-full min-h-[44px] rounded-full bg-black py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-40"
+                      className="w-full min-h-[44px] rounded-full bg-black py-2.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99] disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
-                      {loading ? 'Memproses...' : '📦 Atur Pengiriman Kurir'}
+                      {loading ? 'Memproses Permintaan Pickup...' : `📦 Request Pickup Kurir (${orderCourier.companyName} ${orderCourier.serviceName})`}
                     </button>
                   </div>
                 )}

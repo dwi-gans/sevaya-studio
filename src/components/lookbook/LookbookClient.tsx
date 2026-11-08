@@ -283,6 +283,8 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
             className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+              displayedProducts.length <= 2 ? 'justify-center' : 'justify-start md:justify-center'
+            } ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
@@ -296,8 +298,8 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               [...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start animate-pulse"
-                  style={{ scrollSnapAlign: 'start' }}
+                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[270px] lg:w-[280px] snap-center animate-pulse"
+                  style={{ scrollSnapAlign: 'center' }}
                 >
                   <div className="aspect-[3/4] w-full bg-[#F4F4F4] rounded-xs mb-3" />
                   <div className="h-3 w-3/4 bg-[#EBEBEB] rounded mb-2" />
@@ -308,8 +310,16 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               displayedProducts.map((prod) => (
                 <div
                   key={prod.id}
-                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
-                  style={{ scrollSnapAlign: 'start' }}
+                  className={`shrink-0 snap-center ${
+                    displayedProducts.length === 1
+                      ? 'w-[75vw] max-w-[300px] sm:w-[320px] md:w-[300px]'
+                      : displayedProducts.length === 2
+                      ? 'w-[56vw] sm:w-[44vw] md:w-[280px] max-w-[300px]'
+                      : displayedProducts.length === 3
+                      ? 'w-[58vw] sm:w-[46vw] md:w-[280px] lg:w-[290px]'
+                      : 'w-[58vw] sm:w-[46vw] md:w-[270px] lg:w-[calc(25%-18px)]'
+                  }`}
+                  style={{ scrollSnapAlign: 'center' }}
                 >
                   <ProductCard product={prod} />
                 </div>
@@ -319,7 +329,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         </div>
 
         {/* Dot indicators — mobile only */}
-        {displayedProducts.length > 0 && (
+        {displayedProducts.length > 1 && (
           <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
             {displayedProducts.map((_, i) => (
               <button
