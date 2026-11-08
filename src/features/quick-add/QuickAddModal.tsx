@@ -376,25 +376,6 @@ export function QuickAddModal({
               </>
             )}
           </div>
-
-          {/* Gallery Pagination Dots */}
-          {gallery.length > 1 && (
-            <div className="mt-3.5 flex items-center justify-center gap-1.5">
-              {gallery.map((_, dotIdx) => (
-                <button
-                  key={dotIdx}
-                  type="button"
-                  aria-label={`Lihat foto ${dotIdx + 1}`}
-                  onClick={() => scrollToPhoto(dotIdx)}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    dotIdx === activePhotoIndex
-                      ? 'w-4 bg-black/80'
-                      : 'w-1.5 bg-black/20 hover:bg-black/40'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ── RIGHT COLUMN: Content with Spacious Luxury Scrolling ── */}
