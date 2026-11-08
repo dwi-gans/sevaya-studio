@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
+// Fallback lokal — ditanam langsung sebagai background-image CSS (zero-delay, no network)
 const PRIMARY_HERO = '/images/hero_optimized.jpg';
 
 interface HeroSectionProps {
@@ -15,6 +16,8 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
   // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
   const [animDone, setAnimDone] = useState(false);
+  // imgLoaded: track saat gambar remote selesai diunduh → fade-in smooth
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -44,17 +47,22 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   }, []);
 
   const heroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
+  // Jika gambar hero berasal dari Supabase (URL remote), gunakan lokal sebagai background
+  // agar TIDAK ADA flash hitam selama download berlangsung
+  const isRemote = heroImage.startsWith('http');
 
   return (
     <section
       suppressHydrationWarning
-      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      // Background CSS lokal = tampil SEKETIKA tanpa download, tanpa hitam
+      style={{ backgroundImage: `url(${PRIMARY_HERO})`, backgroundSize: 'cover', backgroundPosition: 'center 30%' }}
     >
       {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
-          className="relative h-full w-full bg-[#111111]"
+          className="relative h-full w-full"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -62,8 +70,13 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
             src={heroImage}
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
             loading="eager"
+            fetchPriority="high"
             decoding="async"
-            className="animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
+            className={`animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%] transition-opacity duration-700 ${
+              // Jika gambar lokal langsung tampil, jika remote fade-in saat selesai
+              !isRemote || imgLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImgLoaded(true)}
             onError={(e) => {
               const target = e.currentTarget;
               if (!target.src.endsWith(PRIMARY_HERO)) {
