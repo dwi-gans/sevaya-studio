@@ -37,6 +37,8 @@ interface ProductModalProps {
   onAddSwatch: () => void;
   onRemoveSwatch: (index: number) => void;
   onUpdateSwatch: (index: number, field: 'name' | 'color' | 'image', value: string) => void;
+  /** Update foto ekstra (foto 2–4) untuk swatch warna tertentu. photoIndex: 1-based (1=foto2, 2=foto3, 3=foto4) */
+  onUpdateSwatchExtraPhoto: (swatchIndex: number, photoIndex: number, value: string) => void;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
   /** Hanya set target upload tanpa membuka modal galeri (dipakai saat klik "Unggah File") */
   onSetImageTarget: (target: ImagePickerTarget) => void;
@@ -60,6 +62,7 @@ export function ProductModal({
   onAddSwatch,
   onRemoveSwatch,
   onUpdateSwatch,
+  onUpdateSwatchExtraPhoto,
   onOpenImagePicker,
   onSetImageTarget,
   onFileUpload,
@@ -654,64 +657,87 @@ export function ProductModal({
                     </button>
                   </div>
 
-                  {/* Photo for this specific color */}
-                  <div className="flex flex-1 items-center gap-2 sm:border-l sm:border-black/15 sm:pl-2.5 min-w-0">
-                    <div className="relative h-10 w-8 shrink-0 overflow-hidden rounded-md border border-black/15 bg-black/5">
-                      <Image
-                        src={sw.image || productForm.image || '/images/catalog/catalog-01.jpg'}
-                        alt={`Foto warna ${sw.name}`}
-                        fill
-                        className="object-cover"
-                        unoptimized={Boolean(
-                          sw.image?.startsWith('http') ||
-                          sw.image?.startsWith('blob:') ||
-                          sw.image?.startsWith('data:') ||
-                          productForm.image?.startsWith('http') ||
-                          productForm.image?.startsWith('blob:') ||
-                          productForm.image?.startsWith('data:')
-                        )}
-                      />
+                  {/* 4-slot foto warna: Foto 1 (Cover) + Foto 2–4 (Ekstra) */}
+                  <div className="flex flex-1 flex-col gap-2 sm:border-l sm:border-black/15 sm:pl-2.5 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[9px] font-medium text-black/50 tracking-wide uppercase">Foto Warna (maks. 4)</span>
+                      {/* Delete button (visible on desktop) */}
+                      <button
+                        type="button"
+                        onClick={() => onRemoveSwatch(idx)}
+                        className="hidden sm:flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-red-500 hover:bg-red-50 active:scale-95 cursor-pointer"
+                        title="Hapus Warna Ini"
+                      >
+                        <Icon name="close" size={13} />
+                      </button>
                     </div>
 
-                    <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget)}
-                          className="h-6 rounded-full border border-black/20 bg-white px-2 text-[10px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer"
-                        >
-                          <Icon name="image" size={10} className="inline mr-1" />
-                          <span>Pilih</span>
-                        </button>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {/* Foto 1 — Cover (wajib, mewakili warna di card & detail) */}
+                      {(() => {
+                        const coverSrc = sw.image || productForm.image || '/images/catalog/catalog-01.jpg';
+                        const isExternal = coverSrc.startsWith('http') || coverSrc.startsWith('blob:') || coverSrc.startsWith('data:');
+                        return (
+                          <div className="flex flex-col gap-0.5 items-center">
+                            <div className="relative w-full aspect-[2/3] overflow-hidden rounded border border-black/20 bg-black/5">
+                              <Image src={coverSrc} alt={`Cover ${sw.name}`} fill className="object-cover" unoptimized={isExternal} />
+                              <span className="absolute bottom-0.5 left-0.5 rounded bg-black/60 px-0.5 text-[7px] text-white leading-tight">1</span>
+                            </div>
+                            <div className="flex gap-0.5 flex-wrap justify-center">
+                              <button
+                                type="button"
+                                onClick={() => onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget)}
+                                className="h-5 rounded-full border border-black/20 bg-white px-1.5 text-[8px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer"
+                              >Pilih</button>
+                              <label className="h-5 flex items-center cursor-pointer rounded-full bg-black px-1.5 text-[8px] font-semibold text-white hover:bg-black/85 active:scale-95">
+                                Unggah
+                                <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif" disabled={isUploading} onChange={(e) => onFileUploadDirect(e, `swatch-${idx}` as ImagePickerTarget)} className="hidden" />
+                              </label>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
-                        <label className="h-6 flex items-center cursor-pointer rounded-full bg-black px-2 text-[10px] font-semibold text-white hover:bg-black/85 active:scale-95">
-                          <Icon name="upload" size={10} className="inline mr-1" />
-                          <span>Unggah</span>
-                          <input
-                            type="file"
-                            accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
-                            disabled={isUploading}
-                            onChange={(e) => {
-                              onFileUploadDirect(e, `swatch-${idx}` as ImagePickerTarget);
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                      <span className="truncate font-mono text-[8px] text-black/40 block min-w-0">
-                        {sw.image || productForm.image}
-                      </span>
+                      {/* Foto 2–4 — Ekstra (tampak samping, belakang, detail) */}
+                      {[1, 2, 3].map((photoNum) => {
+                        const extraSrc = sw.images?.[photoNum - 1];
+                        const hasPhoto = Boolean(extraSrc && extraSrc.trim());
+                        const isExternal = hasPhoto && (extraSrc!.startsWith('http') || extraSrc!.startsWith('blob:') || extraSrc!.startsWith('data:'));
+                        return (
+                          <div key={photoNum} className="flex flex-col gap-0.5 items-center">
+                            <div className="relative w-full aspect-[2/3] overflow-hidden rounded border border-dashed border-black/20 bg-black/[0.03]">
+                              {hasPhoto ? (
+                                <>
+                                  <Image src={extraSrc!} alt={`Foto ${photoNum + 1} ${sw.name}`} fill className="object-cover" unoptimized={isExternal} />
+                                  <button
+                                    type="button"
+                                    onClick={() => onUpdateSwatchExtraPhoto(idx, photoNum, '')}
+                                    className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-600 active:scale-95 cursor-pointer"
+                                    title="Hapus foto ini"
+                                  >
+                                    <Icon name="close" size={8} />
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="absolute inset-0 flex items-center justify-center text-black/20 text-lg font-light">+</span>
+                              )}
+                              <span className="absolute bottom-0.5 left-0.5 rounded bg-black/50 px-0.5 text-[7px] text-white leading-tight">{photoNum + 1}</span>
+                            </div>
+                            <div className="flex gap-0.5 flex-wrap justify-center">
+                              <button
+                                type="button"
+                                onClick={() => onOpenImagePicker(`swatch-${idx}-photo-${photoNum}` as ImagePickerTarget)}
+                                className="h-5 rounded-full border border-black/20 bg-white px-1.5 text-[8px] font-medium text-black hover:bg-black/5 active:scale-95 cursor-pointer"
+                              >Pilih</button>
+                              <label className="h-5 flex items-center cursor-pointer rounded-full bg-black px-1.5 text-[8px] font-semibold text-white hover:bg-black/85 active:scale-95">
+                                Unggah
+                                <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif" disabled={isUploading} onChange={(e) => onFileUploadDirect(e, `swatch-${idx}-photo-${photoNum}` as ImagePickerTarget)} className="hidden" />
+                              </label>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-
-                    {/* Delete button (visible on desktop) */}
-                    <button
-                      type="button"
-                      onClick={() => onRemoveSwatch(idx)}
-                      className="hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-full p-1 text-red-500 hover:bg-red-50 active:scale-95 cursor-pointer"
-                      title="Hapus Warna Ini"
-                    >
-                      <Icon name="close" size={15} />
-                    </button>
                   </div>
                 </div>
               ))}

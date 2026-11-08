@@ -3,7 +3,8 @@ import { supabase } from './client';
 export interface ProductSwatch {
   name: string;
   color: string;
-  image?: string; // photo representing this specific color
+  image?: string;    // cover photo (foto 1) mewakili warna ini
+  images?: string[]; // extra photos (foto 2–4), max 3 items
 }
 
 export interface DbProduct {

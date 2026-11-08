@@ -427,6 +427,7 @@ export default function AdminPage() {
               name: s.name,
               color: s.color,
               image: s.image || product.image,
+              images: Array.isArray(s.images) ? s.images : [],
             }))
           : [
               { name: 'Black', color: '#000000', image: product.image },
@@ -734,6 +735,22 @@ export default function AdminPage() {
     });
   };
 
+  /** Update foto ekstra (foto 2–4) untuk satu swatch. photoIndex: 1-based (1=foto2, 2=foto3, 3=foto4). */
+  const handleUpdateSwatchExtraPhoto = (swatchIndex: number, photoIndex: number, val: string) => {
+    setProductForm((prev) => {
+      const next = [...prev.swatches];
+      if (!next[swatchIndex]) return prev;
+      const currentImages = Array.isArray(next[swatchIndex]!.images)
+        ? [...next[swatchIndex]!.images!]
+        : ['', '', ''];
+      // Pastikan array punya 3 slot
+      while (currentImages.length < 3) currentImages.push('');
+      currentImages[photoIndex - 1] = val;
+      next[swatchIndex] = { ...next[swatchIndex]!, images: currentImages.slice(0, 3) };
+      return { ...prev, swatches: next };
+    });
+  };
+
   // ── Apply selected or uploaded image to target ──
   const applyImageToTarget = (target: ImagePickerTarget, urlOrPath: string) => {
     if (!target) return;
@@ -749,8 +766,16 @@ export default function AdminPage() {
         ),
       }));
     } else if (target.startsWith('swatch-')) {
-      const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
-      handleUpdateSwatch(swatchIdx, 'image', urlOrPath);
+      if (target.includes('-photo-')) {
+        // e.g. swatch-0-photo-1 → swatchIdx=0, photoIdx=1
+        const parts = target.split('-');
+        const swatchIdx = parseInt(parts[1]!, 10);
+        const photoIdx = parseInt(parts[3]!, 10);
+        handleUpdateSwatchExtraPhoto(swatchIdx, photoIdx, urlOrPath);
+      } else {
+        const swatchIdx = parseInt(target.replace('swatch-', ''), 10);
+        handleUpdateSwatch(swatchIdx, 'image', urlOrPath);
+      }
     } else if (target === 'hero') {
       setSections((prev) => {
         const next = { ...prev, hero: { ...prev.hero, image: urlOrPath } };
@@ -1209,6 +1234,12 @@ export default function AdminPage() {
     if (!imagePickerTarget) return undefined;
     if (imagePickerTarget === 'product') return productForm.image;
     if (imagePickerTarget.startsWith('swatch-')) {
+      if (imagePickerTarget.includes('-photo-')) {
+        const parts = imagePickerTarget.split('-');
+        const idx = parseInt(parts[1]!, 10);
+        const photoIdx = parseInt(parts[3]!, 10);
+        return productForm.swatches[idx]?.images?.[photoIdx - 1];
+      }
       const idx = parseInt(imagePickerTarget.replace('swatch-', ''), 10);
       return productForm.swatches[idx]?.image;
     }
@@ -1404,6 +1435,7 @@ export default function AdminPage() {
         onAddSwatch={handleAddSwatch}
         onRemoveSwatch={handleRemoveSwatch}
         onUpdateSwatch={handleUpdateSwatch}
+        onUpdateSwatchExtraPhoto={handleUpdateSwatchExtraPhoto}
         onOpenImagePicker={(target) => {
           setImagePickerTarget(target);
           setIsImagePickerOpen(true);

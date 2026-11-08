@@ -61,6 +61,32 @@ function buildColorOptions(
   });
 }
 
+/** Ambil semua foto untuk satu swatch (cover + extras), max 4, tanpa duplikat */
+function getSwatchPhotos(
+  swatch: { image?: string; images?: string[] },
+  fallback: string
+): string[] {
+  const photos: string[] = [];
+  const push = (img?: string) => {
+    if (!img?.trim() || img.includes('logo_ibey') || photos.includes(img.trim())) return;
+    if (photos.length < 4) photos.push(img.trim());
+  };
+  push(swatch.image);
+  if (Array.isArray(swatch.images)) swatch.images.forEach(push);
+  return photos.length > 0 ? photos : [fallback];
+}
+
+/** Buat map: colorName (lowercase) → array foto (1–4 foto) */
+function buildColorPhotoMap(
+  swatches: Array<{ name: string; image?: string; images?: string[] }> | undefined,
+  fallback: string
+): Record<string, string[]> {
+  if (!swatches || swatches.length === 0) return {};
+  return Object.fromEntries(
+    swatches.map((s) => [s.name.toLowerCase(), getSwatchPhotos(s, fallback)])
+  );
+}
+
 /** Susun foto galeri asli milik produk (foto utama + foto galeri produk asli) */
 function buildGalleryList(
   mainImage?: string,
@@ -143,35 +169,53 @@ export function ProductDetailClient({
   const [sizingOpen, setSizingOpen] = useState(false);
 
   // Galeri foto lengkap: foto utama + semua foto tambahan + foto tiap varian warna
-  const [galleryImages, setGalleryImages] = useState<string[]>(() =>
-    buildGalleryList(
+  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
+    // Init galeri dari foto warna pertama (jika ada multi-foto per warna)
+    const firstSwatch = initialProduct.swatches?.[0];
+    const fallback = initialProduct.image || '/images/catalog/catalog-01.jpg';
+    if (firstSwatch) {
+      const firstPhotos = getSwatchPhotos(firstSwatch, fallback);
+      if (firstPhotos.length > 1) return firstPhotos;
+    }
+    return buildGalleryList(
       initialProduct.image,
       initialProduct.images,
       initialProduct.swatches
+    );
+  });
+
+  // Map: colorName (lowercase) → array foto (1–4 foto) untuk filtered gallery di detail page
+  const [colorPhotoMap, setColorPhotoMap] = useState<Record<string, string[]>>(() =>
+    buildColorPhotoMap(
+      initialProduct.swatches,
+      initialProduct.image || '/images/catalog/catalog-01.jpg'
     )
   );
 
   // Handler saat user mengklik Swatch Warna:
   // 1. Ubah warna terpilih
-  // 2. Ubah gambar utama ke foto varian warna tersebut (dengan validasi anti-corrupt)
+  // 2. Filter galeri ke foto-foto warna tersebut (1–4 foto)
+  // 3. Ubah gambar utama ke foto pertama warna tersebut
   const handleSelectColor = (colorOption: ProductColorOption) => {
     setSelectedColor(colorOption);
-    const validImage =
-      colorOption.image && !colorOption.image.includes('logo_ibey')
-        ? colorOption.image
-        : dbProduct.image || '/images/catalog/catalog-01.jpg';
-    setActiveImage(validImage);
+    const photos = colorPhotoMap[colorOption.name.toLowerCase()];
+    if (photos && photos.length > 0) {
+      setGalleryImages(photos);
+      setActiveImage(photos[0]!);
+    } else {
+      const validImage =
+        colorOption.image && !colorOption.image.includes('logo_ibey')
+          ? colorOption.image
+          : dbProduct.image || '/images/catalog/catalog-01.jpg';
+      setGalleryImages([validImage]);
+      setActiveImage(validImage);
+    }
   };
 
-  // Handler saat user mengklik thumbnail di galeri bawah (Two-way sync):
-  // 1. Ubah gambar utama ke thumbnail yang diklik
-  // 2. Jika foto ini adalah foto salah satu warna, otomatis pilih warna tersebut
+  // Handler saat user mengklik thumbnail di galeri bawah:
+  // Galeri sudah difilter per warna, jadi cukup update activeImage saja
   const handleSelectGalleryImage = (imgSrc: string) => {
     setActiveImage(imgSrc);
-    const matchedColor = colors.find((c) => c.image === imgSrc);
-    if (matchedColor && matchedColor.name.toLowerCase() !== selectedColor.name.toLowerCase()) {
-      setSelectedColor(matchedColor);
-    }
   };
 
   // Stok varian spesifik yang dipilih (warna + size)
@@ -266,17 +310,26 @@ export function ProductDetailClient({
       );
       setColors(freshColors);
 
+      // Rebuild color photo map dari data terbaru
+      const freshFallback = found.image || '/images/catalog/catalog-01.jpg';
+      const freshMap = buildColorPhotoMap(found.swatches, freshFallback);
+      setColorPhotoMap(freshMap);
+
       // PERBAIKAN BUG: Pertahankan warna yang SEDANG DIPILIH oleh user (jangan di-reset ke warna pertama!)
       setSelectedColor((prevSelected) => {
         const matched = freshColors.find(
           (c) => c.name.toLowerCase() === prevSelected.name.toLowerCase()
         );
-        return matched || freshColors[0]!;
+        const resolvedColor = matched || freshColors[0]!;
+        // Perbarui galeri foto untuk warna yang aktif
+        const freshPhotos = freshMap[resolvedColor.name.toLowerCase()];
+        if (freshPhotos && freshPhotos.length > 0) {
+          setGalleryImages(freshPhotos);
+        } else {
+          setGalleryImages(buildGalleryList(found.image, found.images, found.swatches));
+        }
+        return resolvedColor;
       });
-
-      // Perbarui galeri foto lengkap
-      const thumbs = buildGalleryList(found.image, found.images, found.swatches);
-      setGalleryImages(thumbs);
     });
 
     // Refresh data varian dari API

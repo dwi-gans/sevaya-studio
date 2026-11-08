@@ -14,6 +14,7 @@ export type AdminTab =
 export type ImagePickerTarget =
   | 'product'
   | `swatch-${number}`
+  | `swatch-${number}-photo-${number}`
   | 'hero'
   | 'spotlight-0'
   | 'spotlight-1'
