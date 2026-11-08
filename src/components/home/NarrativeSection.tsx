@@ -176,23 +176,23 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
           </div>
 
           {/* Left Text */}
-          <RevealOnScroll variant="fade-up" delayMs={100} className="order-3 md:order-1 space-y-3 pr-0 md:pr-8">
+          <RevealOnScroll variant="fade-up" delayMs={100} className="order-3 md:order-1 space-y-3.5 md:space-y-4 pr-0 md:pr-8 lg:pr-12">
             <div className="hidden md:block">
-              <span className="text-[9px] font-medium tracking-[0.25em] text-black/50 uppercase">
+              <span className="text-[9px] md:text-[11px] lg:text-xs font-medium tracking-[0.25em] md:tracking-[0.28em] text-black/55 uppercase">
                 {narrative.aboutTagline || 'ABOUT SEVAYA'}
               </span>
             </div>
 
-            <p className="text-[10px] leading-relaxed text-black/70">
+            <p className="text-[10px] md:text-[13px] lg:text-[14.5px] leading-relaxed md:leading-[1.8] text-black/75">
               {narrative.aboutDesc ||
                 t('home.narrative.about_p') ||
                 'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship.'}
             </p>
 
-            <div className="pt-1">
+            <div className="pt-1 md:pt-2">
               <Link
                 href={narrative.aboutLinkUrl || '/conscious'}
-                className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
+                className="inline-block text-[10px] md:text-[11.5px] lg:text-xs font-normal tracking-[0.14em] uppercase text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-black/60"
               >
                 {narrative.aboutLinkText || t('common.read_more') || 'Read more'}
               </Link>
