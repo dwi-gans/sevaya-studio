@@ -195,8 +195,7 @@ export function ProductCard({
             className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 cursor-pointer"
             title={t('product.quick_add')}
           >
-            <Icon name="add" size={15} className="sm:hidden" />
-            <Icon name="add" size={18} className="hidden sm:block" />
+            <Icon name="add" size={16} />
           </button>
         ) : (
           <div
