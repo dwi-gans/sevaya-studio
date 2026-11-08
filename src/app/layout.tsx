@@ -10,10 +10,64 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
   title: {
-    default: `${siteConfig.name} — ${siteConfig.tagline}`,
+    default: `${siteConfig.name} — Modern Modest Silhouettes & Luxury Abayas`,
     template: `%s | ${siteConfig.name}`,
   },
-  description: siteConfig.description,
+  description:
+    'Studio busana abaya dan khimar modern premium di Indonesia. Koleksi abaya eksklusif dari bahan cupro silk dan bemberg dengan siluet yang mengalir elegan, nyaman, dan berkelas.',
+  keywords: [
+    'Abaya',
+    'Baju Abaya',
+    'Abaya Modern',
+    'SEVAYA',
+    'Sevaya Studio',
+    'Sevaya Abaya',
+    'Luxury Abaya',
+    'Abaya Indonesia',
+    'French Khimar',
+    'Cupro Silk Abaya',
+    'Abaya Premium',
+    'Modest Fashion Indonesia',
+    'Tala Abaya',
+    'Fina Abaya',
+    'Sevilla Abaya',
+    'Khimar Modern',
+  ],
+  authors: [{ name: 'SEVAYA Studio' }],
+  creator: 'SEVAYA',
+  publisher: 'SEVAYA',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: publicEnv.siteUrl,
+  },
+  openGraph: {
+    title: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
+    description:
+      'Koleksi busana abaya dan french khimar modern dengan bahan cupro silk premium. Siluet mengalir, elegan, dan tenang.',
+    url: publicEnv.siteUrl,
+    siteName: 'SEVAYA Studio',
+    images: [
+      {
+        url: '/images/hero_optimized.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'SEVAYA — Luxury Abayas & Modest Silhouettes',
+      },
+    ],
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
+    description:
+      'Studio busana abaya dan french khimar modern premium. Siluet mengalir elegan dan tenang.',
+    images: ['/images/hero_optimized.jpg'],
+  },
   icons: {
     icon: '/favicon-sv.svg',
     shortcut: '/favicon-sv.svg',
@@ -40,6 +94,30 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           rel="stylesheet"
         />
         <link rel="preload" as="image" href="/images/hero_optimized.jpg" fetchPriority="high" />
+        {/* Google Structured Data / Rich Snippet for E-Commerce Brand */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'ClothingStore',
+              name: 'SEVAYA',
+              alternateName: ['Sevaya Studio', 'Sevaya Abaya', 'SEVAYA Luxury Abayas'],
+              url: publicEnv.siteUrl,
+              logo: `${publicEnv.siteUrl}/images/logo.png`,
+              image: `${publicEnv.siteUrl}/images/hero_optimized.jpg`,
+              description:
+                'Studio busana abaya dan khimar modern premium di Indonesia. Koleksi abaya eksklusif dari bahan cupro silk dan bemberg.',
+              currenciesAccepted: 'IDR',
+              paymentAccepted: 'Cash, Credit Card, Bank Transfer, QRIS',
+              priceRange: '$$',
+              address: {
+                '@type': 'PostalAddress',
+                addressCountry: 'ID',
+              },
+            }),
+          }}
+        />
       </head>
       <body className="font-body text-body-md flex min-h-screen flex-col bg-[#FFFFFF] text-[#000000] antialiased">
         <Providers>
