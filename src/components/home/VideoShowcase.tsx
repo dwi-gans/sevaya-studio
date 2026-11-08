@@ -1,26 +1,22 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 export function VideoShowcase({
   src = '/videos/kani.mp4',
-  poster = '/images/figma_video_cover.png',
+  poster = '/images/video_poster.jpg',
 }: {
   src?: string;
   poster?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  // isPlaying: true setelah video benar-benar mulai bermain
-  // → sembunyikan poster/placeholder dummy sampai video muncul
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     const container = containerRef.current;
     if (!video || !container) return;
 
-    // Ensure endless looping and continuous playback without any interruption
     const handleEnded = () => {
       video.currentTime = 0;
       video.play().catch(() => {});
@@ -28,13 +24,8 @@ export function VideoShowcase({
     const handlePause = () => {
       video.play().catch(() => {});
     };
-    const handlePlaying = () => {
-      setIsPlaying(true);
-    };
-
     video.addEventListener('ended', handleEnded);
     video.addEventListener('pause', handlePause);
-    video.addEventListener('playing', handlePlaying);
 
     // Lazy-load: only load & play video when it enters the viewport
     const observer = new IntersectionObserver(
@@ -59,18 +50,12 @@ export function VideoShowcase({
       observer.disconnect();
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('pause', handlePause);
-      video.removeEventListener('playing', handlePlaying);
     };
   }, []);
 
   return (
     <section className="mx-auto w-full max-w-7xl px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
-      {/* Pure Cinematic Video Screen: 100% clean, no buttons, no overlays */}
-      <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden bg-black shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
-        {/* Overlay hitam solid saat video belum siap — cegah poster/placeholder muncul */}
-        {!isPlaying && (
-          <div className="absolute inset-0 bg-black z-10 pointer-events-none" />
-        )}
+      <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
         <video
           ref={videoRef}
           src={src}
@@ -79,9 +64,7 @@ export function VideoShowcase({
           loop
           playsInline
           preload="none"
-          className={`pointer-events-none h-full w-full select-none object-cover transition-opacity duration-500 ${
-            isPlaying ? 'opacity-100' : 'opacity-0'
-          }`}
+          className="pointer-events-none h-full w-full select-none object-cover"
         />
       </div>
     </section>
