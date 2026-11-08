@@ -11,8 +11,10 @@ interface ImagePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectImage: (imagePath: string) => void;
+  onSelectImages?: (imagePaths: string[]) => void;
   availableImages?: string[];
   currentImage?: string;
+  maxSelect?: number;
 }
 
 const getCachedAssets = (): MasterAsset[] => {
@@ -35,17 +37,22 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
   isOpen,
   onClose,
   onSelectImage,
+  onSelectImages,
   currentImage,
+  maxSelect = 1,
 }) => {
   const { showToast } = useToast();
   const [assets, setAssets] = useState<MasterAsset[]>(getCachedAssets);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'cloud' | 'catalog'>('all');
   const [selectedSrc, setSelectedSrc] = useState<string>('');
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isMultiMode = Boolean(maxSelect && maxSelect > 1);
 
   // Sync cache on modal open — exactly identical to MediaLibraryTab
   useEffect(() => {
@@ -55,6 +62,10 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
 
     if (currentImage) {
       setSelectedSrc(currentImage);
+      setSelectedImages([currentImage]);
+    } else {
+      setSelectedSrc('');
+      setSelectedImages([]);
     }
 
     try {
@@ -183,6 +194,22 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileUpload(e.dataTransfer.files);
+    }
+  };
+
+  const handleItemClick = (src: string) => {
+    if (isMultiMode) {
+      if (selectedImages.includes(src)) {
+        setSelectedImages((prev) => prev.filter((s) => s !== src));
+      } else {
+        if (selectedImages.length >= maxSelect) {
+          showToast(`Maksimal ${maxSelect} foto. Hapus salah satu jika ingin memilih foto lain.`);
+          return;
+        }
+        setSelectedImages((prev) => [...prev, src]);
+      }
+    } else {
+      setSelectedSrc(src);
     }
   };
 
@@ -367,16 +394,19 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {paginatedAssets.map((asset) => {
-                  const isSelected = selectedSrc === asset.src;
+                  const multiIdx = selectedImages.indexOf(asset.src);
+                  const isSelected = isMultiMode ? multiIdx !== -1 : selectedSrc === asset.src;
                   const isCloud = isCloudAsset(asset.src);
 
                   return (
                     <div
                       key={asset.src}
-                      onClick={() => setSelectedSrc(asset.src)}
+                      onClick={() => handleItemClick(asset.src)}
                       onDoubleClick={() => {
-                        onSelectImage(asset.src);
-                        onClose();
+                        if (!isMultiMode) {
+                          onSelectImage(asset.src);
+                          onClose();
+                        }
                       }}
                       className={`group relative rounded-xl border bg-white overflow-hidden cursor-pointer transition-all ${
                         isSelected
@@ -408,10 +438,10 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                           </span>
                         </div>
 
-                        {/* Selection Checkmark */}
+                        {/* Selection Checkmark / Multi Number */}
                         {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150">
-                            <Icon name="check" size={14} />
+                          <div className="absolute top-1.5 right-1.5 min-w-6 h-6 px-1.5 rounded-full bg-black text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150 font-bold text-xs">
+                            {isMultiMode ? <span>#{multiIdx + 1}</span> : <Icon name="check" size={14} />}
                           </div>
                         )}
                       </div>
@@ -468,7 +498,18 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-black/10 bg-white px-4 sm:px-6 py-3.5 shrink-0">
           {/* Selected Item Info */}
           <div className="flex items-center gap-3 min-w-0">
-            {selectedSrc ? (
+            {isMultiMode ? (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[10px] font-bold text-black/70 uppercase tracking-wider block">
+                  {selectedImages.length} dari {maxSelect} Foto Dipilih:
+                </span>
+                <span className="text-[10px] text-black/50 truncate block">
+                  {selectedImages.length > 0
+                    ? `Akan mengisi Slot 1 s/d Slot ${selectedImages.length}`
+                    : `Klik foto-foto di atas untuk memilih hingga ${maxSelect} foto.`}
+                </span>
+              </div>
+            ) : selectedSrc ? (
               <>
                 <div className="relative w-11 h-14 rounded-lg border border-black/20 bg-black/5 overflow-hidden shrink-0">
                   <Image src={selectedSrc} alt="Preview" fill className="object-cover" sizes="44px" />
@@ -501,20 +542,43 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             >
               Batal
             </button>
-            <button
-              type="button"
-              disabled={!selectedSrc}
-              onClick={() => {
-                if (selectedSrc) {
-                  onSelectImage(selectedSrc);
+            {isMultiMode ? (
+              <button
+                type="button"
+                disabled={selectedImages.length === 0}
+                onClick={() => {
+                  if (onSelectImages) {
+                    onSelectImages(selectedImages);
+                  } else if (selectedImages[0]) {
+                    onSelectImage(selectedImages[0]);
+                  }
                   onClose();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
-            >
-              <Icon name="check" size={15} />
-              <span>Gunakan Foto Ini</span>
-            </button>
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+              >
+                <Icon name="check" size={15} />
+                <span>
+                  {selectedImages.length > 1
+                    ? `Gunakan ${selectedImages.length} Foto (Isi Slot 1–${selectedImages.length})`
+                    : 'Gunakan Foto Ini'}
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={!selectedSrc}
+                onClick={() => {
+                  if (selectedSrc) {
+                    onSelectImage(selectedSrc);
+                    onClose();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-semibold text-white transition hover:bg-black/85 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+              >
+                <Icon name="check" size={15} />
+                <span>Gunakan Foto Ini</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

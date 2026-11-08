@@ -660,7 +660,17 @@ export function ProductModal({
                   {/* 4-slot foto warna: Foto 1 (Cover) + Foto 2–4 (Ekstra) */}
                   <div className="flex flex-1 flex-col gap-2 sm:border-l sm:border-black/15 sm:pl-2.5 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[9px] font-medium text-black/50 tracking-wide uppercase">Foto Warna (maks. 4)</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold text-black/60 tracking-wide uppercase">Foto Warna (maks. 4)</span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenImagePicker(`swatch-${idx}` as ImagePickerTarget)}
+                          className="text-[9px] font-semibold text-black underline hover:text-black/70 cursor-pointer"
+                          title="Buka galeri dan pilih langsung hingga 4 foto sekaligus untuk mengisi slot"
+                        >
+                          (Pilih Sekaligus 1-4 Foto)
+                        </button>
+                      </div>
                       {/* Delete button (visible on desktop) */}
                       <button
                         type="button"

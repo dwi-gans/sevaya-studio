@@ -751,6 +751,23 @@ export default function AdminPage() {
     });
   };
 
+  /** Update foto untuk satu swatch sekaligus (hingga 4 foto: 1 cover + 3 ekstra). */
+  const handleUpdateSwatchAllPhotos = (swatchIndex: number, photos: string[]) => {
+    setProductForm((prev) => {
+      const next = [...prev.swatches];
+      if (!next[swatchIndex]) return prev;
+      const clean = photos.filter(Boolean);
+      const cover = clean[0] || next[swatchIndex]!.image || prev.image || '/images/catalog/catalog-01.jpg';
+      const extras = clean.slice(1, 4);
+      next[swatchIndex] = {
+        ...next[swatchIndex]!,
+        image: cover,
+        images: extras,
+      };
+      return { ...prev, swatches: next };
+    });
+  };
+
   // ── Apply selected or uploaded image to target ──
   const applyImageToTarget = (target: ImagePickerTarget, urlOrPath: string) => {
     if (!target) return;
@@ -1259,6 +1276,42 @@ export default function AdminPage() {
     showToast('Gambar berhasil dipilih!');
   };
 
+  const handleSelectImages = (images: string[]) => {
+    if (!imagePickerTarget) return;
+
+    if (imagePickerTarget.startsWith('swatch-')) {
+      const parts = imagePickerTarget.split('-');
+      const swatchIdx = parseInt(parts[1]!, 10);
+
+      // Jika user memilih banyak foto (> 1): langsung mengisi slot 1, 2, 3, 4 sekaligus!
+      if (images.length > 1) {
+        handleUpdateSwatchAllPhotos(swatchIdx, images);
+        setIsImagePickerOpen(false);
+        showToast(`✓ Berhasil mengisi ${images.length} slot foto untuk warna ini!`);
+        return;
+      }
+
+      // Jika user memilih 1 foto:
+      if (images.length === 1) {
+        if (imagePickerTarget.includes('-photo-')) {
+          const photoIdx = parseInt(parts[3]!, 10);
+          handleUpdateSwatchExtraPhoto(swatchIdx, photoIdx, images[0]!);
+        } else {
+          handleUpdateSwatch(swatchIdx, 'image', images[0]!);
+        }
+        setIsImagePickerOpen(false);
+        showToast('Gambar berhasil dipilih!');
+        return;
+      }
+    }
+
+    if (images[0]) {
+      applyImageToTarget(imagePickerTarget, images[0]);
+    }
+    setIsImagePickerOpen(false);
+    showToast('Gambar berhasil dipilih!');
+  };
+
   // ── Auto-save sections debounce (hanya aktif setelah data berhasil dimuat dari server) ──
   useEffect(() => {
     if (!isSectionsLoadedFromServer.current) return;
@@ -1472,7 +1525,9 @@ export default function AdminPage() {
         isOpen={isImagePickerOpen}
         onClose={() => setIsImagePickerOpen(false)}
         onSelectImage={handleSelectPredefinedImage}
+        onSelectImages={handleSelectImages}
         currentImage={currentPickerImage}
+        maxSelect={imagePickerTarget?.startsWith('swatch-') ? 4 : 1}
       />
     </div>
   );
