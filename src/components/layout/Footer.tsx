@@ -36,12 +36,12 @@ export function Footer() {
             <div className="space-y-2 text-xs text-black/60">
               <p>
                 <a
-                  href="https://wa.me/6282266316206"
+                  href="https://wa.me/6285190993087"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:text-black"
                 >
-                  WhatsApp: +62 822-6631-6206
+                  WhatsApp: +62 851-9099-3087
                 </a>
               </p>
               <p>

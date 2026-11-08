@@ -183,7 +183,7 @@ export function ProfileSidebar({
           Tim concierge kami siap melayani informasi ukuran, jahitan custom, dan pelacakan kurir.
         </p>
         <Link
-          href="https://wa.me/6281234567890"
+          href="https://wa.me/6285190993087"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium tracking-wider text-black uppercase underline underline-offset-4 hover:opacity-75"

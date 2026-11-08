@@ -48,7 +48,7 @@ export const SettingsTab: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState<ShippingOriginData>({
     shipper_name: 'SEVAYA Store',
-    shipper_phone: '08123456789',
+    shipper_phone: '085190993087',
     shipper_email: 'info@sevaya-studio.com',
     shipper_organization: 'SEVAYA',
     origin_address: 'Jl. Kebon Jeruk No. 10, Jakarta Barat',

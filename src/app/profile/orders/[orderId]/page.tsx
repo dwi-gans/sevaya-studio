@@ -402,7 +402,7 @@ export default function OrderDetailPage({
               </button>
 
               <Link
-                href={`https://wa.me/6281234567890?text=${encodeURIComponent(
+                href={`https://wa.me/6285190993087?text=${encodeURIComponent(
                   `Halo SEVAYA, saya ingin bertanya tentang pesanan #${order.order_number}`
                 )}`}
                 target="_blank"
