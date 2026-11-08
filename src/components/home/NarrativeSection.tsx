@@ -70,7 +70,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
 
       {/* 2. Video Player Showcase */}
       <RevealOnScroll variant="editorial" delayMs={50}>
-        <VideoShowcase src={narrative.videoSrc} />
+        <VideoShowcase src={narrative.videoSrc} poster={narrative.videoPoster} />
       </RevealOnScroll>
 
       {/* 3. Brand Pillars */}

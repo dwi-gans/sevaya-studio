@@ -294,7 +294,7 @@ export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
   eleganceLinkUrl: '/conscious',
 
   videoSrc: '/videos/kani.mp4',
-  videoPoster: '/images/figma_video_cover.png',
+  videoPoster: '/images/kani_poster.webp',
 
   pillarsTagline: 'OUR CORE VALUES',
   pillarsTitle: 'Brand Pillars',

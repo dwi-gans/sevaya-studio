@@ -607,7 +607,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
             <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black">
               <Image
-                src={narrative.videoPoster || '/images/figma_video_cover.png'}
+                src={narrative.videoPoster || '/images/kani_poster.webp'}
                 alt="Video Cover"
                 fill
                 unoptimized
