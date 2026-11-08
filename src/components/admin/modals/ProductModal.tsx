@@ -39,12 +39,16 @@ interface ProductModalProps {
   onUpdateSwatch: (index: number, field: 'name' | 'color' | 'image', value: string) => void;
   /** Update foto ekstra (foto 2–4) untuk swatch warna tertentu. photoIndex: 1-based (1=foto2, 2=foto3, 3=foto4) */
   onUpdateSwatchExtraPhoto: (swatchIndex: number, photoIndex: number, value: string) => void;
+  /** Update semua foto untuk satu swatch sekaligus (maks. 4 foto: 1 cover + 3 ekstra) */
+  onUpdateSwatchAllPhotos?: (swatchIndex: number, photos: string[]) => void;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
   /** Hanya set target upload tanpa membuka modal galeri (dipakai saat klik "Unggah File") */
   onSetImageTarget: (target: ImagePickerTarget) => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   /** Upload langsung dengan target eksplisit — tidak perlu membuka galeri */
   onFileUploadDirect: (e: React.ChangeEvent<HTMLInputElement>, target: ImagePickerTarget) => Promise<void>;
+  /** Upload langsung banyak foto sekaligus untuk satu swatch (maks. 4 foto) */
+  onFileUploadDirectMultiple?: (e: React.ChangeEvent<HTMLInputElement>, swatchIndex: number) => Promise<void>;
   isLoading: boolean;
   isUploading: boolean;
 }
@@ -63,10 +67,12 @@ export function ProductModal({
   onRemoveSwatch,
   onUpdateSwatch,
   onUpdateSwatchExtraPhoto,
+  onUpdateSwatchAllPhotos,
   onOpenImagePicker,
   onSetImageTarget,
   onFileUpload,
   onFileUploadDirect,
+  onFileUploadDirectMultiple,
   isLoading,
   isUploading,
 }: ProductModalProps) {
@@ -659,17 +665,53 @@ export function ProductModal({
 
                   {/* 4-slot foto warna: Foto 1 (Cover) + Foto 2–4 (Ekstra) */}
                   <div className="flex flex-1 flex-col gap-2 sm:border-l sm:border-black/15 sm:pl-2.5 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[9px] font-medium text-black/50 tracking-wide uppercase">Foto Warna (maks. 4)</span>
-                      {/* Delete button (visible on desktop) */}
-                      <button
-                        type="button"
-                        onClick={() => onRemoveSwatch(idx)}
-                        className="hidden sm:flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-red-500 hover:bg-red-50 active:scale-95 cursor-pointer"
-                        title="Hapus Warna Ini"
-                      >
-                        <Icon name="close" size={13} />
-                      </button>
+                    <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9.5px] font-bold text-black tracking-wide uppercase">
+                          Foto Warna ({1 + (sw.images?.filter(Boolean).length || 0)}/4)
+                        </span>
+                      </div>
+
+                      {/* Tombol aksi sekaligus (pilih banyak atau unggah banyak) */}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => onOpenImagePicker(`swatch-${idx}-multi` as ImagePickerTarget)}
+                          className="h-6 inline-flex items-center gap-1 rounded-full border border-black/25 bg-black/[0.04] px-2 text-[9px] font-semibold text-black hover:bg-black/10 active:scale-95 cursor-pointer"
+                          title="Pilih langsung hingga 4 foto dari pustaka/cloud sekaligus"
+                        >
+                          <Icon name="photo_library" size={11} />
+                          <span>Pilih Sekaligus (Maks 4)</span>
+                        </button>
+
+                        {onFileUploadDirectMultiple && (
+                          <label
+                            className="h-6 inline-flex items-center gap-1 cursor-pointer rounded-full bg-black px-2 text-[9px] font-semibold text-white hover:bg-black/85 active:scale-95"
+                            title="Unggah langsung 1–4 foto dari HP/laptop sekaligus"
+                          >
+                            <Icon name="upload" size={11} />
+                            <span>Unggah Sekaligus</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+                              disabled={isUploading}
+                              onChange={(e) => onFileUploadDirectMultiple(e, idx)}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+
+                        {/* Delete button (visible on desktop) */}
+                        <button
+                          type="button"
+                          onClick={() => onRemoveSwatch(idx)}
+                          className="hidden sm:flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-red-500 hover:bg-red-50 active:scale-95 cursor-pointer ml-1"
+                          title="Hapus Warna Ini"
+                        >
+                          <Icon name="close" size={13} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-4 gap-1.5">

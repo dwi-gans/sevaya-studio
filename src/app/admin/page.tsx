@@ -22,6 +22,7 @@ import {
   listUploadedFiles,
   StorageFile,
 } from '@/integrations/supabase';
+import { uploadMultipleFilesToStorage } from '@/integrations/supabase/storage';
 import { Article } from '@/integrations/supabase/articles';
 
 // Admin Shared Components
@@ -751,6 +752,23 @@ export default function AdminPage() {
     });
   };
 
+  /** Update semua foto untuk satu swatch sekaligus (maks. 4 foto: 1 cover + 3 ekstra). */
+  const handleUpdateSwatchAllPhotos = (swatchIndex: number, photos: string[]) => {
+    setProductForm((prev) => {
+      const next = [...prev.swatches];
+      if (!next[swatchIndex]) return prev;
+      const valid = photos.filter((p) => p && p.trim() && !p.includes('logo_ibey'));
+      const cover = valid[0] || next[swatchIndex]!.image || prev.image || '/images/catalog/catalog-01.jpg';
+      const extras = valid.slice(1, 4);
+      next[swatchIndex] = {
+        ...next[swatchIndex]!,
+        image: cover,
+        images: extras,
+      };
+      return { ...prev, swatches: next };
+    });
+  };
+
   // ── Apply selected or uploaded image to target ──
   const applyImageToTarget = (target: ImagePickerTarget, urlOrPath: string) => {
     if (!target) return;
@@ -1230,6 +1248,36 @@ export default function AdminPage() {
     }
   };
 
+  /**
+   * Upload langsung banyak berkas sekaligus untuk satu swatch warna (maks. 4 foto).
+   */
+  const handleFileUploadDirectMultiple = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    swatchIndex: number
+  ) => {
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList).slice(0, 4);
+    setIsUploading(true);
+    showToast(`Mengunggah ${files.length} foto untuk warna ini...`);
+    try {
+      const res = await uploadMultipleFilesToStorage(files, 'uploads', `Swatch ${swatchIndex + 1} Batch Upload`);
+      if (res.success && res.files && res.files.length > 0) {
+        const urls = res.files.map((f: any) => f.src || f.url).filter(Boolean);
+        handleUpdateSwatchAllPhotos(swatchIndex, urls);
+        const updatedFiles = await listUploadedFiles();
+        setMediaFiles(updatedFiles);
+        showToast(`✓ ${urls.length} foto berhasil diunggah & diterapkan ke warna ini!`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah foto';
+      showToast(msg);
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const currentPickerImage = useMemo(() => {
     if (!imagePickerTarget) return undefined;
     if (imagePickerTarget === 'product') return productForm.image;
@@ -1258,6 +1306,39 @@ export default function AdminPage() {
     setIsImagePickerOpen(false);
     showToast('Gambar berhasil dipilih!');
   };
+
+  const handleSelectMultipleImages = (imagePaths: string[]) => {
+    if (!imagePickerTarget) return;
+    if (imagePickerTarget.startsWith('swatch-') && imagePickerTarget.includes('-multi')) {
+      const parts = imagePickerTarget.split('-');
+      const swatchIdx = parseInt(parts[1]!, 10);
+      handleUpdateSwatchAllPhotos(swatchIdx, imagePaths);
+      setIsImagePickerOpen(false);
+      showToast(`✓ ${imagePaths.length} foto berhasil diterapkan ke warna ini!`);
+      return;
+    }
+    if (imagePaths[0]) {
+      applyImageToTarget(imagePickerTarget, imagePaths[0]);
+    }
+    setIsImagePickerOpen(false);
+    showToast('Gambar berhasil dipilih!');
+  };
+
+  const currentPickerMultiImages = useMemo(() => {
+    if (!imagePickerTarget || !imagePickerTarget.includes('-multi')) return [];
+    const parts = imagePickerTarget.split('-');
+    const idx = parseInt(parts[1]!, 10);
+    const sw = productForm.swatches[idx];
+    if (!sw) return [];
+    const list: string[] = [];
+    if (sw.image) list.push(sw.image);
+    if (Array.isArray(sw.images)) {
+      sw.images.forEach((img) => {
+        if (img && img.trim() && !list.includes(img.trim())) list.push(img.trim());
+      });
+    }
+    return list;
+  }, [imagePickerTarget, productForm.swatches]);
 
   // ── Auto-save sections debounce (hanya aktif setelah data berhasil dimuat dari server) ──
   useEffect(() => {
@@ -1436,6 +1517,7 @@ export default function AdminPage() {
         onRemoveSwatch={handleRemoveSwatch}
         onUpdateSwatch={handleUpdateSwatch}
         onUpdateSwatchExtraPhoto={handleUpdateSwatchExtraPhoto}
+        onUpdateSwatchAllPhotos={handleUpdateSwatchAllPhotos}
         onOpenImagePicker={(target) => {
           setImagePickerTarget(target);
           setIsImagePickerOpen(true);
@@ -1446,6 +1528,7 @@ export default function AdminPage() {
         }}
         onFileUpload={handleFileUpload}
         onFileUploadDirect={handleFileUploadDirect}
+        onFileUploadDirectMultiple={handleFileUploadDirectMultiple}
         isLoading={isLoading}
         isUploading={isUploading}
       />
@@ -1472,7 +1555,10 @@ export default function AdminPage() {
         isOpen={isImagePickerOpen}
         onClose={() => setIsImagePickerOpen(false)}
         onSelectImage={handleSelectPredefinedImage}
+        onSelectImages={handleSelectMultipleImages}
         currentImage={currentPickerImage}
+        maxSelect={imagePickerTarget?.includes('-multi') ? 4 : 1}
+        initialSelectedImages={currentPickerMultiImages}
       />
     </div>
   );
