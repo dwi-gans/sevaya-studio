@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBiteshipRates } from '@/integrations/biteship';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { getShippingOriginSettings } from '@/lib/shipping-settings';
 
 // In-memory cache for shipping calculation results (5 minutes TTL)
 interface ShippingRatesCacheEntry {
@@ -42,7 +43,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, data: cached.rates, notice: cached.notice });
     }
 
+    const originSettings = await getShippingOriginSettings().catch(() => null);
+
     const { rates, notice } = await getBiteshipRates({
+      origin_area_id: originSettings?.origin_area_id || undefined,
+      origin_postal_code: originSettings?.origin_postal_code || undefined,
       destination_area_id: areaId,
       destination_postal_code: postalCode,
       couriers: courierList,

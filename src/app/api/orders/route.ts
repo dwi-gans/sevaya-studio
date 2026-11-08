@@ -6,6 +6,7 @@ import { sendAdminOrderNotification } from '@/lib/admin-order-notification';
 import { getVerifiedProductPrice } from '@/lib/catalog-prices';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { getServerInventoryVariants } from '@/lib/inventory-server';
+import { getShippingOriginSettings } from '@/lib/shipping-settings';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -248,16 +249,19 @@ export async function POST(req: NextRequest) {
             safePhone = '0812' + safePhone.padEnd(8, '0').slice(0, 8);
           }
 
+          const originSettings = await getShippingOriginSettings();
+
           const biteshipPayload = {
-            shipper_contact_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
-            shipper_contact_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
-            shipper_contact_email: process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
-            shipper_organization: 'SEVAYA',
-            origin_contact_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
-            origin_contact_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
-            origin_address: process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-            origin_note: process.env.BITESHIP_ORIGIN_NOTE || 'Gudang SEVAYA',
-            origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450,
+            shipper_contact_name: originSettings.shipper_name,
+            shipper_contact_phone: originSettings.shipper_phone,
+            shipper_contact_email: originSettings.shipper_email,
+            shipper_organization: originSettings.shipper_organization || 'SEVAYA',
+            origin_contact_name: originSettings.shipper_name,
+            origin_contact_phone: originSettings.shipper_phone,
+            origin_address: originSettings.origin_address,
+            origin_note: originSettings.origin_note || 'Gudang SEVAYA',
+            origin_postal_code: originSettings.origin_postal_code || 11450,
+            ...(originSettings.origin_area_id ? { origin_area_id: originSettings.origin_area_id } : {}),
             destination_contact_name: customerName,
             destination_contact_phone: safePhone,
             destination_contact_email: email,
