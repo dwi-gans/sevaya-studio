@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StudioImage } from '@/components/common';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { Icon } from '@/components/ui/Icon';
 import { getDbProducts, DbProduct } from '@/integrations/supabase';
 import { ProductVariant } from '@/integrations/supabase/inventory';
 import { mapDbProductToProduct } from '@/features/catalog';
@@ -22,7 +25,7 @@ const DEFAULT_COLOR_OPTIONS: ProductColorOption[] = [
   { name: 'Black', hex: '#1C1C1E', image: '/images/catalog/catalog-01.jpg' },
   { name: 'Navy', hex: '#1B263B', image: '/images/catalog/catalog-05.jpg' },
   { name: 'Espresso', hex: '#3E2A20', image: '/images/catalog/catalog-07.jpg' },
-  { name: 'Olive Brown', hex: '#8C857B', image: '/images/catalog/catalog-04.jpg', outOfStock: true },
+  { name: 'Olive Brown', hex: '#8C857B', image: '/images/catalog/catalog-04.jpg' },
   { name: 'Sesame', hex: '#EAE5DB', image: '/images/catalog/catalog-03.jpg' },
   { name: 'Chai', hex: '#DDD2C3', image: '/images/catalog/catalog-06.jpg' },
 ];
@@ -37,8 +40,9 @@ function buildColorOptions(
   if (!swatches || swatches.length === 0) return DEFAULT_COLOR_OPTIONS;
 
   return swatches.map((s, idx) => {
+    const sName = s.name.trim().toLowerCase();
     const colorVariants = variants.filter(
-      (v) => v.colorName.toLowerCase() === s.name.toLowerCase()
+      (v) => v.colorName.trim().toLowerCase() === sName
     );
     const isColorSoldOut =
       colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
@@ -131,8 +135,18 @@ export function ProductDetailClient({
   initialProduct,
   initialVariants = [],
 }: ProductDetailClientProps) {
+  const router = useRouter();
+  const { language } = useLanguage();
   const { items, addToCart } = useCart();
   const { showToast } = useToast();
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && document.referrer && document.referrer.includes(window.location.host)) {
+      router.back();
+    } else {
+      router.push('/shop');
+    }
+  };
 
   const [dbProduct, setDbProduct] = useState<DbProduct>(initialProduct);
   const [variants, setVariants] = useState<ProductVariant[]>(initialVariants);
@@ -212,6 +226,21 @@ export function ProductDetailClient({
     }
   };
 
+  // Baca query parameter ?color= dari URL jika user datang dari klik swatch di card katalog
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const colorParam = searchParams.get('color');
+    if (colorParam) {
+      const decoded = decodeURIComponent(colorParam).trim().toLowerCase();
+      const matched = colors.find((c) => c.name.trim().toLowerCase() === decoded);
+      if (matched) {
+        handleSelectColor(matched);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Handler saat user mengklik thumbnail di galeri bawah:
   // Galeri sudah difilter per warna, jadi cukup update activeImage saja
   const handleSelectGalleryImage = (imgSrc: string) => {
@@ -221,15 +250,17 @@ export function ProductDetailClient({
   // Stok varian spesifik yang dipilih (warna + size)
   const selectedVariantStock = useMemo(() => {
     if (variants.length > 0) {
+      const sColor = selectedColor.name.trim().toLowerCase();
+      const sSize = selectedSize.trim().toUpperCase();
       const v = variants.find(
         (vr) =>
-          vr.colorName.toLowerCase() === selectedColor.name.toLowerCase() &&
-          vr.size.toUpperCase() === selectedSize.toUpperCase()
+          vr.colorName.trim().toLowerCase() === sColor &&
+          vr.size.trim().toUpperCase() === sSize
       );
       if (v !== undefined) return v.stock;
       // Color found but no matching size variant = not configured, use product-level stock
       const colorVariants = variants.filter(
-        (vr) => vr.colorName.toLowerCase() === selectedColor.name.toLowerCase()
+        (vr) => vr.colorName.trim().toLowerCase() === sColor
       );
       if (colorVariants.length > 0) {
         // Specific size not found but color variants exist = size is available, use max of color
@@ -262,14 +293,25 @@ export function ProductDetailClient({
     if (variants.length === 0) return;
     setColors((prev) =>
       prev.map((c) => {
+        const cName = c.name.trim().toLowerCase();
         const colorVariants = variants.filter(
-          (v) => v.colorName.toLowerCase() === c.name.toLowerCase()
+          (v) => v.colorName.trim().toLowerCase() === cName
         );
         const isColorSoldOut =
           colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
         return { ...c, outOfStock: isColorSoldOut };
       })
     );
+    // Sinkronkan juga status outOfStock pada selectedColor yang aktif
+    setSelectedColor((prev) => {
+      const pName = prev.name.trim().toLowerCase();
+      const colorVariants = variants.filter(
+        (v) => v.colorName.trim().toLowerCase() === pName
+      );
+      const isColorSoldOut =
+        colorVariants.length > 0 && colorVariants.every((v) => v.stock <= 0);
+      return { ...prev, outOfStock: isColorSoldOut };
+    });
   }, [variants]);
 
   // Refresh produk & varian dari server secara background
@@ -315,14 +357,15 @@ export function ProductDetailClient({
       const freshMap = buildColorPhotoMap(found.swatches, freshFallback);
       setColorPhotoMap(freshMap);
 
-      // PERBAIKAN BUG: Pertahankan warna yang SEDANG DIPILIH oleh user (jangan di-reset ke warna pertama!)
+      // Pertahankan warna yang SEDANG DIPILIH oleh user
       setSelectedColor((prevSelected) => {
+        const pName = prevSelected.name.trim().toLowerCase();
         const matched = freshColors.find(
-          (c) => c.name.toLowerCase() === prevSelected.name.toLowerCase()
+          (c) => c.name.trim().toLowerCase() === pName
         );
         const resolvedColor = matched || freshColors[0]!;
         // Perbarui galeri foto untuk warna yang aktif
-        const freshPhotos = freshMap[resolvedColor.name.toLowerCase()];
+        const freshPhotos = freshMap[resolvedColor.name.trim().toLowerCase()];
         if (freshPhotos && freshPhotos.length > 0) {
           setGalleryImages(freshPhotos);
         } else {
@@ -332,22 +375,15 @@ export function ProductDetailClient({
       });
     });
 
-    // Refresh data varian dari API
-    fetch('/api/admin/inventory', { cache: 'no-store' })
+    // Refresh data varian dari API publik (tanpa hambatan auth admin)
+    fetch(`/api/products/${encodeURIComponent(slug)}/variants`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!isMounted || !data?.variants) return;
-        const productId = String(initialProduct.id);
-        const productVariants: ProductVariant[] = (data.variants as ProductVariant[]).filter(
-          (v) =>
-            v.productSlug === slug ||
-            String(v.productId) === productId
-        );
-        if (productVariants.length > 0) {
-          setVariants(productVariants);
+        if (Array.isArray(data.variants) && data.variants.length > 0) {
+          setVariants(data.variants);
           setVariantsReady(true);
         } else {
-          // No variants from API = rely on SSR data
           setVariantsReady(true);
         }
       })
@@ -430,8 +466,22 @@ export function ProductDetailClient({
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
-      <main className="w-full flex-1 pt-3 sm:pt-10 pb-20">
+      <main className="w-full flex-1 pt-3 sm:pt-6 pb-20">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          
+          {/* Tombol Back Simple di Kiri Atas */}
+          <div className="mb-3 sm:mb-5">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="group inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-normal tracking-[0.18em] uppercase text-black/60 hover:text-black transition-colors cursor-pointer py-1"
+              aria-label="Kembali"
+            >
+              <Icon name="arrow_back" size={14} className="transition-transform group-hover:-translate-x-1 text-black/70 group-hover:text-black" />
+              <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14 items-start">
             
             {/* ── KOLOM KIRI (lg:col-span-6): DETAIL PRODUK & FORM PEMBELIAN ── */}
@@ -476,21 +526,27 @@ export function ProductDetailClient({
               <div className="pt-2">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
-                    COLOR &mdash; <span className="font-normal text-black/80">{selectedColor.name}</span>
+                    COLOR &mdash;{' '}
+                    <span className="font-normal text-black/80">{selectedColor.name}</span>
+                    {selectedColor.outOfStock && (
+                      <span className="ml-2 font-normal text-rose-600 tracking-normal normal-case">
+                        (Habis)
+                      </span>
+                    )}
                   </span>
                 </div>
                 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {colors.map((c) => {
-                    const isSelected = selectedColor.name === c.name;
+                    const isSelected = selectedColor.name.trim().toLowerCase() === c.name.trim().toLowerCase();
                     return (
-                      <div key={c.name} className="flex items-center gap-2">
+                      <div key={c.name} className="flex items-center">
                         <button
                           type="button"
                           onClick={() => handleSelectColor(c)}
                           className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 cursor-pointer ${
                             c.outOfStock
-                              ? 'opacity-70'
+                              ? 'opacity-60'
                               : ''
                           } ${
                             isSelected
@@ -511,12 +567,6 @@ export function ProductDetailClient({
                             </span>
                           )}
                         </button>
-
-                        {c.outOfStock && (
-                          <span className="text-[10px] font-medium text-black/40 line-through">
-                            {c.name} (Habis)
-                          </span>
-                        )}
                       </div>
                     );
                   })}
@@ -530,14 +580,14 @@ export function ProductDetailClient({
                 </span>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {sizeOptions.map((sz) => {
-                    const isSelected = selectedSize === sz;
+                    const isSelected = selectedSize.trim().toUpperCase() === sz.trim().toUpperCase();
                     // Cek apakah kombinasi warna+size ini habis
                     // Only mark sold-out after variants confirmed from live API (prevents 1s flicker)
                     const szVariant = variantsReady && variants.length > 0
                       ? variants.find(
                           (v) =>
-                            v.colorName.toLowerCase() === selectedColor.name.toLowerCase() &&
-                            v.size.toUpperCase() === sz.toUpperCase()
+                            v.colorName.trim().toLowerCase() === selectedColor.name.trim().toLowerCase() &&
+                            v.size.trim().toUpperCase() === sz.trim().toUpperCase()
                         )
                       : undefined;
                     const isSzSoldOut = szVariant !== undefined && szVariant.stock <= 0;
