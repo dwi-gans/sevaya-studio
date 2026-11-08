@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { StudioImage } from '@/components/common';
 import { getSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
-const PRIMARY_HERO = '/images/hero_optimized.jpg';
+const PRIMARY_HERO = '/images/hero_optimized.webp';
 
 interface HeroSectionProps {
   initialHero?: HeroSectionData;
@@ -15,6 +16,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
   // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
   const [animDone, setAnimDone] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,29 +50,39 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   return (
     <section
       suppressHydrationWarning
-      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#111111] text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      className="relative flex w-full flex-col justify-end overflow-hidden bg-[#181818] text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
     >
       {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
-          className="relative h-full w-full bg-[#111111]"
+          className="relative h-full w-full bg-[#181818]"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            suppressHydrationWarning
+          {/* Instant local fallback background to guarantee zero black flash */}
+          {heroImage !== PRIMARY_HERO && (
+            <StudioImage
+              src={PRIMARY_HERO}
+              alt=""
+              fill
+              priority
+              preset="hero"
+              className="animate-kenburns object-cover object-[center_30%] sm:object-[center_35%] filter blur-[1px] opacity-80"
+            />
+          )}
+
+          {/* Main Hero Image via Next.js StudioImage pipeline (auto WebP/AVIF, preloaded via priority) */}
+          <StudioImage
             src={heroImage}
             alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-            loading="eager"
-            decoding="async"
-            className="animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%]"
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.src.endsWith(PRIMARY_HERO)) {
-                target.src = PRIMARY_HERO;
-                setHero((prev) => ({ ...prev, image: PRIMARY_HERO }));
-              }
-            }}
+            fill
+            priority
+            preset="hero"
+            quality={92}
+            fallbackSrc={PRIMARY_HERO}
+            onLoad={() => setImgLoaded(true)}
+            className={`animate-kenburns object-cover object-[center_30%] sm:object-[center_35%] transition-opacity duration-700 ease-out ${
+              imgLoaded ? 'opacity-100' : 'opacity-90'
+            }`}
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
