@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { StudioImage } from '@/components/common';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
@@ -23,6 +23,18 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cfg, setCfg] = useState<LookbookPageConfig>(initialConfig);
 
+  const displayedProducts = useMemo(() => {
+    if (Array.isArray(cfg.shopProductIds) && cfg.shopProductIds.length > 0) {
+      const selected = cfg.shopProductIds
+        .map((id) => products.find((p) => String(p.id) === String(id) || p.slug === String(id)))
+        .filter((p): p is Product => Boolean(p));
+      if (selected.length > 0) {
+        return selected.slice(0, 4);
+      }
+    }
+    return products.slice(0, 4);
+  }, [cfg.shopProductIds, products]);
+
   useEffect(() => {
     // Background fresh fetch for sections to guarantee sync
     getSiteSections(true).then((sections) => {
@@ -38,7 +50,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const cardWidth = el.firstElementChild?.clientWidth || 280;
-    const maxIdx = Math.max(products.length - 1, 0);
+    const maxIdx = Math.max(displayedProducts.length - 1, 0);
     const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), maxIdx);
     setActiveIndex((prev) => (prev !== idx ? idx : prev));
   };
@@ -280,7 +292,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               overscrollBehaviorX: 'contain',
             }}
           >
-            {products.length === 0 ? (
+            {displayedProducts.length === 0 ? (
               [...Array(4)].map((_, i) => (
                 <div
                   key={i}
@@ -293,7 +305,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                 </div>
               ))
             ) : (
-              products.map((prod) => (
+              displayedProducts.map((prod) => (
                 <div
                   key={prod.id}
                   className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
@@ -307,9 +319,9 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         </div>
 
         {/* Dot indicators — mobile only */}
-        {products.length > 0 && (
+        {displayedProducts.length > 0 && (
           <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-            {products.map((_, i) => (
+            {displayedProducts.map((_, i) => (
               <button
                 key={i}
                 type="button"

@@ -1366,6 +1366,7 @@ export default function AdminPage() {
               setIsImagePickerOpen(true);
             }}
             showToast={showToast}
+            products={products}
           />
         )}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { StudioImage } from '@/components/common';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
@@ -34,6 +34,18 @@ export function LookbookVolumeClient({
   const [volTitle, setVolTitle] = useState(initialVolTitle);
   const [volDesc] = useState(initialVolDesc);
 
+  const displayedProducts = useMemo(() => {
+    if (Array.isArray(cfg.shopProductIds) && cfg.shopProductIds.length > 0) {
+      const selected = cfg.shopProductIds
+        .map((id) => products.find((p) => String(p.id) === String(id) || p.slug === String(id)))
+        .filter((p): p is Product => Boolean(p));
+      if (selected.length > 0) {
+        return selected.slice(0, 4);
+      }
+    }
+    return products.slice(0, 4);
+  }, [cfg.shopProductIds, products]);
+
   useEffect(() => {
     getSiteSections(true).then((sections) => {
       if (sections.lookbookVolumesConfig?.[slug]) {
@@ -54,7 +66,7 @@ export function LookbookVolumeClient({
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const cardWidth = el.firstElementChild?.clientWidth || 280;
-    const maxIdx = Math.max(products.length - 1, 0);
+    const maxIdx = Math.max(displayedProducts.length - 1, 0);
     const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), maxIdx);
     setActiveIndex((prev) => (prev !== idx ? idx : prev));
   };
@@ -265,13 +277,14 @@ export function LookbookVolumeClient({
       <section className="border-t border-[#E5E5E5] pt-10 pb-12 sm:pt-12 sm:pb-16 bg-white/40 overflow-hidden w-full">
         <div className="mx-auto mb-8 flex max-w-4xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
           <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            SHOP THE COLLECTION
+            {cfg.shopTag || 'SHOP THE COLLECTION'}
           </span>
           <h2 className="mt-1 font-sans text-sm font-medium tracking-[0.15em] text-[#000000] uppercase sm:text-lg">
-            {volTitle}
+            {cfg.shopTitle || volTitle}
           </h2>
           <p className="mt-2 text-[10px] sm:text-xs text-[#555555] max-w-md font-light">
-            Edisi terbatas eksklusif dengan sentuhan material premium dan palet warna hangat musim ini.
+            {cfg.shopDesc ||
+              'Edisi terbatas eksklusif dengan sentuhan material premium dan palet warna hangat musim ini.'}
           </p>
         </div>
 
@@ -295,7 +308,7 @@ export function LookbookVolumeClient({
               overscrollBehaviorX: 'contain',
             }}
           >
-            {products.length === 0 ? (
+            {displayedProducts.length === 0 ? (
               [...Array(4)].map((_, i) => (
                 <div
                   key={i}
@@ -308,7 +321,7 @@ export function LookbookVolumeClient({
                 </div>
               ))
             ) : (
-              products.map((prod) => (
+              displayedProducts.map((prod) => (
                 <div
                   key={prod.id}
                   className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
@@ -322,9 +335,9 @@ export function LookbookVolumeClient({
         </div>
 
         {/* Dot indicators — mobile only */}
-        {products.length > 0 && (
+        {displayedProducts.length > 0 && (
           <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-            {products.map((_, i) => (
+            {displayedProducts.map((_, i) => (
               <button
                 key={i}
                 type="button"

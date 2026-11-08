@@ -116,6 +116,7 @@ export interface LookbookPageConfig {
   shopTag?: string;
   shopTitle?: string;
   shopDesc?: string;
+  shopProductIds?: string[];
 }
 
 export interface ConsciousPageConfig {
@@ -281,6 +282,7 @@ const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
   shopTitle: 'SEVILLA ABAYA',
   shopDesc:
     'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.',
+  shopProductIds: [],
 };
 
 export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {

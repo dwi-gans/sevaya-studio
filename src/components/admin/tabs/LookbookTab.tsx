@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -6,6 +6,8 @@ import {
   DEFAULT_SITE_SECTIONS,
   saveSiteSections,
   LookbookPageConfig,
+  DbProduct,
+  getDbProducts,
 } from '@/integrations/supabase';
 import type { ImagePickerTarget } from '../adminTypes';
 
@@ -16,6 +18,7 @@ interface LookbookTabProps {
   setSelectedLookbookVolId: (id: string) => void;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
   showToast: (msg: string) => void;
+  products?: DbProduct[];
 }
 
 export const LookbookTab: React.FC<LookbookTabProps> = ({
@@ -25,6 +28,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   setSelectedLookbookVolId,
   onOpenImagePicker,
   showToast,
+  products = [],
 }) => {
   const [viewMode, setViewMode] = useState<'list' | 'edit'>('list');
   const [filterStatus, setFilterStatus] = useState<'all' | 'posted' | 'hidden'>('all');
@@ -33,6 +37,22 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   const [newVolTitle, setNewVolTitle] = useState('');
   const [newVolSeason, setNewVolSeason] = useState("'26");
   const [newVolBadge, setNewVolBadge] = useState('NEW');
+
+  // Catalog products for Lookbook "Shop The Collection" picker
+  const [catalogProducts, setCatalogProducts] = useState<DbProduct[]>(products);
+  const [isCatalogPickerOpen, setIsCatalogPickerOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<'all' | 'abaya' | 'khimar'>('all');
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setCatalogProducts(products);
+    } else {
+      getDbProducts().then((res) => {
+        if (res && res.length > 0) setCatalogProducts(res);
+      });
+    }
+  }, [products]);
 
   const activeVolConfig: LookbookPageConfig =
     sections.lookbookVolumesConfig?.[selectedLookbookVolId] ||
@@ -105,7 +125,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   const activeLink = activeVolIndex >= 0 ? currentLinks[activeVolIndex] : currentLinks[0];
   const activeVolLabel = activeLink?.label || selectedLookbookVolId.toUpperCase();
 
-  const updateVolField = (key: keyof LookbookPageConfig, value: string) => {
+  const updateVolField = <K extends keyof LookbookPageConfig>(key: K, value: LookbookPageConfig[K]) => {
     const updatedConfig = { ...activeVolConfig, [key]: value };
     const next: SiteSectionsConfig = {
       ...sections,
@@ -117,6 +137,92 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
     };
     setSections(next);
   };
+
+  // Selected product IDs for current active volume (Max 4)
+  const selectedProductIds: string[] = useMemo(() => {
+    return Array.isArray(activeVolConfig.shopProductIds)
+      ? activeVolConfig.shopProductIds.map(String)
+      : [];
+  }, [activeVolConfig.shopProductIds]);
+
+  // Selected DbProduct objects mapped in chosen order
+  const selectedProducts: DbProduct[] = useMemo(() => {
+    return selectedProductIds
+      .map((id) => catalogProducts.find((p) => String(p.id) === id || p.slug === id))
+      .filter((p): p is DbProduct => Boolean(p));
+  }, [selectedProductIds, catalogProducts]);
+
+  const handleToggleProduct = (product: DbProduct) => {
+    const prodId = String(product.id);
+    const isSelected =
+      selectedProductIds.includes(prodId) ||
+      (Boolean(product.slug) && selectedProductIds.includes(product.slug));
+
+    if (isSelected) {
+      const next = selectedProductIds.filter((id) => id !== prodId && id !== product.slug);
+      updateVolField('shopProductIds', next);
+    } else {
+      if (selectedProductIds.length >= 4) {
+        showToast('Maksimal 4 produk telah terpilih untuk volume ini.');
+        return;
+      }
+      const next = [...selectedProductIds, prodId];
+      updateVolField('shopProductIds', next);
+    }
+  };
+
+  const handleRemoveProduct = (prodId: string) => {
+    const next = selectedProductIds.filter((id) => id !== prodId);
+    updateVolField('shopProductIds', next);
+  };
+
+  const handleMoveProductOrder = (index: number, direction: 'left' | 'right') => {
+    const targetIdx = direction === 'left' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= selectedProductIds.length) return;
+    const next = [...selectedProductIds];
+    const itemA = next[index];
+    const itemB = next[targetIdx];
+    if (typeof itemA === 'string' && typeof itemB === 'string') {
+      next[index] = itemB;
+      next[targetIdx] = itemA;
+      updateVolField('shopProductIds', next);
+    }
+  };
+
+  const handleResetProducts = () => {
+    updateVolField('shopProductIds', []);
+    showToast('Pilihan produk dikembalikan ke 4 produk teratas di katalog secara otomatis.');
+  };
+
+  const filteredCatalogProducts = useMemo(() => {
+    return catalogProducts.filter((p) => {
+      if (p.hidden) return false;
+      if (catalogCategoryFilter !== 'all') {
+        const cat = (p.category || '').toLowerCase();
+        if (
+          catalogCategoryFilter === 'abaya' &&
+          !cat.includes('abaya') &&
+          !p.title.toLowerCase().includes('abaya')
+        )
+          return false;
+        if (
+          catalogCategoryFilter === 'khimar' &&
+          !cat.includes('khimar') &&
+          !p.title.toLowerCase().includes('khimar')
+        )
+          return false;
+      }
+      if (productSearch.trim()) {
+        const q = productSearch.toLowerCase().trim();
+        return (
+          p.title.toLowerCase().includes(q) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.edition && p.edition.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [catalogProducts, catalogCategoryFilter, productSearch]);
 
   const handleCreateVolume = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1256,17 +1362,23 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
         </div>
       </div>
 
-      {/* ── SECTION 10: SHOP THE COLLECTION HEADER ── */}
-      <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-black/10 pb-2">
-          <span className="text-[10px] font-bold tracking-widest text-black/60 uppercase">
-            10. Header &quot;Shop The Collection&quot;
-          </span>
-          <span className="rounded bg-black/10 px-2 py-0.5 text-[9px] font-semibold text-black">
-            Katalog Lookbook
+      {/* ── SECTION 10: SHOP THE COLLECTION & PRODUCT PICKER ── */}
+      <div className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-3">
+          <div>
+            <span className="text-[10px] font-bold tracking-widest text-black/60 uppercase block">
+              10. Shop The Collection & Kurasi Produk Katalog
+            </span>
+            <p className="text-[11px] text-black/60 mt-0.5">
+              Kelola teks heading dan tentukan maksimal 4 produk pilihan yang tampil di bagian bawah volume ini.
+            </p>
+          </div>
+          <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] font-semibold text-black border border-black/10">
+            Volume: {activeVolLabel}
           </span>
         </div>
 
+        {/* ── Part A: Header Text Inputs ── */}
         <div className="space-y-3 max-w-2xl mx-auto">
           <div>
             <label className="text-[10px] font-semibold text-black/60 uppercase block mb-1">
@@ -1306,6 +1418,326 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               className="w-full rounded-md border border-black/20 bg-[#FBFBFA] px-3 py-2 text-xs leading-relaxed text-black focus:border-black focus:bg-white focus:outline-none"
             />
           </div>
+        </div>
+
+        {/* ── Part B: Product Slots (Max 4) ── */}
+        <div className="border-t border-black/10 pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold tracking-wider text-black uppercase">
+                  Pilihan Produk Katalog (Maksimal 4)
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase transition ${
+                    selectedProductIds.length === 4
+                      ? 'bg-emerald-600 text-white'
+                      : selectedProductIds.length > 0
+                      ? 'bg-black text-white'
+                      : 'bg-black/10 text-black/70'
+                  }`}
+                >
+                  {selectedProductIds.length} / 4 Terpilih
+                </span>
+              </div>
+              <p className="text-[11px] text-black/60 mt-1">
+                {selectedProductIds.length === 0 ? (
+                  <span className="text-amber-700 font-medium">
+                    • Mode Otomatis: Belum ada produk yang dipilih khusus. Website akan menampilkan 4 produk teratas katalog.
+                  </span>
+                ) : (
+                  <span>
+                    • Menampilkan {selectedProductIds.length} produk pilihan khusus di carousel &quot;Shop The Collection&quot;.
+                  </span>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedProductIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetProducts}
+                  className="rounded-full border border-black/20 bg-white px-3 py-1.5 text-[10px] font-semibold text-black/70 hover:bg-black/5 hover:text-black transition cursor-pointer"
+                >
+                  Reset Otomatis
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsCatalogPickerOpen((prev) => !prev)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-[11px] font-semibold text-white shadow hover:bg-black/85 transition cursor-pointer active:scale-95"
+              >
+                <Icon name={isCatalogPickerOpen ? 'close' : 'add'} size={13} />
+                <span>{isCatalogPickerOpen ? 'Tutup Pilihan Katalog' : '+ Pilih Produk Katalog'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Selected Product Slots */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {[0, 1, 2, 3].map((slotIdx) => {
+              const product = selectedProducts[slotIdx];
+              if (product) {
+                return (
+                  <div
+                    key={String(product.id) + slotIdx}
+                    className="group relative flex flex-col rounded-xl border border-black/15 bg-[#FDFDFD] p-2.5 shadow-2xs transition hover:border-black/35 hover:shadow-sm"
+                  >
+                    {/* Top Row: Slot Badge & Remove */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="rounded bg-black px-1.5 py-0.5 text-[9px] font-bold text-white tracking-widest uppercase">
+                        Slot #{slotIdx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveProduct(String(product.id))}
+                        title="Hapus dari pilihan"
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-black/5 text-black/60 transition hover:bg-red-500 hover:text-white cursor-pointer"
+                      >
+                        <span className="text-[11px] font-bold leading-none">✕</span>
+                      </button>
+                    </div>
+
+                    {/* Image Thumbnail */}
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black/5 border border-black/10 mb-2">
+                      <Image
+                        src={product.image || '/images/catalog/catalog-01.jpg'}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                      />
+                      {product.badge && (
+                        <span className="absolute top-1 left-1 rounded bg-black/80 backdrop-blur-xs px-1.5 py-0.5 text-[8px] font-bold text-white uppercase tracking-wider">
+                          {product.badge}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[11px] font-bold text-black truncate" title={product.title}>
+                        {product.title}
+                      </h4>
+                      <p className="text-[10px] font-medium text-black/60 mt-0.5">
+                        Rp {Number(product.price || 0).toLocaleString('id-ID')}
+                      </p>
+                    </div>
+
+                    {/* Order adjustment controls */}
+                    <div className="mt-2.5 flex items-center justify-between border-t border-black/10 pt-2">
+                      <span className="text-[9px] text-black/50 font-medium">Urutan:</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={slotIdx === 0}
+                          onClick={() => handleMoveProductOrder(slotIdx, 'left')}
+                          title="Geser ke kiri"
+                          className="flex h-5 w-5 items-center justify-center rounded border border-black/15 bg-white text-[10px] font-bold text-black transition hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          disabled={slotIdx === selectedProducts.length - 1}
+                          onClick={() => handleMoveProductOrder(slotIdx, 'right')}
+                          title="Geser ke kanan"
+                          className="flex h-5 w-5 items-center justify-center rounded border border-black/15 bg-white text-[10px] font-bold text-black transition hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={`empty-slot-${slotIdx}`}
+                  onClick={() => setIsCatalogPickerOpen(true)}
+                  className="flex flex-col items-center justify-center rounded-xl border border-dashed border-black/25 bg-black/[0.015] p-4 text-center min-h-[170px] transition hover:border-black/50 hover:bg-black/[0.03] cursor-pointer group"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-black/40 group-hover:bg-black group-hover:text-white transition mb-2">
+                    <Icon name="add" size={14} />
+                  </div>
+                  <span className="text-[10px] font-bold text-black/70 uppercase tracking-wider">
+                    Slot #{slotIdx + 1} Kosong
+                  </span>
+                  <span className="text-[9px] text-black/40 mt-1">
+                    Klik untuk pilih produk
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Catalog Product Selection Panel (Collapsible Drawer) ── */}
+          {isCatalogPickerOpen && (
+            <div className="mt-5 rounded-2xl border border-black/20 bg-[#F9F9F8] p-4 sm:p-5 shadow-inner space-y-4 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/10 pb-3">
+                <div>
+                  <h4 className="text-xs font-bold text-black uppercase tracking-wider">
+                    Daftar Produk Katalog Aktif
+                  </h4>
+                  <p className="text-[10px] text-black/60 mt-0.5">
+                    Pilih produk untuk ditambahkan ke Lookbook ini (tersisa {Math.max(0, 4 - selectedProductIds.length)} slot).
+                  </p>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex rounded-lg border border-black/15 bg-white p-0.5 text-[10px] font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setCatalogCategoryFilter('all')}
+                      className={`rounded px-2 py-1 transition cursor-pointer ${
+                        catalogCategoryFilter === 'all' ? 'bg-black text-white font-bold' : 'text-black/70 hover:text-black'
+                      }`}
+                    >
+                      Semua
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogCategoryFilter('abaya')}
+                      className={`rounded px-2 py-1 transition cursor-pointer ${
+                        catalogCategoryFilter === 'abaya' ? 'bg-black text-white font-bold' : 'text-black/70 hover:text-black'
+                      }`}
+                    >
+                      Abaya
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogCategoryFilter('khimar')}
+                      className={`rounded px-2 py-1 transition cursor-pointer ${
+                        catalogCategoryFilter === 'khimar' ? 'bg-black text-white font-bold' : 'text-black/70 hover:text-black'
+                      }`}
+                    >
+                      Khimar
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Cari nama produk..."
+                      className="rounded-lg border border-black/20 bg-white px-3 py-1.5 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none w-44 sm:w-56"
+                    />
+                    {productSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setProductSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-black/40 hover:text-black text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid of Catalog Products */}
+              {filteredCatalogProducts.length === 0 ? (
+                <div className="py-8 text-center text-xs text-black/50">
+                  Tidak ada produk katalog yang sesuai dengan pencarian.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                  {filteredCatalogProducts.map((p) => {
+                    const prodId = String(p.id);
+                    const selectedIdx = selectedProductIds.findIndex(
+                      (id) => id === prodId || (Boolean(p.slug) && id === p.slug)
+                    );
+                    const isSelected = selectedIdx >= 0;
+                    const isMaxReached = selectedProductIds.length >= 4 && !isSelected;
+
+                    return (
+                      <div
+                        key={prodId}
+                        onClick={() => {
+                          if (!isMaxReached) {
+                            handleToggleProduct(p);
+                          }
+                        }}
+                        className={`relative flex flex-col rounded-xl border p-2 transition cursor-pointer ${
+                          isSelected
+                            ? 'border-black bg-black/[0.04] ring-2 ring-black shadow-xs'
+                            : isMaxReached
+                            ? 'border-black/10 bg-white/60 opacity-50 cursor-not-allowed'
+                            : 'border-black/15 bg-white hover:border-black/40 hover:shadow-xs'
+                        }`}
+                      >
+                        {/* Top Indicator */}
+                        <div className="absolute top-3 right-3 z-10">
+                          {isSelected ? (
+                            <span className="flex h-5 items-center justify-center rounded-full bg-black px-1.5 text-[9px] font-bold text-white shadow-xs">
+                              ✓ #{selectedIdx + 1}
+                            </span>
+                          ) : (
+                            <span className="flex h-4 w-4 items-center justify-center rounded-full border border-black/30 bg-white text-[9px] text-black/40 font-bold">
+                              +
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Image */}
+                        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black/5 border border-black/10 mb-1.5">
+                          <Image
+                            src={p.image || '/images/catalog/catalog-01.jpg'}
+                            alt={p.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+
+                        {/* Title & Price */}
+                        <h5 className="text-[11px] font-bold text-black truncate" title={p.title}>
+                          {p.title}
+                        </h5>
+                        <p className="text-[10px] text-black/60 font-medium">
+                          Rp {Number(p.price || 0).toLocaleString('id-ID')}
+                        </p>
+
+                        {/* Action status button */}
+                        <button
+                          type="button"
+                          disabled={isMaxReached}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleProduct(p);
+                          }}
+                          className={`mt-2 w-full rounded-md py-1 text-[10px] font-semibold transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                              : isMaxReached
+                              ? 'bg-black/5 text-black/40 cursor-not-allowed'
+                              : 'bg-black text-white hover:bg-black/85'
+                          }`}
+                        >
+                          {isSelected ? '✕ Lepas' : isMaxReached ? 'Penuh (4/4)' : '+ Pilih'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center border-t border-black/10 pt-3">
+                <span className="text-[10px] text-black/60 font-medium">
+                  {selectedProductIds.length} dari 4 slot terisi.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsCatalogPickerOpen(false)}
+                  className="rounded-full bg-black px-4 py-1.5 text-[10px] font-bold text-white hover:bg-black/85 transition cursor-pointer"
+                >
+                  Selesai Memilih
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
