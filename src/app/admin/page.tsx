@@ -983,7 +983,6 @@ export default function AdminPage() {
       day: 'numeric',
       year: 'numeric',
     });
-    const defaultCaption = 'Atelier notes, an intimate gathering and honest reflections on modest grace.';
     setArticleForm({
       title: '',
       slug: '',
@@ -993,7 +992,7 @@ export default function AdminPage() {
       excerpt: '',
       content: '',
       image: '/images/catalog/catalog-11.jpg',
-      hero_caption: defaultCaption,
+      hero_caption: '',
       images: [],
       image_captions: [],
       featured: false,
@@ -1003,20 +1002,17 @@ export default function AdminPage() {
 
   const handleOpenEditArticleModal = (art: Article) => {
     setEditingArticle(art);
-    const defaultCaption = 'Atelier notes, an intimate gathering and honest reflections on modest grace.';
-    const heroCaption =
-      art.hero_caption && art.hero_caption.trim() !== ''
-        ? art.hero_caption
-        : defaultCaption;
+    // Jika artikel memiliki hero_caption (bahkan jika string kosong karena dihapus), gunakan itu
+    const heroCaption = typeof art.hero_caption === 'string' ? art.hero_caption : '';
 
     const initialImages =
       Array.isArray(art.images) && art.images.length > 0
         ? art.images
-        : ['/images/catalog/catalog-12.jpg'];
+        : [];
 
     const initialCaptions = initialImages.map((_, i) => {
       const existing = (art as any).image_captions?.[i];
-      return existing && existing.trim() !== '' ? existing : defaultCaption;
+      return typeof existing === 'string' ? existing : '';
     });
 
     setArticleForm({

@@ -57,9 +57,11 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
           />
         </div>
         {/* Hero Caption */}
-        <p className="text-[10px] text-center text-[#777777] italic tracking-wide mb-8">
-          {article.hero_caption || t('news.atelier_caption')}
-        </p>
+        {article.hero_caption && article.hero_caption.trim() !== '' && (
+          <p className="text-[10px] text-center text-[#777777] italic tracking-wide mb-8">
+            {article.hero_caption}
+          </p>
+        )}
 
         {/* Article Body Content */}
         <article className="prose prose-neutral max-w-none space-y-6 text-[#222222] text-xs sm:text-[13px] leading-relaxed">
@@ -86,9 +88,11 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       className="object-cover"
                     />
                   </div>
-                  <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    {article.image_captions?.[0] || t('news.atelier_caption')}
-                  </p>
+                  {article.image_captions?.[0] && article.image_captions[0].trim() !== '' && (
+                    <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                      {article.image_captions[0]}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -103,9 +107,11 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       className="object-cover"
                     />
                   </div>
-                  <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                    {article.image_captions?.[index] || t('news.atelier_caption')}
-                  </p>
+                  {article.image_captions?.[index] && article.image_captions[index].trim() !== '' && (
+                    <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                      {article.image_captions[index]}
+                    </p>
+                  )}
                 </div>
               )}
             </React.Fragment>
@@ -126,9 +132,11 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                         className="object-cover"
                       />
                     </div>
-                    <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
-                      {article.image_captions?.[imgIdx] || t('news.atelier_caption')}
-                    </p>
+                    {article.image_captions?.[imgIdx] && article.image_captions[imgIdx].trim() !== '' && (
+                      <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+                        {article.image_captions[imgIdx]}
+                      </p>
+                    )}
                   </div>
                 );
               })}

@@ -27,6 +27,44 @@ export const ARTICLE_CATEGORIES = ['All Stories', 'Journal', 'Event'];
 
 // ── READ ─────────────────────────────────────────────────────────────────────
 
+async function loadCaptionsRegistrySafe() {
+  if (typeof window === 'undefined') {
+    try {
+      const { getAllArticleCaptions } = await import('@/lib/article-captions');
+      return await getAllArticleCaptions();
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+async function saveCaptionsSafe(
+  id: string | undefined,
+  slug: string | undefined,
+  captions: { hero_caption?: string; image_captions?: string[] }
+) {
+  if (typeof window === 'undefined') {
+    try {
+      const { saveCaptionsForArticle } = await import('@/lib/article-captions');
+      await saveCaptionsForArticle(id, slug, captions);
+    } catch (err) {
+      console.error('[articles] saveCaptionsSafe error:', err);
+    }
+  }
+}
+
+async function deleteCaptionsSafe(idOrSlug: string) {
+  if (typeof window === 'undefined') {
+    try {
+      const { deleteCaptionsForArticle } = await import('@/lib/article-captions');
+      await deleteCaptionsForArticle(idOrSlug);
+    } catch (err) {
+      console.error('[articles] deleteCaptionsSafe error:', err);
+    }
+  }
+}
+
 function getFallbackInitialArticles(): Article[] {
   return INITIAL_ARTICLES.map((a) => ({
     id: a.id,
@@ -45,29 +83,37 @@ function getFallbackInitialArticles(): Article[] {
 }
 
 export async function getArticles(): Promise<Article[]> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('published', true)
-    .order('created_at', { ascending: false });
+  const [dbRes, captionsMap] = await Promise.all([
+    supabase
+      .from('articles')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false }),
+    loadCaptionsRegistrySafe(),
+  ]);
 
+  const { data, error } = dbRes;
   if (error) {
     console.warn('[articles] getArticles error:', error.message);
     return [];
   }
   if (!data || data.length === 0) return [];
-  return data.map(normalizeArticle);
+  return data.map((item) => normalizeArticle(item, captionsMap));
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle();
+  const [dbRes, captionsMap] = await Promise.all([
+    supabase
+      .from('articles')
+      .select('*')
+      .eq('slug', slug)
+      .maybeSingle(),
+    loadCaptionsRegistrySafe(),
+  ]);
 
+  const { data, error } = dbRes;
   if (!error && data) {
-    return normalizeArticle(data);
+    return normalizeArticle(data, captionsMap);
   }
 
   // Article not found in DB → return null (do NOT fallback to hardcoded data)
@@ -78,17 +124,21 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
 }
 
 export async function getAllArticlesAdmin(): Promise<Article[]> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [dbRes, captionsMap] = await Promise.all([
+    supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false }),
+    loadCaptionsRegistrySafe(),
+  ]);
 
+  const { data, error } = dbRes;
   if (error) {
     console.warn('[articles] getAllArticlesAdmin error:', error.message);
     return [];
   }
   if (!data || data.length === 0) return [];
-  return data.map(normalizeArticle);
+  return data.map((item) => normalizeArticle(item, captionsMap));
 }
 
 // ── CREATE ────────────────────────────────────────────────────────────────────
@@ -130,6 +180,18 @@ export async function createArticle(article: ArticleInsert): Promise<Article | n
     console.error('[articles] createArticle error:', error.message);
     return null;
   }
+
+  if (data) {
+    if (article.hero_caption !== undefined || article.image_captions !== undefined) {
+      await saveCaptionsSafe(data.id, article.slug, {
+        hero_caption: article.hero_caption ?? '',
+        image_captions: article.image_captions ?? [],
+      });
+      (data as Record<string, unknown>).hero_caption = article.hero_caption ?? '';
+      (data as Record<string, unknown>).image_captions = article.image_captions ?? [];
+    }
+  }
+
   return normalizeArticle(data);
 }
 
@@ -166,8 +228,8 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
     data = fallbackRes.data;
     error = fallbackRes.error;
     if (data) {
-      if (updates.hero_caption) (data as Record<string, unknown>).hero_caption = updates.hero_caption;
-      if (updates.image_captions) (data as Record<string, unknown>).image_captions = updates.image_captions;
+      if (updates.hero_caption !== undefined) (data as Record<string, unknown>).hero_caption = updates.hero_caption;
+      if (updates.image_captions !== undefined) (data as Record<string, unknown>).image_captions = updates.image_captions;
     }
   }
 
@@ -218,10 +280,25 @@ export async function updateArticle(idOrSlug: string, updates: ArticleUpdate): P
     }
 
     if (inserted.data) {
-      return { article: normalizeArticle(inserted.data) };
+      data = inserted.data;
+    } else {
+      return { error: 'Gagal menyimpan artikel ke database' };
     }
+  }
 
-    return { error: 'Gagal menyimpan artikel ke database' };
+  // Save captions to cloud storage under both ID and slug
+  const targetId = data?.id ? String(data.id) : (isUuid ? idOrSlug : undefined);
+  const targetSlug = data?.slug ? String(data.slug) : (!isUuid ? idOrSlug : updates.slug);
+
+  if (updates.hero_caption !== undefined || updates.image_captions !== undefined) {
+    await saveCaptionsSafe(targetId, targetSlug, {
+      hero_caption: updates.hero_caption ?? '',
+      image_captions: updates.image_captions ?? [],
+    });
+    if (data) {
+      (data as Record<string, unknown>).hero_caption = updates.hero_caption ?? '';
+      (data as Record<string, unknown>).image_captions = updates.image_captions ?? [];
+    }
   }
 
   return { article: normalizeArticle(data) };
@@ -239,6 +316,7 @@ export async function deleteArticle(id: string): Promise<boolean> {
     console.error('[articles] deleteArticle error:', error.message);
     return false;
   }
+  await deleteCaptionsSafe(id);
   return true;
 }
 
@@ -278,7 +356,14 @@ export async function getLatestArticlesForJournal(limit = 2): Promise<
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
 // Normalize content field: DB stores as TEXT (JSON string) or JSONB array
-function normalizeArticle(raw: Record<string, unknown>): Article {
+function normalizeArticle(
+  raw: Record<string, unknown>,
+  captionsMap?: Record<string, { hero_caption?: string; image_captions?: string[] }>
+): Article {
+  const id = String(raw.id);
+  const slug = String(raw.slug ?? '');
+  const savedCaptions = captionsMap?.[id] || captionsMap?.[slug];
+
   let content: string[] = [];
   if (Array.isArray(raw.content)) {
     content = raw.content as string[];
@@ -303,8 +388,17 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
     }
   }
 
+  let hero_caption: string | undefined = undefined;
+  if (savedCaptions && typeof savedCaptions.hero_caption === 'string') {
+    hero_caption = savedCaptions.hero_caption;
+  } else if (raw.hero_caption != null) {
+    hero_caption = String(raw.hero_caption);
+  }
+
   let image_captions: string[] = [];
-  if (Array.isArray(raw.image_captions)) {
+  if (savedCaptions && Array.isArray(savedCaptions.image_captions)) {
+    image_captions = savedCaptions.image_captions;
+  } else if (Array.isArray(raw.image_captions)) {
     image_captions = raw.image_captions as string[];
   } else if (typeof raw.image_captions === 'string') {
     try {
@@ -316,8 +410,8 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
   }
 
   return {
-    id: String(raw.id),
-    slug: String(raw.slug ?? ''),
+    id,
+    slug,
     title: String(raw.title ?? ''),
     category: String(raw.category ?? 'Journal'),
     date: String(raw.date ?? ''),
@@ -325,7 +419,7 @@ function normalizeArticle(raw: Record<string, unknown>): Article {
     excerpt: String(raw.excerpt ?? ''),
     content,
     image: String(raw.image ?? ''),
-    hero_caption: raw.hero_caption != null ? String(raw.hero_caption) : undefined,
+    hero_caption,
     images,
     image_captions,
     featured: Boolean(raw.featured),

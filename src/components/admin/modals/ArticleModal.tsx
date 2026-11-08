@@ -235,14 +235,25 @@ export function ArticleModal({
 
             {/* Caption / Keterangan Foto Sampul (Hero Photo) */}
             <div className="flex flex-col gap-1.5 pt-1 border-t border-black/10">
-              <label className="text-xs font-semibold text-black">
-                Caption / Keterangan Foto Sampul (Hero Photo)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-black">
+                  Caption / Keterangan Foto Sampul (Hero Photo)
+                </label>
+                {articleForm.hero_caption && (
+                  <button
+                    type="button"
+                    onClick={() => setArticleForm((prev) => ({ ...prev, hero_caption: '' }))}
+                    className="text-[10px] text-red-600 hover:underline font-medium"
+                  >
+                    Hapus Caption
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={articleForm.hero_caption}
                 onChange={(e) => setArticleForm((prev) => ({ ...prev, hero_caption: e.target.value }))}
-                placeholder="Atelier notes, an intimate gathering and honest reflections on modest grace."
+                placeholder="Tulis keterangan caption foto (kosongkan jika tanpa caption)"
                 className="w-full min-h-[34px] rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black italic focus:border-black focus:outline-none"
               />
               <span className="text-[10px] text-black/50">
@@ -348,17 +359,33 @@ export function ArticleModal({
                       className="w-full min-h-[34px] rounded border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none"
                     />
                     {/* Caption / Penjelasan Gambar */}
-                    <input
-                      type="text"
-                      value={articleForm.image_captions?.[idx] ?? ''}
-                      onChange={(e) => {
-                        const next = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
-                        next[idx] = e.target.value;
-                        setArticleForm((prev) => ({ ...prev, image_captions: next }));
-                      }}
-                      placeholder="Keterangan gambar (opsional) — tampil di bawah foto"
-                      className="w-full min-h-[30px] rounded border border-black/10 bg-black/[0.02] px-2.5 py-1 text-[10px] text-black/70 italic focus:border-black/30 focus:outline-none"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={articleForm.image_captions?.[idx] ?? ''}
+                        onChange={(e) => {
+                          const next = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
+                          next[idx] = e.target.value;
+                          setArticleForm((prev) => ({ ...prev, image_captions: next }));
+                        }}
+                        placeholder="Keterangan gambar (opsional — kosongkan jika tanpa caption)"
+                        className="w-full min-h-[30px] rounded border border-black/10 bg-black/[0.02] pl-2.5 pr-7 py-1 text-[10px] text-black/70 italic focus:border-black/30 focus:outline-none"
+                      />
+                      {articleForm.image_captions?.[idx] && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = [...(articleForm.image_captions ?? articleForm.images.map(() => ''))];
+                            next[idx] = '';
+                            setArticleForm((prev) => ({ ...prev, image_captions: next }));
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-black/40 hover:text-red-600 font-bold"
+                          title="Hapus caption foto ini"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Urutan & Hapus */}

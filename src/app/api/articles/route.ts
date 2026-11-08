@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       excerpt: excerpt?.trim() || '',
       content: Array.isArray(content) ? content : [content || ''],
       image: image || '/images/catalog/catalog-01.jpg',
-      hero_caption: hero_caption?.trim() || undefined,
+      hero_caption: typeof hero_caption === 'string' ? hero_caption.trim() : '',
       images: Array.isArray(images) ? images : [],
       image_captions: Array.isArray(image_captions) ? image_captions : [],
       featured: Boolean(featured),
