@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { detectOrderCourier } from '@/lib/courier-utils';
+import { ShippingLabelModal } from './ShippingLabelModal';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -101,11 +102,13 @@ function OrderDetailModal({
   onClose,
   onStatusUpdate,
   onCreateBiteship,
+  onPrintLabel,
 }: {
   order: AdminOrder;
   onClose: () => void;
   onStatusUpdate: (id: string, status: string, extra?: Partial<AdminOrder>) => Promise<void>;
   onCreateBiteship: (order: AdminOrder, courier: string, service: string) => Promise<void>;
+  onPrintLabel?: (order: AdminOrder) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [trackingInput, setTrackingInput] = useState(order.tracking_number || '');
@@ -202,6 +205,15 @@ function OrderDetailModal({
             <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">{formatDate(order.created_at)}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onPrintLabel?.(order)}
+              className="flex items-center gap-1.5 rounded-full border border-black bg-black px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95 cursor-pointer shadow-xs"
+              title="Cetak Label Pengiriman (Thermal 10x15)"
+            >
+              <span>🖨️</span>
+              <span className="hidden xs:inline">Cetak Label</span>
+            </button>
             <StatusBadge status={order.status} type="internal" />
             {order.biteship_status && (
               <span className="hidden xs:inline-flex">
@@ -219,6 +231,31 @@ function OrderDetailModal({
         </div>
 
         <div className="overflow-y-auto p-4 sm:p-6 grid gap-5 sm:gap-6 md:grid-cols-2">
+          {/* Quick Print Card */}
+          <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-black/15 bg-[#FAF9F6] p-3.5 sm:px-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-black text-white flex items-center justify-center text-base shrink-0">
+                🖨️
+              </div>
+              <div>
+                <p className="text-xs font-bold text-black flex items-center gap-1.5">
+                  Label Pengiriman &amp; Packing Slip (Thermal 10×15 cm)
+                </p>
+                <p className="text-[11px] text-black/60">
+                  {order.tracking_number
+                    ? `No. Resi: ${order.tracking_number} (Tercetak otomatis)`
+                    : 'Siap cetak untuk tempel paket (Mode kirim sendiri / drop-off manual)'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onPrintLabel?.(order)}
+              className="min-h-[36px] px-4 rounded-full bg-black text-white text-xs font-bold transition hover:bg-black/85 active:scale-95 cursor-pointer shrink-0 self-start sm:self-auto flex items-center gap-1.5"
+            >
+              <span>🖨️</span> Cetak Label (A6)
+            </button>
+          </div>
           {/* Left Column */}
           <div className="flex flex-col gap-5">
             {/* Customer Info */}
@@ -513,6 +550,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [error, setError] = useState('');
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -948,6 +986,13 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                               Kelola
                             </button>
                             <button
+                              onClick={() => setPrintOrder(o)}
+                              title="Cetak Label Pengiriman (Thermal 10x15)"
+                              className="rounded-full border border-black/20 bg-white px-2.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 flex items-center gap-1"
+                            >
+                              <span>🖨️</span> Label
+                            </button>
+                            <button
                               onClick={() => handleDeleteOrder(o.id, o.order_number)}
                               title="Hapus Pesanan"
                               className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-600 transition hover:bg-red-100"
@@ -1029,6 +1074,14 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                       </button>
                       <button
                         type="button"
+                        onClick={() => setPrintOrder(o)}
+                        title="Cetak Label Pengiriman"
+                        className="min-h-[38px] px-3.5 flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white text-xs font-semibold text-black transition hover:bg-black/5 active:scale-95"
+                      >
+                        <span>🖨️</span> Label
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDeleteOrder(o.id, o.order_number)}
                         title="Hapus Pesanan"
                         className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 transition hover:bg-red-100 active:scale-95"
@@ -1044,8 +1097,6 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
         )
       )}
 
-
-
       {/* Modal Detail Order */}
       {selectedOrder && (
         <OrderDetailModal
@@ -1053,8 +1104,16 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
           onClose={() => setSelectedOrder(null)}
           onStatusUpdate={handleStatusUpdate}
           onCreateBiteship={handleCreateBiteship}
+          onPrintLabel={(ord) => setPrintOrder(ord)}
         />
       )}
+
+      {/* Modal Cetak Label Pengiriman (Thermal 10x15 cm) */}
+      <ShippingLabelModal
+        order={printOrder}
+        isOpen={Boolean(printOrder)}
+        onClose={() => setPrintOrder(null)}
+      />
     </div>
   );
 }
