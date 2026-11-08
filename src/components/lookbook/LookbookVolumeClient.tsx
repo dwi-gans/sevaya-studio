@@ -23,7 +23,6 @@ export function LookbookVolumeClient({
   initialVolDesc,
 }: LookbookVolumeClientProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const [isDown, setIsDown] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
@@ -61,15 +60,6 @@ export function LookbookVolumeClient({
       }
     });
   }, [slug]);
-
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const el = scrollRef.current;
-    const cardWidth = el.firstElementChild?.clientWidth || 280;
-    const maxIdx = Math.max(displayedProducts.length - 1, 0);
-    const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), maxIdx);
-    setActiveIndex((prev) => (prev !== idx ? idx : prev));
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return;
@@ -292,7 +282,6 @@ export function LookbookVolumeClient({
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div
             ref={scrollRef}
-            onScroll={handleScroll}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -343,28 +332,6 @@ export function LookbookVolumeClient({
             )}
           </div>
         </div>
-
-        {/* Dot indicators — mobile only */}
-        {displayedProducts.length > 1 && (
-          <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
-            {displayedProducts.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Produk ${i + 1}`}
-                onClick={() => {
-                  if (!scrollRef.current) return;
-                  const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 280;
-                  scrollRef.current.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
-                  setActiveIndex(i);
-                }}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  activeIndex === i ? 'w-5 bg-[#000000]' : 'w-1.5 bg-[#CCCCCC]'
-                }`}
-              />
-            ))}
-          </div>
-        )}
       </section>
 
       <Footer />
