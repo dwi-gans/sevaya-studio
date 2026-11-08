@@ -24,14 +24,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const payload = {
-      shipper_contact_name: body.shipper_name || 'SEVAYA Store',
-      shipper_contact_phone: body.shipper_phone || '08123456789',
-      shipper_contact_email: body.shipper_email || 'store@sevaya.id',
+      shipper_contact_name: body.shipper_name || process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
+      shipper_contact_phone: body.shipper_phone || process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
+      shipper_contact_email: body.shipper_email || process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
       shipper_organization: 'SEVAYA',
-      origin_contact_name: body.shipper_name || 'SEVAYA Store',
-      origin_contact_phone: body.shipper_phone || '08123456789',
-      origin_address: body.origin_address || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-      origin_note: 'Toko SEVAYA',
+      origin_contact_name: body.shipper_name || process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
+      origin_contact_phone: body.shipper_phone || process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
+      origin_address: body.origin_address || process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
+      origin_note: process.env.BITESHIP_ORIGIN_NOTE || 'Toko SEVAYA',
       origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450,
       destination_contact_name: body.destination_name || 'Test Customer',
       destination_contact_phone: body.destination_phone || '08987654321',

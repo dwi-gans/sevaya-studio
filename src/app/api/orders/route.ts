@@ -249,14 +249,14 @@ export async function POST(req: NextRequest) {
           }
 
           const biteshipPayload = {
-            shipper_contact_name: 'SEVAYA Store',
-            shipper_contact_phone: '08123456789',
-            shipper_contact_email: 'store@sevaya.id',
+            shipper_contact_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
+            shipper_contact_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
+            shipper_contact_email: process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
             shipper_organization: 'SEVAYA',
-            origin_contact_name: 'SEVAYA Store',
-            origin_contact_phone: '08123456789',
-            origin_address: 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-            origin_note: 'Gudang SEVAYA',
+            origin_contact_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
+            origin_contact_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '08123456789',
+            origin_address: process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
+            origin_note: process.env.BITESHIP_ORIGIN_NOTE || 'Gudang SEVAYA',
             origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450,
             destination_contact_name: customerName,
             destination_contact_phone: safePhone,
