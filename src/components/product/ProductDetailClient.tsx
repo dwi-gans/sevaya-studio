@@ -466,15 +466,15 @@ export function ProductDetailClient({
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
-      <main className="w-full flex-1 pt-3 sm:pt-6 pb-20">
+      <main className="w-full flex-1 pt-1.5 sm:pt-5 pb-20">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
           
           {/* Tombol Back Simple di Kiri Atas */}
-          <div className="mb-3 sm:mb-5">
+          <div className="mb-2 sm:mb-4">
             <button
               type="button"
               onClick={handleBack}
-              className="group inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-normal tracking-[0.18em] uppercase text-black/60 hover:text-black transition-colors cursor-pointer py-1"
+              className="group inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-normal tracking-[0.18em] uppercase text-black/60 hover:text-black transition-colors cursor-pointer py-0.5"
               aria-label="Kembali"
             >
               <Icon name="arrow_back" size={14} className="transition-transform group-hover:-translate-x-1 text-black/70 group-hover:text-black" />
@@ -740,7 +740,7 @@ export function ProductDetailClient({
 
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
             <div className="order-1 flex flex-col items-center lg:items-stretch lg:order-2 lg:col-span-6 static lg:sticky lg:top-24 w-full">
-              <div className="relative aspect-[3/4] h-[48vh] max-h-[420px] sm:h-auto sm:max-h-none w-auto sm:w-full overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto">
+              <div className="relative aspect-[3/4] h-[36vh] max-h-[300px] sm:h-[48vh] sm:max-h-[420px] lg:h-auto lg:max-h-none w-auto lg:w-full overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto">
                 {dbProduct.badge && (
                   <span
                     className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
@@ -777,7 +777,7 @@ export function ProductDetailClient({
               </div>
 
               {galleryImages.length > 1 && (
-                <div className="no-scrollbar mt-2 sm:mt-3 flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 overflow-x-auto py-1 w-full">
+                <div className="no-scrollbar mt-2 sm:mt-3 flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 overflow-x-auto py-0.5 w-full">
                   {galleryImages.map((imgSrc, idx) => {
                     const isActive = activeImage === imgSrc;
                     return (
@@ -785,7 +785,7 @@ export function ProductDetailClient({
                         key={`${imgSrc}-${idx}`}
                         type="button"
                         onClick={() => handleSelectGalleryImage(imgSrc)}
-                        className={`relative h-14 w-10 sm:h-16 sm:w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
+                        className={`relative h-13 w-9.5 sm:h-16 sm:w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
                           isActive
                             ? 'ring-2 ring-black ring-offset-1 opacity-100 scale-102'
                             : 'opacity-65 hover:opacity-100 border border-black/10'
