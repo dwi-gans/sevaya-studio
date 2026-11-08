@@ -205,14 +205,15 @@ export function ProductCard({
             type="button"
             aria-label={t('product.quick_add')}
             onClick={handleQuickAdd}
-            className="absolute right-3 bottom-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 cursor-pointer"
+            className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-all duration-300 hover:scale-110 hover:bg-black hover:text-white active:scale-95 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 cursor-pointer"
             title={t('product.quick_add')}
           >
-            <Icon name="add" size={18} />
+            <Icon name="add" size={15} className="sm:hidden" />
+            <Icon name="add" size={18} className="hidden sm:block" />
           </button>
         ) : (
           <div
-            className="absolute right-3 bottom-3 z-20 flex h-7 items-center justify-center rounded-full bg-[#1C1917]/85 backdrop-blur-xs px-2.5 text-[8.5px] font-medium tracking-wider text-white/90 uppercase shadow-xs sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
+            className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 flex h-6 sm:h-7 items-center justify-center rounded-full bg-[#1C1917]/85 backdrop-blur-xs px-2 sm:px-2.5 text-[7.5px] sm:text-[8.5px] font-medium tracking-wider text-white/90 uppercase shadow-xs sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
           >
             Habis
           </div>

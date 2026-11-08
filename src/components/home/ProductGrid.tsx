@@ -209,7 +209,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar flex gap-3 overflow-x-auto px-3 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar flex gap-2.5 overflow-x-auto px-3 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
             }`}
             style={{
@@ -222,7 +222,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
             {displayList.map((p, i) => (
               <div
                 key={`${p.id || 'prod'}-${p.slug || ''}-${i}`}
-                className="w-[44vw] shrink-0 sm:w-[40vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
+                className="w-[37vw] max-w-[155px] shrink-0 sm:max-w-none sm:w-[40vw] md:w-[285px] lg:w-[calc(25%-18px)] snap-start"
                 style={{ scrollSnapAlign: 'start' }}
               >
                 <ProductCard product={p} />

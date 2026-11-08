@@ -271,7 +271,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClickCapture={handleClickCapture}
-            className={`no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
+            className={`no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-4 touch-auto select-none sm:-mx-6 sm:gap-6 sm:px-6 md:mx-0 md:px-0 ${
               displayedProducts.length <= 2 ? 'justify-center' : 'justify-start md:justify-center'
             } ${
               isDown ? 'cursor-grabbing scroll-auto' : 'cursor-grab scroll-smooth'
@@ -287,7 +287,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               [...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-[58vw] shrink-0 sm:w-[46vw] md:w-[270px] lg:w-[280px] snap-center animate-pulse"
+                  className="w-[38vw] max-w-[160px] shrink-0 sm:max-w-none sm:w-[46vw] md:w-[270px] lg:w-[280px] snap-center animate-pulse"
                   style={{ scrollSnapAlign: 'center' }}
                 >
                   <div className="aspect-[3/4] w-full bg-[#F4F4F4] rounded-xs mb-3" />
@@ -301,12 +301,12 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                   key={prod.id}
                   className={`shrink-0 snap-center ${
                     displayedProducts.length === 1
-                      ? 'w-[75vw] max-w-[300px] sm:w-[320px] md:w-[300px]'
+                      ? 'w-[48vw] max-w-[195px] sm:w-[320px] md:w-[300px]'
                       : displayedProducts.length === 2
-                      ? 'w-[56vw] sm:w-[44vw] md:w-[280px] max-w-[300px]'
+                      ? 'w-[40vw] max-w-[170px] sm:max-w-none sm:w-[44vw] md:w-[280px]'
                       : displayedProducts.length === 3
-                      ? 'w-[58vw] sm:w-[46vw] md:w-[280px] lg:w-[290px]'
-                      : 'w-[58vw] sm:w-[46vw] md:w-[270px] lg:w-[calc(25%-18px)]'
+                      ? 'w-[38vw] max-w-[160px] sm:max-w-none sm:w-[46vw] md:w-[280px] lg:w-[290px]'
+                      : 'w-[38vw] max-w-[160px] sm:max-w-none sm:w-[46vw] md:w-[270px] lg:w-[calc(25%-18px)]'
                   }`}
                   style={{ scrollSnapAlign: 'center' }}
                 >
