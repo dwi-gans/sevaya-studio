@@ -740,7 +740,7 @@ export function ProductDetailClient({
 
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
             <div className="order-1 flex flex-col items-center lg:items-start lg:order-2 lg:col-span-6 static lg:sticky lg:top-24 w-full">
-              <div className="relative aspect-[3/4] h-[36vh] max-h-[300px] sm:h-[48vh] sm:max-h-[420px] lg:h-[58vh] lg:max-h-[480px] w-auto overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto lg:mx-0">
+              <div className="relative aspect-[3/4] h-[100svh] max-h-screen sm:h-[52vh] sm:max-h-[460px] lg:h-[66vh] lg:max-h-[560px] w-auto overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto lg:mx-0">
                 {dbProduct.badge && (
                   <span
                     className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
