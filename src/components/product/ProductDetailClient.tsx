@@ -140,11 +140,24 @@ export function ProductDetailClient({
   const { items, addToCart } = useCart();
   const { showToast } = useToast();
 
-  const handleBack = () => {
-    if (typeof window !== 'undefined' && document.referrer && document.referrer.includes(window.location.host)) {
-      router.back();
-    } else {
-      router.push('/shop');
+  const handleBack = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (typeof window !== 'undefined') {
+      const currentUrl = window.location.href;
+      if (window.history.length > 1) {
+        window.history.back();
+        // Fallback: jika setelah 250ms URL tidak berubah (misal dibuka langsung dari tab baru), arahkan ke /shop
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.location.href === currentUrl) {
+            router.push('/shop');
+          }
+        }, 250);
+      } else {
+        router.push('/shop');
+      }
     }
   };
 
@@ -470,14 +483,18 @@ export function ProductDetailClient({
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
           
           {/* Tombol Back Simple di Kiri Atas */}
-          <div className="mb-2 sm:mb-4">
+          <div className="mb-1 sm:mb-4">
             <button
               type="button"
               onClick={handleBack}
-              className="group inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-normal tracking-[0.18em] uppercase text-black/60 hover:text-black transition-colors cursor-pointer py-0.5"
+              className="group -ml-2 inline-flex min-h-[44px] items-center gap-2 px-2 py-2 text-[10px] sm:text-[11px] font-normal tracking-[0.18em] uppercase text-black/60 hover:text-black active:opacity-40 transition-colors cursor-pointer select-none"
               aria-label="Kembali"
             >
-              <Icon name="arrow_back" size={14} className="transition-transform group-hover:-translate-x-1 text-black/70 group-hover:text-black" />
+              <Icon
+                name="arrow_back"
+                size={14}
+                className="transition-transform group-hover:-translate-x-1 text-black/70 group-hover:text-black shrink-0"
+              />
               <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
             </button>
           </div>
