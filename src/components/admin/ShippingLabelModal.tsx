@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 export interface ShippingLabelOrder {
   id: string;
@@ -79,6 +79,59 @@ function BarcodeSVG({ value }: { value: string }) {
 
 export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModalProps) {
   const labelRef = useRef<HTMLDivElement>(null);
+  const [shipperInfo, setShipperInfo] = useState({
+    name: 'SEVAYA Studio',
+    phone: '0851-9099-3087',
+    address: 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
+  });
+  const [isEditingShipper, setIsEditingShipper] = useState(false);
+  const [savingShipper, setSavingShipper] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/shipping-settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          const s = data.settings;
+          const fullAddress = [
+            s.origin_address,
+            s.origin_area_name,
+            s.origin_postal_code ? String(s.origin_postal_code) : '',
+          ]
+            .filter(Boolean)
+            .join(', ');
+
+          setShipperInfo({
+            name: s.shipper_name || 'SEVAYA Studio',
+            phone: s.shipper_phone || '0851-9099-3087',
+            address: fullAddress || s.origin_address || 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSaveShipper = async () => {
+    setSavingShipper(true);
+    try {
+      await fetch('/api/admin/shipping-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shipper_name: shipperInfo.name,
+          shipper_phone: shipperInfo.phone,
+          origin_address: shipperInfo.address,
+          origin_postal_code: 11450,
+        }),
+      });
+      setIsEditingShipper(false);
+    } catch {
+      // Keep local state anyway
+      setIsEditingShipper(false);
+    } finally {
+      setSavingShipper(false);
+    }
+  };
 
   if (!isOpen || !order) return null;
 
@@ -186,20 +239,83 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
             </div>
           </div>
 
-          {/* Banner Informasi Skenario Pengiriman (Screen Only) */}
-          <div className="border-b border-black/10 bg-[#FAF9F6] px-5 py-2.5 text-[11px] text-black/80 flex items-center justify-between print:hidden">
+          {/* Banner Informasi Skenario Pengiriman & Pengirim (Screen Only) */}
+          <div className="border-b border-black/10 bg-[#FAF9F6] px-5 py-2.5 text-[11px] text-black/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 print:hidden">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-black">
                 {isManualShipping ? '📦 Mode: Kirim Sendiri / Drop Off' : '🚚 Mode: Pick Up Kurir (Biteship)'}
               </span>
               <span className="text-black/40">•</span>
-              <span className="text-black/60">
-                {isManualShipping
-                  ? 'Label ini memuat alamat & produk lengkap. No. resi kurir bisa Anda input manual setelah drop off.'
-                  : `Resi otomatis terhubung: ${order.tracking_number}`}
+              <span className="text-black/60 truncate max-w-xs">
+                Pengirim: {shipperInfo.name} ({shipperInfo.phone})
               </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsEditingShipper(!isEditingShipper)}
+              className="text-[10px] font-semibold text-black underline hover:text-black/70 cursor-pointer self-start sm:self-auto"
+            >
+              {isEditingShipper ? '✕ Tutup Edit' : '✏️ Ubah Alamat Pengirim'}
+            </button>
           </div>
+
+          {/* Quick Edit Shipper Box (Screen Only) */}
+          {isEditingShipper && (
+            <div className="border-b border-black/15 bg-white p-4 space-y-2.5 print:hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-black uppercase tracking-wider">
+                  Sesuaikan Identitas &amp; Alamat Pengirim (Toko)
+                </span>
+                <span className="text-[10px] text-black/50">Langsung tercermin di label saat dicetak</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="text-[10px] text-black/60 font-semibold uppercase block mb-1">
+                    Nama Toko / Pengirim
+                  </label>
+                  <input
+                    type="text"
+                    value={shipperInfo.name}
+                    onChange={(e) => setShipperInfo({ ...shipperInfo, name: e.target.value })}
+                    className="w-full border border-black/20 rounded p-1.5 text-xs text-black"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-black/60 font-semibold uppercase block mb-1">
+                    No. WhatsApp Pengirim
+                  </label>
+                  <input
+                    type="text"
+                    value={shipperInfo.phone}
+                    onChange={(e) => setShipperInfo({ ...shipperInfo, phone: e.target.value })}
+                    className="w-full border border-black/20 rounded p-1.5 text-xs text-black"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-[10px] text-black/60 font-semibold uppercase block mb-1">
+                    Alamat Lengkap Pengirim / Studio
+                  </label>
+                  <input
+                    type="text"
+                    value={shipperInfo.address}
+                    onChange={(e) => setShipperInfo({ ...shipperInfo, address: e.target.value })}
+                    placeholder="Contoh: Jl. Panglima Polim No. 12, Kebayoran Baru, Jakarta Selatan 12160"
+                    className="w-full border border-black/20 rounded p-1.5 text-xs text-black"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSaveShipper}
+                  disabled={savingShipper}
+                  className="px-3.5 py-1.5 bg-black text-white text-xs font-bold rounded-full hover:bg-black/85"
+                >
+                  {savingShipper ? 'Menyimpan...' : 'Terapkan ke Label'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Printable Label Area */}
           <div className="overflow-y-auto p-4 sm:p-6 bg-neutral-100 flex justify-center print:p-0 print:bg-white print:overflow-visible">
@@ -271,13 +387,13 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
                     <span className="text-[9px] font-bold uppercase tracking-wider text-black/80">
                       PENGIRIM (FROM):
                     </span>
-                    <span className="font-bold">WA: 0851-9099-3087</span>
+                    <span className="font-bold">WA: {shipperInfo.phone}</span>
                   </div>
                   <p className="font-bold text-[11px] text-black">
-                    SEVAYA Studio (E-Commerce Fulfillment)
+                    {shipperInfo.name}
                   </p>
                   <p className="text-[10px] text-black/80 leading-tight">
-                    Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450
+                    {shipperInfo.address}
                   </p>
                 </div>
               </div>

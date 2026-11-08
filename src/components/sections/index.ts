@@ -1,6 +1,7 @@
 // Export all site sections from a clean unified entrypoint
 export { HeroSection } from '@/components/home/HeroSection';
 export { ProductGrid } from '@/components/home/ProductGrid';
+export { CloserLookSection } from '@/components/home/CloserLookSection';
 export { CategorySpotlight } from '@/components/home/CategorySpotlight';
 export { NarrativeSection } from '@/components/home/NarrativeSection';
 export { JournalSection } from '@/components/home/JournalSection';

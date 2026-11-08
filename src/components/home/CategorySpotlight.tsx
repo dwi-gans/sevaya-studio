@@ -45,18 +45,9 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
   const khimar = spotlight[1];
 
   return (
-    <section className="w-full bg-white py-8 text-black section--light">
+    <section className="w-full bg-white pt-2 sm:pt-4 pb-12 sm:pb-16 text-black section--light">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Intro Subtext */}
-        <RevealOnScroll variant="fade-up" delayMs={50} className="mb-4 text-center sm:mb-5">
-          <p className="mx-auto max-w-3xl text-[10px] leading-relaxed text-black/60 sm:text-[11px]">
-            {intro ||
-              t('home.spotlight.intro') ||
-              'Discover modestwear designed for women who embrace their faith, pursue their ambitions, and move through life with confidence. Timeless design, effortless comfort, and thoughtful details for a life of purpose.'}
-          </p>
-        </RevealOnScroll>
-
-        {/* 2 Category Banners: ABAYA & KHIBAN */}
+        {/* 2 Category Banners: ABAYA & KHIMAR */}
         <div className="grid grid-cols-2 gap-3 sm:gap-6">
           {/* Banner 1: ABAYA */}
           <RevealOnScroll variant="editorial" delayMs={0}>

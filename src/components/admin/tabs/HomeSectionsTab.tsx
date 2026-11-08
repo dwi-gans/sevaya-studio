@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/Icon';
 import {
   SiteSectionsConfig,
   DEFAULT_SITE_SECTIONS,
+  DEFAULT_CLOSER_LOOK,
   DEFAULT_HOME_NARRATIVE,
   DEFAULT_JOURNAL_HEADER,
   saveSiteSections,
@@ -31,6 +32,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   showToast,
 }) => {
   const hero = sections.hero || DEFAULT_SITE_SECTIONS.hero;
+  const closerLook = sections.closerLook || DEFAULT_CLOSER_LOOK;
   const spotlightIntro = sections.spotlightIntro || DEFAULT_SITE_SECTIONS.spotlightIntro || '';
   const spotlight = sections.spotlight?.length ? sections.spotlight : DEFAULT_SITE_SECTIONS.spotlight;
   const narrative: HomeNarrativeConfig = {
@@ -57,6 +59,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         let next = { ...prev };
         if (target === 'hero') {
           next = { ...next, hero: { ...(next.hero || DEFAULT_SITE_SECTIONS.hero), image: publicUrl } };
+        } else if (target === 'closer-look') {
+          next = { ...next, closerLook: { ...(next.closerLook || DEFAULT_CLOSER_LOOK), image: publicUrl } };
         } else if (target === 'home-video-poster') {
           next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), videoPoster: publicUrl } };
         } else if (target === 'home-about-1') {
@@ -368,6 +372,165 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               placeholder="Lookbook"
               className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION: A CLOSER LOOK AT (VOL 1: SEVILLA ABAYA) */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
+      <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-black/10 pb-3">
+          <div>
+            <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
+              Bagian Eksklusif • Editorial Collection
+            </span>
+            <h3 className="text-sm font-bold text-black uppercase tracking-wider">
+              A Closer Look At (Vol 1: Sevilla Abaya)
+            </h3>
+          </div>
+          <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
+            Foto Kiri + Cerita Kanan
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Foto Banner Kiri */}
+          <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
+                Foto Koleksi (Cloud)
+              </span>
+              <UploadActionGroup target="closer-look" label="Pilih Foto" currentImage={closerLook?.image} />
+            </div>
+
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
+              <Image
+                src={closerLook?.image || DEFAULT_CLOSER_LOOK.image || '/images/lookbook_figma_0.png'}
+                alt="Closer Look Collection"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            </div>
+            <p className="text-[10px] text-black/50">
+              Dapat diganti kapan saja dari Galeri Cloud atau unggah foto baru dari laptop/HP.
+            </p>
+          </div>
+
+          {/* Form Teks Narasi Kanan */}
+          <div className="md:col-span-2 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  Sub-Judul Kecil (Eyebrow)
+                </label>
+                <input
+                  type="text"
+                  value={closerLook.eyebrow || ''}
+                  onChange={(e) =>
+                    setSections((prev) => ({
+                      ...prev,
+                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), eyebrow: e.target.value },
+                    }))
+                  }
+                  placeholder="A CLOSER LOOK AT"
+                  className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  Judul Koleksi
+                </label>
+                <input
+                  type="text"
+                  value={closerLook.title || ''}
+                  onChange={(e) =>
+                    setSections((prev) => ({
+                      ...prev,
+                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), title: e.target.value },
+                    }))
+                  }
+                  placeholder="VOL 1: SEVILLA ABAYA"
+                  className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                Paragraf Cerita #1
+              </label>
+              <textarea
+                rows={3}
+                value={closerLook.paragraph1 || ''}
+                onChange={(e) =>
+                  setSections((prev) => ({
+                    ...prev,
+                    closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), paragraph1: e.target.value },
+                  }))
+                }
+                placeholder="In Indonesia, particularly between June and August..."
+                className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                Paragraf Cerita #2
+              </label>
+              <textarea
+                rows={3}
+                value={closerLook.paragraph2 || ''}
+                onChange={(e) =>
+                  setSections((prev) => ({
+                    ...prev,
+                    closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), paragraph2: e.target.value },
+                  }))
+                }
+                placeholder="Through 26°Rhapsody, TAZA reflects on gentle, mindful growth..."
+                className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  Teks Tombol / Link
+                </label>
+                <input
+                  type="text"
+                  value={closerLook.linkText || ''}
+                  onChange={(e) =>
+                    setSections((prev) => ({
+                      ...prev,
+                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), linkText: e.target.value },
+                    }))
+                  }
+                  placeholder="Read More"
+                  className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  Target Link (Halaman Lookbook)
+                </label>
+                <input
+                  type="text"
+                  value={closerLook.linkUrl || ''}
+                  onChange={(e) =>
+                    setSections((prev) => ({
+                      ...prev,
+                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), linkUrl: e.target.value },
+                    }))
+                  }
+                  placeholder="/lookbook"
+                  className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>

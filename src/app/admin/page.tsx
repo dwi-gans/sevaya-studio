@@ -18,6 +18,7 @@ import {
   saveSiteSections,
   SiteSectionsConfig,
   DEFAULT_SITE_SECTIONS,
+  DEFAULT_CLOSER_LOOK,
   uploadFileToStorage,
   listUploadedFiles,
   StorageFile,
@@ -800,6 +801,19 @@ export default function AdminPage() {
         return next;
       });
       showToast('Foto Hero tersimpan otomatis!');
+    } else if (target === 'closer-look') {
+      setSections((prev) => {
+        const next = {
+          ...prev,
+          closerLook: {
+            ...(prev.closerLook || DEFAULT_CLOSER_LOOK),
+            image: urlOrPath,
+          },
+        };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Closer Look tersimpan otomatis!');
     } else if (target === 'spotlight-0') {
       setSections((prev) => {
         const nextSpotlight = [...prev.spotlight];
@@ -1261,6 +1275,7 @@ export default function AdminPage() {
       return productForm.swatches[idx]?.image;
     }
     if (imagePickerTarget === 'hero') return sections.hero.image;
+    if (imagePickerTarget === 'closer-look') return sections.closerLook?.image || DEFAULT_CLOSER_LOOK.image;
     if (imagePickerTarget === 'spotlight-0') return sections.spotlight[0]?.image;
     if (imagePickerTarget === 'spotlight-1') return sections.spotlight[1]?.image;
     if (imagePickerTarget === 'textiles') return sections.missionTextiles.image;

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   HeroSection,
   ProductGrid,
+  CloserLookSection,
   CategorySpotlight,
   NarrativeSection,
   JournalSection,
@@ -48,10 +49,12 @@ export default async function HomePage() {
       {/* 2. Best Sellers Carousel */}
       <ProductGrid products={activeProducts} />
 
+      {/* 2.5 Editorial Collection Spotlight: A Closer Look At 26°Rhapsody */}
+      <CloserLookSection initialData={activeSections?.closerLook} />
+
       {/* 3. Category Split Banners: ABAYA & KHIMAR */}
       <CategorySpotlight
         initialSpotlight={activeSections?.spotlight}
-        initialIntro={activeSections?.spotlightIntro}
       />
 
       {/* 4. Narrative: Elegance in Simplicity, Video Showcase, Brand Pillars, About SEVAYA 2-photo split, Trust Badges */}

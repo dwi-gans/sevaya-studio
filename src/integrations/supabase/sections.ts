@@ -197,8 +197,19 @@ export const DEFAULT_CONSCIOUS_PAGE: ConsciousPageConfig = {
   founderClosing: 'Thank you for being here, and for growing with us.',
 };
 
+export interface CloserLookData {
+  eyebrow?: string;
+  title?: string;
+  paragraph1?: string;
+  paragraph2?: string;
+  image?: string;
+  linkText?: string;
+  linkUrl?: string;
+}
+
 export interface SiteSectionsConfig {
   hero: HeroSectionData;
+  closerLook?: CloserLookData;
   spotlightIntro?: string;
   spotlight: SpotlightItem[];
   narrative?: HomeNarrativeConfig;
@@ -329,6 +340,18 @@ export const DEFAULT_JOURNAL_HEADER: HomeJournalHeaderConfig = {
   journalLinkUrl: '/news',
 };
 
+export const DEFAULT_CLOSER_LOOK: CloserLookData = {
+  eyebrow: 'A CLOSER LOOK AT',
+  title: 'VOL 1: SEVILLA ABAYA',
+  paragraph1:
+    'In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced. In this atmosphere, life moves in its own rhythm; like a Rhapsody: free-flowing, expressive, and quietly harmonious.',
+  paragraph2:
+    'Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That much like nature, we each unfold in our own time and beauty reveals itself when we learn to move with our own rhythm.',
+  image: '/images/lookbook_figma_0.png',
+  linkText: 'Read More',
+  linkUrl: '/lookbook',
+};
+
 export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   hero: {
     badge: 'TIMELESS • INTENTIONAL • EFFORTLESS',
@@ -338,6 +361,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     ctaLookbook: 'Lookbook',
     ctaShop: 'Shop The Collection',
   },
+  closerLook: DEFAULT_CLOSER_LOOK,
   spotlightIntro:
     'Discover modestwear designed for women who embrace their faith, pursue their ambitions, and move through life with confidence. Timeless design, effortless comfort, and thoughtful details for a life of purpose.',
   spotlight: [
