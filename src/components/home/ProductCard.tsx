@@ -132,27 +132,33 @@ export function ProductCard({
           prefetch={true}
           className="relative block h-full w-full"
         >
-          {/* Badge */}
-          {product.badge && (
-            <span
-              className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs transition-colors ${
-                product.badge.toLowerCase().includes('best')
-                  ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
-                  : product.badge.toLowerCase().includes('trend')
-                  ? 'bg-[#FAF8F5]/95 text-[#2C2723] border border-[#DDD5C7]'
-                  : 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
-              }`}
-            >
-              <span className="mr-1 text-[9px] opacity-75">✦</span>
-              {product.badge}
-            </span>
-          )}
+          {/* Badges Container: Responsive layout agar di mobile tidak tumpang tindih (stack vertikal), di desktop terpisah kiri & kanan */}
+          {(product.badge || isOutOfStock) && (
+            <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 z-10 flex flex-col items-start sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-1.5 pointer-events-none">
+              {product.badge ? (
+                <span
+                  className={`self-start px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.16em] sm:tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs transition-colors shrink-0 ${
+                    product.badge.toLowerCase().includes('best')
+                      ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
+                      : product.badge.toLowerCase().includes('trend')
+                      ? 'bg-[#FAF8F5]/95 text-[#2C2723] border border-[#DDD5C7]'
+                      : 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
+                  }`}
+                >
+                  <span className="mr-1 text-[8px] sm:text-[9px] opacity-75">✦</span>
+                  {product.badge}
+                </span>
+              ) : (
+                <span className="hidden sm:inline-block" />
+              )}
 
-          {/* Out of Stock indicator badge */}
-          {isOutOfStock && (
-            <span className="absolute top-3 right-3 z-10 rounded-full bg-black/75 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.2em] text-white uppercase backdrop-blur-xs shadow-xs">
-              Out of Stock
-            </span>
+              {/* Out of Stock indicator badge */}
+              {isOutOfStock && (
+                <span className="self-start sm:self-auto rounded-full bg-black/85 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.14em] sm:tracking-[0.2em] text-white uppercase backdrop-blur-xs shadow-xs shrink-0">
+                  Out of Stock
+                </span>
+              )}
+            </div>
           )}
 
           {/* Primary Product Image — smoothly transitions on swatch change */}

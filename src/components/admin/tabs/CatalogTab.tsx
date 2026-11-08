@@ -154,29 +154,35 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                     </span>
                   </div>
                 )}
-                {product.badge && (
-                  <span
-                    className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[8.5px] font-medium tracking-[0.2em] uppercase shadow-xs backdrop-blur-xs ${
-                      product.badge.toLowerCase().includes('best')
-                        ? 'bg-[#1C1917] text-[#FBF9F5] border border-white/20'
-                        : product.badge.toLowerCase().includes('trend')
-                        ? 'bg-[#FAF8F5] text-[#2C2723] border border-[#DDD5C7]'
-                        : 'bg-[#1C1917] text-white border border-white/20'
-                    }`}
-                  >
-                    <span className="mr-0.5 text-[9px] opacity-75">✦</span>
-                    {product.badge}
-                  </span>
-                )}
-                <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px]">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false && product.stock != null && product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                  />
-                  <span>
-                    {product.inStock !== false && product.stock != null && product.stock > 0
-                      ? `Stok: ${product.stock} pcs`
-                      : 'Habis (0)'}
-                  </span>
+                {/* Badges & Stock Container: responsive agar di mobile tidak tumpang tindih */}
+                <div className="absolute top-2 left-2 right-2 z-10 flex flex-col items-start sm:flex-row sm:items-start sm:justify-between gap-1 pointer-events-none">
+                  {product.badge ? (
+                    <span
+                      className={`self-start rounded-full px-2 py-0.5 text-[8px] sm:text-[8.5px] font-medium tracking-[0.16em] sm:tracking-[0.2em] uppercase shadow-xs backdrop-blur-xs shrink-0 ${
+                        product.badge.toLowerCase().includes('best')
+                          ? 'bg-[#1C1917] text-[#FBF9F5] border border-white/20'
+                          : product.badge.toLowerCase().includes('trend')
+                          ? 'bg-[#FAF8F5] text-[#2C2723] border border-[#DDD5C7]'
+                          : 'bg-[#1C1917] text-white border border-white/20'
+                      }`}
+                    >
+                      <span className="mr-0.5 text-[8px] sm:text-[9px] opacity-75">✦</span>
+                      {product.badge}
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline-block" />
+                  )}
+
+                  <div className="self-start sm:self-auto flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8.5px] font-semibold text-black shadow-xs backdrop-blur-xs sm:px-2 sm:text-[10px] shrink-0">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${product.inStock !== false && product.stock != null && product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                    />
+                    <span>
+                      {product.inStock !== false && product.stock != null && product.stock > 0
+                        ? `Stok: ${product.stock} pcs`
+                        : 'Habis (0)'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
