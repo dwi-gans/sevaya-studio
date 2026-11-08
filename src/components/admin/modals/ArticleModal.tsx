@@ -254,7 +254,7 @@ export function ArticleModal({
                 value={articleForm.hero_caption}
                 onChange={(e) => setArticleForm((prev) => ({ ...prev, hero_caption: e.target.value }))}
                 placeholder="Tulis keterangan caption foto (kosongkan jika tanpa caption)"
-                className="w-full min-h-[34px] rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black italic focus:border-black focus:outline-none"
+                className="w-full min-h-[40px] sm:min-h-[36px] rounded border border-black/20 bg-white px-3 py-2 text-xs text-black italic focus:border-black focus:outline-none transition"
               />
               <span className="text-[10px] text-black/50">
                 Teks keterangan miring elegan yang tampil tepat di bawah foto sampul (hero) di halaman artikel jurnal.
@@ -315,8 +315,8 @@ export function ArticleModal({
             <div className="flex flex-col gap-3">
               {articleForm.images.map((img, idx) => (
                 <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2.5 rounded-xl border border-black/10 bg-white p-3 shadow-xs">
-                  {/* Preview Image */}
-                  <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-black/5">
+                  {/* Preview Image — Full width di mobile, compact di MacBook/Desktop */}
+                  <div className="relative h-28 w-full sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-black/5">
                     {img ? (
                       <Image
                         src={img}
@@ -333,7 +333,7 @@ export function ArticleModal({
                   </div>
 
                   {/* Input & Ganti Galeri */}
-                  <div className="flex flex-1 flex-col gap-1.5">
+                  <div className="flex flex-1 flex-col gap-1.5 w-full">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-semibold text-black/60 uppercase tracking-wider">
                         Foto #{idx + 1} {idx === 0 ? '(Tampil setelah Paragraf 1)' : `(Paragraf ${idx + 1})`}
@@ -341,7 +341,7 @@ export function ArticleModal({
                       <button
                         type="button"
                         onClick={() => onOpenImagePicker(`article-image-${idx}` as ImagePickerTarget)}
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-black hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-black hover:underline cursor-pointer py-1"
                       >
                         <Icon name="image" size={12} />
                         <span>Ganti dari Galeri</span>
@@ -356,7 +356,7 @@ export function ArticleModal({
                         setArticleForm((prev) => ({ ...prev, images: next }));
                       }}
                       placeholder="/images/catalog/catalog-12.jpg atau URL Supabase"
-                      className="w-full min-h-[34px] rounded border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none"
+                      className="w-full min-h-[38px] sm:min-h-[34px] rounded border border-black/20 bg-white px-2.5 py-1 text-xs text-black focus:border-black focus:outline-none transition"
                     />
                     {/* Caption / Penjelasan Gambar */}
                     <div className="relative">
@@ -369,7 +369,7 @@ export function ArticleModal({
                           setArticleForm((prev) => ({ ...prev, image_captions: next }));
                         }}
                         placeholder="Keterangan gambar (opsional — kosongkan jika tanpa caption)"
-                        className="w-full min-h-[30px] rounded border border-black/10 bg-black/[0.02] pl-2.5 pr-7 py-1 text-[10px] text-black/70 italic focus:border-black/30 focus:outline-none"
+                        className="w-full min-h-[36px] sm:min-h-[32px] rounded border border-black/10 bg-black/[0.02] pl-2.5 pr-8 py-1.5 text-xs sm:text-[11px] text-black/80 italic focus:border-black/30 focus:outline-none transition"
                       />
                       {articleForm.image_captions?.[idx] && (
                         <button
@@ -379,7 +379,7 @@ export function ArticleModal({
                             next[idx] = '';
                             setArticleForm((prev) => ({ ...prev, image_captions: next }));
                           }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-black/40 hover:text-red-600 font-bold"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-black/40 hover:text-red-600 font-bold p-1"
                           title="Hapus caption foto ini"
                         >
                           ✕
