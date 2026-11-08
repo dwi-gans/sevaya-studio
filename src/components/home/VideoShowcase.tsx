@@ -12,11 +12,8 @@ export function VideoShowcase({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   // isPlaying: true setelah video benar-benar mulai bermain
-  // → sembunyikan placeholder/poster agar tidak terlihat sebelum video muncul
+  // → sembunyikan poster/placeholder dummy sampai video muncul
   const [isPlaying, setIsPlaying] = useState(false);
-
-  // Apakah ada video asli yang diset (bukan default placeholder)?
-  const hasRealVideo = src && src !== '/videos/kani.mp4';
 
   useEffect(() => {
     const video = videoRef.current;
@@ -66,14 +63,11 @@ export function VideoShowcase({
     };
   }, []);
 
-  // Jika belum ada video asli yang dipasang, sembunyikan seluruh section
-  if (!hasRealVideo) return null;
-
   return (
     <section className="mx-auto w-full max-w-7xl px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
       {/* Pure Cinematic Video Screen: 100% clean, no buttons, no overlays */}
       <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden bg-black shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
-        {/* Placeholder hitam solid — tidak ada poster/gambar dummy muncul */}
+        {/* Overlay hitam solid saat video belum siap — cegah poster/placeholder muncul */}
         {!isPlaying && (
           <div className="absolute inset-0 bg-black z-10 pointer-events-none" />
         )}
