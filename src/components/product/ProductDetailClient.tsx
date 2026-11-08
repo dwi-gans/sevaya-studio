@@ -544,20 +544,20 @@ export function ProductDetailClient({
                         <button
                           type="button"
                           onClick={() => handleSelectColor(c)}
-                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 cursor-pointer ${
+                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full cursor-pointer ${
                             c.outOfStock
                               ? 'opacity-60'
                               : ''
                           } ${
                             isSelected
-                              ? 'ring-1 ring-black ring-offset-2 ring-offset-white scale-105'
+                              ? 'ring-1 ring-black ring-offset-2 ring-offset-white'
                               : 'ring-1 ring-black/20 hover:ring-black/60'
                           }`}
                           title={c.outOfStock ? `${c.name} — Stok Habis` : c.name}
                           aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Stok Habis)' : ''}`}
                         >
                           <span
-                            className="h-full w-full rounded-full border border-black/10 transition-transform duration-150"
+                            className="h-full w-full rounded-full border border-black/10"
                             style={{ backgroundColor: c.hex }}
                           />
 
@@ -671,7 +671,7 @@ export function ProductDetailClient({
                   type="button"
                   disabled={isOutOfStock}
                   onClick={handleAddToCart}
-                  className="w-full bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors cursor-pointer active:scale-[0.99] disabled:bg-black/30 disabled:cursor-not-allowed"
+                  className="w-full bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors cursor-pointer active:opacity-90 disabled:bg-black/30 disabled:cursor-not-allowed"
                 >
                   {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
                 </button>
@@ -740,7 +740,7 @@ export function ProductDetailClient({
 
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
             <div className="order-1 flex flex-col items-center lg:items-start lg:order-2 lg:col-span-6 static lg:sticky lg:top-24 w-full">
-              <div className="relative w-full h-[100svh] max-h-screen sm:aspect-[3/4] sm:h-[52vh] sm:max-h-[460px] lg:h-[66vh] lg:max-h-[560px] sm:w-auto overflow-hidden bg-[#ECE8E1] border border-black/5 sm:mx-auto lg:mx-0">
+              <div className="relative aspect-[3/4] w-full max-w-[420px] sm:max-w-none sm:h-[52vh] sm:max-h-[460px] lg:h-[66vh] lg:max-h-[560px] sm:w-auto overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto lg:mx-0">
                 {dbProduct.badge && (
                   <span
                     className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
@@ -772,7 +772,7 @@ export function ProductDetailClient({
                     !activeImage.includes('supabase.co') &&
                     !activeImage.includes('unsplash.com')
                   }
-                  className="object-cover object-top transition-opacity duration-300"
+                  className="object-cover object-top"
                 />
               </div>
 
@@ -785,9 +785,9 @@ export function ProductDetailClient({
                         key={`${imgSrc}-${idx}`}
                         type="button"
                         onClick={() => handleSelectGalleryImage(imgSrc)}
-                        className={`relative h-13 w-9.5 sm:h-14 sm:w-10.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
+                        className={`relative h-13 w-9.5 sm:h-14 sm:w-10.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer ${
                           isActive
-                            ? 'ring-2 ring-black ring-offset-1 opacity-100 scale-102'
+                            ? 'ring-2 ring-black ring-offset-1 opacity-100'
                             : 'opacity-65 hover:opacity-100 border border-black/10'
                         }`}
                         aria-label={`Thumbnail photo ${idx + 1}`}

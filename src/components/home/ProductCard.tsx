@@ -166,8 +166,8 @@ export function ProductCard({
               isLoaded ? 'opacity-100 scale-100' : 'opacity-90 scale-[1.01]'
             } ${isOutOfStock ? 'grayscale-[15%] opacity-90' : ''} ${
               secondaryImage
-                ? 'group-hover:opacity-0 group-hover:scale-105'
-                : 'group-hover:scale-105'
+                ? 'group-hover:opacity-0 sm:group-hover:scale-105'
+                : 'sm:group-hover:scale-105'
             }`}
             draggable={false}
           />
