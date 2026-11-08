@@ -28,10 +28,24 @@ export async function POST(req: NextRequest) {
       createdBy?: string;
     };
 
-    if (!variantId || !type || typeof quantity !== 'number') {
+    if (!variantId || !type || typeof quantity !== 'number' || isNaN(quantity)) {
       return NextResponse.json({
         success: false,
         error: 'Data mutasi tidak lengkap (variantId, type, dan quantity wajib diisi).',
+      }, { status: 400 });
+    }
+
+    if (type !== 'adjustment' && quantity <= 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Jumlah unit mutasi harus berupa angka positif yang lebih besar dari 0.',
+      }, { status: 400 });
+    }
+
+    if (type === 'adjustment' && quantity < 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Stok penyesuaian aktual tidak boleh bernilai negatif.',
       }, { status: 400 });
     }
 

@@ -52,29 +52,68 @@ export default function StockMutationModal({
   }, [variant]);
 
   const qty = parseInt(quantity, 10);
-  const isValidQty = !isNaN(qty) && qty > 0;
+  const isPositiveInt = !isNaN(qty) && qty > 0;
+  const isOutOfStock = type === 'out' && selectedVariant.stock <= 0;
+  const isExceedingStock = type === 'out' && isPositiveInt && qty > selectedVariant.stock;
+
+  const isValidQty = (() => {
+    if (type === 'adjustment') {
+      return !isNaN(qty) && qty >= 0;
+    }
+    if (type === 'out') {
+      return isPositiveInt && !isOutOfStock && !isExceedingStock;
+    }
+    return isPositiveInt;
+  })();
 
   // Preview stok baru berdasarkan varian yang sedang dipilih
   const previewStock = (() => {
-    if (!isValidQty) return selectedVariant.stock;
-    if (type === 'in') return selectedVariant.stock + qty;
-    if (type === 'out') return Math.max(0, selectedVariant.stock - qty);
-    if (type === 'adjustment') return Math.max(0, qty);
+    if (!isPositiveInt && type !== 'adjustment') return selectedVariant.stock;
+    if (type === 'in') return selectedVariant.stock + (isPositiveInt ? qty : 0);
+    if (type === 'out') {
+      if (isExceedingStock || isOutOfStock) return selectedVariant.stock;
+      return selectedVariant.stock - (isPositiveInt ? qty : 0);
+    }
+    if (type === 'adjustment') return !isNaN(qty) && qty >= 0 ? qty : selectedVariant.stock;
     return selectedVariant.stock;
   })();
 
   const handleTypeChange = (newType: MutationType) => {
     setType(newType);
+    setError(null);
     const firstReason = REASON_OPTIONS_BY_TYPE[newType][0];
     if (firstReason) setReason(firstReason);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidQty) {
-      setError('Masukkan jumlah unit yang valid (angka positif).');
-      return;
+    if (type === 'out') {
+      if (selectedVariant.stock <= 0) {
+        setError(`Stok varian "${selectedVariant.sku}" saat ini sudah habis (0 pcs). Tidak dapat mencatat stok keluar.`);
+        return;
+      }
+      if (!isPositiveInt || qty <= 0) {
+        setError('Masukkan jumlah unit yang ingin dikeluarkan (minimal 1 pcs).');
+        return;
+      }
+      if (qty > selectedVariant.stock) {
+        setError(
+          `Jumlah stok keluar (${qty} pcs) melebihi sisa stok yang tersedia (${selectedVariant.stock} pcs). Maksimal unit yang dapat dikeluarkan adalah ${selectedVariant.stock} pcs.`
+        );
+        return;
+      }
+    } else if (type === 'in') {
+      if (!isPositiveInt || qty <= 0) {
+        setError('Masukkan jumlah unit stok masuk yang valid (minimal 1 pcs).');
+        return;
+      }
+    } else if (type === 'adjustment') {
+      if (isNaN(qty) || qty < 0) {
+        setError('Masukkan jumlah stok fisik aktual yang valid (angka 0 atau lebih).');
+        return;
+      }
     }
+
     setLoading(true);
     setError(null);
 
@@ -209,16 +248,24 @@ export default function StockMutationModal({
                 Setelah Mutasi
               </span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className={`text-xl font-bold tabular-nums ${
-                  previewStock === 0 ? 'text-red-600' : previewStock <= (selectedVariant.lowStockThreshold ?? 3) ? 'text-amber-600' : 'text-emerald-700'
-                }`}>
-                  {previewStock}
-                </span>
-                <span className="text-[11px] text-black/50">pcs</span>
-                {isValidQty && deltaLabel && (
-                  <span className={`text-[10px] font-semibold ml-1 ${stockDelta > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    ({deltaLabel})
+                {isExceedingStock ? (
+                  <span className="text-xs font-bold text-rose-600">
+                    Defisit ({qty - selectedVariant.stock} pcs melebihi stok)
                   </span>
+                ) : (
+                  <>
+                    <span className={`text-xl font-bold tabular-nums ${
+                      previewStock === 0 ? 'text-red-600' : previewStock <= (selectedVariant.lowStockThreshold ?? 3) ? 'text-amber-600' : 'text-emerald-700'
+                    }`}>
+                      {previewStock}
+                    </span>
+                    <span className="text-[11px] text-black/50">pcs</span>
+                    {isValidQty && deltaLabel && (
+                      <span className={`text-[10px] font-semibold ml-1 ${stockDelta > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        ({deltaLabel})
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -268,19 +315,79 @@ export default function StockMutationModal({
 
           {/* Input Jumlah Unit */}
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 mb-1">
-              {type === 'adjustment' ? 'Stok Fisik Aktual (Langsung Timpa)' : 'Jumlah Unit (pcs)'}
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder={type === 'adjustment' ? 'Contoh: 15' : 'Contoh: 10'}
-              className="w-full h-9 rounded-lg border border-black/20 bg-white px-3 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none transition-colors"
-              required
-              autoFocus
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70">
+                {type === 'adjustment' ? 'Stok Fisik Aktual (Langsung Timpa)' : 'Jumlah Unit (pcs)'}
+              </label>
+              {type === 'out' && (
+                <span className={`text-[10px] font-semibold ${selectedVariant.stock === 0 ? 'text-rose-600' : 'text-black/60'}`}>
+                  Maksimal: <span className="font-bold">{selectedVariant.stock} pcs</span>
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                min={type === 'adjustment' ? '0' : '1'}
+                max={type === 'out' ? selectedVariant.stock : undefined}
+                value={quantity}
+                onChange={(e) => {
+                  setQuantity(e.target.value);
+                  setError(null);
+                }}
+                disabled={isOutOfStock}
+                placeholder={
+                  type === 'adjustment'
+                    ? 'Contoh: 15'
+                    : isOutOfStock
+                    ? 'Stok varian habis (0 pcs)'
+                    : `Maksimal ${selectedVariant.stock} pcs`
+                }
+                className={`w-full h-9 rounded-lg border px-3 text-xs text-black placeholder:text-black/40 focus:outline-none transition-colors ${
+                  isExceedingStock
+                    ? 'border-rose-500 bg-rose-50/40 focus:border-rose-600'
+                    : isOutOfStock
+                    ? 'border-black/10 bg-black/5 cursor-not-allowed text-black/40'
+                    : 'border-black/20 bg-white focus:border-black'
+                }`}
+                required
+                autoFocus
+              />
+              {type === 'out' && selectedVariant.stock > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuantity(String(selectedVariant.stock));
+                    setError(null);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-black/5 hover:bg-black/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black transition cursor-pointer"
+                  title="Gunakan seluruh stok yang tersisa"
+                >
+                  Semua ({selectedVariant.stock})
+                </button>
+              )}
+            </div>
+
+            {/* Warning jika stok keluar melebihi stok yang ada */}
+            {isOutOfStock && (
+              <p className="mt-1.5 text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                <span>⚠️ Stok varian ini saat ini 0 pcs. Anda tidak dapat mencatat stok keluar.</span>
+              </p>
+            )}
+            {isExceedingStock && (
+              <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-medium text-rose-700 flex items-center justify-between gap-2">
+                <span>
+                  ⚠️ <strong>Jumlah melebihi stok!</strong> Anda memasukkan {qty} pcs, sedangkan stok fisik hanya <strong>{selectedVariant.stock} pcs</strong>.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity(String(selectedVariant.stock))}
+                  className="shrink-0 underline font-bold hover:text-rose-900 cursor-pointer text-[10px]"
+                >
+                  Gunakan {selectedVariant.stock} pcs
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Alasan Dropdown */}

@@ -225,10 +225,27 @@ export async function executeServerStockMutation(params: {
   const qty = Math.abs(params.quantity);
 
   if (params.type === 'in') {
+    if (qty <= 0) {
+      throw new Error('Jumlah unit stok masuk harus lebih dari 0.');
+    }
     newStock = prevStock + qty;
   } else if (params.type === 'out') {
-    newStock = Math.max(0, prevStock - qty);
+    if (prevStock <= 0) {
+      throw new Error(`Stok varian "${target.sku}" saat ini sudah kosong (0 pcs). Tidak ada unit yang dapat dikeluarkan.`);
+    }
+    if (qty <= 0) {
+      throw new Error('Jumlah unit stok keluar harus lebih dari 0.');
+    }
+    if (qty > prevStock) {
+      throw new Error(
+        `Jumlah stok keluar (${qty} pcs) melebihi sisa stok yang tersedia (${prevStock} pcs). Maksimal unit yang dapat dikeluarkan adalah ${prevStock} pcs.`
+      );
+    }
+    newStock = prevStock - qty;
   } else if (params.type === 'adjustment') {
+    if (params.quantity < 0) {
+      throw new Error('Stok fisik aktual tidak boleh bernilai negatif.');
+    }
     newStock = Math.max(0, params.quantity);
   }
 
@@ -528,10 +545,13 @@ export async function deductStockForOrder(
         continue;
       }
 
+      const actualDeductQty = Math.min(targetQty, variant.stock);
+      if (actualDeductQty <= 0) continue;
+
       await executeServerStockMutation({
         variantId: variant.id,
         type: 'out',
-        quantity: targetQty,
+        quantity: actualDeductQty,
         reason: 'ORDER_FULFILLMENT',
         reference: orderNumber,
         notes: `Pembelian oleh ${customerName} via Web`,

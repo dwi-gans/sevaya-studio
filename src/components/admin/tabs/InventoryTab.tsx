@@ -898,9 +898,14 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                                             </button>
                                             <button
                                               type="button"
+                                              disabled={firstVariant.stock <= 0}
                                               onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'out' })}
-                                              className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
-                                              title="Stok Keluar (-)"
+                                              className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-bold transition ${
+                                                firstVariant.stock <= 0
+                                                  ? 'border-black/10 bg-black/5 text-black/30 cursor-not-allowed'
+                                                  : 'border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 active:scale-95 cursor-pointer'
+                                              }`}
+                                              title={firstVariant.stock <= 0 ? 'Stok varian habis (0 pcs)' : 'Stok Keluar (-)'}
                                             >
                                               <Icon name="remove" size={11} />
                                               <span>Keluar</span>
@@ -1048,9 +1053,14 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                             </button>
                             <button
                               type="button"
+                              disabled={variant.stock <= 0}
                               onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'out' })}
-                              className="inline-flex items-center gap-0.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-800 hover:bg-rose-100 transition active:scale-95 cursor-pointer"
-                              title="Stok Keluar"
+                              className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition ${
+                                variant.stock <= 0
+                                  ? 'border-black/10 bg-black/5 text-black/30 cursor-not-allowed'
+                                  : 'border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 active:scale-95 cursor-pointer'
+                              }`}
+                              title={variant.stock <= 0 ? 'Stok varian habis (0 pcs)' : 'Stok Keluar'}
                             >
                               <Icon name="remove" size={11} />
                               <span>Keluar</span>
