@@ -4,10 +4,8 @@ import React, { useRef, useEffect } from 'react';
 
 export function VideoShowcase({
   src = '/videos/kani.mp4',
-  poster = '/images/video_poster.jpg',
 }: {
   src?: string;
-  poster?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -56,10 +54,10 @@ export function VideoShowcase({
   return (
     <section className="mx-auto w-full max-w-7xl px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
       <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden shadow-sm sm:aspect-[16/9] md:aspect-[21/9]">
+        {/* Tanpa poster — tidak ada gambar dummy/placeholder, langsung video */}
         <video
           ref={videoRef}
           src={src}
-          poster={poster}
           muted
           loop
           playsInline
