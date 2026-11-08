@@ -430,9 +430,9 @@ export function ProductDetailClient({
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
-      <main className="w-full flex-1 pt-8 sm:pt-10 pb-20">
+      <main className="w-full flex-1 pt-3 sm:pt-10 pb-20">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14 items-start">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14 items-start">
             
             {/* ── KOLOM KIRI (lg:col-span-6): DETAIL PRODUK & FORM PEMBELIAN ── */}
             <div className="order-2 flex flex-col lg:order-1 lg:col-span-6 space-y-6">
@@ -689,11 +689,11 @@ export function ProductDetailClient({
             </div>
 
             {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
-            <div className="order-1 flex flex-col lg:order-2 lg:col-span-6 static lg:sticky lg:top-24">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#ECE8E1] border border-black/5">
+            <div className="order-1 flex flex-col items-center lg:items-stretch lg:order-2 lg:col-span-6 static lg:sticky lg:top-24 w-full">
+              <div className="relative aspect-[3/4] h-[48vh] max-h-[420px] sm:h-auto sm:max-h-none w-auto sm:w-full overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto">
                 {dbProduct.badge && (
                   <span
-                    className={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[8px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
+                    className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
                       dbProduct.badge.toLowerCase().includes('best')
                         ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                         : dbProduct.badge.toLowerCase().includes('trend')
@@ -701,7 +701,7 @@ export function ProductDetailClient({
                         : 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                     }`}
                   >
-                    <span className="mr-1 text-[9px] opacity-75">✦</span>
+                    <span className="mr-1 text-[8px] sm:text-[9px] opacity-75">✦</span>
                     {dbProduct.badge}
                   </span>
                 )}
@@ -727,7 +727,7 @@ export function ProductDetailClient({
               </div>
 
               {galleryImages.length > 1 && (
-                <div className="no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto py-1">
+                <div className="no-scrollbar mt-2 sm:mt-3 flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 overflow-x-auto py-1 w-full">
                   {galleryImages.map((imgSrc, idx) => {
                     const isActive = activeImage === imgSrc;
                     return (
@@ -735,7 +735,7 @@ export function ProductDetailClient({
                         key={`${imgSrc}-${idx}`}
                         type="button"
                         onClick={() => handleSelectGalleryImage(imgSrc)}
-                        className={`relative h-16 w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
+                        className={`relative h-14 w-10 sm:h-16 sm:w-12 flex-shrink-0 overflow-hidden bg-[#ECE8E1] transition-all cursor-pointer ${
                           isActive
                             ? 'ring-2 ring-black ring-offset-1 opacity-100 scale-102'
                             : 'opacity-65 hover:opacity-100 border border-black/10'
