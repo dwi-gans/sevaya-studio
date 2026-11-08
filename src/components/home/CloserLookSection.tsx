@@ -52,29 +52,29 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-10 sm:py-14 lg:py-16 text-black section--light">
+    <section className="w-full bg-white py-10 sm:py-14 lg:py-18 text-black section--light">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 xl:gap-18 items-center">
-          {/* Left Column: Editorial Photo */}
-          <RevealOnScroll variant="editorial" delayMs={0}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 xl:gap-20 items-stretch">
+          {/* Left Column: Editorial Photo Filling The Entire Box */}
+          <RevealOnScroll variant="editorial" delayMs={0} className="h-full w-full flex">
             <Link
               href={linkUrl}
-              className="group relative block aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] w-full overflow-hidden bg-black/5 border border-black/10 shadow-xs"
+              className="group relative block w-full h-full min-h-[460px] sm:min-h-[540px] lg:min-h-[600px] xl:min-h-[660px] aspect-[3/4] lg:aspect-auto overflow-hidden bg-black/5 border border-black/10 shadow-xs"
             >
               <StudioImage
                 src={image}
                 alt={title}
                 fill
                 preset="spotlight"
-                className="object-cover transition-transform duration-700 group-hover:scale-103"
+                className="object-cover object-center transition-transform duration-700 group-hover:scale-103"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
             </Link>
           </RevealOnScroll>
 
           {/* Right Column: Editorial Narrative Story */}
-          <RevealOnScroll variant="fade-up" delayMs={150}>
-            <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left">
+          <RevealOnScroll variant="fade-up" delayMs={150} className="flex flex-col justify-center h-full">
+            <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left py-2 sm:py-6">
               {/* Eyebrow */}
               <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] text-black/60 uppercase block mb-2 sm:mb-2.5">
                 {eyebrow}
