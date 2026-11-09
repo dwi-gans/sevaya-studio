@@ -27,50 +27,95 @@ interface ShippingLabelModalProps {
   onClose: () => void;
 }
 
-// Generate realistic crisp barcode stripes from a string
-function BarcodeSVG({ value }: { value: string }) {
-  const bars = useMemo(() => {
-    const str = (value || 'SEVAYA').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const pattern: number[] = [];
-    // Start guard
-    pattern.push(2, 1, 1, 2);
-    for (let i = 0; i < str.length; i++) {
-      const code = str.charCodeAt(i);
-      pattern.push((code % 3) + 1);
-      pattern.push(((code >> 2) % 2) + 1);
-      pattern.push(((code >> 4) % 3) + 1);
-      pattern.push(((code * 7) % 2) + 1);
-    }
-    // Stop guard
-    pattern.push(2, 1, 2, 1, 2);
-    return pattern;
-  }, [value]);
+// ═════════════════════════════════════════════════════════════════════════════
+// 100% Compliant ISO/IEC 15417 Code 128 Barcode Generator
+// Scannable by any barcode scanner gun (J&T/JNE/SiCepat), warehouse scanner, & mobile camera
+// ═════════════════════════════════════════════════════════════════════════════
+const CODE128_PATTERNS = [
+  '11011001100','11001101100','11001100110','10010011000','10010001100',
+  '10001001100','10011001000','10011000100','10001100100','11001001000',
+  '11001000100','11000100100','10110011100','10011011100','10011001110',
+  '10111001100','10011101100','10011100110','11001110010','11001011100',
+  '11001001110','11011100100','11001110100','11101101110','11101001100',
+  '11100101100','11100100110','11101100100','11100110100','11100110010',
+  '11011011000','11011000110','11000110110','10100011000','10001011000',
+  '10001000110','10110001000','10001101000','10001100010','11010001000',
+  '11000101000','11000100010','10110111000','10110001110','10001101110',
+  '10111011000','10111000110','10001110110','11101110110','11010001110',
+  '11000101110','11011101000','11011100010','11011101110','11101011000',
+  '11101000110','11100010110','11101101000','11101100010','11100011010',
+  '11101111010','11001000010','11110001010','10100110000','10100001100',
+  '10010110000','10010000110','10000101100','10000100110','10110010000',
+  '10110000100','10011010000','10011000010','10000110100','10000110010',
+  '11000010010','11001010000','11110111010','11000010100','10001111010',
+  '10100111100','10010111100','10010011110','10111100100','10011110100',
+  '10011110010','11110100100','11110010100','11110010010','11011011110',
+  '11011110110','11110110110','10101111000','10100011110','10001011110',
+  '10111101000','10111100010','11110101000','11110100010','10111011110',
+  '10111101110','11101011110','11110101110',
+  '11010000100', // 103: Start A
+  '11010010000', // 104: Start B
+  '11010011100', // 105: Start C
+  '1100011101011' // 106: Stop (13 bits)
+];
 
-  let currentX = 10;
+function generateCode128Bars(text: string) {
+  const clean = (text || 'SEVAYA').trim();
+  let sum = 104; // Start Code B
+  let bits = '0000000000'; // 10 modules Quiet Zone
+  bits += CODE128_PATTERNS[104];
+
+  for (let i = 0; i < clean.length; i++) {
+    const code = clean.charCodeAt(i) - 32;
+    if (code < 0 || code > 94) continue;
+    sum += code * (i + 1);
+    bits += CODE128_PATTERNS[code];
+  }
+
+  const checksum = sum % 103;
+  bits += CODE128_PATTERNS[checksum];
+  bits += CODE128_PATTERNS[106];
+  bits += '0000000000'; // 10 modules Quiet Zone
+
+  // Group consecutive '1' bits into single solid bars for optimal SVG rendering
+  const bars: { x: number; width: number }[] = [];
+  let i = 0;
+  while (i < bits.length) {
+    if (bits[i] === '1') {
+      const start = i;
+      while (i < bits.length && bits[i] === '1') i++;
+      bars.push({ x: start, width: i - start });
+    } else {
+      i++;
+    }
+  }
+
+  return { bars, totalWidth: bits.length };
+}
+
+function BarcodeSVG({ value }: { value: string }) {
+  const { bars, totalWidth } = useMemo(() => generateCode128Bars(value), [value]);
+
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center px-1">
       <svg
-        className="w-full max-w-[280px] h-12"
-        viewBox="0 0 300 48"
+        className="w-full max-w-[320px] h-13"
+        viewBox={`0 0 ${totalWidth} 50`}
         preserveAspectRatio="none"
+        shapeRendering="crispEdges"
       >
-        {bars.map((w, idx) => {
-          const isBlack = idx % 2 === 0;
-          const rect = isBlack ? (
-            <rect
-              key={idx}
-              x={currentX}
-              y={0}
-              width={w * 1.6}
-              height={48}
-              fill="#000000"
-            />
-          ) : null;
-          currentX += w * 1.6;
-          return rect;
-        })}
+        {bars.map((bar, idx) => (
+          <rect
+            key={idx}
+            x={bar.x}
+            y={0}
+            width={bar.width}
+            height={50}
+            fill="#000000"
+          />
+        ))}
       </svg>
-      <span className="font-mono text-[11px] font-bold tracking-widest text-black mt-1">
+      <span className="font-mono text-xs sm:text-[13px] font-extrabold tracking-[0.16em] text-black mt-1">
         {value}
       </span>
     </div>
