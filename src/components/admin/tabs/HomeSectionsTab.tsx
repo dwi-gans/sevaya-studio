@@ -120,6 +120,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         let next = { ...prev };
         if (target === 'hero') {
           next = { ...next, hero: { ...(next.hero || DEFAULT_SITE_SECTIONS.hero), image: publicUrl } };
+        } else if (target === 'hero-mobile') {
+          next = { ...next, hero: { ...(next.hero || DEFAULT_SITE_SECTIONS.hero), mobileImage: publicUrl } };
         } else if (target === 'closer-look') {
           next = { ...next, closerLook: { ...(next.closerLook || DEFAULT_CLOSER_LOOK), image: publicUrl } };
         } else if (target === 'home-video-poster') {
@@ -325,35 +327,79 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </span>
         </div>
 
-        {/* Hero Photo Preview */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-              Foto Latar Hero (Utama)
-            </label>
-            <UploadActionGroup target="hero" label="Pilih Galeri" currentImage={hero.image} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+                {/* Hero Photo Preview (Desktop & Mobile Responsive) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
+          {/* Desktop Hero (16:9 / Landscape) */}
+          <div className="lg:col-span-7 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-black/80 uppercase flex items-center gap-1.5">
+                  <span>🖥️</span> Foto Hero Desktop
+                </label>
+                <p className="text-[10px] text-black/50">Rasio 16:9 • Tampil di Layar Laptop / PC</p>
+              </div>
+              <UploadActionGroup target="hero" label="Pilih Galeri" currentImage={hero.image} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+            </div>
+
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
+              <Image
+                src={hero.image?.trim() || '/images/hero_optimized.jpg'}
+                alt="Hero Desktop Preview"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
+                <span className="text-[9px] tracking-widest uppercase opacity-90">
+                  {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
+                </span>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="rounded bg-white text-black px-2 py-0.5 text-[9px] font-semibold uppercase">
+                    {hero.ctaShop || 'Shop The Collection'}
+                  </span>
+                  <span className="rounded border border-white text-white px-2 py-0.5 text-[9px] font-semibold uppercase">
+                    {hero.ctaLookbook || 'Lookbook'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
-            <Image
-              src={hero.image?.trim() || '/images/hero_optimized.jpg'}
-              alt="Hero Preview"
-              fill
-              unoptimized
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
-              <span className="text-[9px] tracking-widest uppercase opacity-90">
-                {hero.badge || 'TIMELESS â€¢ INTENTIONAL â€¢ EFFORTLESS'}
-              </span>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="rounded bg-white text-black px-2 py-0.5 text-[9px] font-semibold uppercase">
-                  {hero.ctaShop || 'Shop The Collection'}
-                </span>
-                <span className="rounded border border-white text-white px-2 py-0.5 text-[9px] font-semibold uppercase">
-                  {hero.ctaLookbook || 'Lookbook'}
-                </span>
+          {/* Mobile Hero (9:16 / Portrait) */}
+          <div className="lg:col-span-5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-black/80 uppercase flex items-center gap-1.5">
+                  <span>📱</span> Foto Hero Mobile
+                </label>
+                <p className="text-[10px] text-black/50">Rasio 9:16 • Tampil di Layar Smartphone</p>
               </div>
+              <UploadActionGroup target="hero-mobile" label="Pilih Galeri" currentImage={hero.mobileImage || hero.image} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+            </div>
+
+            <div className="relative mx-auto aspect-[9/16] max-h-[300px] w-full max-w-[180px] overflow-hidden rounded-xl border-2 border-black/20 bg-black/5 shadow-md">
+              <Image
+                src={hero.mobileImage?.trim() || hero.image?.trim() || '/images/hero_optimized.jpg'}
+                alt="Hero Mobile Preview"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex flex-col justify-end p-3 text-white text-center">
+                <span className="text-[8px] tracking-widest uppercase opacity-90 leading-tight">
+                  {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
+                </span>
+                <div className="mt-1.5 flex flex-col gap-1">
+                  <span className="rounded bg-white text-black py-0.5 text-[8px] font-semibold uppercase">
+                    {hero.ctaShop || 'Shop'}
+                  </span>
+                </div>
+              </div>
+              {!hero.mobileImage && (
+                <div className="absolute top-2 left-2 right-2 bg-black/70 text-white text-[8px] px-1.5 py-0.5 rounded text-center backdrop-blur-xs">
+                  Mengikuti Desktop
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -276,13 +276,19 @@ export default function AdminPage() {
 
   // ΓöÇΓöÇ Hero Image Cropper ΓöÇΓöÇ
   const { openCropper: openHeroCropper, cropperProps: heroCropperProps } = useHeroImageCropper({
-    onUploaded: (publicUrl) => {
+    onUploaded: (url, target) => {
       setSections((prev) => {
-        const next = { ...prev, hero: { ...prev.hero, image: publicUrl } };
+        const next = {
+          ...prev,
+          hero: {
+            ...prev.hero,
+            ...(target === 'mobile' ? { mobileImage: url } : { image: url }),
+          },
+        };
         saveSiteSections(next);
         return next;
       });
-      showToast('Foto Hero tersimpan otomatis!');
+      showToast(target === 'mobile' ? 'Foto Hero Mobile tersimpan otomatis!' : 'Foto Hero Desktop tersimpan otomatis!');
     },
     onLoadingChange: (loading) => setIsUploading(loading),
     onError: (msg) => showToast(msg),
@@ -818,7 +824,14 @@ export default function AdminPage() {
         saveSiteSections(next);
         return next;
       });
-      showToast('Foto Hero tersimpan otomatis!');
+      showToast('Foto Hero Desktop tersimpan otomatis!');
+    } else if (target === 'hero-mobile') {
+      setSections((prev) => {
+        const next = { ...prev, hero: { ...prev.hero, mobileImage: urlOrPath } };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Hero Mobile tersimpan otomatis!');
     } else if (target === 'closer-look') {
       setSections((prev) => {
         const next = {
@@ -1231,9 +1244,10 @@ export default function AdminPage() {
     if (!file) return;
 
     // Khusus target hero: buka image cropper dulu sebelum upload
-    if (imagePickerTarget === 'hero') {
+    if (imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') {
+      const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(file);
+      openHeroCropper(file, mode);
       // Reset input agar file yang sama bisa dipilih lagi
       e.target.value = '';
       return;
@@ -1270,8 +1284,9 @@ export default function AdminPage() {
     if (!file) return;
 
     // Khusus target hero: buka image cropper dulu sebelum upload
-    if (target === 'hero') {
-      openHeroCropper(file);
+    if (target === 'hero' || target === 'hero-mobile') {
+      const mode = target === 'hero-mobile' ? 'mobile' : 'desktop';
+      openHeroCropper(file, mode);
       e.target.value = '';
       return;
     }
@@ -1299,8 +1314,9 @@ export default function AdminPage() {
   const handleSectionFileUpload = async (target: ImagePickerTarget, file: File): Promise<void> => {
     if (!file) return;
     // Khusus target hero: buka image cropper dulu
-    if (target === 'hero') {
-      openHeroCropper(file);
+    if (target === 'hero' || target === 'hero-mobile') {
+      const mode = target === 'hero-mobile' ? 'mobile' : 'desktop';
+      openHeroCropper(file, mode);
       return;
     }
     setIsUploading(true);
@@ -1332,6 +1348,7 @@ export default function AdminPage() {
       return productForm.swatches[idx]?.image;
     }
     if (imagePickerTarget === 'hero') return sections.hero.image;
+    if (imagePickerTarget === 'hero-mobile') return sections.hero.mobileImage || sections.hero.image;
     if (imagePickerTarget === 'closer-look') return sections.closerLook?.image || DEFAULT_CLOSER_LOOK.image;
     if (imagePickerTarget === 'spotlight-0') return sections.spotlight[0]?.image;
     if (imagePickerTarget === 'spotlight-1') return sections.spotlight[1]?.image;
@@ -1344,9 +1361,10 @@ export default function AdminPage() {
 
   const handleSelectPredefinedImage = (imagePath: string) => {
     // Khusus target hero: buka image cropper agar user bisa atur crop sebelum pasang
-    if (imagePickerTarget === 'hero') {
+    if (imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') {
+      const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(imagePath);
+      openHeroCropper(imagePath, mode);
       return;
     }
     applyImageToTarget(imagePickerTarget, imagePath);
@@ -1358,9 +1376,10 @@ export default function AdminPage() {
     if (!imagePickerTarget) return;
 
     // Khusus target hero dari modal picker: buka image cropper
-    if (imagePickerTarget === 'hero' && images[0]) {
+    if ((imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') && images[0]) {
+      const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(images[0]);
+      openHeroCropper(images[0], mode);
       return;
     }
 

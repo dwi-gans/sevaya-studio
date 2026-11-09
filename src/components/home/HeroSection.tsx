@@ -46,10 +46,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
     });
   }, []);
 
-  const heroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
-  // Jika gambar hero berasal dari Supabase (URL remote), gunakan lokal sebagai background
+  const desktopHeroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
+  const mobileHeroImage = (hero?.mobileImage && hero.mobileImage.trim()) || desktopHeroImage;
+  // Jika gambar hero berasal dari URL remote, gunakan lokal sebagai background
   // agar TIDAK ADA flash hitam selama download berlangsung
-  const isRemote = heroImage.startsWith('http');
+  const isRemote = desktopHeroImage.startsWith('http') || mobileHeroImage.startsWith('http');
 
   return (
     <section
@@ -65,26 +66,31 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
           className="relative h-full w-full"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            suppressHydrationWarning
-            src={heroImage}
-            alt="SEVAYA Collection - Timeless, Intentional, Effortless"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            className={`animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%] transition-opacity duration-700 ${
-              // Jika gambar lokal langsung tampil, jika remote fade-in saat selesai
-              !isRemote || imgLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            onLoad={() => setImgLoaded(true)}
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.src.endsWith(PRIMARY_HERO)) {
-                target.src = PRIMARY_HERO;
-                setHero((prev) => ({ ...prev, image: PRIMARY_HERO }));
-              }
-            }}
-          />
+          <picture className="h-full w-full">
+            {mobileHeroImage && (
+              <source media="(max-width: 639px)" srcSet={mobileHeroImage} />
+            )}
+            <img
+              suppressHydrationWarning
+              src={desktopHeroImage}
+              alt="SEVAYA Collection - Timeless, Intentional, Effortless"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className={`animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%] transition-opacity duration-700 ${
+                // Jika gambar lokal langsung tampil, jika remote fade-in saat selesai
+                !isRemote || imgLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              onLoad={() => setImgLoaded(true)}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith(PRIMARY_HERO)) {
+                  target.src = PRIMARY_HERO;
+                  setHero((prev) => ({ ...prev, image: PRIMARY_HERO }));
+                }
+              }}
+            />
+          </picture>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
       </div>

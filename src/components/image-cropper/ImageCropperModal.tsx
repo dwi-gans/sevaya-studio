@@ -25,6 +25,10 @@ export interface CropperResult {
   wasCropped: boolean;
   /** URL asli jika gambar berasal dari galeri cloud */
   originalUrl?: string;
+  /** Data URL base64 untuk penyimpanan instan tanpa unggah ulang ke cloud */
+  dataUrl?: string;
+  /** Mode target hasil crop: desktop atau mobile */
+  targetMode?: 'desktop' | 'mobile';
 }
 
 export interface RatioOption {
@@ -36,6 +40,7 @@ export interface ImageCropperModalProps {
   open: boolean;
   file: File | string | null;
   preset: CropPreset;
+  initialMode?: 'desktop' | 'mobile';
   extraRatios?: RatioOption[];
   allowFreeRatio?: boolean;
   allowSkip?: boolean;
@@ -67,6 +72,7 @@ export function ImageCropperModal({
   open,
   file,
   preset,
+  initialMode = 'desktop',
   extraRatios = [],
   allowFreeRatio = true,
   allowSkip = true,
@@ -80,7 +86,7 @@ export function ImageCropperModal({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('desktop');
+  const [viewMode, setViewMode] = useState<ViewMode>(initialMode);
   const [activeRatio, setActiveRatio] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cropError, setCropError] = useState<string | null>(null);
@@ -111,7 +117,7 @@ export function ImageCropperModal({
       const timer = setTimeout(() => {
         setImageSrc(null);
         setCropError(null);
-        setViewMode('desktop');
+        setViewMode(initialMode);
       }, 0);
       return () => clearTimeout(timer);
     }
@@ -136,13 +142,15 @@ export function ImageCropperModal({
       setCrop({ x: 0, y: 0 });
       setZoom(1);
       setRotation(0);
-      setActiveRatio(preset.aspect);
-      setViewMode('desktop');
+      const targetAspect =
+        initialMode === 'mobile' && preset.mobileAspect ? preset.mobileAspect : preset.aspect;
+      setActiveRatio(targetAspect);
+      setViewMode(initialMode);
       setCropError(null);
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [file, open, fileError, preset.aspect]);
+  }, [file, open, fileError, preset.aspect, preset.mobileAspect, initialMode]);
 
   // Focus trap & tutup dengan Esc
   useEffect(() => {
@@ -212,9 +220,13 @@ export function ImageCropperModal({
         file,
         preset.outputMaxWidth,
         preset.outputFormat ?? 'image/webp',
-        preset.quality ?? 0.9,
+        preset.quality ?? 0.98,
       );
-      await onConfirm({ ...result, wasCropped: true });
+      await onConfirm({
+        ...result,
+        wasCropped: true,
+        targetMode: viewMode,
+      });
     } catch (err) {
       setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
     } finally {
@@ -235,10 +247,18 @@ export function ImageCropperModal({
           height: 0,
           wasCropped: false,
           originalUrl: file,
+          targetMode: viewMode,
         });
       } else {
         const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-        await onConfirm({ file, blob, width: 0, height: 0, wasCropped: false });
+        await onConfirm({
+          file,
+          blob,
+          width: 0,
+          height: 0,
+          wasCropped: false,
+          targetMode: viewMode,
+        });
       }
     } catch (err) {
       setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
@@ -316,33 +336,43 @@ export function ImageCropperModal({
 
           {/* Desktop / Mobile toggle — hanya jika preset punya mobileAspect */}
           {preset.mobileAspect && (
-            <div className="flex justify-center gap-1 px-4 pt-3">
-              <button
-                onClick={() => handleViewModeChange('desktop')}
-                aria-pressed={viewMode === 'desktop'}
-                aria-label="Tampilan desktop"
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium tracking-wide transition-colors ${
-                  viewMode === 'desktop'
-                    ? 'bg-black text-white'
-                    : 'border border-black/20 bg-white text-black/60 hover:border-black/40'
-                }`}
-              >
-                <Monitor className="h-3 w-3" aria-hidden />
-                Desktop
-              </button>
-              <button
-                onClick={() => handleViewModeChange('mobile')}
-                aria-pressed={viewMode === 'mobile'}
-                aria-label="Tampilan mobile"
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium tracking-wide transition-colors ${
-                  viewMode === 'mobile'
-                    ? 'bg-black text-white'
-                    : 'border border-black/20 bg-white text-black/60 hover:border-black/40'
-                }`}
-              >
-                <Smartphone className="h-3 w-3" aria-hidden />
-                Mobile
-              </button>
+            <div className="flex items-center justify-between border-b border-black/10 bg-neutral-50 px-4 py-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-black/60 mr-1">
+                  Target:
+                </span>
+                <div className="inline-flex rounded-full border border-black/15 bg-white p-0.5 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('desktop')}
+                    aria-pressed={viewMode === 'desktop'}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+                      viewMode === 'desktop'
+                        ? 'bg-black text-white shadow-xs'
+                        : 'text-black/60 hover:text-black'
+                    }`}
+                  >
+                    <Monitor className="h-3 w-3" />
+                    <span>Desktop (16:9)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('mobile')}
+                    aria-pressed={viewMode === 'mobile'}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+                      viewMode === 'mobile'
+                        ? 'bg-black text-white shadow-xs'
+                        : 'text-black/60 hover:text-black'
+                    }`}
+                  >
+                    <Smartphone className="h-3 w-3" />
+                    <span>Mobile (9:16)</span>
+                  </button>
+                </div>
+              </div>
+              <span className="hidden sm:inline text-[9px] font-semibold uppercase tracking-wider text-black/40">
+                Ultra HD • Anti-Burik
+              </span>
             </div>
           )}
 
@@ -446,9 +476,18 @@ export function ImageCropperModal({
             <button
               onClick={handleConfirm}
               disabled={isLoading || !imageSrc || !croppedAreaPixels}
-              className="rounded-full bg-black px-5 py-2 text-[10px] font-semibold tracking-[0.12em] uppercase text-white transition-colors hover:bg-black/80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50"
+              className="flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-[10px] font-semibold tracking-[0.12em] uppercase text-white transition-colors hover:bg-black/80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50"
             >
-              {isLoading ? 'Memproses…' : 'Pasang Foto'}
+              {viewMode === 'mobile' ? (
+                <Smartphone className="h-3 w-3" />
+              ) : (
+                <Monitor className="h-3 w-3" />
+              )}
+              {isLoading
+                ? 'Memproses…'
+                : viewMode === 'mobile'
+                ? 'Pasang Hero Mobile'
+                : 'Pasang Hero Desktop'}
             </button>
           </div>
         </div>

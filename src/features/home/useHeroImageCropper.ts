@@ -4,23 +4,20 @@
  * Hook pembungkus (wrapper) untuk useImageCropper yang spesifik pada fitur Hero Home.
  *
  * Menyertakan:
- * - Preset heroHome
- * - Logika upload ke Supabase Storage
- * - Callback onConfirm yang diterima dari admin page (untuk update state sections)
- *
- * Komponen image-cropper itu sendiri tidak tahu apa pun soal hero atau Supabase.
+ * - Preset heroHome (Desktop & Mobile)
+ * - Pemrosesan langsung (hasil crop tidak diunggah ulang ke cloud)
+ * - Callback onConfirm yang diterima dari admin page (untuk update state sections desktop & mobile)
  */
 
 import { useCallback } from 'react';
 import { useImageCropper } from '@/components/image-cropper';
 import type { CropperResult } from '@/components/image-cropper';
 import { CROP_PRESETS } from '@/config/image-crop-presets';
-import { uploadFileToStorage } from '@/integrations/supabase/storage';
 
 export interface UseHeroImageCropperOptions {
-  /** Dipanggil dengan URL publik gambar yang sudah di-upload */
-  onUploaded: (publicUrl: string) => void | Promise<void>;
-  /** Dipanggil saat upload sedang berlangsung */
+  /** Dipanggil dengan URL gambar hasil crop atau original, beserta target ('desktop' | 'mobile') */
+  onUploaded: (url: string, target?: 'desktop' | 'mobile') => void | Promise<void>;
+  /** Dipanggil saat proses sedang berlangsung */
   onLoadingChange?: (loading: boolean) => void;
   /** Dipanggil saat ada error */
   onError?: (message: string) => void;
@@ -35,15 +32,27 @@ export function useHeroImageCropper({
     async (result: CropperResult) => {
       onLoadingChange?.(true);
       try {
+        const target = result.targetMode || 'desktop';
+
         // Jika user memilih "Gunakan Asli" dan gambar sudah dari URL cloud/galeri:
         if (!result.wasCropped && result.originalUrl) {
-          await onUploaded(result.originalUrl);
+          await onUploaded(result.originalUrl, target);
           return;
         }
-        const publicUrl = await uploadFileToStorage(result.file, 'uploads');
-        await onUploaded(publicUrl);
+
+        // Hasil crop TIDAK disimpan di cloud!
+        // Gunakan dataUrl beresolusi tinggi (anti-burik, kualitas 0.98 WebP) langsung
+        const finalUrl =
+          result.dataUrl ||
+          (typeof window !== 'undefined' && result.blob ? URL.createObjectURL(result.blob) : '');
+
+        if (!finalUrl) {
+          throw new Error('Gagal menghasilkan URL gambar.');
+        }
+
+        await onUploaded(finalUrl, target);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Gagal mengunggah gambar hero';
+        const msg = err instanceof Error ? err.message : 'Gagal memproses gambar hero';
         onError?.(msg);
       } finally {
         onLoadingChange?.(false);

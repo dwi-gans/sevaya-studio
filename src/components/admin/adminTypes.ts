@@ -16,6 +16,7 @@ export type ImagePickerTarget =
   | `swatch-${number}`
   | `swatch-${number}-photo-${number}`
   | 'hero'
+  | 'hero-mobile'
   | 'closer-look'
   | 'spotlight-0'
   | 'spotlight-1'

@@ -17,6 +17,7 @@ export interface CroppedImageResult {
   file: File;
   width: number;
   height: number;
+  dataUrl: string;
 }
 
 /**
@@ -90,7 +91,7 @@ export async function getCroppedImage(
   originalFile: File | string,
   outputMaxWidth: number,
   outputFormat: 'image/webp' | 'image/jpeg' = 'image/webp',
-  quality = 0.9,
+  quality = 0.98,
 ): Promise<CroppedImageResult> {
   // Koreksi EXIF (hanya untuk File fisik)
   let exifDeg: 0 | 90 | 180 | 270 = 0;
@@ -113,6 +114,10 @@ export async function getCroppedImage(
   const rotCtx = rotCanvas.getContext('2d');
   if (!rotCtx) throw new Error('Canvas tidak tersedia');
 
+  // Aktifkan smoothing kualitas tertinggi agar gambar tetap tajam (anti-burik)
+  rotCtx.imageSmoothingEnabled = true;
+  rotCtx.imageSmoothingQuality = 'high';
+
   const sin = Math.abs(Math.sin(radians));
   const cos = Math.abs(Math.cos(radians));
   rotCanvas.width = Math.round(image.width * cos + image.height * sin);
@@ -127,7 +132,11 @@ export async function getCroppedImage(
   const cropCtx = cropCanvas.getContext('2d');
   if (!cropCtx) throw new Error('Canvas tidak tersedia');
 
-  // Skala agar output tidak melebihi outputMaxWidth
+  // Aktifkan smoothing kualitas tertinggi pada canvas crop
+  cropCtx.imageSmoothingEnabled = true;
+  cropCtx.imageSmoothingQuality = 'high';
+
+  // Skala agar output tidak melebihi outputMaxWidth, mempertahankan ketajaman asli
   const scale = Math.min(1, outputMaxWidth / pixelCrop.width);
   const outW = Math.round(pixelCrop.width * scale);
   const outH = Math.round(pixelCrop.height * scale);
@@ -146,6 +155,8 @@ export async function getCroppedImage(
     outW,
     outH,
   );
+
+  const dataUrl = cropCanvas.toDataURL(outputFormat, quality);
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     cropCanvas.toBlob(
@@ -170,5 +181,5 @@ export async function getCroppedImage(
 
   const file = new File([blob], fileName, { type: outputFormat });
 
-  return { blob, file, width: outW, height: outH };
+  return { blob, file, width: outW, height: outH, dataUrl };
 }

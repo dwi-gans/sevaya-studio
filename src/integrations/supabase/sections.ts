@@ -6,6 +6,7 @@ export interface HeroSectionData {
   title: string;
   desc: string;
   image: string;
+  mobileImage?: string;
   ctaLookbook: string;
   ctaShop: string;
 }
@@ -358,6 +359,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     title: 'SEVAYA',
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
     image: '/images/hero_optimized.jpg',
+    mobileImage: '/images/hero_optimized.jpg',
     ctaLookbook: 'Lookbook',
     ctaShop: 'Shop The Collection',
   },
