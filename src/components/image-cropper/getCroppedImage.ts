@@ -136,8 +136,24 @@ export async function getCroppedImage(
   cropCtx.imageSmoothingEnabled = true;
   cropCtx.imageSmoothingQuality = 'high';
 
-  // Skala agar output tidak melebihi outputMaxWidth, mempertahankan ketajaman asli
-  const scale = Math.min(1, outputMaxWidth / pixelCrop.width);
+  // Resolusi Cerdas (Anti-Burik):
+  // Jika crop berorientasi Landscape (Desktop 16:9), pastikan resolusi output minimal 1920x1080 (Full HD).
+  // Jika sumber foto hanya 1024px (seperti foto katalog/WA), canvas akan melakukan upsampling bicubic
+  // berkualitas tinggi ke 1920px sehingga tidak pecah saat dirender di layar laptop/PC.
+  const isLandscape = pixelCrop.width / pixelCrop.height >= 1.3;
+  let targetWidth = pixelCrop.width;
+
+  if (isLandscape) {
+    // Standar minimum Full HD untuk desktop landscape
+    const minDesktopWidth = 1920;
+    targetWidth = Math.min(outputMaxWidth, Math.max(minDesktopWidth, pixelCrop.width));
+  } else {
+    // Standar minimum untuk mobile portrait (9:16)
+    const minMobileWidth = 1080;
+    targetWidth = Math.min(outputMaxWidth, Math.max(minMobileWidth, pixelCrop.width));
+  }
+
+  const scale = targetWidth / pixelCrop.width;
   const outW = Math.round(pixelCrop.width * scale);
   const outH = Math.round(pixelCrop.height * scale);
 

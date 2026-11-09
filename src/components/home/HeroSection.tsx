@@ -83,10 +83,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               loading="eager"
               fetchPriority="high"
               decoding="async"
-              className={`animate-kenburns h-full w-full object-cover object-[center_30%] sm:object-[center_35%] transition-opacity duration-700 ${
+              className={`animate-kenburns h-full w-full object-cover object-center transition-opacity duration-700 ${
                 // Jika gambar lokal langsung tampil, jika remote fade-in saat selesai
                 !isRemote || imgLoaded ? 'opacity-100' : 'opacity-0'
               }`}
+              style={{ imageRendering: 'auto' }}
               onLoad={() => setImgLoaded(true)}
               onError={(e) => {
                 const target = e.currentTarget;
