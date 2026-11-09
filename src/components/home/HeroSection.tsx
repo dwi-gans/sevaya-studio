@@ -32,17 +32,6 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
     return initialHero || DEFAULT_SITE_SECTIONS.hero;
   });
 
-  // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
-  // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
-  const [animDone, setAnimDone] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimDone(true);
-    }, 1400);
-    return () => clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     // Background refresh: update hanya jika data Supabase berbeda
     getSiteSections().then((sections) => {
@@ -77,11 +66,6 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
     <section
       suppressHydrationWarning
       className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
-      style={{
-        backgroundImage: `url(${desktopHeroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
     >
       {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -99,7 +83,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
                 loading="eager"
                 fetchPriority="high"
                 decoding="sync"
-                className="animate-kenburns block sm:hidden h-full w-full object-cover object-center"
+                className="block sm:hidden h-full w-full object-cover object-center"
                 style={{ imageRendering: 'auto' }}
               />
               {/* Desktop (>= 640px) */}
@@ -110,7 +94,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
                 loading="eager"
                 fetchPriority="high"
                 decoding="sync"
-                className="animate-kenburns hidden sm:block h-full w-full object-cover object-center"
+                className="hidden sm:block h-full w-full object-cover object-center"
                 style={{ imageRendering: 'auto' }}
               />
             </>
@@ -122,7 +106,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               loading="eager"
               fetchPriority="high"
               decoding="sync"
-              className="animate-kenburns h-full w-full object-cover object-center"
+              className="h-full w-full object-cover object-center"
               style={{ imageRendering: 'auto' }}
             />
           )}
@@ -133,20 +117,12 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       {/* Content — posisi seimbang di mobile sesuai permintaan user */}
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 sm:px-6 pb-11 text-center text-white sm:pb-16 md:pb-20 lg:pb-24">
         {/* Tagline */}
-        <p
-          className={`mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px] ${
-            animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-title'
-          }`}
-        >
+        <p className="mb-3 sm:mb-4 text-[8.5px] font-normal tracking-[0.22em] sm:tracking-[0.28em] text-white/95 uppercase drop-shadow-sm sm:text-[10px] animate-hero-fadeup-title">
           {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
         </p>
 
         {/* CTA Buttons - Selalu menyamping berdampingan (flex-row) di mobile & desktop */}
-        <div
-          className={`flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2 ${
-            animDone ? 'opacity-100 translate-y-0' : 'animate-hero-fadeup-link'
-          }`}
-        >
+        <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-md px-2 animate-hero-fadeup-link">
           <Link
             href="/shop"
             className="flex-1 sm:flex-none inline-flex min-w-[118px] sm:min-w-[160px] items-center justify-center bg-white px-3 py-2 sm:px-5 sm:py-3 text-[8.5px] sm:text-[10px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-black uppercase transition-all duration-300 hover:bg-white/90 active:scale-95 whitespace-nowrap text-center shadow-xs"
