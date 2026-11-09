@@ -58,14 +58,14 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light">
-      <div className="mx-auto max-w-[1360px] px-3 sm:px-6 lg:px-8">
+    <section className="w-full bg-white py-8 sm:py-12 lg:py-16 text-black section--light">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         <RevealOnScroll variant="editorial">
-          {/* Framed Editorial Box Container — selalu menyamping berdampingan (2 kolom) di mobile & desktop */}
-          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-2 items-stretch shadow-xs">
+          {/* Framed Editorial Box Container ("di dalam kotak") */}
+          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch shadow-xs">
             {/* Left Column: Photo fills its chamber seamlessly */}
-            <div className="relative min-h-[130px] sm:min-h-[260px] md:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full h-full overflow-hidden bg-black/5">
-              <Link href={linkUrl} className="group relative block h-full w-full">
+            <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
+              <Link href={linkUrl} className="group relative block h-full w-full min-h-[300px] sm:min-h-[380px] lg:min-h-full">
                 <StudioImage
                   src={image}
                   alt={title}
@@ -77,20 +77,20 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </Link>
             </div>
 
-            {/* Right Column: Editorial Narrative Story inside the box — ringkas di mobile agar foto & box tidak kepanjangan */}
-            <div className="flex flex-col justify-center p-3 sm:p-6 md:p-10 lg:p-12 xl:p-16 text-left border-l border-black/10">
+            {/* Right Column: Editorial Narrative Story inside the box */}
+            <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-16 text-left border-t border-black/10 lg:border-t-0 lg:border-l lg:border-black/10">
               {/* Eyebrow */}
-              <span className="font-sans text-[7.5px] sm:text-[9.5px] lg:text-[11px] font-medium tracking-[0.16em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1 sm:mb-2">
+              <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2.5">
                 {eyebrow}
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-[11px] sm:text-[14px] md:text-lg lg:text-[23px] font-semibold sm:font-normal tracking-[0.12em] sm:tracking-[0.16em] text-black uppercase mb-1.5 sm:mb-3 lg:mb-5 leading-snug line-clamp-2">
+              <h2 className="font-sans text-[15px] sm:text-lg md:text-xl lg:text-[23px] font-medium sm:font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3.5 sm:mb-4 lg:mb-5 leading-snug">
                 {title}
               </h2>
 
-              {/* Story Paragraph 1 — ringkas di mobile (line-clamp-3) agar kompak */}
-              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.55] sm:leading-[1.75] font-light mb-2 sm:mb-3 lg:mb-4.5 line-clamp-3 sm:line-clamp-none">
+              {/* Story Paragraph 1 */}
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5">
                 {paragraph1 === DEFAULT_CLOSER_LOOK.paragraph1 ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -104,8 +104,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
                 )}
               </p>
 
-              {/* Story Paragraph 2 — disembunyikan di mobile agar tidak kepanjangan, tampil di tablet/desktop */}
-              <p className="hidden sm:block text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-2 sm:mb-4 lg:mb-6">
+              {/* Story Paragraph 2 */}
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6">
                 {paragraph2 === DEFAULT_CLOSER_LOOK.paragraph2 ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
@@ -122,7 +122,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               <div>
                 <Link
                   href={linkUrl}
-                  className="inline-block text-[8.5px] sm:text-[11px] lg:text-[13px] font-medium text-black underline underline-offset-2 sm:underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
+                  className="inline-block text-[11px] sm:text-xs lg:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
                 >
                   {linkText}
                 </Link>
