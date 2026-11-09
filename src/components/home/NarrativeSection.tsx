@@ -40,27 +40,27 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
   return (
     <div className="w-full bg-white text-black section--light">
       {/* 1. Elegance in Simplicity Narrative */}
-      <section className="mx-auto max-w-4xl px-4 py-8 text-center sm:px-6">
+      <section className="mx-auto max-w-3xl px-4 py-10 sm:py-14 text-center sm:px-6">
         <RevealOnScroll variant="fade-up">
-          <h2 className="font-sans text-xs font-normal tracking-wide text-black sm:text-sm">
+          <h2 className="font-sans text-sm sm:text-base md:text-[17px] font-normal tracking-wide text-black uppercase">
             {narrative.eleganceTitle || 'Elegance in Simplicity'}
           </h2>
-          <div className="mx-auto mt-3 max-w-2xl space-y-2 text-[10px] leading-relaxed text-black/70">
+          <div className="mx-auto mt-3.5 max-w-2xl space-y-2.5 text-[11px] sm:text-[12.5px] md:text-[13.5px] leading-relaxed sm:leading-[1.8] text-black/75 font-light">
             <p>
               {narrative.eleganceParagraph ||
                 t('home.narrative.elegance_p') ||
                 'Opting for quality over quantity means selecting timeless, durable, and responsibly made items. This approach simplifies our lives and fosters a deeper appreciation for our surroundings. Emphasizing longevity and responsible production resonates with a more sustainable and mindful lifestyle.'}
             </p>
-            <p className="font-medium text-black">
+            <p className="text-[11.5px] sm:text-[13px] md:text-[14px] font-medium text-black tracking-wide">
               {narrative.eleganceHighlight ||
                 t('home.narrative.less_more') ||
                 'The Art of Fewer, Better Choices'}
             </p>
           </div>
-          <div className="mt-6">
+          <div className="mt-6 sm:mt-7">
             <Link
               href={narrative.eleganceLinkUrl || '/conscious'}
-              className="inline-block text-[10px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
+              className="inline-block text-[11px] sm:text-xs font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
             >
               {narrative.eleganceLinkText || t('common.read_more') || 'Read more'}
             </Link>

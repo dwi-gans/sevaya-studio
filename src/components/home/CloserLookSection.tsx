@@ -52,43 +52,39 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-6 sm:py-10 lg:py-14 text-black section--light">
+    <section className="w-full bg-white py-8 sm:py-12 lg:py-16 text-black section--light">
       <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-14 xl:gap-18 items-center">
-          {/* Left Column: Editorial Photo — sleek and responsive on mobile */}
-          <RevealOnScroll variant="editorial" delayMs={0}>
-            <div className="max-w-md sm:max-w-none mx-auto w-full">
-              <Link
-                href={linkUrl}
-                className="group relative block aspect-[16/10] sm:aspect-[16/10] lg:aspect-[4/3] w-full overflow-hidden bg-black/5 border border-black/10 shadow-xs"
-              >
+        <RevealOnScroll variant="editorial">
+          {/* Framed Editorial Box Container ("di dalam kotak") */}
+          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch shadow-xs">
+            {/* Left Column: Photo fills its chamber seamlessly */}
+            <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
+              <Link href={linkUrl} className="group relative block h-full w-full min-h-[300px] sm:min-h-[380px] lg:min-h-full">
                 <StudioImage
                   src={image}
                   alt={title}
                   fill
                   preset="spotlight"
-                  className="object-cover transition-transform duration-700 group-hover:scale-103"
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-103"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
               </Link>
             </div>
-          </RevealOnScroll>
 
-          {/* Right Column: Editorial Narrative Story — with bottom divider line matching screenshot */}
-          <RevealOnScroll variant="fade-up" delayMs={150}>
-            <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left border-b border-black/15 pb-6 sm:pb-8 lg:pb-10">
+            {/* Right Column: Editorial Narrative Story inside the box */}
+            <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-16 text-left border-t border-black/10 lg:border-t-0 lg:border-l lg:border-black/10">
               {/* Eyebrow */}
-              <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2">
+              <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2.5">
                 {eyebrow}
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-[15px] sm:text-lg md:text-xl lg:text-[24px] font-medium sm:font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3 sm:mb-4 lg:mb-5 leading-snug">
+              <h2 className="font-sans text-[15px] sm:text-lg md:text-xl lg:text-[23px] font-medium sm:font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3.5 sm:mb-4 lg:mb-5 leading-snug">
                 {title}
               </h2>
 
               {/* Story Paragraph 1 */}
-              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.7] sm:leading-[1.8] font-light mb-3 sm:mb-3.5 lg:mb-4.5">
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5">
                 {paragraph1.includes('between June and August') ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -103,7 +99,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </p>
 
               {/* Story Paragraph 2 */}
-              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.7] sm:leading-[1.8] font-light mb-4 sm:mb-5 lg:mb-6">
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6">
                 {paragraph2.includes('much like nature') ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
@@ -126,8 +122,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
                 </Link>
               </div>
             </div>
-          </RevealOnScroll>
-        </div>
+          </div>
+        </RevealOnScroll>
       </div>
     </section>
   );
