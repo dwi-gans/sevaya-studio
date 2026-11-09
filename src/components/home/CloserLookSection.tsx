@@ -55,10 +55,10 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
     <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light">
       <div className="mx-auto max-w-[1360px] px-3 sm:px-6 lg:px-8">
         <RevealOnScroll variant="editorial">
-          {/* Framed Editorial Box Container — selalu menyamping (miring / side-by-side) tidak turun ke bawah */}
-          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-12 items-stretch shadow-xs">
-            {/* Left Column: Photo fills its chamber seamlessly side-by-side */}
-            <div className="col-span-5 md:col-span-6 relative min-h-[190px] sm:min-h-[280px] md:min-h-[380px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
+          {/* Framed Editorial Box Container — selalu menyamping berdampingan (2 kolom) di mobile & desktop */}
+          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-2 items-stretch shadow-xs">
+            {/* Left Column: Photo fills its chamber seamlessly */}
+            <div className="relative min-h-[200px] sm:min-h-[280px] md:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full h-full overflow-hidden bg-black/5">
               <Link href={linkUrl} className="group relative block h-full w-full">
                 <StudioImage
                   src={image}
@@ -71,20 +71,20 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </Link>
             </div>
 
-            {/* Right Column: Editorial Narrative Story inside the box — side-by-side with photo */}
-            <div className="col-span-7 md:col-span-6 flex flex-col justify-center p-3 sm:p-6 md:p-8 lg:p-12 xl:p-16 text-left border-l border-black/10">
+            {/* Right Column: Editorial Narrative Story inside the box — proporsional di mobile & desktop */}
+            <div className="flex flex-col justify-center p-3 sm:p-6 md:p-10 lg:p-12 xl:p-16 text-left border-l border-black/10">
               {/* Eyebrow */}
-              <span className="font-sans text-[7.5px] sm:text-[9.5px] lg:text-[11px] font-medium tracking-[0.16em] sm:tracking-[0.22em] text-black/60 uppercase block mb-1 sm:mb-2 lg:mb-2.5">
+              <span className="font-sans text-[7.5px] sm:text-[9.5px] lg:text-[11px] font-medium tracking-[0.16em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1 sm:mb-2">
                 {eyebrow}
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-[11.5px] sm:text-base md:text-lg lg:text-[23px] font-medium sm:font-normal tracking-[0.12em] sm:tracking-[0.16em] text-black uppercase mb-1.5 sm:mb-3 lg:mb-4 leading-tight sm:leading-snug">
+              <h2 className="font-sans text-[11px] sm:text-[14px] md:text-lg lg:text-[23px] font-semibold sm:font-normal tracking-[0.12em] sm:tracking-[0.16em] text-black uppercase mb-1.5 sm:mb-3 lg:mb-5 leading-snug">
                 {title}
               </h2>
 
               {/* Story Paragraph 1 */}
-              <p className="text-[8.5px] sm:text-[11px] md:text-xs lg:text-sm text-black/75 leading-[1.55] sm:leading-[1.75] lg:leading-[1.85] font-light mb-1.5 sm:mb-2.5 lg:mb-4">
+              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-1.5 sm:mb-3 lg:mb-4.5">
                 {paragraph1.includes('between June and August') ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -99,7 +99,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </p>
 
               {/* Story Paragraph 2 */}
-              <p className="text-[8.5px] sm:text-[11px] md:text-xs lg:text-sm text-black/75 leading-[1.55] sm:leading-[1.75] lg:leading-[1.85] font-light mb-2 sm:mb-3.5 lg:mb-5">
+              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-2 sm:mb-4 lg:mb-6">
                 {paragraph2.includes('much like nature') ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
@@ -116,7 +116,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               <div>
                 <Link
                   href={linkUrl}
-                  className="inline-block text-[9px] sm:text-xs lg:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
+                  className="inline-block text-[8.5px] sm:text-[11px] lg:text-[13px] font-medium text-black underline underline-offset-2 sm:underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
                 >
                   {linkText}
                 </Link>
