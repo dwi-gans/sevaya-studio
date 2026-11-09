@@ -10,6 +10,7 @@ import {
   saveSiteSections,
   HomeNarrativeConfig,
   HomeJournalHeaderConfig,
+  CloserLookData,
 } from '@/integrations/supabase';
 import { uploadFileToStorage } from '@/integrations/supabase/storage';
 import type { Article } from '@/integrations/supabase/articles';
@@ -193,6 +194,13 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
     }));
   };
 
+  const updateCloserLookField = (field: keyof CloserLookData, val: string) => {
+    setSections((prev) => ({
+      ...prev,
+      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), [field]: val },
+    }));
+  };
+
   const updateNarrativeField = (field: keyof HomeNarrativeConfig, val: string) => {
     setSections((prev) => ({
       ...prev,
@@ -242,6 +250,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
     const next: SiteSectionsConfig = {
       ...sections,
       hero,
+      closerLook: sections.closerLook || closerLook,
       spotlightIntro,
       spotlight,
       narrative,
@@ -380,7 +389,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
       {/* SECTION: A CLOSER LOOK AT (VOL 1: SEVILLA ABAYA) */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-black/10 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-black/10 pb-3 gap-2">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
               Bagian Eksklusif • Editorial Collection
@@ -389,9 +398,27 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               A Closer Look At (Vol 1: Sevilla Abaya)
             </h3>
           </div>
-          <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
-            Foto Kiri + Cerita Kanan
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
+              Foto Kiri + Cerita Kanan
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const next: SiteSectionsConfig = {
+                  ...sections,
+                  closerLook: sections.closerLook || closerLook,
+                };
+                setSections(next);
+                saveSiteSections(next);
+                showToast('✓ Data Closer Look berhasil disimpan ke cloud!');
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1 text-[10px] font-semibold text-white uppercase tracking-wider hover:bg-black/85 transition active:scale-95 cursor-pointer shadow-2xs"
+            >
+              <Icon name="check" size={12} />
+              <span>Simpan Closer Look</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -428,12 +455,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 <input
                   type="text"
                   value={closerLook.eyebrow || ''}
-                  onChange={(e) =>
-                    setSections((prev) => ({
-                      ...prev,
-                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), eyebrow: e.target.value },
-                    }))
-                  }
+                  onChange={(e) => updateCloserLookField('eyebrow', e.target.value)}
                   placeholder="A CLOSER LOOK AT"
                   className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                 />
@@ -446,12 +468,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 <input
                   type="text"
                   value={closerLook.title || ''}
-                  onChange={(e) =>
-                    setSections((prev) => ({
-                      ...prev,
-                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), title: e.target.value },
-                    }))
-                  }
+                  onChange={(e) => updateCloserLookField('title', e.target.value)}
                   placeholder="VOL 1: SEVILLA ABAYA"
                   className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                 />
@@ -465,12 +482,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <textarea
                 rows={3}
                 value={closerLook.paragraph1 || ''}
-                onChange={(e) =>
-                  setSections((prev) => ({
-                    ...prev,
-                    closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), paragraph1: e.target.value },
-                  }))
-                }
+                onChange={(e) => updateCloserLookField('paragraph1', e.target.value)}
                 placeholder="In Indonesia, particularly between June and August..."
                 className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
               />
@@ -483,13 +495,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <textarea
                 rows={3}
                 value={closerLook.paragraph2 || ''}
-                onChange={(e) =>
-                  setSections((prev) => ({
-                    ...prev,
-                    closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), paragraph2: e.target.value },
-                  }))
-                }
-                placeholder="Through 26°Rhapsody, TAZA reflects on gentle, mindful growth..."
+                onChange={(e) => updateCloserLookField('paragraph2', e.target.value)}
+                placeholder="Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth..."
                 className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
               />
             </div>
@@ -502,12 +509,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 <input
                   type="text"
                   value={closerLook.linkText || ''}
-                  onChange={(e) =>
-                    setSections((prev) => ({
-                      ...prev,
-                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), linkText: e.target.value },
-                    }))
-                  }
+                  onChange={(e) => updateCloserLookField('linkText', e.target.value)}
                   placeholder="Read More"
                   className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                 />
@@ -520,16 +522,30 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 <input
                   type="text"
                   value={closerLook.linkUrl || ''}
-                  onChange={(e) =>
-                    setSections((prev) => ({
-                      ...prev,
-                      closerLook: { ...(prev.closerLook || DEFAULT_CLOSER_LOOK), linkUrl: e.target.value },
-                    }))
-                  }
+                  onChange={(e) => updateCloserLookField('linkUrl', e.target.value)}
                   placeholder="/lookbook"
                   className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const next: SiteSectionsConfig = {
+                    ...sections,
+                    closerLook: sections.closerLook || closerLook,
+                  };
+                  setSections(next);
+                  saveSiteSections(next);
+                  showToast('✓ Data Closer Look berhasil disimpan ke cloud!');
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white tracking-wider hover:bg-black/85 transition active:scale-95 cursor-pointer shadow-xs"
+              >
+                <Icon name="check" size={14} />
+                <span>Simpan Closer Look</span>
+              </button>
             </div>
           </div>
         </div>

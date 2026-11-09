@@ -32,6 +32,12 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   }, [initialData]);
 
   useEffect(() => {
+    if (initialData) {
+      setData(initialData);
+    }
+  }, [initialData]);
+
+  useEffect(() => {
     getSiteSections().then((sections) => {
       if (sections?.closerLook) {
         setData(sections.closerLook);
@@ -85,7 +91,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
 
               {/* Story Paragraph 1 — ringkas di mobile (line-clamp-3) agar kompak */}
               <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.55] sm:leading-[1.75] font-light mb-2 sm:mb-3 lg:mb-4.5 line-clamp-3 sm:line-clamp-none">
-                {paragraph1.includes('between June and August') ? (
+                {paragraph1 === DEFAULT_CLOSER_LOOK.paragraph1 ? (
                   <>
                     In Indonesia, particularly{' '}
                     <strong className="font-medium text-black">between June and August</strong>
@@ -100,7 +106,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
 
               {/* Story Paragraph 2 — disembunyikan di mobile agar tidak kepanjangan, tampil di tablet/desktop */}
               <p className="hidden sm:block text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-2 sm:mb-4 lg:mb-6">
-                {paragraph2.includes('much like nature') ? (
+                {paragraph2 === DEFAULT_CLOSER_LOOK.paragraph2 ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
                     <em className="italic font-medium text-black">much like nature</em>, we each

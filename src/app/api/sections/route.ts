@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import {
   DEFAULT_SITE_SECTIONS,
+  DEFAULT_CLOSER_LOOK,
   DEFAULT_CONSCIOUS_PAGE,
   DEFAULT_HOME_NARRATIVE,
   DEFAULT_JOURNAL_HEADER,
@@ -55,6 +56,10 @@ function mergeDeep(base: SiteSectionsConfig, incoming: Partial<SiteSectionsConfi
     hero: {
       ...base.hero,
       ...(incoming.hero || {}),
+    },
+    closerLook: {
+      ...(base.closerLook || DEFAULT_CLOSER_LOOK),
+      ...(incoming.closerLook || {}),
     },
     spotlight: incoming.spotlight?.length ? incoming.spotlight : base.spotlight,
     spotlightIntro:

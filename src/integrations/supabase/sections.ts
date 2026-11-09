@@ -506,6 +506,10 @@ export function getCachedSiteSections(): SiteSectionsConfig {
             ...(parsed.hero || {}),
             image: sanitizeHeroImage(parsed.hero?.image),
           },
+          closerLook: {
+            ...DEFAULT_CLOSER_LOOK,
+            ...(parsed.closerLook || {}),
+          },
           narrative: {
             ...DEFAULT_HOME_NARRATIVE,
             ...(parsed.narrative || {}),
@@ -577,6 +581,10 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...(rawSections.hero || {}),
             image: sanitizeHeroImage(rawSections.hero?.image),
           },
+          closerLook: {
+            ...DEFAULT_CLOSER_LOOK,
+            ...(rawSections.closerLook || {}),
+          },
           narrative: {
             ...DEFAULT_HOME_NARRATIVE,
             ...(rawSections.narrative || {}),
@@ -645,6 +653,10 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...DEFAULT_SITE_SECTIONS.hero,
             ...(parsed.hero || {}),
             image: sanitizeHeroImage(parsed.hero?.image),
+          },
+          closerLook: {
+            ...DEFAULT_CLOSER_LOOK,
+            ...(parsed.closerLook || {}),
           },
           narrative: {
             ...DEFAULT_HOME_NARRATIVE,
