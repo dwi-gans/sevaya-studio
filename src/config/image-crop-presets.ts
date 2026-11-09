@@ -59,9 +59,9 @@ export const CROP_PRESETS = {
   },
   aboutStory: {
     id: 'about-story',
-    label: 'About (3:4)',
-    aspect: 3 / 4,
-    outputMaxWidth: 1800,
+    label: 'About (4:3)',
+    aspect: 4 / 3,
+    outputMaxWidth: 2400,
     outputFormat: 'image/webp',
     quality: 0.96,
   },

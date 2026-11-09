@@ -126,8 +126,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           next = { ...next, closerLook: { ...(next.closerLook || DEFAULT_CLOSER_LOOK), image: publicUrl } };
         } else if (target === 'home-video-poster') {
           next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), videoPoster: publicUrl } };
-        } else if (target === 'home-about-1') {
-          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage1: publicUrl } };
+        } else if (target === 'home-about' || target === 'home-about-1') {
+          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage: publicUrl, aboutImage1: publicUrl } };
         } else if (target === 'home-about-2') {
           next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage2: publicUrl } };
         } else if (target === 'spotlight-0') {
@@ -998,7 +998,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               Bagian 6 â€¢ Tentang Brand
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
-              About SEVAYA (2 Foto Menyamping & Cerita)
+              About SEVAYA (Foto Card Lebar & Cerita)
             </h3>
           </div>
           <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
@@ -1006,44 +1006,35 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </span>
         </div>
 
-        {/* 2 Photos Side-by-Side */}
+        {/* 1 Photo Card Lebar */}
         <div className="space-y-2">
-          <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-            2 Foto Editorial Berdampingan
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Photo 1 */}
-            <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #1 (KIRI)</span>
-                <UploadActionGroup target="home-about-1" label="Pilih" currentImage={narrative.aboutImage1} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+          <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-[9px] font-bold tracking-widest text-black/70 uppercase">
+                  FOTO EDITORIAL ABOUT (1 KARTU LEBAR)
+                </span>
+                <p className="text-[10px] text-black/50">
+                  Rekomendasi rasio 4:3 Lebar / 16:10 • Terintegrasi dengan Image Cropper
+                </p>
               </div>
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-                <Image
-                  src={narrative.aboutImage1 || '/images/figma_about_1.png'}
-                  alt="About Foto 1"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+              <UploadActionGroup
+                target="home-about"
+                label="Pilih / Crop Foto"
+                currentImage={narrative.aboutImage || narrative.aboutImage1}
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+              />
             </div>
-
-            {/* Photo 2 */}
-            <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-black/50">FOTO #2 (KANAN)</span>
-                <UploadActionGroup target="home-about-2" label="Pilih" currentImage={narrative.aboutImage2} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
-              </div>
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-                <Image
-                  src={narrative.aboutImage2 || '/images/figma_about_2.png'}
-                  alt="About Foto 2"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+            <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full max-w-lg overflow-hidden rounded-lg border border-black/15 bg-white shadow-xs">
+              <Image
+                src={narrative.aboutImage || narrative.aboutImage1 || '/images/figma_about_1.webp'}
+                alt="About Foto SEVAYA"
+                fill
+                unoptimized
+                className="object-cover"
+              />
             </div>
           </div>
         </div>

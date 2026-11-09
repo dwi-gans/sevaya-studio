@@ -151,24 +151,13 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
             </h2>
           </RevealOnScroll>
 
-          {/* 2 Editorial Photos */}
-          <div className="order-2 md:order-2 grid grid-cols-2 gap-3 sm:gap-4 items-start">
+          {/* 1 Editorial Photo Card (Lebar) */}
+          <div className="order-2 md:order-2 w-full">
             <RevealOnScroll variant="editorial" delayMs={0}>
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+              <div className="relative aspect-[4/3] sm:aspect-[16/11] md:aspect-[4/3] w-full overflow-hidden bg-black/5 shadow-xs border border-black/10">
                 <StudioImage
-                  src={narrative.aboutImage1 || '/images/figma_about_1.webp'}
-                  alt="SEVAYA editorial 1"
-                  fill
-                  preset="spotlight"
-                  className="object-cover transition duration-700 hover:scale-105"
-                />
-              </div>
-            </RevealOnScroll>
-            <RevealOnScroll variant="editorial" delayMs={150}>
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-                <StudioImage
-                  src={narrative.aboutImage2 || '/images/figma_about_2.webp'}
-                  alt="SEVAYA editorial 2"
+                  src={narrative.aboutImage || narrative.aboutImage1 || '/images/figma_about_1.webp'}
+                  alt="SEVAYA editorial story"
                   fill
                   preset="spotlight"
                   className="object-cover transition duration-700 hover:scale-105"

@@ -300,6 +300,7 @@ export default function AdminPage() {
       target === 'hero-mobile' ||
       target === 'spotlight-0' ||
       target === 'spotlight-1' ||
+      target === 'home-about' ||
       target === 'home-about-1' ||
       target === 'home-about-2'
     );
@@ -874,14 +875,14 @@ export default function AdminPage() {
         return next;
       });
       showToast('Foto Spotlight Khimar tersimpan otomatis!');
-    } else if (target === 'home-about-1') {
+    } else if (target === 'home-about' || target === 'home-about-1') {
       setSections((prev) => {
-        const nextNarrative = { ...(prev.narrative || {}), aboutImage1: urlOrPath };
+        const nextNarrative = { ...(prev.narrative || {}), aboutImage: urlOrPath, aboutImage1: urlOrPath };
         const next = { ...prev, narrative: nextNarrative };
         saveSiteSections(next);
         return next;
       });
-      showToast('Foto About SEVAYA #1 tersimpan otomatis!');
+      showToast('Foto About SEVAYA tersimpan otomatis!');
     } else if (target === 'home-about-2') {
       setSections((prev) => {
         const nextNarrative = { ...(prev.narrative || {}), aboutImage2: urlOrPath };
@@ -1088,12 +1089,12 @@ export default function AdminPage() {
         extraRatios = [
           { label: '3:4', value: 3 / 4 },
         ];
-      } else if (target === 'home-about-1' || target === 'home-about-2') {
+      } else if (target === 'home-about' || target === 'home-about-1' || target === 'home-about-2') {
         preset = CROP_PRESETS.aboutStory;
-        title = target === 'home-about-1' ? 'Sesuaikan Foto About SEVAYA #1' : 'Sesuaikan Foto About SEVAYA #2';
-        description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
+        title = 'Sesuaikan Foto About SEVAYA';
+        description = 'Atur posisi foto cerita About di Home (Rekomendasi 4:3 Lebar / 3:4 Portrait)';
         extraRatios = [
-          { label: '4:3', value: 4 / 3 },
+          { label: '3:4', value: 3 / 4 },
         ];
       }
 

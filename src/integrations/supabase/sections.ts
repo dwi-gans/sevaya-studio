@@ -56,6 +56,7 @@ export interface HomeNarrativeConfig {
   aboutDesc?: string;
   aboutLinkText?: string;
   aboutLinkUrl?: string;
+  aboutImage?: string;
   aboutImage1?: string;
   aboutImage2?: string;
 }
@@ -326,6 +327,7 @@ export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
     'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship. Each piece is designed to be lived in, moving with quiet grace through every chapter of your day.',
   aboutLinkText: 'Read more',
   aboutLinkUrl: '/conscious',
+  aboutImage: '/images/figma_about_1.webp',
   aboutImage1: '/images/figma_about_1.webp',
   aboutImage2: '/images/figma_about_2.webp',
 };

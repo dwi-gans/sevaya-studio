@@ -20,6 +20,7 @@ export type ImagePickerTarget =
   | 'closer-look'
   | 'spotlight-0'
   | 'spotlight-1'
+  | 'home-about'
   | 'home-about-1'
   | 'home-about-2'
   | 'home-video-poster'
