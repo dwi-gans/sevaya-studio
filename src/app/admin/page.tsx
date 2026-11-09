@@ -1084,43 +1084,19 @@ export default function AdminPage() {
         { label: '1:1', value: 1 },
       ];
 
-      if (target === 'spotlight-0') {
+      if (target === 'spotlight-0' || target === 'spotlight-1') {
         preset = CROP_PRESETS.categorySpotlight;
-        title = 'Sesuaikan Foto Kategori Abaya';
-        description = 'Atur posisi foto kategori Abaya di Home (Rekomendasi 4:3 Desktop / 3:4 Mobile)';
+        title = target === 'spotlight-0' ? 'Sesuaikan Foto Kategori Abaya' : 'Sesuaikan Foto Kategori Khimar';
+        description = 'Atur posisi foto kategori di Home (Rekomendasi 4:3 Desktop / 3:4 Mobile)';
         extraRatios = [
-          { label: '4:3', value: 4 / 3 },
           { label: '3:4', value: 3 / 4 },
-          { label: '1:1', value: 1 },
-          { label: '16:9', value: 16 / 9 },
         ];
-      } else if (target === 'spotlight-1') {
-        preset = CROP_PRESETS.categorySpotlight;
-        title = 'Sesuaikan Foto Kategori Khimar';
-        description = 'Atur posisi foto kategori Khimar di Home (Rekomendasi 4:3 Desktop / 3:4 Mobile)';
-        extraRatios = [
-          { label: '4:3', value: 4 / 3 },
-          { label: '3:4', value: 3 / 4 },
-          { label: '1:1', value: 1 },
-          { label: '16:9', value: 16 / 9 },
-        ];
-      } else if (target === 'home-about-1') {
+      } else if (target === 'home-about-1' || target === 'home-about-2') {
         preset = CROP_PRESETS.aboutStory;
-        title = 'Sesuaikan Foto About SEVAYA #1';
+        title = target === 'home-about-1' ? 'Sesuaikan Foto About SEVAYA #1' : 'Sesuaikan Foto About SEVAYA #2';
         description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
         extraRatios = [
           { label: '3:4', value: 3 / 4 },
-          { label: '4:3', value: 4 / 3 },
-          { label: '1:1', value: 1 },
-        ];
-      } else if (target === 'home-about-2') {
-        preset = CROP_PRESETS.aboutStory;
-        title = 'Sesuaikan Foto About SEVAYA #2';
-        description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
-        extraRatios = [
-          { label: '3:4', value: 3 / 4 },
-          { label: '4:3', value: 4 / 3 },
-          { label: '1:1', value: 1 },
         ];
       }
 

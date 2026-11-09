@@ -329,15 +329,28 @@ export function ImageCropperModal({
     setZoom(1);
   };
 
-  if (!open) return null;
+  // Tombol rasio yang ditampilkan (deduplikasi label & value)
+  const ratioButtons = useMemo(() => {
+    const raw: Array<{ label: string; value: number | null }> = [
+      { label: preset.label, value: effectiveAspect },
+      ...BUILT_IN_RATIOS.filter((r) => Math.abs(r.value - effectiveAspect) > 0.001),
+      ...extraRatios.filter((r) => Math.abs(r.value - effectiveAspect) > 0.001),
+      ...(allowFreeRatio ? [{ label: 'Bebas', value: null }] : []),
+    ];
 
-  // Tombol rasio yang ditampilkan
-  const ratioButtons: Array<{ label: string; value: number | null }> = [
-    { label: preset.label, value: effectiveAspect },
-    ...BUILT_IN_RATIOS.filter((r) => r.value !== effectiveAspect),
-    ...extraRatios.filter((r) => r.value !== effectiveAspect),
-    ...(allowFreeRatio ? [{ label: 'Bebas', value: null }] : []),
-  ];
+    const seen = new Set<string>();
+    const unique: Array<{ label: string; value: number | null }> = [];
+    for (const item of raw) {
+      const key = item.label + '_' + String(item.value);
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(item);
+      }
+    }
+    return unique;
+  }, [preset.label, effectiveAspect, extraRatios, allowFreeRatio]);
+
+  if (!open) return null;
 
   return (
     <div
@@ -469,11 +482,11 @@ export function ImageCropperModal({
           <div className="flex items-center justify-between gap-2 px-4 py-2.5">
             {/* Rasio */}
             <div className="flex flex-wrap gap-1">
-              {ratioButtons.map((btn) => {
+              {ratioButtons.map((btn, idx) => {
                 const isActive = btn.value === activeRatio;
                 return (
                   <button
-                    key={btn.label}
+                    key={btn.label + '_' + String(btn.value) + '_' + idx}
                     onClick={() => handleRatioSelect(btn.value)}
                     aria-pressed={isActive}
                     className={`rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide transition-colors ${
