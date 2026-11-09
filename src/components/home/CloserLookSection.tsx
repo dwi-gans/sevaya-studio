@@ -58,7 +58,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
           {/* Framed Editorial Box Container — selalu menyamping berdampingan (2 kolom) di mobile & desktop */}
           <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-2 items-stretch shadow-xs">
             {/* Left Column: Photo fills its chamber seamlessly */}
-            <div className="relative min-h-[200px] sm:min-h-[280px] md:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full h-full overflow-hidden bg-black/5">
+            <div className="relative min-h-[130px] sm:min-h-[260px] md:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full h-full overflow-hidden bg-black/5">
               <Link href={linkUrl} className="group relative block h-full w-full">
                 <StudioImage
                   src={image}
@@ -71,7 +71,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </Link>
             </div>
 
-            {/* Right Column: Editorial Narrative Story inside the box — proporsional di mobile & desktop */}
+            {/* Right Column: Editorial Narrative Story inside the box — ringkas di mobile agar foto & box tidak kepanjangan */}
             <div className="flex flex-col justify-center p-3 sm:p-6 md:p-10 lg:p-12 xl:p-16 text-left border-l border-black/10">
               {/* Eyebrow */}
               <span className="font-sans text-[7.5px] sm:text-[9.5px] lg:text-[11px] font-medium tracking-[0.16em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1 sm:mb-2">
@@ -79,12 +79,12 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-[11px] sm:text-[14px] md:text-lg lg:text-[23px] font-semibold sm:font-normal tracking-[0.12em] sm:tracking-[0.16em] text-black uppercase mb-1.5 sm:mb-3 lg:mb-5 leading-snug">
+              <h2 className="font-sans text-[11px] sm:text-[14px] md:text-lg lg:text-[23px] font-semibold sm:font-normal tracking-[0.12em] sm:tracking-[0.16em] text-black uppercase mb-1.5 sm:mb-3 lg:mb-5 leading-snug line-clamp-2">
                 {title}
               </h2>
 
-              {/* Story Paragraph 1 */}
-              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-1.5 sm:mb-3 lg:mb-4.5">
+              {/* Story Paragraph 1 — ringkas di mobile (line-clamp-3) agar kompak */}
+              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.55] sm:leading-[1.75] font-light mb-2 sm:mb-3 lg:mb-4.5 line-clamp-3 sm:line-clamp-none">
                 {paragraph1.includes('between June and August') ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -98,8 +98,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
                 )}
               </p>
 
-              {/* Story Paragraph 2 */}
-              <p className="text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-2 sm:mb-4 lg:mb-6">
+              {/* Story Paragraph 2 — disembunyikan di mobile agar tidak kepanjangan, tampil di tablet/desktop */}
+              <p className="hidden sm:block text-[8.5px] sm:text-[10.5px] md:text-[12.5px] lg:text-sm text-black/75 leading-[1.6] sm:leading-[1.75] font-light mb-2 sm:mb-4 lg:mb-6">
                 {paragraph2.includes('much like nature') ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
