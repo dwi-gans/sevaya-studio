@@ -47,7 +47,7 @@ export function VideoShowcase({
   }, []);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
+    <section className="mx-auto w-full max-w-[1440px] 2xl:max-w-[1536px] px-3 pb-3 sm:px-6 sm:pb-6 lg:px-8">
       <div
         ref={containerRef}
         className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-100 shadow-sm sm:aspect-[16/9] md:aspect-[21/9]"

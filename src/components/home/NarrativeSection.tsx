@@ -74,7 +74,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
       </RevealOnScroll>
 
       {/* 3. Brand Pillars */}
-      <section className="mx-auto w-full max-w-7xl px-3 pt-4 pb-8 sm:px-6 sm:pt-4 sm:pb-10 lg:px-8">
+      <section className="mx-auto w-full max-w-[1440px] 2xl:max-w-[1536px] px-3 pt-4 pb-8 sm:px-6 sm:pt-4 sm:pb-10 lg:px-8">
         <RevealOnScroll variant="fade-up" className="text-center">
           <span className="text-[9px] font-medium tracking-[0.25em] text-black/60 uppercase">
             {narrative.pillarsTagline || 'OUR CORE VALUES'}
@@ -140,7 +140,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
       </section>
 
       {/* 4. About SEVAYA */}
-      <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1440px] 2xl:max-w-[1536px] px-4 pb-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
           {/* Mobile Title */}
           <RevealOnScroll variant="fade-up" className="space-y-1 md:hidden">

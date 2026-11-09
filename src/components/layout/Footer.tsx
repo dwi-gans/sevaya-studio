@@ -26,7 +26,7 @@ export function Footer() {
 
   return (
     <footer className="w-full border-t border-black/10 bg-white pt-16 pb-12 text-black section--light">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-y-10 md:grid-cols-4 lg:grid-cols-12 lg:gap-8">
           {/* Column 1: Contact Us */}
           <div className="col-span-2 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-3">

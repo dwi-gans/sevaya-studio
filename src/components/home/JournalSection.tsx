@@ -72,7 +72,7 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
 
   return (
     <section className="w-full bg-black text-white section--dark py-8 sm:py-12 overflow-hidden" id="journal">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-3 sm:px-6 lg:px-8">
         {/* Top Header Layout: Left is Manifesto, Right is Prestigious Journals */}
         <RevealOnScroll variant="fade-up" className="mb-6 sm:mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end">
           {/* Left Column: The Art of Fewer, Better Choices */}

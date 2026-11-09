@@ -52,8 +52,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-10 sm:py-14 lg:py-16 text-black section--light">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-white py-10 sm:py-14 lg:py-16 text-black section--light border-b border-black/10">
+      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 xl:gap-18 items-center">
           {/* Left Column: Editorial Photo */}
           <RevealOnScroll variant="editorial" delayMs={0}>
