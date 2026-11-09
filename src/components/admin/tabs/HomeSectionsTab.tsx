@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -546,7 +546,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   type="text"
                   value={closerLook.linkText || ''}
                   onChange={(e) => updateCloserLookField('linkText', e.target.value)}
-                  placeholder="Read More"
+                  placeholder="Discover Vol 1"
                   className="w-full rounded border border-black/20 bg-white px-2.5 py-1.5 text-xs text-black focus:border-black focus:outline-none"
                 />
               </div>
@@ -772,7 +772,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 type="text"
                 value={narrative.eleganceLinkText}
                 onChange={(e) => updateNarrativeField('eleganceLinkText', e.target.value)}
-                placeholder="Read more"
+                placeholder="Our Story"
                 className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
               />
             </div>
@@ -1006,28 +1006,24 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </span>
         </div>
 
-        {/* 1 Photo Card Lebar */}
-        <div className="space-y-2">
-          <div className="flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/70 uppercase">
-                  FOTO EDITORIAL ABOUT (1 KARTU LEBAR)
-                </span>
-                <p className="text-[10px] text-black/50">
-                  Rekomendasi rasio 4:3 Lebar / 16:10 • Terintegrasi dengan Image Cropper
-                </p>
-              </div>
+        {/* Layout Proporsional Side-by-Side: Foto Card Kiri + Form Narasi Kanan */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Foto Editorial Kiri (Snug & compact, proporsional persis seperti card di website) */}
+          <div className="lg:col-span-5 flex flex-col gap-2 rounded-xl border border-black/15 bg-black/5 p-3.5">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[9px] font-bold tracking-widest text-black/70 uppercase">
+                Foto About (Card Lebar)
+              </span>
               <UploadActionGroup
                 target="home-about"
-                label="Pilih / Crop Foto"
+                label="Pilih Foto"
                 currentImage={narrative.aboutImage || narrative.aboutImage1}
                 uploadingTarget={uploadingTarget}
                 onDirectUpload={resolvedDirectUpload}
                 onOpenImagePicker={onOpenImagePicker}
               />
             </div>
-            <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full max-w-lg overflow-hidden rounded-lg border border-black/15 bg-white shadow-xs">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white shadow-xs">
               <Image
                 src={narrative.aboutImage || narrative.aboutImage1 || '/images/figma_about_1.webp'}
                 alt="About Foto SEVAYA"
@@ -1036,61 +1032,64 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 className="object-cover"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Narrative Inputs */}
-        <div className="space-y-3 pt-1">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-              Tagline Judul
-            </label>
-            <input
-              type="text"
-              value={narrative.aboutTagline}
-              onChange={(e) => updateNarrativeField('aboutTagline', e.target.value)}
-              placeholder="ABOUT SEVAYA"
-              className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
-            />
+            <p className="text-[9.5px] text-black/50 leading-tight">
+              Rasio 4:3 Lebar • Proporsional dengan card di beranda
+            </p>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-              Paragraf Cerita Filosofi
-            </label>
-            <textarea
-              rows={3}
-              value={narrative.aboutDesc}
-              onChange={(e) => updateNarrativeField('aboutDesc', e.target.value)}
-              placeholder="Rooted in simplicity, SEVAYA redefines modern modestwear..."
-              className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Form Teks Narasi Kanan */}
+          <div className="lg:col-span-7 space-y-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-                Teks Tombol Link
+                Tagline Judul
               </label>
               <input
                 type="text"
-                value={narrative.aboutLinkText}
-                onChange={(e) => updateNarrativeField('aboutLinkText', e.target.value)}
-                placeholder="Read more"
+                value={narrative.aboutTagline}
+                onChange={(e) => updateNarrativeField('aboutTagline', e.target.value)}
+                placeholder="ABOUT SEVAYA"
                 className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
               />
             </div>
+
             <div className="space-y-1">
               <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-                URL Target Link
+                Paragraf Cerita Filosofi
               </label>
-              <input
-                type="text"
-                value={narrative.aboutLinkUrl}
-                onChange={(e) => updateNarrativeField('aboutLinkUrl', e.target.value)}
-                placeholder="/conscious"
-                className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+              <textarea
+                rows={3}
+                value={narrative.aboutDesc}
+                onChange={(e) => updateNarrativeField('aboutDesc', e.target.value)}
+                placeholder="Rooted in simplicity, SEVAYA redefines modern modestwear..."
+                className="w-full rounded border border-black/20 bg-white p-2.5 text-xs leading-relaxed text-black focus:border-black focus:outline-none"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  Teks Tombol Link
+                </label>
+                <input
+                  type="text"
+                  value={narrative.aboutLinkText}
+                  onChange={(e) => updateNarrativeField('aboutLinkText', e.target.value)}
+                  placeholder="Our Story"
+                  className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
+                  URL Target Link
+                </label>
+                <input
+                  type="text"
+                  value={narrative.aboutLinkUrl}
+                  onChange={(e) => updateNarrativeField('aboutLinkUrl', e.target.value)}
+                  placeholder="/conscious"
+                  className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+                />
+              </div>
             </div>
           </div>
         </div>

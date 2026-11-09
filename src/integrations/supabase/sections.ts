@@ -325,7 +325,7 @@ export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
   aboutTitle: 'About SEVAYA',
   aboutDesc:
     'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship. Each piece is designed to be lived in, moving with quiet grace through every chapter of your day.',
-  aboutLinkText: 'Read more',
+  aboutLinkText: 'Our Story',
   aboutLinkUrl: '/conscious',
   aboutImage: '/images/figma_about_1.webp',
   aboutImage1: '/images/figma_about_1.webp',
@@ -351,7 +351,7 @@ export const DEFAULT_CLOSER_LOOK: CloserLookData = {
   paragraph2:
     'Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That much like nature, we each unfold in our own time and beauty reveals itself when we learn to move with our own rhythm.',
   image: '/images/lookbook_figma_0.png',
-  linkText: 'Read More',
+  linkText: 'Discover Vol 1',
   linkUrl: '/lookbook',
 };
 

@@ -21,7 +21,14 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
         const stored = localStorage.getItem('sevaya_site_sections');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed?.hero?.image) {
+          const rawHeroImg = parsed?.hero?.image;
+          if (
+            rawHeroImg &&
+            typeof rawHeroImg === 'string' &&
+            !rawHeroImg.startsWith('blob:') &&
+            rawHeroImg !== 'undefined' &&
+            rawHeroImg !== 'null'
+          ) {
             return { ...DEFAULT_SITE_SECTIONS.hero, ...parsed.hero };
           }
         }
@@ -33,8 +40,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   });
 
   useEffect(() => {
-    // Jika sudah ada data SSR yang valid (ada image), skip network fetch
-    if (initialHero?.image) return;
+    // Jika ada data SSR, gunakan langsung
+    if (initialHero?.image) {
+      setHero(initialHero);
+      return;
+    }
 
     // Background refresh: update hanya jika data Supabase berbeda
     getSiteSections().then((sections) => {
@@ -54,29 +64,44 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
         });
       }
     });
-  }, []);
+  }, [initialHero]);
 
-  const desktopHeroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
+  const rawDesktop = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
+  const desktopHeroImage =
+    rawDesktop.startsWith('blob:') || rawDesktop === 'undefined' ? PRIMARY_HERO : rawDesktop;
+
+  const rawMobile = hero?.mobileImage?.trim();
   const hasCustomMobile = Boolean(
-    hero?.mobileImage &&
-    hero.mobileImage.trim() &&
-    hero.mobileImage !== PRIMARY_HERO &&
-    hero.mobileImage !== desktopHeroImage
+    rawMobile &&
+    rawMobile !== PRIMARY_HERO &&
+    rawMobile !== desktopHeroImage &&
+    !rawMobile.startsWith('blob:') &&
+    rawMobile !== 'undefined'
   );
-  const mobileHeroImage = hasCustomMobile ? hero.mobileImage!.trim() : desktopHeroImage;
+  const mobileHeroImage = hasCustomMobile ? rawMobile! : desktopHeroImage;
+
+  // State fallback dinamis jika URL gambar remote lambat/gagal/offline
+  const [desktopSrc, setDesktopSrc] = useState(desktopHeroImage);
+  const [mobileSrc, setMobileSrc] = useState(mobileHeroImage);
+
+  useEffect(() => {
+    setDesktopSrc(desktopHeroImage);
+    setMobileSrc(mobileHeroImage);
+  }, [desktopHeroImage, mobileHeroImage]);
 
   // Gambar fallback ditanam langsung di CSS style section sebagai background instan
-  // agar tidak ada hitam sama sekali saat React belum selesai hydrate
+  // Menggunakan warna hangat charcoal/bronze gelap daripada hitam pekat agar tidak 'mati' saat loading
   const bgStyle: React.CSSProperties = {
-    backgroundImage: `url(${desktopHeroImage})`,
+    backgroundImage: `url(${desktopSrc})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
+    backgroundColor: '#1C1917',
   };
 
   return (
     <section
       suppressHydrationWarning
-      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      className="relative flex w-full flex-col justify-end overflow-hidden text-white h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
       style={bgStyle}
     >
       {/* Background Hero Image — di atas CSS bg agar kualitas lebih tajam saat loaded */}
@@ -90,36 +115,48 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               {/* Mobile (< 640px) */}
               <img
                 suppressHydrationWarning
-                src={mobileHeroImage}
+                src={mobileSrc}
                 alt="SEVAYA Collection - Timeless, Intentional, Effortless"
                 loading="eager"
                 fetchPriority="high"
-                decoding="sync"
+                decoding="async"
                 className="block sm:hidden h-full w-full object-cover object-center"
                 style={{ imageRendering: 'auto' }}
+                onError={() => {
+                  console.warn('[Hero] Mobile hero image failed to load, falling back to local asset');
+                  setMobileSrc(PRIMARY_HERO);
+                }}
               />
               {/* Desktop (>= 640px) */}
               <img
                 suppressHydrationWarning
-                src={desktopHeroImage}
+                src={desktopSrc}
                 alt="SEVAYA Collection - Timeless, Intentional, Effortless"
                 loading="eager"
                 fetchPriority="high"
-                decoding="sync"
+                decoding="async"
                 className="hidden sm:block h-full w-full object-cover object-center"
                 style={{ imageRendering: 'auto' }}
+                onError={() => {
+                  console.warn('[Hero] Desktop hero image failed to load, falling back to local asset');
+                  setDesktopSrc(PRIMARY_HERO);
+                }}
               />
             </>
           ) : (
             <img
               suppressHydrationWarning
-              src={desktopHeroImage}
+              src={desktopSrc}
               alt="SEVAYA Collection - Timeless, Intentional, Effortless"
               loading="eager"
               fetchPriority="high"
-              decoding="sync"
+              decoding="async"
               className="h-full w-full object-cover object-center"
               style={{ imageRendering: 'auto' }}
+              onError={() => {
+                console.warn('[Hero] Hero image failed to load, falling back to local asset');
+                setDesktopSrc(PRIMARY_HERO);
+              }}
             />
           )}
         </div>

@@ -77,13 +77,10 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
   return (
     <section className="w-full bg-black text-white section--dark py-8 sm:py-12 overflow-hidden" id="journal">
       <div className="mx-auto max-w-[1360px] px-3 sm:px-6 lg:px-8">
-        {/* Top Header Layout: Left is Manifesto, Right is Prestigious Journals */}
-        <RevealOnScroll variant="fade-up" className="mb-6 sm:mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-end">
+        {/* Top Header Layout: Left is Manifesto, Right is OUR READING CORNER → */}
+        <RevealOnScroll variant="fade-up" className="mb-6 sm:mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
           {/* Left Column: The Art of Fewer, Better Choices */}
-          <div className="space-y-2.5 sm:space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[9px] sm:text-[10px] font-medium tracking-widest text-white/70 uppercase backdrop-blur-xs">
-              <span>{header.manifestoTag || 'Philosophy • Studio Manifesto'}</span>
-            </div>
+          <div className="space-y-2 sm:space-y-2.5">
             <h2 className="font-sans text-sm font-normal tracking-wide text-white sm:text-lg">
               {header.manifestoTitle || 'The Art of Fewer, Better Choices'}
             </h2>
@@ -94,23 +91,15 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
             </p>
           </div>
 
-          {/* Right Column: PRESTIGIOUS JOURNALS / OUR READING CORNER */}
-          <div className="flex flex-col md:items-end md:text-right">
-            <span className="text-[9px] font-medium tracking-[0.25em] text-white/60 uppercase">
-              {header.journalBadge || t('home.journal.badge') || 'EDITORIAL JOURNAL'}
-            </span>
-            <h3 className="mt-1 font-sans text-xs sm:text-sm font-normal tracking-wide text-white uppercase">
-              {header.journalTitle || 'OUR READING CORNER'}
-            </h3>
-            <div className="mt-3 sm:mt-4 flex items-center gap-4 md:justify-end">
-              <Link
-                href={header.journalLinkUrl || '/news'}
-                className="group inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold tracking-wider text-white uppercase transition-colors hover:text-white/70"
-              >
-                <span>{header.journalLinkText || t('home.journal.explore') || 'Explore All Stories'}</span>
-                <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
-              </Link>
-            </div>
+          {/* Right Column: OUR READING CORNER → */}
+          <div className="flex flex-col md:items-end md:text-right pb-1 md:pb-0">
+            <Link
+              href={header.journalLinkUrl || '/news'}
+              className="group inline-flex items-center gap-1.5 font-sans text-xs sm:text-sm font-medium tracking-wider text-white uppercase transition-colors hover:text-white/70"
+            >
+              <span>{header.journalTitle || 'OUR READING CORNER'}</span>
+              <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
+            </Link>
           </div>
         </RevealOnScroll>
 
@@ -142,15 +131,6 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
                     <p className="mt-1 sm:mt-2 text-[9px] sm:text-[10px] md:text-[11px] leading-relaxed text-black/70 line-clamp-2 sm:line-clamp-3">
                       {item.excerpt}
                     </p>
-                  </div>
-
-                  <div className="mt-2.5 sm:mt-4">
-                    <Link
-                      href={item.href || '/news'}
-                      className="inline-block text-[9px] sm:text-[10px] md:text-[11px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/70 hover:border-black/60"
-                    >
-                      {t('home.journal.read_article')}
-                    </Link>
                   </div>
                 </div>
               </article>

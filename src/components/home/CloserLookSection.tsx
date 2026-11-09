@@ -54,7 +54,11 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
     data.paragraph2 ||
     'Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That much like nature, we each unfold in our own time and beauty reveals itself when we learn to move with our own rhythm.';
   const image = data.image || '/images/lookbook_figma_0.png';
-  const linkText = data.linkText || 'Read More';
+  const rawLinkText = data.linkText || 'Discover Vol 1';
+  const linkText =
+    rawLinkText === 'Read More' || rawLinkText === 'Read more'
+      ? 'Discover Vol 1'
+      : rawLinkText;
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (

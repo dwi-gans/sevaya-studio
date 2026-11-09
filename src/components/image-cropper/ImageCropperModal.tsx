@@ -263,49 +263,72 @@ export function ImageCropperModal({
   const handleSkip = async () => {
     if (!file) return;
     setIsLoading(true);
+    const isMobileSupported = Boolean(preset.mobileAspect);
     try {
       if (typeof file === 'string') {
-        // Jika dari cloud URL, langsung gunakan URL asli untuk desktop dan mobile
-        await onConfirm({
-          file: new File([], 'original.jpg', { type: 'image/jpeg' }),
-          blob: new Blob([]),
-          width: 0,
-          height: 0,
-          wasCropped: false,
-          originalUrl: file,
-          targetMode: 'desktop',
-          shouldClose: false,
-        });
-        await onConfirm({
-          file: new File([], 'original.jpg', { type: 'image/jpeg' }),
-          blob: new Blob([]),
-          width: 0,
-          height: 0,
-          wasCropped: false,
-          originalUrl: file,
-          targetMode: 'mobile',
-          shouldClose: true,
-        });
+        if (isMobileSupported) {
+          await onConfirm({
+            file: new File([], 'original.jpg', { type: 'image/jpeg' }),
+            blob: new Blob([]),
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            originalUrl: file,
+            targetMode: 'desktop',
+            shouldClose: false,
+          });
+          await onConfirm({
+            file: new File([], 'original.jpg', { type: 'image/jpeg' }),
+            blob: new Blob([]),
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            originalUrl: file,
+            targetMode: 'mobile',
+            shouldClose: true,
+          });
+        } else {
+          await onConfirm({
+            file: new File([], 'original.jpg', { type: 'image/jpeg' }),
+            blob: new Blob([]),
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            originalUrl: file,
+            shouldClose: true,
+          });
+        }
       } else {
         const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-        await onConfirm({
-          file,
-          blob,
-          width: 0,
-          height: 0,
-          wasCropped: false,
-          targetMode: 'desktop',
-          shouldClose: false,
-        });
-        await onConfirm({
-          file,
-          blob,
-          width: 0,
-          height: 0,
-          wasCropped: false,
-          targetMode: 'mobile',
-          shouldClose: true,
-        });
+        if (isMobileSupported) {
+          await onConfirm({
+            file,
+            blob,
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            targetMode: 'desktop',
+            shouldClose: false,
+          });
+          await onConfirm({
+            file,
+            blob,
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            targetMode: 'mobile',
+            shouldClose: true,
+          });
+        } else {
+          await onConfirm({
+            file,
+            blob,
+            width: 0,
+            height: 0,
+            wasCropped: false,
+            shouldClose: true,
+          });
+        }
       }
     } catch (err) {
       setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
@@ -555,18 +578,9 @@ export function ImageCropperModal({
             <button
               onClick={handleConfirm}
               disabled={isLoading || !imageSrc || !croppedAreaPixels}
-              className="flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-[10px] font-semibold tracking-[0.12em] uppercase text-white transition-colors hover:bg-black/80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50"
+              className="flex items-center justify-center rounded-full bg-black px-6 py-2 text-[10px] font-semibold tracking-[0.14em] uppercase text-white transition-colors hover:bg-black/80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50"
             >
-              {viewMode === 'mobile' ? (
-                <Smartphone className="h-3 w-3" />
-              ) : (
-                <Monitor className="h-3 w-3" />
-              )}
-              {isLoading
-                ? 'Memproses…'
-                : viewMode === 'mobile'
-                ? 'Pasang Hero Mobile'
-                : 'Pasang Hero Desktop'}
+              {isLoading ? 'Memproses…' : 'Pasang'}
             </button>
           </div>
         </div>

@@ -59,14 +59,6 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
                 'The Art of Fewer, Better Choices'}
             </p>
           </div>
-          <div className="mt-6 sm:mt-7">
-            <Link
-              href={narrative.eleganceLinkUrl || '/conscious'}
-              className="inline-block text-[11px] sm:text-xs font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-[#000000]"
-            >
-              {narrative.eleganceLinkText || t('common.read_more') || 'Read more'}
-            </Link>
-          </div>
         </RevealOnScroll>
       </section>
 
@@ -142,17 +134,10 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
       </section>
 
       {/* 4. About SEVAYA */}
-      <section className="mx-auto w-full max-w-[1360px] px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
-          {/* Mobile Title */}
-          <RevealOnScroll variant="fade-up" className="space-y-1 md:hidden">
-            <h2 className="font-sans text-xs sm:text-sm font-normal tracking-wide text-black uppercase">
-              {narrative.aboutTagline || 'ABOUT SEVAYA'}
-            </h2>
-          </RevealOnScroll>
-
+      <section className="mx-auto w-full max-w-[1360px] px-4 pt-2 pb-10 sm:px-6 sm:pb-14 lg:px-8">
+        <div className="grid grid-cols-1 items-center gap-5 sm:gap-8 md:grid-cols-2 md:gap-12 lg:gap-16">
           {/* 1 Editorial Photo Card (Lebar) */}
-          <div className="order-2 md:order-2 w-full">
+          <div className="order-1 md:order-2 w-full">
             <RevealOnScroll variant="editorial" delayMs={0}>
               <div className="relative aspect-[4/3] sm:aspect-[16/11] md:aspect-[4/3] w-full overflow-hidden bg-black/5 shadow-xs border border-black/10">
                 <StudioImage
@@ -166,26 +151,38 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
             </RevealOnScroll>
           </div>
 
-          {/* Left Text */}
-          <RevealOnScroll variant="fade-up" delayMs={100} className="order-3 md:order-1 space-y-3 md:space-y-3.5 pr-0 md:pr-8 lg:pr-12">
-            <div className="hidden md:block">
-              <h2 className="font-sans text-xs sm:text-sm md:text-base font-normal tracking-wide text-black uppercase">
-                {narrative.aboutTagline || 'ABOUT SEVAYA'}
-              </h2>
-            </div>
+          {/* Narrative Text (Title + Paragraph + Our Story) */}
+          <RevealOnScroll
+            variant="fade-up"
+            delayMs={100}
+            className="order-2 md:order-1 space-y-3 sm:space-y-4 pr-0 md:pr-8 lg:pr-12 text-left"
+          >
+            <h2 className="font-sans text-[11px] sm:text-xs md:text-sm lg:text-base font-semibold md:font-medium tracking-[0.2em] sm:tracking-[0.18em] text-black uppercase">
+              {narrative.aboutTagline || 'ABOUT SEVAYA'}
+            </h2>
 
-            <p className="text-[10px] md:text-[13px] lg:text-[14px] leading-relaxed md:leading-[1.8] text-black/70">
+            <p className="text-[12px] sm:text-[13px] md:text-[13.5px] lg:text-[14px] leading-relaxed sm:leading-[1.8] text-black/75 font-light">
               {narrative.aboutDesc ||
                 t('home.narrative.about_p') ||
                 'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship.'}
             </p>
 
-            <div className="pt-2">
+            <div className="pt-1 sm:pt-2">
               <Link
                 href={narrative.aboutLinkUrl || '/conscious'}
-                className="inline-block text-[10px] md:text-[11px] font-normal text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-black/60"
+                className="group inline-flex items-center gap-1.5 text-[11.5px] sm:text-xs md:text-[13px] font-medium text-black border-b border-black pb-0.5 transition hover:text-black/60 hover:border-black/60"
               >
-                {narrative.aboutLinkText || t('common.read_more') || 'Read more'}
+                <span>
+                  {narrative.aboutLinkText && narrative.aboutLinkText !== 'Read more'
+                    ? narrative.aboutLinkText
+                    : 'Our Story'}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                >
+                  &rarr;
+                </span>
               </Link>
             </div>
           </RevealOnScroll>

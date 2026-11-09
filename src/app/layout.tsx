@@ -52,10 +52,10 @@ export const metadata: Metadata = {
     siteName: 'SEVAYA Studio',
     images: [
       {
-        url: '/images/hero_optimized.jpg',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'SEVAYA — Luxury Abayas & Modest Silhouettes',
+        alt: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
       },
     ],
     locale: 'id_ID',
@@ -66,13 +66,22 @@ export const metadata: Metadata = {
     title: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
     description:
       'Studio busana abaya dan french khimar modern premium. Siluet mengalir elegan dan tenang.',
-    images: ['/images/hero_optimized.jpg'],
+    images: ['/images/og-image.jpg'],
   },
   icons: {
-    icon: '/favicon-sv.svg',
-    shortcut: '/favicon-sv.svg',
-    apple: '/images/logo.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-sv.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
+  manifest: '/site.webmanifest',
 };
 
 export const viewport: Viewport = {
@@ -105,7 +114,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
               alternateName: ['Sevaya Studio', 'Sevaya Abaya', 'SEVAYA Luxury Abayas'],
               url: publicEnv.siteUrl,
               logo: `${publicEnv.siteUrl}/images/logo.png`,
-              image: `${publicEnv.siteUrl}/images/hero_optimized.jpg`,
+              image: `${publicEnv.siteUrl}/images/og-image.jpg`,
               description:
                 'Studio busana abaya dan khimar modern premium di Indonesia. Koleksi abaya eksklusif dari bahan cupro silk dan bemberg.',
               currenciesAccepted: 'IDR',

@@ -185,8 +185,9 @@ export async function getCroppedImage(
     );
   });
 
-  // Nama file: ganti ekstensi sesuai format output
-  const ext = outputFormat === 'image/webp' ? 'webp' : 'jpg';
+  // Pastikan ekstensi dan MIME type selalu cocok dengan tipe output blob yang sebenarnya
+  const actualType = blob.type || outputFormat;
+  const ext = actualType === 'image/webp' ? 'webp' : (actualType === 'image/png' ? 'png' : 'jpg');
   const baseName =
     originalFile instanceof File
       ? originalFile.name.replace(/\.[^.]+$/, '')
@@ -195,7 +196,7 @@ export async function getCroppedImage(
           : 'hero-image');
   const fileName = `${baseName}.${ext}`;
 
-  const file = new File([blob], fileName, { type: outputFormat });
+  const file = new File([blob], fileName, { type: actualType });
 
   return { blob, file, width: outW, height: outH, dataUrl };
 }
