@@ -61,8 +61,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
     <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light">
       <div className="mx-auto max-w-[1360px] px-3 sm:px-6 lg:px-8">
         <RevealOnScroll variant="editorial">
-          {/* Framed Editorial Box Container ("di dalam kotak") */}
-          <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch shadow-xs">
+          {/* Framed Editorial Box Container — hanya kotak di desktop (border & background lembut), polos & rapi tanpa kotak di mobile */}
+          <div className="border-0 lg:border lg:border-black/15 bg-white lg:bg-[#FAF9F7] overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch shadow-none lg:shadow-xs">
             {/* Left Column: Photo fills its chamber seamlessly */}
             <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto min-h-[260px] sm:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
               <Link href={linkUrl} className="group relative block h-full w-full">
@@ -78,7 +78,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
             </div>
 
             {/* Right Column: Editorial Narrative Story inside the box — terpusat rapi di mobile sesuai referensi, rata kiri di desktop */}
-            <div className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left px-5 py-7 sm:px-10 sm:py-12 lg:p-12 xl:p-16 border-t-0 lg:border-l lg:border-black/10">
+            <div className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left px-4 pt-6 pb-2 sm:px-10 sm:py-12 lg:p-12 xl:p-16 border-t-0 lg:border-l lg:border-black/10">
               {/* Eyebrow */}
               <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2.5">
                 {eyebrow}
