@@ -419,8 +419,10 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
 }
 
 /**
- * Membersihkan semua varian inventaris yang produk induknya sudah dihapus,
- * atau yang warna/ukurannya sudah dihapus dari katalog produk.
+ * Sinkronisasi dua arah otomatis antara katalog produk dan inventaris stok:
+ * 1. Membersihkan varian yatim (warna / ukuran / produk yang dihapus dari katalog)
+ * 2. Meng-generate otomatis varian baru yang belum ada untuk setiap swatch x size dari produk katalog
+ * 3. Menjaga stok yang sudah ada agar tidak pernah terhapus atau reset ke 0
  */
 export async function cleanServerOrphanedVariants(forceRefresh = false): Promise<ProductVariant[]> {
   const [products, variants] = await Promise.all([
@@ -434,7 +436,9 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
   });
 
   let changed = false;
-  const cleaned = variants.filter((v) => {
+
+  // 1. Hapus varian yang produk atau warna atau ukurannya sudah dihapus dari katalog
+  let cleaned = variants.filter((v) => {
     const parent = productMap.get(v.productId);
     if (!parent) {
       changed = true;
@@ -463,6 +467,62 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
 
     return true;
   });
+
+  // 2. JAMIN SETIAP KOMBINASI WARNA x UKURAN DARI SEMUA PRODUK AKTIF MEMILIKI BARIS VARIAN
+  for (const product of products) {
+    const swatches = product.swatches && product.swatches.length > 0
+      ? product.swatches
+      : [{ name: 'Default', color: '#1A1A1A' }];
+    const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['All Size'];
+
+    for (const sw of swatches) {
+      for (const sz of sizes) {
+        const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
+        const foundIdx = cleaned.findIndex(
+          (v) =>
+            v.id === variantId ||
+            (v.productId === String(product.id) &&
+              v.colorName.toLowerCase().trim() === sw.name.toLowerCase().trim() &&
+              v.size.toLowerCase().trim() === sz.toLowerCase().trim())
+        );
+
+        if (foundIdx === -1) {
+          const sku = generateVariantSku(product.title, product.id, sw.name, sz);
+          cleaned.push({
+            id: variantId,
+            productId: String(product.id),
+            productSlug: product.slug,
+            productTitle: product.title,
+            sku,
+            colorName: sw.name,
+            colorHex: sw.color || '#1A1A1A',
+            size: sz,
+            stock: 0,
+            lowStockThreshold: 3,
+            updatedAt: new Date().toISOString(),
+          });
+          changed = true;
+        } else {
+          // Update metadata jika judul produk, slug, atau warna hex diperbarui
+          const curr = cleaned[foundIdx]!;
+          if (
+            curr.productTitle !== product.title ||
+            curr.productSlug !== product.slug ||
+            (sw.color && curr.colorHex !== sw.color)
+          ) {
+            cleaned[foundIdx] = {
+              ...curr,
+              productTitle: product.title,
+              productSlug: product.slug,
+              colorHex: sw.color || curr.colorHex,
+              updatedAt: new Date().toISOString(),
+            };
+            changed = true;
+          }
+        }
+      }
+    }
+  }
 
   if (changed) {
     await saveServerInventoryVariants(cleaned);

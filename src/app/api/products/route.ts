@@ -8,6 +8,7 @@ import {
   getCachedProducts,
   setCachedProducts,
 } from '@/lib/products-cache';
+import { cleanServerOrphanedVariants } from '@/lib/inventory-server';
 
 export const runtime = 'nodejs';
 
@@ -136,6 +137,13 @@ export async function POST(req: NextRequest) {
         upsert: true,
       })
       .catch(() => {/* offline — disk already saved */});
+
+    // Otomatis sinkronkan varian inventaris agar swatch/size baru langsung tersedia di Inventaris
+    try {
+      await cleanServerOrphanedVariants(true);
+    } catch (e) {
+      console.warn('[POST /api/products] Inventory reconcile error:', e);
+    }
 
     return NextResponse.json({ success: true, products });
   } catch (err: unknown) {

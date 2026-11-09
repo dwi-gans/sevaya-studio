@@ -36,6 +36,10 @@ import { ProductModal, ProductFormData } from '@/components/admin/modals/Product
 import { ArticleModal, ArticleFormData } from '@/components/admin/modals/ArticleModal';
 import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
 
+// Image Cropper
+import { ImageCropperModal } from '@/components/image-cropper';
+import { useHeroImageCropper } from '@/features/home';
+
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
 import { CatalogTab } from '@/components/admin/tabs/CatalogTab';
@@ -269,6 +273,20 @@ export default function AdminPage() {
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [imagePickerTarget, setImagePickerTarget] = useState<ImagePickerTarget>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // ── Hero Image Cropper ──
+  const { openCropper: openHeroCropper, cropperProps: heroCropperProps } = useHeroImageCropper({
+    onUploaded: (publicUrl) => {
+      setSections((prev) => {
+        const next = { ...prev, hero: { ...prev.hero, image: publicUrl } };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Foto Hero tersimpan otomatis!');
+    },
+    onLoadingChange: (loading) => setIsUploading(loading),
+    onError: (msg) => showToast(msg),
+  });
 
   // Fetch data when authenticated
   useEffect(() => {
@@ -1212,6 +1230,15 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Khusus target hero: buka image cropper dulu sebelum upload
+    if (imagePickerTarget === 'hero') {
+      setIsImagePickerOpen(false);
+      openHeroCropper(file);
+      // Reset input agar file yang sama bisa dipilih lagi
+      e.target.value = '';
+      return;
+    }
+
     setIsUploading(true);
     try {
       const publicUrl = await uploadFileToStorage(file);
@@ -1241,6 +1268,13 @@ export default function AdminPage() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Khusus target hero: buka image cropper dulu sebelum upload
+    if (target === 'hero') {
+      openHeroCropper(file);
+      e.target.value = '';
+      return;
+    }
 
     setIsUploading(true);
     try {
@@ -1544,6 +1578,9 @@ export default function AdminPage() {
         currentImage={currentPickerImage}
         maxSelect={imagePickerTarget?.startsWith('swatch-') ? 4 : 1}
       />
+
+      {/* Hero Image Cropper Modal */}
+      <ImageCropperModal {...heroCropperProps} />
     </div>
   );
 }

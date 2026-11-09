@@ -313,26 +313,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
   const handleGenerateVariants = async () => {
     setGenerating(true);
     try {
-      // Call ensure_product for every catalog product — server will create missing variants idempotently
-      let synced = 0;
-      for (const p of products) {
-        const res = await fetch('/api/admin/inventory', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-key': 'sevaya-admin',
-          },
-          body: JSON.stringify({ action: 'ensure_product', product: p }),
-        });
-        const json = await res.json();
-        if (json.success) synced++;
-      }
-
-      if (synced === 0) {
-        alert('Tidak ada produk di katalog untuk disinkronkan.');
-      } else {
-        await fetchInventory(true);
-      }
+      await fetchInventory(true);
     } catch (err) {
       console.warn('[GenerateVariants]', err);
     } finally {
@@ -384,6 +365,17 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleGenerateVariants}
+            disabled={loading || generating}
+            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+            title="Sinkronkan varian warna & ukuran dari semua produk katalog"
+          >
+            <Icon name="refresh" size={13} className={generating ? 'animate-spin' : ''} />
+            <span>{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => fetchInventory(true)}
