@@ -22,7 +22,7 @@ export default async function HomePage() {
       console.warn('fetchCatalogProducts fallback error:', err);
       return [];
     }),
-    getSiteSections(true).catch((err) => {
+    getSiteSections(false).catch((err) => {
       console.warn('getSiteSections fallback error:', err);
       return DEFAULT_SITE_SECTIONS;
     }),
@@ -47,8 +47,8 @@ export default async function HomePage() {
       {/* 1. Hero Section matching Figma: TIMELESS • INTENTIONAL • EFFORTLESS */}
       <HeroSection initialHero={activeSections?.hero} />
 
-      {/* 2. Best Sellers Carousel */}
-      <ProductGrid products={activeProducts} />
+      {/* 2. Best Sellers Carousel — Hanya kirim 8 produk unggulan ke homepage (ringan & cepat) */}
+      <ProductGrid products={activeProducts.slice(0, 8)} />
 
       {/* 2.5 Editorial Collection Spotlight: A Closer Look At 26°Rhapsody */}
       <CloserLookSection initialData={activeSections?.closerLook} />

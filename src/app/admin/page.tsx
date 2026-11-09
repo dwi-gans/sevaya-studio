@@ -1118,9 +1118,24 @@ export default function AdminPage() {
   const handleUniversalCropperConfirm = useCallback(
     async (result: CropperResult) => {
       const currentTarget = cropperModalConfig.target;
-      const finalUrl =
-        result.dataUrl ||
-        (result.blob ? URL.createObjectURL(result.blob) : (result.originalUrl || ''));
+      let finalUrl = result.originalUrl || '';
+
+      // Jika gambar hasil crop berupa File/Blob, unggah ke Cloud Storage agar sections.json tetap ringan (~18KB)
+      // dan TIDAK menyimpan jutaan karakter base64 (Data URL) yang membuat Vercel & HP lemot.
+      if (result.file && result.file.size > 0 && result.wasCropped) {
+        showToast('Mengunggah hasil crop ke cloud storage...');
+        try {
+          const uploadedUrl = await uploadFileToStorage(result.file, 'uploads');
+          if (uploadedUrl) {
+            finalUrl = uploadedUrl;
+          }
+        } catch (err) {
+          console.warn('[Cropper] Upload ke storage gagal, fallback ke dataUrl:', err);
+          finalUrl = result.dataUrl || (result.blob ? URL.createObjectURL(result.blob) : '');
+        }
+      } else if (!finalUrl) {
+        finalUrl = result.dataUrl || (result.blob ? URL.createObjectURL(result.blob) : '');
+      }
 
       if (!finalUrl || !currentTarget) return;
 

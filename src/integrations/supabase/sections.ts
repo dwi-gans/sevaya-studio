@@ -621,12 +621,18 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
     // In Node.js / Server Components, relative URLs fail with ERR_INVALID_URL.
     // Use the public Supabase Storage CDN directly on server as the single source of truth!
     const url = isServer
-      ? `https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json?t=${Date.now()}`
-      : forceRefresh
-      ? `/api/sections?fresh=1&t=${Date.now()}`
-      : `/api/sections?t=${Date.now()}`;
+      ? (forceRefresh
+          ? `https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json?t=${Date.now()}`
+          : 'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/sections.json')
+      : (forceRefresh
+          ? `/api/sections?fresh=1&t=${Date.now()}`
+          : '/api/sections');
 
-    const res = await fetch(url, { cache: 'no-store' });
+    const fetchOptions: RequestInit = isServer
+      ? (forceRefresh ? { cache: 'no-store' } : { next: { revalidate: 60 } })
+      : (forceRefresh ? { cache: 'no-store' } : { cache: 'default' });
+
+    const res = await fetch(url, fetchOptions);
     if (res.ok) {
       const json = await res.json();
       const rawSections = (isServer ? json : json.sections) as SiteSectionsConfig | undefined;
