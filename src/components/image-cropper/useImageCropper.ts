@@ -65,7 +65,9 @@ export function useImageCropper({
   const handleConfirm = useCallback(
     async (result: CropperResult) => {
       await onConfirm(result);
-      closeCropper();
+      if (result.shouldClose !== false) {
+        closeCropper();
+      }
     },
     [onConfirm, closeCropper],
   );

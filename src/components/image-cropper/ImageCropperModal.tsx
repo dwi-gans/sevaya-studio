@@ -29,6 +29,8 @@ export interface CropperResult {
   dataUrl?: string;
   /** Mode target hasil crop: desktop atau mobile */
   targetMode?: 'desktop' | 'mobile';
+  /** Apakah modal harus ditutup setelah simpan (default: true) */
+  shouldClose?: boolean;
 }
 
 export interface RatioOption {
@@ -90,6 +92,8 @@ export function ImageCropperModal({
   const [activeRatio, setActiveRatio] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cropError, setCropError] = useState<string | null>(null);
+  const [desktopSaved, setDesktopSaved] = useState(false);
+  const [mobileSaved, setMobileSaved] = useState(false);
 
   const objectUrlRef = useRef<string | null>(null);
   const prevFileRef = useRef<File | string | null>(null);
@@ -118,6 +122,8 @@ export function ImageCropperModal({
         setImageSrc(null);
         setCropError(null);
         setViewMode(initialMode);
+        setDesktopSaved(false);
+        setMobileSaved(false);
       }, 0);
       return () => clearTimeout(timer);
     }
@@ -146,6 +152,8 @@ export function ImageCropperModal({
         initialMode === 'mobile' && preset.mobileAspect ? preset.mobileAspect : preset.aspect;
       setActiveRatio(targetAspect);
       setViewMode(initialMode);
+      setDesktopSaved(false);
+      setMobileSaved(false);
       setCropError(null);
     }, 0);
 
@@ -222,11 +230,29 @@ export function ImageCropperModal({
         preset.outputFormat ?? 'image/webp',
         preset.quality ?? 0.98,
       );
+
+      const currentMode = viewMode;
+      const isMobileSupported = Boolean(preset.mobileAspect);
+      // Jika baru crop desktop dan ada preset mobile: jangan tutup dulu agar bisa lanjut crop mobile!
+      const willTransitionToMobile = isMobileSupported && currentMode === 'desktop';
+      const shouldClose = !willTransitionToMobile;
+
       await onConfirm({
         ...result,
         wasCropped: true,
-        targetMode: viewMode,
+        targetMode: currentMode,
+        shouldClose,
       });
+
+      if (currentMode === 'desktop') {
+        setDesktopSaved(true);
+        if (willTransitionToMobile) {
+          // Beralih otomatis ke tab mobile
+          handleViewModeChange('mobile');
+        }
+      } else {
+        setMobileSaved(true);
+      }
     } catch (err) {
       setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
     } finally {
@@ -239,7 +265,7 @@ export function ImageCropperModal({
     setIsLoading(true);
     try {
       if (typeof file === 'string') {
-        // Jika dari cloud URL, tidak perlu re-upload! Langsung gunakan URL aslinya
+        // Jika dari cloud URL, langsung gunakan URL asli untuk desktop dan mobile
         await onConfirm({
           file: new File([], 'original.jpg', { type: 'image/jpeg' }),
           blob: new Blob([]),
@@ -247,7 +273,18 @@ export function ImageCropperModal({
           height: 0,
           wasCropped: false,
           originalUrl: file,
-          targetMode: viewMode,
+          targetMode: 'desktop',
+          shouldClose: false,
+        });
+        await onConfirm({
+          file: new File([], 'original.jpg', { type: 'image/jpeg' }),
+          blob: new Blob([]),
+          width: 0,
+          height: 0,
+          wasCropped: false,
+          originalUrl: file,
+          targetMode: 'mobile',
+          shouldClose: true,
         });
       } else {
         const blob = new Blob([await file.arrayBuffer()], { type: file.type });
@@ -257,7 +294,17 @@ export function ImageCropperModal({
           width: 0,
           height: 0,
           wasCropped: false,
-          targetMode: viewMode,
+          targetMode: 'desktop',
+          shouldClose: false,
+        });
+        await onConfirm({
+          file,
+          blob,
+          width: 0,
+          height: 0,
+          wasCropped: false,
+          targetMode: 'mobile',
+          shouldClose: true,
         });
       }
     } catch (err) {
@@ -354,6 +401,11 @@ export function ImageCropperModal({
                   >
                     <Monitor className="h-3 w-3" />
                     <span>Desktop (16:9)</span>
+                    {desktopSaved && (
+                      <span className="ml-0.5 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold leading-none">
+                        ✓
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -367,6 +419,11 @@ export function ImageCropperModal({
                   >
                     <Smartphone className="h-3 w-3" />
                     <span>Mobile (9:16)</span>
+                    {mobileSaved && (
+                      <span className="ml-0.5 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold leading-none">
+                        ✓
+                      </span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -464,7 +521,16 @@ export function ImageCropperModal({
             Geser atau scroll foto untuk menyesuaikan.
           </p>
           <div className="flex items-center gap-2 ml-auto">
-            {allowSkip && (
+            {desktopSaved && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-full border border-emerald-600 bg-emerald-50 px-3.5 py-2 text-[10px] font-semibold tracking-[0.1em] uppercase text-emerald-800 transition-colors hover:bg-emerald-100"
+              >
+                ✓ Selesai
+              </button>
+            )}
+            {allowSkip && !desktopSaved && (
               <button
                 onClick={handleSkip}
                 disabled={isLoading || !file}

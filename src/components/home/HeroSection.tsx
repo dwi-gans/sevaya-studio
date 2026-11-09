@@ -47,7 +47,13 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   }, []);
 
   const desktopHeroImage = (hero?.image && hero.image.trim()) || PRIMARY_HERO;
-  const mobileHeroImage = (hero?.mobileImage && hero.mobileImage.trim()) || desktopHeroImage;
+  const hasCustomMobile = Boolean(
+    hero?.mobileImage &&
+    hero.mobileImage.trim() &&
+    hero.mobileImage !== PRIMARY_HERO &&
+    hero.mobileImage !== desktopHeroImage
+  );
+  const mobileHeroImage = hasCustomMobile ? hero.mobileImage!.trim() : desktopHeroImage;
   // Jika gambar hero berasal dari URL remote, gunakan lokal sebagai background
   // agar TIDAK ADA flash hitam selama download berlangsung
   const isRemote = desktopHeroImage.startsWith('http') || mobileHeroImage.startsWith('http');
@@ -67,7 +73,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <picture className="h-full w-full">
-            {mobileHeroImage && (
+            {hasCustomMobile && (
               <source media="(max-width: 639px)" srcSet={mobileHeroImage} />
             )}
             <img

@@ -359,7 +359,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     title: 'SEVAYA',
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
     image: '/images/hero_optimized.jpg',
-    mobileImage: '/images/hero_optimized.jpg',
+    mobileImage: '',
     ctaLookbook: 'Lookbook',
     ctaShop: 'Shop The Collection',
   },
@@ -452,8 +452,7 @@ function sanitizeHeroImage(img?: string | null): string {
     !trimmed ||
     trimmed === 'undefined' ||
     trimmed === 'null' ||
-    trimmed.startsWith('blob:') ||
-    trimmed.startsWith('data:')
+    trimmed.startsWith('blob:')
   ) {
     return DEFAULT_SITE_SECTIONS.hero.image;
   }
@@ -582,6 +581,7 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...DEFAULT_SITE_SECTIONS.hero,
             ...(rawSections.hero || {}),
             image: sanitizeHeroImage(rawSections.hero?.image),
+            mobileImage: rawSections.hero?.mobileImage ? sanitizeHeroImage(rawSections.hero?.mobileImage) : '',
           },
           closerLook: {
             ...DEFAULT_CLOSER_LOOK,
