@@ -52,41 +52,43 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-10 sm:py-14 lg:py-16 text-black section--light border-b border-black/10">
+    <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light border-b border-black/10">
       <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 xl:gap-18 items-center">
-          {/* Left Column: Editorial Photo */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-14 xl:gap-18 items-center">
+          {/* Left Column: Editorial Photo — sleek and responsive on mobile */}
           <RevealOnScroll variant="editorial" delayMs={0}>
-            <Link
-              href={linkUrl}
-              className="group relative block aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] w-full overflow-hidden bg-black/5 border border-black/10 shadow-xs"
-            >
-              <StudioImage
-                src={image}
-                alt={title}
-                fill
-                preset="spotlight"
-                className="object-cover transition-transform duration-700 group-hover:scale-103"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
-            </Link>
+            <div className="max-w-md sm:max-w-none mx-auto w-full">
+              <Link
+                href={linkUrl}
+                className="group relative block aspect-[16/10] sm:aspect-[16/10] lg:aspect-[4/3] w-full overflow-hidden bg-black/5 border border-black/10 shadow-xs"
+              >
+                <StudioImage
+                  src={image}
+                  alt={title}
+                  fill
+                  preset="spotlight"
+                  className="object-cover transition-transform duration-700 group-hover:scale-103"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
+              </Link>
+            </div>
           </RevealOnScroll>
 
-          {/* Right Column: Editorial Narrative Story */}
+          {/* Right Column: Editorial Narrative Story — refined typography that fits mobile nicely */}
           <RevealOnScroll variant="fade-up" delayMs={150}>
             <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left">
               {/* Eyebrow */}
-              <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] text-black/60 uppercase block mb-2 sm:mb-2.5">
+              <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2">
                 {eyebrow}
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-xl sm:text-2xl md:text-[26px] font-normal tracking-[0.15em] sm:tracking-[0.18em] text-black uppercase mb-5 sm:mb-6 leading-tight">
+              <h2 className="font-sans text-[15px] sm:text-lg md:text-xl lg:text-[24px] font-medium sm:font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3 sm:mb-4 lg:mb-5 leading-snug">
                 {title}
               </h2>
 
               {/* Story Paragraph 1 */}
-              <p className="text-xs sm:text-[13px] md:text-sm text-black/75 leading-[1.8] sm:leading-[1.85] font-light mb-4 sm:mb-4.5">
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.7] sm:leading-[1.8] font-light mb-3 sm:mb-3.5 lg:mb-4.5">
                 {paragraph1.includes('between June and August') ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -101,7 +103,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </p>
 
               {/* Story Paragraph 2 */}
-              <p className="text-xs sm:text-[13px] md:text-sm text-black/75 leading-[1.8] sm:leading-[1.85] font-light mb-6 sm:mb-7">
+              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.7] sm:leading-[1.8] font-light mb-4 sm:mb-5 lg:mb-6">
                 {paragraph2.includes('much like nature') ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
@@ -118,7 +120,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               <div>
                 <Link
                   href={linkUrl}
-                  className="inline-block text-xs sm:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
+                  className="inline-block text-[11px] sm:text-xs lg:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
                 >
                   {linkText}
                 </Link>
