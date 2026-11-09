@@ -44,6 +44,7 @@ export function StudioImage({
 }: StudioImageProps) {
   const resolvedSizes = sizes || (preset ? PRESET_SIZES[preset] : undefined);
   const resolvedSrc = src || fallbackSrc;
+  const isDataUrl = typeof resolvedSrc === 'string' && resolvedSrc.startsWith('data:');
 
   return (
     <Image
@@ -51,6 +52,7 @@ export function StudioImage({
       alt={alt}
       quality={quality}
       sizes={resolvedSizes}
+      unoptimized={isDataUrl || rest.unoptimized}
       className={className}
       {...rest}
     />

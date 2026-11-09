@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { useToast } from '@/context/ToastContext';
 import {
   getDbProducts,
@@ -37,8 +37,8 @@ import { ArticleModal, ArticleFormData } from '@/components/admin/modals/Article
 import { ImagePickerModal } from '@/components/admin/modals/ImagePickerModal';
 
 // Image Cropper
-import { ImageCropperModal } from '@/components/image-cropper';
-import { useHeroImageCropper } from '@/features/home';
+import { ImageCropperModal, CropperResult, RatioOption } from '@/components/image-cropper';
+import { CROP_PRESETS, CropPreset } from '@/config/image-crop-presets';
 
 // Admin Tabs
 import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
@@ -275,24 +275,35 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   // ΓöÇΓöÇ Hero Image Cropper ΓöÇΓöÇ
-  const { openCropper: openHeroCropper, cropperProps: heroCropperProps } = useHeroImageCropper({
-    onUploaded: (url, target) => {
-      setSections((prev) => {
-        const next = {
-          ...prev,
-          hero: {
-            ...prev.hero,
-            ...(target === 'mobile' ? { mobileImage: url } : { image: url }),
-          },
-        };
-        saveSiteSections(next);
-        return next;
-      });
-      showToast(target === 'mobile' ? 'Foto Hero Mobile tersimpan otomatis!' : 'Foto Hero Desktop tersimpan otomatis!');
-    },
-    onLoadingChange: (loading) => setIsUploading(loading),
-    onError: (msg) => showToast(msg),
+  // ── Universal Image Cropper State (Hero, Kategori Abaya & Khimar, About 1 & 2) ──
+  const [cropperModalConfig, setCropperModalConfig] = useState<{
+    open: boolean;
+    file: File | string | null;
+    target: ImagePickerTarget;
+    preset: CropPreset;
+    title: string;
+    description: string;
+    initialMode?: 'desktop' | 'mobile';
+    extraRatios?: RatioOption[];
+  }>({
+    open: false,
+    file: null,
+    target: null,
+    preset: CROP_PRESETS.heroHome,
+    title: 'Sesuaikan / Potong Foto',
+    description: 'Atur posisi agar pas dengan tampilan di website',
   });
+
+  const isCroppableTarget = (target: ImagePickerTarget): boolean => {
+    return (
+      target === 'hero' ||
+      target === 'hero-mobile' ||
+      target === 'spotlight-0' ||
+      target === 'spotlight-1' ||
+      target === 'home-about-1' ||
+      target === 'home-about-2'
+    );
+  };
 
   // Fetch data when authenticated
   useEffect(() => {
@@ -1062,6 +1073,114 @@ export default function AdminPage() {
     }
   };
 
+  const openCropperForTarget = useCallback(
+    (fileOrUrl: File | string, target: ImagePickerTarget, mode: 'desktop' | 'mobile' = 'desktop') => {
+      let preset: CropPreset = CROP_PRESETS.heroHome;
+      let title = 'Sesuaikan / Potong Foto Hero';
+      let description = 'Atur posisi agar pas dengan tampilan di website & mobile';
+      let extraRatios: RatioOption[] = [
+        { label: '16:9', value: 16 / 9 },
+        { label: '4:3', value: 4 / 3 },
+        { label: '1:1', value: 1 },
+      ];
+
+      if (target === 'spotlight-0') {
+        preset = CROP_PRESETS.categorySpotlight;
+        title = 'Sesuaikan Foto Kategori Abaya';
+        description = 'Atur posisi foto kategori Abaya di Home (Rekomendasi 4:3 Desktop / 3:4 Mobile)';
+        extraRatios = [
+          { label: '4:3', value: 4 / 3 },
+          { label: '3:4', value: 3 / 4 },
+          { label: '1:1', value: 1 },
+          { label: '16:9', value: 16 / 9 },
+        ];
+      } else if (target === 'spotlight-1') {
+        preset = CROP_PRESETS.categorySpotlight;
+        title = 'Sesuaikan Foto Kategori Khimar';
+        description = 'Atur posisi foto kategori Khimar di Home (Rekomendasi 4:3 Desktop / 3:4 Mobile)';
+        extraRatios = [
+          { label: '4:3', value: 4 / 3 },
+          { label: '3:4', value: 3 / 4 },
+          { label: '1:1', value: 1 },
+          { label: '16:9', value: 16 / 9 },
+        ];
+      } else if (target === 'home-about-1') {
+        preset = CROP_PRESETS.aboutStory;
+        title = 'Sesuaikan Foto About SEVAYA #1';
+        description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
+        extraRatios = [
+          { label: '3:4', value: 3 / 4 },
+          { label: '4:3', value: 4 / 3 },
+          { label: '1:1', value: 1 },
+        ];
+      } else if (target === 'home-about-2') {
+        preset = CROP_PRESETS.aboutStory;
+        title = 'Sesuaikan Foto About SEVAYA #2';
+        description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
+        extraRatios = [
+          { label: '3:4', value: 3 / 4 },
+          { label: '4:3', value: 4 / 3 },
+          { label: '1:1', value: 1 },
+        ];
+      }
+
+      setCropperModalConfig({
+        open: true,
+        file: fileOrUrl,
+        target,
+        preset,
+        title,
+        description,
+        initialMode: mode,
+        extraRatios,
+      });
+    },
+    [],
+  );
+
+  const closeUniversalCropper = useCallback(() => {
+    setCropperModalConfig((prev) => ({ ...prev, open: false, file: null, target: null }));
+  }, []);
+
+  const handleUniversalCropperConfirm = useCallback(
+    async (result: CropperResult) => {
+      const currentTarget = cropperModalConfig.target;
+      const finalUrl =
+        result.dataUrl ||
+        (result.blob ? URL.createObjectURL(result.blob) : (result.originalUrl || ''));
+
+      if (!finalUrl || !currentTarget) return;
+
+      if (currentTarget === 'hero' || currentTarget === 'hero-mobile') {
+        const targetMode = result.targetMode || (currentTarget === 'hero-mobile' ? 'mobile' : 'desktop');
+        setSections((prev) => {
+          const next = {
+            ...prev,
+            hero: {
+              ...prev.hero,
+              ...(targetMode === 'mobile' ? { mobileImage: finalUrl } : { image: finalUrl }),
+            },
+          };
+          saveSiteSections(next);
+          return next;
+        });
+        showToast(
+          targetMode === 'mobile'
+            ? 'Foto Hero Mobile tersimpan otomatis!'
+            : 'Foto Hero Desktop tersimpan otomatis!',
+        );
+        if (result.shouldClose) {
+          closeUniversalCropper();
+        }
+      } else {
+        // Untuk spotlight-0, spotlight-1, home-about-1, home-about-2
+        applyImageToTarget(currentTarget, finalUrl);
+        closeUniversalCropper();
+      }
+    },
+    [cropperModalConfig.target, closeUniversalCropper, applyImageToTarget, showToast],
+  );
+
   // ΓöÇΓöÇ News & Articles Handlers ΓöÇΓöÇ
   const handleOpenCreateArticleModal = () => {
     setEditingArticle(null);
@@ -1243,11 +1362,11 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Khusus target hero: buka image cropper dulu sebelum upload
-    if (imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') {
+    // Khusus target croppable (hero, spotlight abaya/khimar, about): buka image cropper
+    if (isCroppableTarget(imagePickerTarget)) {
       const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(file, mode);
+      openCropperForTarget(file, imagePickerTarget, mode);
       // Reset input agar file yang sama bisa dipilih lagi
       e.target.value = '';
       return;
@@ -1283,10 +1402,10 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Khusus target hero: buka image cropper dulu sebelum upload
-    if (target === 'hero' || target === 'hero-mobile') {
+    // Khusus target croppable (hero, spotlight abaya/khimar, about): buka image cropper
+    if (isCroppableTarget(target)) {
       const mode = target === 'hero-mobile' ? 'mobile' : 'desktop';
-      openHeroCropper(file, mode);
+      openCropperForTarget(file, target, mode);
       e.target.value = '';
       return;
     }
@@ -1313,10 +1432,10 @@ export default function AdminPage() {
   // Handler khusus untuk HomeSectionsTab — menerima (target, file) langsung
   const handleSectionFileUpload = async (target: ImagePickerTarget, file: File): Promise<void> => {
     if (!file) return;
-    // Khusus target hero: buka image cropper dulu
-    if (target === 'hero' || target === 'hero-mobile') {
+    // Khusus target croppable (hero, spotlight abaya/khimar, about): buka image cropper
+    if (isCroppableTarget(target)) {
       const mode = target === 'hero-mobile' ? 'mobile' : 'desktop';
-      openHeroCropper(file, mode);
+      openCropperForTarget(file, target, mode);
       return;
     }
     setIsUploading(true);
@@ -1360,11 +1479,11 @@ export default function AdminPage() {
   }, [imagePickerTarget, productForm, sections, articleForm]);
 
   const handleSelectPredefinedImage = (imagePath: string) => {
-    // Khusus target hero: buka image cropper agar user bisa atur crop sebelum pasang
-    if (imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') {
+    // Khusus target croppable: buka image cropper agar user bisa atur crop sebelum pasang
+    if (isCroppableTarget(imagePickerTarget)) {
       const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(imagePath, mode);
+      openCropperForTarget(imagePath, imagePickerTarget, mode);
       return;
     }
     applyImageToTarget(imagePickerTarget, imagePath);
@@ -1375,11 +1494,11 @@ export default function AdminPage() {
   const handleSelectImages = (images: string[]) => {
     if (!imagePickerTarget) return;
 
-    // Khusus target hero dari modal picker: buka image cropper
-    if ((imagePickerTarget === 'hero' || imagePickerTarget === 'hero-mobile') && images[0]) {
+    // Khusus target croppable dari modal picker: buka image cropper
+    if (isCroppableTarget(imagePickerTarget) && images[0]) {
       const mode = imagePickerTarget === 'hero-mobile' ? 'mobile' : 'desktop';
       setIsImagePickerOpen(false);
-      openHeroCropper(images[0], mode);
+      openCropperForTarget(images[0], imagePickerTarget, mode);
       return;
     }
 
@@ -1635,8 +1754,18 @@ export default function AdminPage() {
         maxSelect={imagePickerTarget?.startsWith('swatch-') ? 4 : 1}
       />
 
-      {/* Hero Image Cropper Modal */}
-      <ImageCropperModal {...heroCropperProps} />
+      {/* Universal Image Cropper Modal (Hero, Kategori Abaya & Khimar, About 1 & 2) */}
+      <ImageCropperModal
+        open={cropperModalConfig.open}
+        file={cropperModalConfig.file}
+        preset={cropperModalConfig.preset}
+        title={cropperModalConfig.title}
+        description={cropperModalConfig.description}
+        initialMode={cropperModalConfig.initialMode}
+        extraRatios={cropperModalConfig.extraRatios}
+        onConfirm={handleUniversalCropperConfirm}
+        onCancel={closeUniversalCropper}
+      />
     </div>
   );
 }

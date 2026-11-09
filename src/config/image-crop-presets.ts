@@ -49,6 +49,22 @@ export const CROP_PRESETS = {
     outputFormat: 'image/webp',
     quality: 0.98,
   },
+  categorySpotlight: {
+    id: 'category-spotlight',
+    label: 'Kategori (4:3)',
+    aspect: 4 / 3,
+    outputMaxWidth: 2000,
+    outputFormat: 'image/webp',
+    quality: 0.96,
+  },
+  aboutStory: {
+    id: 'about-story',
+    label: 'About (3:4)',
+    aspect: 3 / 4,
+    outputMaxWidth: 1800,
+    outputFormat: 'image/webp',
+    quality: 0.96,
+  },
   productCard: {
     id: 'product-card',
     label: 'Kartu Produk',
