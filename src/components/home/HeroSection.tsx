@@ -83,7 +83,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
-          className="relative h-full w-full"
+          className="relative h-full w-full animate-hero-zoom"
         >
           {hasCustomMobile ? (
             <>
