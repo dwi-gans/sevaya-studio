@@ -65,12 +65,21 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   );
   const mobileHeroImage = hasCustomMobile ? hero.mobileImage!.trim() : desktopHeroImage;
 
+  // Gambar fallback ditanam langsung di CSS style section sebagai background instan
+  // agar tidak ada hitam sama sekali saat React belum selesai hydrate
+  const bgStyle: React.CSSProperties = {
+    backgroundImage: `url(${desktopHeroImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  };
+
   return (
     <section
       suppressHydrationWarning
       className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      style={bgStyle}
     >
-      {/* Background Hero Image */}
+      {/* Background Hero Image — di atas CSS bg agar kualitas lebih tajam saat loaded */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           suppressHydrationWarning
