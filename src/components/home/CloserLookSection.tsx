@@ -58,14 +58,14 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-8 sm:py-12 lg:py-16 text-black section--light">
-      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light">
+      <div className="mx-auto max-w-[1360px] px-3 sm:px-6 lg:px-8">
         <RevealOnScroll variant="editorial">
           {/* Framed Editorial Box Container ("di dalam kotak") */}
           <div className="border border-black/15 bg-[#FAF9F7] overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch shadow-xs">
             {/* Left Column: Photo fills its chamber seamlessly */}
-            <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
-              <Link href={linkUrl} className="group relative block h-full w-full min-h-[300px] sm:min-h-[380px] lg:min-h-full">
+            <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto min-h-[260px] sm:min-h-[360px] lg:min-h-[460px] xl:min-h-[500px] w-full overflow-hidden bg-black/5">
+              <Link href={linkUrl} className="group relative block h-full w-full">
                 <StudioImage
                   src={image}
                   alt={title}
@@ -77,20 +77,20 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </Link>
             </div>
 
-            {/* Right Column: Editorial Narrative Story inside the box */}
-            <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-16 text-left border-t border-black/10 lg:border-t-0 lg:border-l lg:border-black/10">
+            {/* Right Column: Editorial Narrative Story inside the box — terpusat rapi di mobile sesuai referensi, rata kiri di desktop */}
+            <div className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left px-5 py-7 sm:px-10 sm:py-12 lg:p-12 xl:p-16 border-t-0 lg:border-l lg:border-black/10">
               {/* Eyebrow */}
               <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2.5">
                 {eyebrow}
               </span>
 
               {/* Title */}
-              <h2 className="font-sans text-[15px] sm:text-lg md:text-xl lg:text-[23px] font-medium sm:font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3.5 sm:mb-4 lg:mb-5 leading-snug">
+              <h2 className="font-sans text-[14px] sm:text-lg md:text-xl lg:text-[23px] font-normal tracking-[0.14em] sm:tracking-[0.16em] text-black uppercase mb-3.5 sm:mb-4 lg:mb-5 leading-snug">
                 {title}
               </h2>
 
               {/* Story Paragraph 1 */}
-              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5">
+              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5 max-w-[500px]">
                 {paragraph1 === DEFAULT_CLOSER_LOOK.paragraph1 ? (
                   <>
                     In Indonesia, particularly{' '}
@@ -105,7 +105,7 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </p>
 
               {/* Story Paragraph 2 */}
-              <p className="text-[11px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6">
+              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6 max-w-[500px]">
                 {paragraph2 === DEFAULT_CLOSER_LOOK.paragraph2 ? (
                   <>
                     Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
@@ -119,10 +119,10 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
               </p>
 
               {/* Read More Link */}
-              <div>
+              <div className="w-full flex justify-center lg:justify-start">
                 <Link
                   href={linkUrl}
-                  className="inline-block text-[11px] sm:text-xs lg:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all self-start"
+                  className="inline-block text-[11px] sm:text-xs lg:text-[13px] font-medium text-black underline underline-offset-4 decoration-black/60 hover:decoration-black hover:text-black/60 transition-all"
                 >
                   {linkText}
                 </Link>
