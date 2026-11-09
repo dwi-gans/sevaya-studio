@@ -19,8 +19,8 @@ const SHIPPING_SETTINGS_FILE = 'shipping_settings.json';
 const DATA_DIR = path.join(process.cwd(), '.data');
 
 export const DEFAULT_SHIPPING_ORIGIN: ShippingOriginSettings = {
-  shipper_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA Store',
-  shipper_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '085190993087',
+  shipper_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA',
+  shipper_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '0851 9099 3087',
   shipper_email: process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
   shipper_organization: 'SEVAYA',
   origin_address: process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',

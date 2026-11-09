@@ -125,8 +125,8 @@ function BarcodeSVG({ value }: { value: string }) {
 export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModalProps) {
   const labelRef = useRef<HTMLDivElement>(null);
   const [shipperInfo, setShipperInfo] = useState({
-    name: 'SEVAYA Studio',
-    phone: '0851-9099-3087',
+    name: 'SEVAYA',
+    phone: '0851 9099 3087',
     address: 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
   });
   const [isEditingShipper, setIsEditingShipper] = useState(false);
@@ -147,8 +147,8 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
             .join(', ');
 
           setShipperInfo({
-            name: s.shipper_name || 'SEVAYA Studio',
-            phone: s.shipper_phone || '0851-9099-3087',
+            name: s.shipper_name || 'SEVAYA',
+            phone: s.shipper_phone || '0851 9099 3087',
             address: fullAddress || s.origin_address || 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
           });
         }

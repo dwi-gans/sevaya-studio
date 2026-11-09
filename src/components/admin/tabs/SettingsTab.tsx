@@ -47,8 +47,8 @@ export const SettingsTab: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<ShippingOriginData>({
-    shipper_name: 'SEVAYA Store',
-    shipper_phone: '085190993087',
+    shipper_name: 'SEVAYA',
+    shipper_phone: '0851 9099 3087',
     shipper_email: 'info@sevaya-studio.com',
     shipper_organization: 'SEVAYA',
     origin_address: 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
@@ -454,7 +454,7 @@ export const SettingsTab: React.FC = () => {
                 <div>
                   <span className="text-black/50 block">Pengirim:</span>
                   <span className="font-semibold text-black">
-                    {formData.shipper_name || 'SEVAYA Store'} ({formData.shipper_phone || '08...'})
+                    {formData.shipper_name || 'SEVAYA'} ({formData.shipper_phone || '0851 9099 3087'})
                   </span>
                 </div>
                 <div>
