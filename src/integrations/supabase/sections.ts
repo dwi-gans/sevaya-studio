@@ -326,8 +326,8 @@ export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
     'Rooted in simplicity, SEVAYA redefines modern modestwear through understated silhouettes, responsible material selection, and intentional craftsmanship. Each piece is designed to be lived in, moving with quiet grace through every chapter of your day.',
   aboutLinkText: 'Read more',
   aboutLinkUrl: '/conscious',
-  aboutImage1: '/images/figma_about_1.png',
-  aboutImage2: '/images/figma_about_2.png',
+  aboutImage1: '/images/figma_about_1.webp',
+  aboutImage2: '/images/figma_about_2.webp',
 };
 
 export const DEFAULT_JOURNAL_HEADER: HomeJournalHeaderConfig = {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getSiteSections, DEFAULT_SITE_SECTIONS, HeroSectionData } from '@/integrations/supabase';
 
 // Fallback lokal — ditanam langsung sebagai background-image CSS (zero-delay, no network)
-const PRIMARY_HERO = '/images/hero_optimized.jpg';
+const PRIMARY_HERO = '/images/hero_optimized.webp';
 
 interface HeroSectionProps {
   initialHero?: HeroSectionData;
@@ -33,6 +33,9 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   });
 
   useEffect(() => {
+    // Jika sudah ada data SSR yang valid (ada image), skip network fetch
+    if (initialHero?.image) return;
+
     // Background refresh: update hanya jika data Supabase berbeda
     getSiteSections().then((sections) => {
       if (sections?.hero) {

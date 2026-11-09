@@ -24,11 +24,13 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
   );
 
   useEffect(() => {
-    if (!initialNarrative) {
-      const cached = getCachedSiteSections();
-      if (cached?.narrative) {
-        setNarrative(cached.narrative);
-      }
+    // Jika sudah ada data SSR, tidak perlu fetch ulang dari network
+    if (initialNarrative) return;
+
+    // Tidak ada SSR data: coba cache dulu (sync, 0 delay), lalu network
+    const cached = getCachedSiteSections();
+    if (cached?.narrative) {
+      setNarrative(cached.narrative);
     }
     getSiteSections().then((sections) => {
       if (sections?.narrative) {
@@ -154,7 +156,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
             <RevealOnScroll variant="editorial" delayMs={0}>
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
-                  src={narrative.aboutImage1 || '/images/figma_about_1.png'}
+                  src={narrative.aboutImage1 || '/images/figma_about_1.webp'}
                   alt="SEVAYA editorial 1"
                   fill
                   preset="spotlight"
@@ -165,7 +167,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
             <RevealOnScroll variant="editorial" delayMs={150}>
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
-                  src={narrative.aboutImage2 || '/images/figma_about_2.png'}
+                  src={narrative.aboutImage2 || '/images/figma_about_2.webp'}
                   alt="SEVAYA editorial 2"
                   fill
                   preset="spotlight"

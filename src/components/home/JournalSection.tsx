@@ -48,26 +48,30 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
       .then((data: { articles?: JournalArticleData[] }) => {
         if (Array.isArray(data.articles) && data.articles.length > 0) {
           setArticles(data.articles);
-        } else {
-          // Fallback: ambil dari sections config
+        } else if (!initialArticles?.length) {
+          // Fallback: ambil dari sections config hanya jika tidak ada SSR data
           getSiteSections().then((sections) => {
             if (sections.journal?.length) setArticles(sections.journal);
-            if (sections.journalHeader) setHeader(sections.journalHeader);
+            if (sections.journalHeader && !initialHeader) setHeader(sections.journalHeader);
           });
         }
       })
       .catch(() => {
-        // Fallback jika fetch gagal
-        getSiteSections().then((sections) => {
-          if (sections.journal?.length) setArticles(sections.journal);
-          if (sections.journalHeader) setHeader(sections.journalHeader);
-        });
+        // Fallback jika fetch gagal, hanya jika tidak ada SSR data
+        if (!initialArticles?.length) {
+          getSiteSections().then((sections) => {
+            if (sections.journal?.length) setArticles(sections.journal);
+            if (sections.journalHeader && !initialHeader) setHeader(sections.journalHeader);
+          });
+        }
       });
 
-    // Tetap refresh journalHeader dari sections
-    getSiteSections().then((sections) => {
-      if (sections.journalHeader) setHeader(sections.journalHeader);
-    });
+    // Refresh journalHeader dari sections hanya jika tidak ada dari SSR
+    if (!initialHeader) {
+      getSiteSections().then((sections) => {
+        if (sections.journalHeader) setHeader(sections.journalHeader);
+      });
+    }
   }, []);
 
   return (

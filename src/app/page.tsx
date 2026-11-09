@@ -12,8 +12,9 @@ import { DEFAULT_BEST_SELLERS } from '@/components/home/ProductGrid';
 import { fetchCatalogProducts } from '@/features/catalog';
 import { getSiteSections, getLatestArticlesForJournal, DEFAULT_SITE_SECTIONS } from '@/integrations/supabase';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: cache homepage 60 detik — drastis lebih cepat di HP karena tidak perlu
+// SSR dari nol untuk setiap visitor. Data produk & sections update tiap 60 detik.
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [products, sections, latestArticles] = await Promise.all([

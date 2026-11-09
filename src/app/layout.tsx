@@ -93,7 +93,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@100..900&display=swap"
           rel="stylesheet"
         />
-        <link rel="preload" as="image" href="/images/hero_optimized.jpg" fetchPriority="high" />
+        <link rel="preload" as="image" href="/images/hero_optimized.webp" fetchPriority="high" />
         {/* Google Structured Data / Rich Snippet for E-Commerce Brand */}
         <script
           type="application/ld+json"

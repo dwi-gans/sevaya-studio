@@ -35,6 +35,9 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
   }, [initialSpotlight, initialIntro]);
 
   useEffect(() => {
+    // Jika sudah ada data SSR, tidak perlu fetch ulang dari network
+    if (initialSpotlight && initialSpotlight.length > 0) return;
+
     getSiteSections().then((sections) => {
       if (sections.spotlight?.length) setSpotlight(sections.spotlight);
       if (sections.spotlightIntro) setIntro(sections.spotlightIntro);
@@ -56,7 +59,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
               className="group relative block aspect-[3/4] w-full overflow-hidden sm:aspect-[4/3] bg-black/5 border border-black/10 shadow-xs"
             >
               <StudioImage
-                src={abaya?.image || '/images/figma_abaya_banner.png'}
+                src={abaya?.image || '/images/figma_abaya_banner.webp'}
                 alt={abaya?.title || 'ABAYA Collection'}
                 fill
                 preset="spotlight"
