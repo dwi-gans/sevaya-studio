@@ -16,8 +16,6 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
   // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
   const [animDone, setAnimDone] = useState(false);
-  // imgLoaded: track saat gambar remote selesai diunduh → fade-in smooth
-  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -34,6 +32,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
           const s = sections.hero;
           if (
             s.image === prev.image &&
+            s.mobileImage === prev.mobileImage &&
             s.badge === prev.badge &&
             s.ctaShop === prev.ctaShop &&
             s.ctaLookbook === prev.ctaLookbook
@@ -54,16 +53,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
     hero.mobileImage !== desktopHeroImage
   );
   const mobileHeroImage = hasCustomMobile ? hero.mobileImage!.trim() : desktopHeroImage;
-  // Jika gambar hero berasal dari URL remote, gunakan lokal sebagai background
-  // agar TIDAK ADA flash hitam selama download berlangsung
-  const isRemote = desktopHeroImage.startsWith('http') || mobileHeroImage.startsWith('http');
 
   return (
     <section
       suppressHydrationWarning
-      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
-      // Background CSS lokal = tampil SEKETIKA tanpa download, tanpa hitam
-      style={{ backgroundImage: `url(${PRIMARY_HERO})`, backgroundSize: 'cover', backgroundPosition: 'center 30%' }}
+      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px] bg-neutral-950"
     >
       {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -83,12 +77,8 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               loading="eager"
               fetchPriority="high"
               decoding="async"
-              className={`animate-kenburns h-full w-full object-cover object-center transition-opacity duration-700 ${
-                // Jika gambar lokal langsung tampil, jika remote fade-in saat selesai
-                !isRemote || imgLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
+              className="animate-kenburns h-full w-full object-cover object-center"
               style={{ imageRendering: 'auto' }}
-              onLoad={() => setImgLoaded(true)}
               onError={(e) => {
                 const target = e.currentTarget;
                 if (!target.src.endsWith(PRIMARY_HERO)) {
