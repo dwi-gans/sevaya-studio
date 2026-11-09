@@ -87,18 +87,20 @@ export async function getCroppedImage(
   imageSrc: string,
   pixelCrop: PixelCrop,
   rotation: number,
-  originalFile: File,
+  originalFile: File | string,
   outputMaxWidth: number,
   outputFormat: 'image/webp' | 'image/jpeg' = 'image/webp',
   quality = 0.9,
 ): Promise<CroppedImageResult> {
-  // Koreksi EXIF
+  // Koreksi EXIF (hanya untuk File fisik)
   let exifDeg: 0 | 90 | 180 | 270 = 0;
-  try {
-    const buf = await originalFile.arrayBuffer();
-    exifDeg = getExifRotation(buf);
-  } catch {
-    // abaikan jika gagal baca EXIF
+  if (originalFile instanceof File) {
+    try {
+      const buf = await originalFile.arrayBuffer();
+      exifDeg = getExifRotation(buf);
+    } catch {
+      // abaikan jika gagal baca EXIF
+    }
   }
 
   const image = await loadImage(imageSrc);
@@ -158,7 +160,12 @@ export async function getCroppedImage(
 
   // Nama file: ganti ekstensi sesuai format output
   const ext = outputFormat === 'image/webp' ? 'webp' : 'jpg';
-  const baseName = originalFile.name.replace(/\.[^.]+$/, '');
+  const baseName =
+    originalFile instanceof File
+      ? originalFile.name.replace(/\.[^.]+$/, '')
+      : (typeof originalFile === 'string'
+          ? (originalFile.split('/').pop()?.split('?')[0]?.replace(/\.[^.]+$/, '') || 'hero-cloud')
+          : 'hero-image');
   const fileName = `${baseName}.${ext}`;
 
   const file = new File([blob], fileName, { type: outputFormat });

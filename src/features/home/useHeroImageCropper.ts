@@ -35,6 +35,11 @@ export function useHeroImageCropper({
     async (result: CropperResult) => {
       onLoadingChange?.(true);
       try {
+        // Jika user memilih "Gunakan Asli" dan gambar sudah dari URL cloud/galeri:
+        if (!result.wasCropped && result.originalUrl) {
+          await onUploaded(result.originalUrl);
+          return;
+        }
         const publicUrl = await uploadFileToStorage(result.file, 'uploads');
         await onUploaded(publicUrl);
       } catch (err) {

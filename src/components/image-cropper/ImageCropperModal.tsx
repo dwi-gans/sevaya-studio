@@ -23,6 +23,8 @@ export interface CropperResult {
   height: number;
   /** false jika user memilih "Gunakan Asli" */
   wasCropped: boolean;
+  /** URL asli jika gambar berasal dari galeri cloud */
+  originalUrl?: string;
 }
 
 export interface RatioOption {
@@ -32,7 +34,7 @@ export interface RatioOption {
 
 export interface ImageCropperModalProps {
   open: boolean;
-  file: File | null;
+  file: File | string | null;
   preset: CropPreset;
   extraRatios?: RatioOption[];
   allowFreeRatio?: boolean;
@@ -51,12 +53,13 @@ const BUILT_IN_RATIOS: RatioOption[] = [
 
 type ViewMode = 'desktop' | 'mobile';
 
-/** Validasi file — computed, tidak memerlukan state */
-function validateFile(file: File | null): string | null {
+/** Validasi file atau URL — computed, tidak memerlukan state */
+function validateFile(file: File | string | null): string | null {
   if (!file) return null;
-  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!allowed.includes(file.type)) return 'Format tidak didukung. Gunakan JPG, PNG, atau WebP.';
-  if (file.size > 20 * 1024 * 1024) return 'Ukuran file terlalu besar (maks. 20 MB).';
+  if (typeof file === 'string') return null; // URL cloud selalu valid
+  const isImage = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|avif|heic|gif)$/i.test(file.name);
+  if (!isImage) return 'Format tidak didukung. Gunakan JPG, PNG, WebP, atau format gambar lainnya.';
+  if (file.size > 25 * 1024 * 1024) return 'Ukuran file terlalu besar (maks. 25 MB).';
   return null;
 }
 
@@ -83,7 +86,7 @@ export function ImageCropperModal({
   const [cropError, setCropError] = useState<string | null>(null);
 
   const objectUrlRef = useRef<string | null>(null);
-  const prevFileRef = useRef<File | null>(null);
+  const prevFileRef = useRef<File | string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   // Validasi file (derived, bukan state)
@@ -117,9 +120,15 @@ export function ImageCropperModal({
     if (!file || fileError || prevFileRef.current === file) return undefined;
 
     prevFileRef.current = file;
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const url = URL.createObjectURL(file);
-    objectUrlRef.current = url;
+
+    let url: string;
+    if (typeof file === 'string') {
+      url = file;
+    } else {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      url = URL.createObjectURL(file);
+      objectUrlRef.current = url;
+    }
 
     // Semua setState di dalam callback async agar tidak sync dalam effect body
     const timer = setTimeout(() => {
@@ -217,8 +226,20 @@ export function ImageCropperModal({
     if (!file) return;
     setIsLoading(true);
     try {
-      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-      await onConfirm({ file, blob, width: 0, height: 0, wasCropped: false });
+      if (typeof file === 'string') {
+        // Jika dari cloud URL, tidak perlu re-upload! Langsung gunakan URL aslinya
+        await onConfirm({
+          file: new File([], 'original.jpg', { type: 'image/jpeg' }),
+          blob: new Blob([]),
+          width: 0,
+          height: 0,
+          wasCropped: false,
+          originalUrl: file,
+        });
+      } else {
+        const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+        await onConfirm({ file, blob, width: 0, height: 0, wasCropped: false });
+      }
     } catch (err) {
       setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
     } finally {

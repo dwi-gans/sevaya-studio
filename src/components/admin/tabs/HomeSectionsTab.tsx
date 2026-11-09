@@ -46,7 +46,10 @@ const UploadActionGroup: React.FC<UploadActionGroupProps> = ({
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) void onDirectUpload(target, file);
-          if (e.target) e.target.value = '';
+          const inputEl = e.target;
+          setTimeout(() => {
+            if (inputEl) inputEl.value = '';
+          }, 100);
         }}
       />
       <button
@@ -298,14 +301,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSaveAll}
-          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-black px-4 py-2 text-[11px] font-semibold tracking-wider text-white uppercase shadow-sm transition hover:bg-black/85 active:scale-95"
-        >
-          <Icon name="check" size={14} />
-          <span>Simpan Semua Perubahan</span>
-        </button>
+
       </div>
 
       {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}

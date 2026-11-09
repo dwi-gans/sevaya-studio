@@ -15,14 +15,14 @@ export interface UseImageCropperOptions {
 }
 
 export interface UseImageCropperReturn {
-  /** Buka modal dengan file yang dipilih */
-  openCropper: (file: File) => void;
+  /** Buka modal dengan file yang dipilih atau URL gambar cloud */
+  openCropper: (file: File | string) => void;
   /** Tutup modal tanpa melakukan apa pun */
   closeCropper: () => void;
   /** Props yang diteruskan ke <ImageCropperModal> */
   cropperProps: {
     open: boolean;
-    file: File | null;
+    file: File | string | null;
     preset: CropPreset;
     onConfirm: (result: CropperResult) => void | Promise<void>;
     onCancel: () => void;
@@ -34,15 +34,18 @@ export function useImageCropper({
   onConfirm,
 }: UseImageCropperOptions): UseImageCropperReturn {
   const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | string | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
-  const openCropper = useCallback((f: File) => {
+  const openCropper = useCallback((f: File | string) => {
     // Bersihkan objectURL sebelumnya
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
     }
-    objectUrlRef.current = URL.createObjectURL(f);
+    if (f instanceof File) {
+      objectUrlRef.current = URL.createObjectURL(f);
+    }
     setFile(f);
     setOpen(true);
   }, []);

@@ -1343,6 +1343,12 @@ export default function AdminPage() {
   }, [imagePickerTarget, productForm, sections, articleForm]);
 
   const handleSelectPredefinedImage = (imagePath: string) => {
+    // Khusus target hero: buka image cropper agar user bisa atur crop sebelum pasang
+    if (imagePickerTarget === 'hero') {
+      setIsImagePickerOpen(false);
+      openHeroCropper(imagePath);
+      return;
+    }
     applyImageToTarget(imagePickerTarget, imagePath);
     setIsImagePickerOpen(false);
     showToast('Gambar berhasil dipilih!');
@@ -1350,6 +1356,13 @@ export default function AdminPage() {
 
   const handleSelectImages = (images: string[]) => {
     if (!imagePickerTarget) return;
+
+    // Khusus target hero dari modal picker: buka image cropper
+    if (imagePickerTarget === 'hero' && images[0]) {
+      setIsImagePickerOpen(false);
+      openHeroCropper(images[0]);
+      return;
+    }
 
     if (imagePickerTarget.startsWith('swatch-')) {
       const parts = imagePickerTarget.split('-');
