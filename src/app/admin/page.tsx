@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from 'react';
 import { useToast } from '@/context/ToastContext';
@@ -54,7 +54,7 @@ import { SettingsTab } from '@/components/admin/tabs/SettingsTab';
 export default function AdminPage() {
   const { showToast } = useToast();
 
-  // ── Authentication State ──
+  // ΓöÇΓöÇ Authentication State ΓöÇΓöÇ
   const isClient = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -135,7 +135,7 @@ export default function AdminPage() {
     };
   }, []);
 
-  // ── Admin Active Tab & Mobile Drawer (Persisted across refreshes) ──
+  // ΓöÇΓöÇ Admin Active Tab & Mobile Drawer (Persisted across refreshes) ΓöÇΓöÇ
   const [activeTab, setActiveTabState] = useState<AdminTab>('orders');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -213,7 +213,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── Data State ──
+  // ΓöÇΓöÇ Data State ΓöÇΓöÇ
   const [products, setProducts] = useState<DbProduct[]>([]);
   const [sections, setSections] = useState<SiteSectionsConfig>(getCachedSiteSections);
   const isSectionsLoadedFromServer = useRef(false);
@@ -223,7 +223,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // ── News & Articles State ──
+  // ΓöÇΓöÇ News & Articles State ΓöÇΓöÇ
   const [articles, setArticles] = useState<Article[]>([]);
   const [newsFilterCategory, setNewsFilterCategory] = useState('All Stories');
   const [newsSearchQuery, setNewsSearchQuery] = useState('');
@@ -244,7 +244,7 @@ export default function AdminPage() {
     featured: false,
   });
 
-  // ── Product Modal (Create / Edit) ──
+  // ΓöÇΓöÇ Product Modal (Create / Edit) ΓöÇΓöÇ
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<DbProduct | null>(null);
   const [productForm, setProductForm] = useState<ProductFormData>({
@@ -269,12 +269,12 @@ export default function AdminPage() {
     sizing: '',
   });
 
-  // ── Image Picker Modal State ──
+  // ΓöÇΓöÇ Image Picker Modal State ΓöÇΓöÇ
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [imagePickerTarget, setImagePickerTarget] = useState<ImagePickerTarget>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // ── Hero Image Cropper ──
+  // ΓöÇΓöÇ Hero Image Cropper ΓöÇΓöÇ
   const { openCropper: openHeroCropper, cropperProps: heroCropperProps } = useHeroImageCropper({
     onUploaded: (publicUrl) => {
       setSections((prev) => {
@@ -347,7 +347,7 @@ export default function AdminPage() {
     };
   }, [isAuthenticated, showToast]);
 
-  // ── Admin Login Handlers ──
+  // ΓöÇΓöÇ Admin Login Handlers ΓöÇΓöÇ
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -391,7 +391,7 @@ export default function AdminPage() {
     showToast('Admin logged out.');
   };
 
-  // ── Product CRUD Handlers ──
+  // ΓöÇΓöÇ Product CRUD Handlers ΓöÇΓöÇ
   const handleOpenCreateModal = () => {
     setEditingProduct(null);
     setProductForm({
@@ -754,7 +754,7 @@ export default function AdminPage() {
     });
   };
 
-  /** Update foto ekstra (foto 2–4) untuk satu swatch. photoIndex: 1-based (1=foto2, 2=foto3, 3=foto4). */
+  /** Update foto ekstra (foto 2ΓÇô4) untuk satu swatch. photoIndex: 1-based (1=foto2, 2=foto3, 3=foto4). */
   const handleUpdateSwatchExtraPhoto = (swatchIndex: number, photoIndex: number, val: string) => {
     setProductForm((prev) => {
       const next = [...prev.swatches];
@@ -787,7 +787,7 @@ export default function AdminPage() {
     });
   };
 
-  // ── Apply selected or uploaded image to target ──
+  // ΓöÇΓöÇ Apply selected or uploaded image to target ΓöÇΓöÇ
   const applyImageToTarget = (target: ImagePickerTarget, urlOrPath: string) => {
     if (!target) return;
 
@@ -803,7 +803,7 @@ export default function AdminPage() {
       }));
     } else if (target.startsWith('swatch-')) {
       if (target.includes('-photo-')) {
-        // e.g. swatch-0-photo-1 → swatchIdx=0, photoIdx=1
+        // e.g. swatch-0-photo-1 ΓåÆ swatchIdx=0, photoIdx=1
         const parts = target.split('-');
         const swatchIdx = parseInt(parts[1]!, 10);
         const photoIdx = parseInt(parts[3]!, 10);
@@ -1049,7 +1049,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── News & Articles Handlers ──
+  // ΓöÇΓöÇ News & Articles Handlers ΓöÇΓöÇ
   const handleOpenCreateArticleModal = () => {
     setEditingArticle(null);
     const today = new Date().toLocaleDateString('en-US', {
@@ -1225,7 +1225,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── Direct Image Upload Handler ──
+  // ΓöÇΓöÇ Direct Image Upload Handler ΓöÇΓöÇ
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1259,7 +1259,7 @@ export default function AdminPage() {
 
   /**
    * Upload langsung dengan target yang diberikan secara eksplisit (sinkron),
-   * dipakai saat tombol "Unggah File" di form produk/swatch diklik —
+   * dipakai saat tombol "Unggah File" di form produk/swatch diklik ΓÇö
    * sehingga galeri TIDAK perlu dibuka dulu.
    */
   const handleFileUploadDirect = async (
@@ -1287,6 +1287,29 @@ export default function AdminPage() {
       const updatedFiles = await listUploadedFiles();
       setMediaFiles(updatedFiles);
       setIsImagePickerOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengunggah file';
+      showToast(msg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handler khusus untuk HomeSectionsTab — menerima (target, file) langsung
+  const handleSectionFileUpload = async (target: ImagePickerTarget, file: File): Promise<void> => {
+    if (!file) return;
+    // Khusus target hero: buka image cropper dulu
+    if (target === 'hero') {
+      openHeroCropper(file);
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const publicUrl = await uploadFileToStorage(file);
+      showToast('Gambar berhasil diunggah!');
+      applyImageToTarget(target, publicUrl);
+      const updatedFiles = await listUploadedFiles();
+      setMediaFiles(updatedFiles);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengunggah file';
       showToast(msg);
@@ -1336,7 +1359,7 @@ export default function AdminPage() {
       if (images.length > 1) {
         handleUpdateSwatchAllPhotos(swatchIdx, images);
         setIsImagePickerOpen(false);
-        showToast(`✓ Berhasil mengisi ${images.length} slot foto untuk warna ini!`);
+        showToast(`Γ£ô Berhasil mengisi ${images.length} slot foto untuk warna ini!`);
         return;
       }
 
@@ -1361,7 +1384,7 @@ export default function AdminPage() {
     showToast('Gambar berhasil dipilih!');
   };
 
-  // ── Auto-save sections debounce (hanya aktif setelah data berhasil dimuat dari server) ──
+  // ΓöÇΓöÇ Auto-save sections debounce (hanya aktif setelah data berhasil dimuat dari server) ΓöÇΓöÇ
   useEffect(() => {
     if (!isSectionsLoadedFromServer.current) return;
     const timer = setTimeout(() => {
@@ -1470,6 +1493,7 @@ export default function AdminPage() {
               setImagePickerTarget(target);
               setIsImagePickerOpen(true);
             }}
+            onFileUploadDirect={handleSectionFileUpload}
             showToast={showToast}
           />
         )}
