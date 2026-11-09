@@ -12,7 +12,26 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ initialHero }: HeroSectionProps) {
-  const [hero, setHero] = useState<HeroSectionData>(() => initialHero || DEFAULT_SITE_SECTIONS.hero);
+  const [hero, setHero] = useState<HeroSectionData>(() => {
+    if (initialHero && initialHero.image) {
+      return initialHero;
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('sevaya_site_sections');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.hero?.image) {
+            return { ...DEFAULT_SITE_SECTIONS.hero, ...parsed.hero };
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return initialHero || DEFAULT_SITE_SECTIONS.hero;
+  });
+
   // animDone: setelah animasi masuk selesai (1.4s), ubah ke class statis
   // sehingga saat user scroll ke atas/bawah di mobile tidak ada animasi yang keulang / kedut-kedut
   const [animDone, setAnimDone] = useState(false);
@@ -57,7 +76,12 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   return (
     <section
       suppressHydrationWarning
-      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px] bg-neutral-950"
+      className="relative flex w-full flex-col justify-end overflow-hidden text-white section--dark h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[500px]"
+      style={{
+        backgroundImage: `url(${desktopHeroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       {/* Background Hero Image */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -65,29 +89,43 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
           suppressHydrationWarning
           className="relative h-full w-full"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <picture className="h-full w-full">
-            {hasCustomMobile && (
-              <source media="(max-width: 639px)" srcSet={mobileHeroImage} />
-            )}
+          {hasCustomMobile ? (
+            <>
+              {/* Mobile (< 640px) */}
+              <img
+                suppressHydrationWarning
+                src={mobileHeroImage}
+                alt="SEVAYA Collection - Timeless, Intentional, Effortless"
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
+                className="animate-kenburns block sm:hidden h-full w-full object-cover object-center"
+                style={{ imageRendering: 'auto' }}
+              />
+              {/* Desktop (>= 640px) */}
+              <img
+                suppressHydrationWarning
+                src={desktopHeroImage}
+                alt="SEVAYA Collection - Timeless, Intentional, Effortless"
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
+                className="animate-kenburns hidden sm:block h-full w-full object-cover object-center"
+                style={{ imageRendering: 'auto' }}
+              />
+            </>
+          ) : (
             <img
               suppressHydrationWarning
               src={desktopHeroImage}
               alt="SEVAYA Collection - Timeless, Intentional, Effortless"
               loading="eager"
               fetchPriority="high"
-              decoding="async"
+              decoding="sync"
               className="animate-kenburns h-full w-full object-cover object-center"
               style={{ imageRendering: 'auto' }}
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (!target.src.endsWith(PRIMARY_HERO)) {
-                  target.src = PRIMARY_HERO;
-                  setHero((prev) => ({ ...prev, image: PRIMARY_HERO }));
-                }
-              }}
             />
-          </picture>
+          )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
       </div>

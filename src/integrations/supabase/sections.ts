@@ -559,6 +559,63 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
 
   const isServer = typeof window === 'undefined';
 
+  // ── 0. Server-Side Instant Disk Read (0 ms, Zero Delay) ────────────────────
+  if (isServer) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const path = require('path');
+      const diskPath = path.join(process.cwd(), '.data', 'sections.json');
+      if (fs.existsSync(diskPath)) {
+        const fileContent = fs.readFileSync(diskPath, 'utf-8');
+        const parsed = JSON.parse(fileContent) as Partial<SiteSectionsConfig>;
+        if (parsed && typeof parsed === 'object') {
+          const merged: SiteSectionsConfig = {
+            ...DEFAULT_SITE_SECTIONS,
+            ...parsed,
+            hero: {
+              ...DEFAULT_SITE_SECTIONS.hero,
+              ...(parsed.hero || {}),
+              image: sanitizeHeroImage(parsed.hero?.image),
+              mobileImage: parsed.hero?.mobileImage ? sanitizeHeroImage(parsed.hero?.mobileImage) : '',
+            },
+            closerLook: {
+              ...DEFAULT_CLOSER_LOOK,
+              ...(parsed.closerLook || {}),
+            },
+            narrative: {
+              ...DEFAULT_HOME_NARRATIVE,
+              ...(parsed.narrative || {}),
+            },
+            journalHeader: {
+              ...DEFAULT_JOURNAL_HEADER,
+              ...(parsed.journalHeader || {}),
+            },
+            consciousPage: {
+              ...DEFAULT_CONSCIOUS_PAGE,
+              ...(parsed.consciousPage || {}),
+            },
+            lookbookPage: {
+              ...DEFAULT_SITE_SECTIONS.lookbookPage!,
+              ...(parsed.lookbookPage || {}),
+            },
+            lookbookVolumesConfig: {
+              ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+              ...(parsed.lookbookVolumesConfig || {}),
+            },
+          };
+          _cachedSiteSections = merged;
+          _cachedSectionsTime = Date.now();
+          _isServerFetched = true;
+          return merged;
+        }
+      }
+    } catch {
+      // Fallback ke network fetch jika filesystem tidak tersedia
+    }
+  }
+
   // ── Fetch from server or Supabase Storage CDN ──────────────────────────────
   try {
     // In Node.js / Server Components, relative URLs fail with ERR_INVALID_URL.
