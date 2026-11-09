@@ -46,7 +46,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
 
   return (
     <section className="w-full bg-white pt-2 sm:pt-4 pb-12 sm:pb-16 text-black section--light">
-      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         {/* 2 Category Banners: ABAYA & KHIMAR */}
         <div className="grid grid-cols-2 gap-3 sm:gap-6">
           {/* Banner 1: ABAYA */}

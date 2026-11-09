@@ -52,8 +52,8 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
   const linkUrl = data.linkUrl || '/lookbook';
 
   return (
-    <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light border-b border-black/10">
-      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-white py-6 sm:py-10 lg:py-14 text-black section--light">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-14 xl:gap-18 items-center">
           {/* Left Column: Editorial Photo — sleek and responsive on mobile */}
           <RevealOnScroll variant="editorial" delayMs={0}>
@@ -74,9 +74,9 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
             </div>
           </RevealOnScroll>
 
-          {/* Right Column: Editorial Narrative Story — refined typography that fits mobile nicely */}
+          {/* Right Column: Editorial Narrative Story — with bottom divider line matching screenshot */}
           <RevealOnScroll variant="fade-up" delayMs={150}>
-            <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left">
+            <div className="flex flex-col justify-center max-w-xl mx-auto lg:mx-0 lg:pl-2 xl:pl-6 text-left border-b border-black/15 pb-6 sm:pb-8 lg:pb-10">
               {/* Eyebrow */}
               <span className="font-sans text-[8.5px] sm:text-[10px] lg:text-[11px] font-medium tracking-[0.2em] sm:tracking-[0.25em] text-black/60 uppercase block mb-1.5 sm:mb-2">
                 {eyebrow}

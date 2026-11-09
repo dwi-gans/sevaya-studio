@@ -189,7 +189,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
 
   return (
     <section className="w-full bg-white pt-6 pb-6 sm:py-8 text-black section--light" data-section="collections">
-      <div className="mx-auto max-w-[1440px] 2xl:max-w-[1536px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         {/* Top Header with subtle fade-up reveal - konsisten rata kiri di mobile & desktop */}
         <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-left">
           <span className="text-[8.5px] sm:text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
