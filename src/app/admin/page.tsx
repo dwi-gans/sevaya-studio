@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { useToast } from '@/context/ToastContext';
@@ -1078,11 +1078,8 @@ export default function AdminPage() {
       let preset: CropPreset = CROP_PRESETS.heroHome;
       let title = 'Sesuaikan / Potong Foto Hero';
       let description = 'Atur posisi agar pas dengan tampilan di website & mobile';
-      let extraRatios: RatioOption[] = [
-        { label: '16:9', value: 16 / 9 },
-        { label: '4:3', value: 4 / 3 },
-        { label: '1:1', value: 1 },
-      ];
+      // extraRatios kosong untuk hero — BUILT_IN_RATIOS (4:3, 16:9, 1:1) sudah cukup
+      let extraRatios: RatioOption[] = [];
 
       if (target === 'spotlight-0' || target === 'spotlight-1') {
         preset = CROP_PRESETS.categorySpotlight;
@@ -1096,7 +1093,7 @@ export default function AdminPage() {
         title = target === 'home-about-1' ? 'Sesuaikan Foto About SEVAYA #1' : 'Sesuaikan Foto About SEVAYA #2';
         description = 'Atur posisi foto cerita About di Home (Rekomendasi 3:4 Editorial Portrait)';
         extraRatios = [
-          { label: '3:4', value: 3 / 4 },
+          { label: '4:3', value: 4 / 3 },
         ];
       }
 
