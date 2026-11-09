@@ -193,10 +193,10 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
         {/* Top Header with subtle fade-up reveal - konsisten rata kiri di mobile & desktop */}
         <RevealOnScroll variant="fade-up" className="mb-5 flex flex-col gap-1 text-left">
           <span className="text-[8.5px] sm:text-[9px] font-medium tracking-[0.2em] text-black/60 uppercase">
-            SHOP THE COLLECTION
+            WORN &amp; LOVED
           </span>
           <h2 className="font-sans text-[13px] sm:text-sm font-medium tracking-wider text-black/85 uppercase">
-            BEST-LOVED COLLECTIONS
+            SHOP THE COLLECTION
           </h2>
         </RevealOnScroll>
 
