@@ -14,18 +14,18 @@ interface StockMutationModalProps {
 
 export const REASON_LABELS: Record<MutationReason, string> = {
   RESTOCK_PRODUCTION: 'Produksi Masuk (Gudang)',
-  CUSTOMER_ORDER: 'Penjualan / Pesanan Pelanggan',
-  ORDER_FULFILLMENT: 'Pesanan Website (Otomatis)',
+  CUSTOMER_ORDER: 'Penjualan Offline / Khusus',
+  ORDER_FULFILLMENT: '🛒 Pembelian Website (Otomatis)',
   CUSTOMER_RETURN: 'Retur dari Pelanggan',
   DAMAGE_DEFECT: 'Barang Cacat / Reject',
   SAMPLE_MARKETING: 'Sampel Foto & Promosi',
   STOCK_OPNAME: 'Penyesuaian Stok Opname',
-  OTHER: 'Lainnya / Catatan Khusus',
+  OTHER: 'Penyesuaian Manual Admin / Coba-coba',
 };
 
 const REASON_OPTIONS_BY_TYPE: Record<MutationType, MutationReason[]> = {
   in: ['RESTOCK_PRODUCTION', 'CUSTOMER_RETURN', 'OTHER'],
-  out: ['CUSTOMER_ORDER', 'DAMAGE_DEFECT', 'SAMPLE_MARKETING', 'OTHER'],
+  out: ['OTHER', 'DAMAGE_DEFECT', 'SAMPLE_MARKETING', 'CUSTOMER_ORDER'],
   adjustment: ['STOCK_OPNAME', 'OTHER'],
 };
 

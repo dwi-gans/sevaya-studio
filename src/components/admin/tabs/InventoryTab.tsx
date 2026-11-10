@@ -77,6 +77,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
   const [sizeFilter, setSizeFilter] = useState<string>('all');
   const [colorFilter, setColorFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('stock-desc');
+  const [mutationFilter, setMutationFilter] = useState<'all' | 'order' | 'manual'>('all');
 
   // Expanded product cards in grouped view (all expanded by default for quick glance)
   const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
@@ -288,6 +289,39 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
 
     return list;
   }, [products, variants, searchQuery, stockFilter, sizeFilter, colorFilter, sortBy]);
+
+  const orderMutationsCount = useMemo(
+    () =>
+      mutations.filter(
+        (m) =>
+          m.reason === 'ORDER_FULFILLMENT' ||
+          Boolean(m.reference && m.reference.startsWith('SVY-'))
+      ).length,
+    [mutations]
+  );
+  const manualMutationsCount = mutations.length - orderMutationsCount;
+
+  const filteredMutations = useMemo(() => {
+    return mutations.filter((m) => {
+      const isOrder =
+        m.reason === 'ORDER_FULFILLMENT' ||
+        Boolean(m.reference && m.reference.startsWith('SVY-'));
+
+      if (mutationFilter === 'order' && !isOrder) return false;
+      if (mutationFilter === 'manual' && isOrder) return false;
+
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        m.sku.toLowerCase().includes(q) ||
+        m.productTitle.toLowerCase().includes(q) ||
+        m.colorName.toLowerCase().includes(q) ||
+        m.size.toLowerCase().includes(q) ||
+        Boolean(m.reference && m.reference.toLowerCase().includes(q)) ||
+        Boolean(m.notes && m.notes.toLowerCase().includes(q))
+      );
+    });
+  }, [mutations, searchQuery, mutationFilter]);
 
   // Toggle card expansion
   const toggleExpand = (productId: string) => {
@@ -608,6 +642,38 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Sub-Filters for Mutations View */}
+        {activeView === 'mutations' && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/10">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              {[
+                { id: 'all', label: `Semua Mutasi (${mutations.length})` },
+                { id: 'order', label: `🛒 Pembelian Website (${orderMutationsCount})` },
+                { id: 'manual', label: `⚙️ Manual & Restock (${manualMutationsCount})` },
+              ].map((tab) => {
+                const active = mutationFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setMutationFilter(tab.id as 'all' | 'order' | 'manual')}
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold transition active:scale-95 shrink-0 cursor-pointer whitespace-nowrap ${
+                      active
+                        ? 'bg-black text-white shadow-xs'
+                        : 'border border-black/15 bg-white text-black/70 hover:bg-black/5 hover:text-black'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-black/50 hidden sm:block">
+              *Pesanan pelanggan di website otomatis tercatat sebagai mutasi &quot;Order Web&quot;
+            </p>
           </div>
         )}
       </div>
@@ -1155,40 +1221,86 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/[0.06]">
-                  {mutations.map((m) => {
-                    const typeInfo = MUTATION_TYPE_INFO[m.type];
-                    const friendlyReason = REASON_LABELS[m.reason] || 'Lainnya';
-                    return (
-                      <tr key={m.id} className="hover:bg-black/[0.015] transition-colors">
-                        <td className="py-2.5 px-3 sm:px-4 text-[11px] text-black/50 whitespace-nowrap">
-                          {formatDate(m.createdAt)}
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 font-mono text-[11px] text-black/60 font-medium whitespace-nowrap">
-                          {m.sku}
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 font-semibold text-black max-w-[160px] truncate">
-                          {m.productTitle} · {m.colorName} ({m.size})
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 text-center">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${typeInfo.className}`}>
-                            {typeInfo.label}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 text-center font-bold tabular-nums text-black">
-                          {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 text-center text-[11px] font-medium text-black/60 tabular-nums whitespace-nowrap">
-                          {m.previousStock} → <strong className="text-black">{m.currentStock}</strong> pcs
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 text-black/70 text-[11px]">
-                          {friendlyReason}
-                        </td>
-                        <td className="py-2.5 px-3 sm:px-4 font-mono text-[10px] text-black/50">
-                          {m.reference || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filteredMutations.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 px-4 text-center text-black/50 text-xs">
+                        Tidak ada riwayat mutasi yang cocok dengan filter yang dipilih.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredMutations.map((m) => {
+                      const typeInfo = MUTATION_TYPE_INFO[m.type];
+                      const friendlyReason = REASON_LABELS[m.reason] || 'Lainnya';
+                      const isOrder =
+                        m.reason === 'ORDER_FULFILLMENT' ||
+                        Boolean(m.reference && m.reference.startsWith('SVY-'));
+
+                      return (
+                        <tr key={m.id} className="hover:bg-black/[0.015] transition-colors">
+                          <td className="py-2.5 px-3 sm:px-4 text-[11px] text-black/50 whitespace-nowrap">
+                            {formatDate(m.createdAt)}
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 font-mono text-[11px] text-black/60 font-medium whitespace-nowrap">
+                            {m.sku}
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 font-semibold text-black max-w-[160px] truncate">
+                            {m.productTitle} · {m.colorName} ({m.size})
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 text-center">
+                            {isOrder ? (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs whitespace-nowrap">
+                                🛒 Order Web
+                              </span>
+                            ) : (
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap ${typeInfo.className}`}>
+                                {typeInfo.label}
+                              </span>
+                            )}
+                          </td>
+                          <td className={`py-2.5 px-3 sm:px-4 text-center font-bold tabular-nums ${isOrder ? 'text-emerald-800 font-extrabold' : 'text-black'}`}>
+                            {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 text-center text-[11px] font-medium text-black/60 tabular-nums whitespace-nowrap">
+                            {m.previousStock} → <strong className="text-black">{m.currentStock}</strong> pcs
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 text-[11px]">
+                            {isOrder ? (
+                              <div>
+                                <span className="font-semibold text-emerald-950 block">
+                                  Pembelian Pelanggan
+                                </span>
+                                {m.notes && (
+                                  <span className="text-[10px] text-emerald-800/80 font-medium block">
+                                    {m.notes}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="text-black/80 font-medium block">
+                                  {friendlyReason}
+                                </span>
+                                {m.notes && (
+                                  <span className="text-[10px] text-black/50 block">
+                                    {m.notes}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 sm:px-4 font-mono text-[10px]">
+                            {m.reference ? (
+                              <span className="inline-block font-bold text-black bg-black/5 px-2 py-0.5 rounded border border-black/10">
+                                #{m.reference}
+                              </span>
+                            ) : (
+                              <span className="text-black/40">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
