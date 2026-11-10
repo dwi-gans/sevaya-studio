@@ -207,8 +207,117 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
   const barcodeValue = order.tracking_number?.trim() || order.biteship_order_id || order.order_number;
   const isManualShipping = !isBiteshipPickup;
 
+  // Cek apakah alamat tujuan sudah lengkap memuat kecamatan/kota sehingga tidak perlu diulang
+  const isDestinationRedundant = useMemo(() => {
+    if (!order.destination_area || !order.customer_address) return false;
+    const destNorm = order.destination_area.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const addrNorm = order.customer_address.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return addrNorm.includes(destNorm);
+  }, [order.destination_area, order.customer_address]);
+
   const handlePrint = () => {
-    window.print();
+    const labelEl = document.getElementById('sevaya-shipping-label');
+    if (!labelEl) {
+      window.print();
+      return;
+    }
+
+    try {
+      // Buat iframe terisolasi agar PASTI hanya 1 halaman & tidak mencetak dashboard di belakang
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute(
+        'style',
+        'position:fixed;top:-9999px;left:-9999px;width:100mm;height:150mm;border:0;visibility:hidden;'
+      );
+      document.body.appendChild(iframe);
+
+      const frameDoc = iframe.contentWindow?.document;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      // Kloning seluruh styles aktif dari halaman
+      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map((el) => el.outerHTML)
+        .join('\n');
+
+      frameDoc.open();
+      frameDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>Label Pengiriman SEVAYA #${order.order_number}</title>
+            ${styles}
+            <style>
+              @page {
+                size: 100mm 150mm;
+                margin: 0;
+              }
+              * {
+                box-sizing: border-box !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              html, body {
+                width: 100mm !important;
+                height: 146mm !important;
+                max-height: 146mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                background: #fff !important;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              }
+              .print-container {
+                width: 100mm !important;
+                height: 146mm !important;
+                max-height: 146mm !important;
+                box-sizing: border-box !important;
+                padding: 2mm !important;
+                overflow: hidden !important;
+              }
+              #sevaya-shipping-label {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                min-height: 0 !important;
+                box-sizing: border-box !important;
+                border: 1.5px solid #000 !important;
+                padding: 2.5mm !important;
+                box-shadow: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                overflow: hidden !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-container">
+              ${labelEl.outerHTML}
+            </div>
+          </body>
+        </html>
+      `);
+      frameDoc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          try {
+            document.body.removeChild(iframe);
+          } catch {
+            // ignore
+          }
+        }, 1500);
+      }, 300);
+    } catch {
+      window.print();
+    }
   };
 
   const formattedDate = order.created_at
@@ -221,9 +330,25 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
 
   return (
     <>
-      {/* ─── Global Print Styles ────────────────────────────────────────────── */}
+      {/* ─── Global Print Styles (Fallback jika Ctrl+P) ────────────────────── */}
       <style jsx global>{`
         @media print {
+          @page {
+            size: 100mm 150mm;
+            margin: 0;
+          }
+          html,
+          body {
+            width: 100mm !important;
+            height: 146mm !important;
+            max-height: 146mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -232,24 +357,29 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
             visibility: visible !important;
           }
           #sevaya-shipping-label {
-            position: fixed !important;
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 100mm !important;
             max-width: 100mm !important;
-            min-height: 145mm !important;
+            height: 146mm !important;
+            max-height: 146mm !important;
+            min-height: 0 !important;
+            box-sizing: border-box !important;
             margin: 0 !important;
-            padding: 4mm !important;
+            padding: 2.5mm !important;
             box-shadow: none !important;
-            border: 2px solid #000 !important;
+            border: 1.5px solid #000 !important;
             background: #fff !important;
             color: #000 !important;
-            font-size: 11px !important;
-            z-index: 9999999 !important;
-          }
-          @page {
-            size: 100mm 150mm;
-            margin: 0;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
@@ -372,24 +502,24 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
             <div
               id="sevaya-shipping-label"
               ref={labelRef}
-              className="w-full max-w-[380px] bg-white border-2 border-black p-3.5 text-black font-sans shadow-md print:shadow-none print:border-2 print:border-black print:max-w-none print:w-[100mm]"
-              style={{ minHeight: '520px' }}
+              className="w-full max-w-[380px] bg-white border-2 border-black p-3 text-black font-sans shadow-md flex flex-col justify-between print:shadow-none print:border-2 print:border-black print:max-w-none print:w-[100mm] print:h-[146mm] print:p-2.5 box-border"
+              style={{ minHeight: '480px' }}
             >
               {/* Header: Logo, Store & Service */}
-              <div className="flex items-center justify-between border-b-2 border-black pb-2.5">
+              <div className="flex items-center justify-between border-b-2 border-black pb-1.5 shrink-0">
                 <div>
-                  <h1 className="font-serif text-lg font-extrabold tracking-widest uppercase">
+                  <h1 className="font-serif text-base font-extrabold tracking-widest uppercase leading-tight">
                     SEVAYA
                   </h1>
-                  <p className="text-[9px] uppercase tracking-wider text-black font-medium">
+                  <p className="text-[8.5px] uppercase tracking-wider text-black font-medium">
                     Modern Modestwear Studio
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="inline-block bg-black text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded-xs">
+                  <div className="inline-block bg-black text-white px-2 py-0.5 text-[11px] font-black uppercase tracking-wider rounded-xs">
                     {order.courier_name || 'REGULER'}
                   </div>
-                  <p className="text-[9px] text-black/70 font-mono mt-0.5">
+                  <p className="text-[8.5px] text-black/70 font-mono mt-0.5">
                     {formattedDate}
                   </p>
                 </div>
@@ -397,26 +527,26 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
 
               {/* Barcode & Waybill Section */}
               {isBiteshipPickup ? (
-                <div className="py-2.5 border-b-2 border-black text-center bg-black/2 print:bg-transparent">
+                <div className="py-1.5 border-b-2 border-black text-center bg-black/2 print:bg-transparent shrink-0">
                   <BarcodeSVG value={barcodeValue} />
-                  <div className="flex items-center justify-between px-2 pt-1 text-[9px] text-black/70">
+                  <div className="flex items-center justify-between px-2 pt-0.5 text-[8.5px] text-black/70">
                     <span className="font-mono font-bold">Resi: {barcodeValue}</span>
                     <span>Berat: {estWeight} kg</span>
                     <span>Qty: {totalQuantity} pcs</span>
                   </div>
                 </div>
               ) : (
-                <div className="py-2 px-3 border-b-2 border-black bg-neutral-50/70 print:bg-transparent">
-                  <div className="flex items-center justify-between text-[10px]">
+                <div className="py-1.5 px-2.5 border-b-2 border-black bg-neutral-50/70 print:bg-transparent shrink-0">
+                  <div className="flex items-center justify-between text-[9px]">
                     <div className="flex items-center gap-1.5">
-                      <span className="inline-block text-[9px] font-black uppercase tracking-wider bg-black text-white px-2 py-0.5 rounded-2xs">
+                      <span className="inline-block text-[8px] font-black uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-2xs">
                         DROP-OFF GERAI
                       </span>
                       <span className="font-bold text-black font-mono">
                         #{order.order_number}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-[9px] text-black/80 font-medium">
+                    <div className="flex items-center gap-1.5 text-[8.5px] text-black/80 font-medium">
                       <span className="font-bold text-black">NON-COD • LUNAS</span>
                       <span>•</span>
                       <span>{estWeight} kg</span>
@@ -428,69 +558,69 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
               )}
 
               {/* Address Section: Recipient & Sender */}
-              <div className="grid grid-cols-1 divide-y-2 divide-black border-b-2 border-black">
+              <div className="grid grid-cols-1 divide-y-2 divide-black border-b-2 border-black shrink-0">
                 
                 {/* Kepada (Penerima) */}
-                <div className="p-2.5 space-y-1">
+                <div className="p-2 space-y-0.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-2xs">
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-2xs">
                       PENERIMA (TO)
                     </span>
-                    <span className="font-bold text-xs">{order.customer_phone}</span>
+                    <span className="font-bold text-[11px] font-mono">{order.customer_phone}</span>
                   </div>
-                  <p className="font-extrabold text-sm leading-tight text-black pt-0.5">
+                  <p className="font-extrabold text-[13px] leading-tight text-black pt-0.5">
                     {order.customer_name}
                   </p>
-                  <p className="text-[11px] leading-snug text-black">
+                  <p className="text-[10px] leading-snug text-black break-words">
                     {order.customer_address}
                   </p>
-                  {order.destination_area && (
-                    <p className="text-[10px] font-semibold text-black/80 pt-0.5">
+                  {order.destination_area && !isDestinationRedundant && (
+                    <p className="text-[9px] font-semibold text-black/80 pt-0.5">
                       📍 {order.destination_area}
                     </p>
                   )}
                 </div>
 
                 {/* Dari (Pengirim) */}
-                <div className="p-2 space-y-0.5 bg-neutral-50/50 print:bg-transparent text-[10px]">
+                <div className="p-1.5 space-y-0.5 bg-neutral-50/50 print:bg-transparent text-[9px]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-black/80">
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-black/80">
                       PENGIRIM (FROM):
                     </span>
-                    <span className="font-bold">WA: {shipperInfo.phone}</span>
+                    <span className="font-bold font-mono">WA: {shipperInfo.phone}</span>
                   </div>
-                  <p className="font-bold text-[11px] text-black">
+                  <p className="font-bold text-[10px] text-black">
                     {shipperInfo.name}
                   </p>
-                  <p className="text-[10px] text-black/80 leading-tight">
+                  <p className="text-[9px] text-black/80 leading-tight break-words">
                     {shipperInfo.address}
                   </p>
                 </div>
               </div>
 
               {/* Packing Slip / Daftar Produk */}
-              <div className="p-2 border-b-2 border-black space-y-1.5">
+              <div className="p-1.5 border-b-2 border-black space-y-1 shrink-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-black">
+                  <span className="text-[8.5px] font-bold uppercase tracking-wider text-black">
                     RINCIAN ISI PAKET (PACKING SLIP)
                   </span>
-                  <span className="text-[9px] text-black/60 font-mono">
+                  <span className="text-[8.5px] text-black/60 font-mono">
                     Total: {totalQuantity} pcs
                   </span>
                 </div>
-                <div className="divide-y divide-black/20 text-[10px]">
+                <div className="divide-y divide-black/20 text-[9.5px]">
                   {itemsList.map((item, idx) => (
-                    <div key={idx} className="py-1 flex items-start justify-between gap-2">
+                    <div key={idx} className="py-0.5 flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-bold text-black leading-tight truncate">
                           {item.productTitle || item.title || item.name || 'Produk Modestwear'}
                         </p>
-                        <p className="text-[9px] text-black/70">
+                        <p className="text-[8.5px] text-black/70">
                           {item.color ? `Warna: ${item.color}` : ''}
                           {item.size ? ` • Size: ${item.size}` : ''}
                         </p>
                       </div>
-                      <span className="font-bold font-mono text-[11px] shrink-0">
+                      <span className="font-bold font-mono text-[10.5px] shrink-0">
                         ×{item.qty || item.quantity || 1}
                       </span>
                     </div>
@@ -499,7 +629,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
               </div>
 
               {/* Footer Note */}
-              <div className="pt-2 text-center text-[8px] text-black/70 leading-tight">
+              <div className="pt-1.5 pb-0.5 text-center text-[7.5px] text-black/75 leading-tight shrink-0">
                 <p className="font-bold uppercase tracking-wider text-black">
                   FRAGILE • JAGA KEBERSIHAN PAKET
                 </p>
