@@ -207,13 +207,10 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
   const barcodeValue = order.tracking_number?.trim() || order.biteship_order_id || order.order_number;
   const isManualShipping = !isBiteshipPickup;
 
-  // Cek apakah alamat tujuan sudah lengkap memuat kecamatan/kota sehingga tidak perlu diulang
-  const isDestinationRedundant = useMemo(() => {
-    if (!order.destination_area || !order.customer_address) return false;
-    const destNorm = order.destination_area.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const addrNorm = order.customer_address.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return addrNorm.includes(destNorm);
-  }, [order.destination_area, order.customer_address]);
+  // Cek apakah alamat tujuan sudah lengkap memuat kecamatan/kota sehingga tidak perlu diulang (tanpa hook)
+  const destNorm = order.destination_area ? order.destination_area.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+  const addrNorm = order.customer_address ? order.customer_address.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+  const isDestinationRedundant = Boolean(destNorm && addrNorm && addrNorm.includes(destNorm));
 
   const handlePrint = () => {
     const labelEl = document.getElementById('sevaya-shipping-label');
