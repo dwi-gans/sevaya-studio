@@ -6,7 +6,7 @@ import { Logo } from '@/components/ui/Logo';
 import { useLanguage } from '@/context/LanguageContext';
 
 export function Footer() {
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -27,9 +27,9 @@ export function Footer() {
   return (
     <footer className="w-full border-t border-black/10 bg-white pt-16 pb-12 text-black section--light">
       <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-y-10 md:grid-cols-4 lg:grid-cols-12 lg:gap-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-y-10 md:grid-cols-12 lg:gap-8">
           {/* Column 1: Contact Us */}
-          <div className="col-span-2 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-3">
+          <div className="col-span-2 space-y-3 sm:col-span-1 md:col-span-4 lg:col-span-4">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Contact Us
             </h4>
@@ -94,7 +94,7 @@ export function Footer() {
           </div>
 
           {/* Column 2: Company */}
-          <div className="col-span-1 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
+          <div className="col-span-1 space-y-3 sm:col-span-1 md:col-span-3 lg:col-span-3">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Company
             </h4>
@@ -122,43 +122,8 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Language (sebelah Company di right) */}
-          <div className="col-span-1 space-y-3 sm:col-span-1 md:col-span-1 lg:col-span-2">
-            <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
-              Language
-            </h4>
-            <ul className="space-y-2 text-xs text-black/60">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('en')}
-                  className={`transition cursor-pointer text-left ${
-                    language === 'en'
-                      ? 'font-medium text-black underline underline-offset-4'
-                      : 'hover:text-black'
-                  }`}
-                >
-                  English
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('id')}
-                  className={`transition cursor-pointer text-left ${
-                    language === 'id'
-                      ? 'font-medium text-black underline underline-offset-4'
-                      : 'hover:text-black'
-                  }`}
-                >
-                  Indonesia
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Newsletter Subscription */}
-          <div className="col-span-2 space-y-3 sm:col-span-2 md:col-span-1 lg:col-span-5">
+          {/* Column 3: Newsletter Subscription */}
+          <div className="col-span-2 space-y-3 sm:col-span-2 md:col-span-5 lg:col-span-5">
             <h4 className="text-xs font-semibold tracking-wider text-black/85 uppercase">
               Newsletter
             </h4>
