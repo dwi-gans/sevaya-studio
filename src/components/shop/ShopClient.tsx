@@ -143,10 +143,10 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
     <div className="min-h-screen bg-[#FFFFFF]">
       {/* Top Editorial Header */}
       <div className="border-b border-[#E5E5E5]/60 bg-[#FFFFFF]">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-headline text-2xl font-light tracking-tight text-[#000000] uppercase sm:text-3xl lg:text-4xl">
+              <h1 className="font-headline text-base font-medium tracking-[0.18em] text-[#000000] uppercase sm:text-xl lg:text-2xl">
                 Ready to Wear
               </h1>
               <p className="mt-1 text-[11px] text-[#666666] tracking-wide">
