@@ -360,7 +360,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     badge: 'TIMELESS • INTENTIONAL • EFFORTLESS',
     title: 'SEVAYA',
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
-    image: '/images/hero_optimized.jpg',
+    image: '/images/hero_optimized.webp',
     mobileImage: '',
     ctaLookbook: 'Lookbook',
     ctaShop: 'Shop The Collection',
@@ -570,7 +570,8 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
       const diskPath = path.join(process.cwd(), '.data', 'sections.json');
       if (fs.existsSync(diskPath)) {
         const fileContent = fs.readFileSync(diskPath, 'utf-8');
-        const parsed = JSON.parse(fileContent) as Partial<SiteSectionsConfig>;
+        const cleanContent = fileContent.replace(/^\uFEFF/, '');
+        const parsed = JSON.parse(cleanContent) as Partial<SiteSectionsConfig>;
         if (parsed && typeof parsed === 'object') {
           const merged: SiteSectionsConfig = {
             ...DEFAULT_SITE_SECTIONS,

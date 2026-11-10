@@ -1119,12 +1119,17 @@ export default function AdminPage() {
   const handleUniversalCropperConfirm = useCallback(
     async (result: CropperResult) => {
       const currentTarget = cropperModalConfig.target;
-      let finalUrl = result.originalUrl || '';
+      const existingUrl =
+        result.originalUrl ||
+        (typeof cropperModalConfig.file === 'string' ? cropperModalConfig.file : '');
+      let finalUrl = existingUrl || '';
 
-      // Jika gambar hasil crop berupa File/Blob, unggah ke Cloud Storage agar sections.json tetap ringan (~18KB)
-      // dan TIDAK menyimpan jutaan karakter base64 (Data URL) yang membuat Vercel & HP lemot.
-      if (result.file && result.file.size > 0 && result.wasCropped) {
-        showToast('Mengunggah hasil crop ke cloud storage...');
+      // Hanya upload crop jika sumber asli adalah File lokal dari laptop/HP (bukan URL cloud yang sudah ada).
+      // Jika sumber sudah berupa URL remote, gunakan URL asli agar tidak membuat duplikat file di media library.
+      const sourceIsLocalFile = cropperModalConfig.file instanceof File;
+
+      if (sourceIsLocalFile && result.file && result.file.size > 0 && result.wasCropped) {
+        showToast('Mengunggah foto baru ke cloud storage...');
         try {
           const uploadedUrl = await uploadFileToStorage(result.file, 'uploads');
           if (uploadedUrl) {
@@ -1132,10 +1137,11 @@ export default function AdminPage() {
           }
         } catch (err) {
           console.warn('[Cropper] Upload ke storage gagal, fallback ke dataUrl:', err);
-          finalUrl = result.dataUrl || (result.blob ? URL.createObjectURL(result.blob) : '');
+          finalUrl = existingUrl || result.dataUrl || '';
         }
       } else if (!finalUrl) {
-        finalUrl = result.dataUrl || (result.blob ? URL.createObjectURL(result.blob) : '');
+        // Sumber sudah berupa URL remote - gunakan langsung tanpa upload ulang
+        finalUrl = existingUrl || result.dataUrl || '';
       }
 
       if (!finalUrl || !currentTarget) return;
@@ -1167,7 +1173,7 @@ export default function AdminPage() {
         closeUniversalCropper();
       }
     },
-    [cropperModalConfig.target, closeUniversalCropper, applyImageToTarget, showToast],
+    [cropperModalConfig, closeUniversalCropper, applyImageToTarget, showToast],
   );
 
   // ΓöÇΓöÇ News & Articles Handlers ΓöÇΓöÇ

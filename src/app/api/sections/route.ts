@@ -31,7 +31,8 @@ function readLocalSections(): SiteSectionsConfig | null {
     const filePath = path.join(DATA_DIR, SECTIONS_FILE);
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf-8');
-      const parsed = JSON.parse(content) as SiteSectionsConfig;
+      const clean = content.replace(/^\uFEFF/, '');
+      const parsed = JSON.parse(clean) as SiteSectionsConfig;
       if (parsed && typeof parsed === 'object') return parsed;
     }
   } catch {

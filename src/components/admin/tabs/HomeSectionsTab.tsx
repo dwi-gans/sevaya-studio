@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import {
@@ -18,6 +18,46 @@ import { INITIAL_ARTICLES } from '@/data/newsArticles';
 import type { ImagePickerTarget } from '../adminTypes';
 
 // â”€â”€ Upload Action Group (harus di luar komponen agar tidak re-create saat render) â”€â”€
+// ── Admin image preview with auto-fallback ──────────────────────────────────
+// Mencegah tampilan "gambar rusak/corrupt" di admin ketika URL cloud sudah dihapus.
+interface AdminImgPreviewProps {
+  src?: string | null;
+  fallback: string;
+  alt?: string;
+  className?: string;
+}
+
+const AdminImgPreview: React.FC<AdminImgPreviewProps> = ({ src, fallback, alt = '', className = '' }) => {
+  const resolved =
+    src?.trim() && src !== 'undefined' && src !== 'null' && !src.startsWith('blob:')
+      ? src.trim()
+      : fallback;
+  const [imgSrc, setImgSrc] = useState(resolved);
+
+  useEffect(() => {
+    const next =
+      src?.trim() && src !== 'undefined' && src !== 'null' && !src.startsWith('blob:')
+        ? src.trim()
+        : fallback;
+    setImgSrc(next);
+  }, [src, fallback]);
+
+  return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      fill
+      unoptimized
+      className={`object-cover ${className}`.trim()}
+      onError={() => setImgSrc(fallback)}
+    />
+  );
+};
+
+const HeroAdminPreview: React.FC<{ src?: string | null }> = ({ src }) => (
+  <AdminImgPreview src={src} fallback="/images/hero_optimized.webp" alt="Hero Preview" />
+);
+
 interface UploadActionGroupProps {
   target: ImagePickerTarget;
   label?: string;
@@ -349,13 +389,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </div>
 
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
-            <Image
-              src={hero.image?.trim() || '/images/hero_optimized.jpg'}
-              alt="Hero Preview"
-              fill
-              unoptimized
-              className="object-cover"
-            />
+            <HeroAdminPreview src={hero.image?.trim()} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
               <span className="text-[9px] tracking-widest uppercase opacity-90">
                 {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
@@ -468,12 +502,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-              <Image
-                src={closerLook?.image || DEFAULT_CLOSER_LOOK.image || '/images/lookbook_figma_0.png'}
+              <AdminImgPreview
+                src={closerLook?.image || DEFAULT_CLOSER_LOOK.image}
+                fallback="/images/lookbook_figma_0.png"
                 alt="Closer Look Collection"
-                fill
-                unoptimized
-                className="object-cover"
               />
             </div>
             <p className="text-[10px] text-black/50">
@@ -633,12 +665,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-              <Image
-                src={spotlight[0]?.image || '/images/figma_abaya_banner.png'}
+              <AdminImgPreview
+                src={spotlight[0]?.image}
+                fallback="/images/figma_abaya_banner.webp"
                 alt="Spotlight 1"
-                fill
-                unoptimized
-                className="object-cover"
               />
               <div className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white uppercase">
                 {spotlight[0]?.title || 'ABAYA'}
@@ -673,12 +703,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
-              <Image
-                src={spotlight[1]?.image || '/images/khiban-banner-v2.jpg'}
+              <AdminImgPreview
+                src={spotlight[1]?.image}
+                fallback="/images/figma_khiban_banner.webp"
                 alt="Spotlight 2"
-                fill
-                unoptimized
-                className="object-cover"
               />
               <div className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-white uppercase">
                 {spotlight[1]?.title || 'KHIMAR'}
@@ -821,12 +849,11 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </div>
 
             <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black">
-              <Image
-                src={narrative.videoPoster || '/images/kani_poster.webp'}
+              <AdminImgPreview
+                src={narrative.videoPoster}
+                fallback="/images/kani_poster.webp"
                 alt="Video Cover"
-                fill
-                unoptimized
-                className="object-cover opacity-90"
+                className="opacity-90"
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="rounded-full bg-white/20 p-3 backdrop-blur-xs">
@@ -1024,12 +1051,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               />
             </div>
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white shadow-xs">
-              <Image
-                src={narrative.aboutImage || narrative.aboutImage1 || '/images/figma_about_1.webp'}
+              <AdminImgPreview
+                src={narrative.aboutImage || narrative.aboutImage1}
+                fallback="/images/figma_about_1.webp"
                 alt="About Foto SEVAYA"
-                fill
-                unoptimized
-                className="object-cover"
               />
             </div>
             <p className="text-[9.5px] text-black/50 leading-tight">
@@ -1258,12 +1283,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </div>
 
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
-                  <Image
-                    src={journal[0]?.image || '/images/catalog/catalog-11.jpg'}
+                  <AdminImgPreview
+                    src={journal[0]?.image}
+                    fallback="/images/catalog/catalog-11.jpg"
                     alt={journal[0]?.title || 'Artikel 1'}
-                    fill
-                    unoptimized
-                    className="object-cover"
                   />
                 </div>
 
@@ -1326,12 +1349,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 </div>
 
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
-                  <Image
-                    src={journal[1]?.image || '/images/catalog/catalog-12.jpg'}
+                  <AdminImgPreview
+                    src={journal[1]?.image}
+                    fallback="/images/catalog/catalog-12.jpg"
                     alt={journal[1]?.title || 'Artikel 2'}
-                    fill
-                    unoptimized
-                    className="object-cover"
                   />
                 </div>
 
