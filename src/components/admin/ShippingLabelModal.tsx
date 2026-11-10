@@ -406,24 +406,23 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
                   </div>
                 </div>
               ) : (
-                <div className="py-2.5 px-3 border-b-2 border-black bg-neutral-50/70 print:bg-transparent">
-                  <div className="flex items-center justify-between">
+                <div className="py-2 px-3 border-b-2 border-black bg-neutral-50/70 print:bg-transparent">
+                  <div className="flex items-center justify-between text-[10px]">
                     <div className="flex items-center gap-1.5">
                       <span className="inline-block text-[9px] font-black uppercase tracking-wider bg-black text-white px-2 py-0.5 rounded-2xs">
                         DROP-OFF GERAI
                       </span>
-                      <span className="text-[10px] font-bold text-black font-mono">
+                      <span className="font-bold text-black font-mono">
                         #{order.order_number}
                       </span>
                     </div>
-                    <span className="text-[9px] font-semibold text-black/70 uppercase">
-                      NON-COD • LUNAS
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between pt-1.5 text-[9px] text-black/70 border-t border-black/10 mt-1.5">
-                    <span>Ekspedisi: <strong className="text-black font-bold uppercase">{order.courier_name || 'Reguler'}</strong></span>
-                    <span>Est. Berat: <strong className="text-black font-bold">{estWeight} kg</strong></span>
-                    <span>Total Isi: <strong className="text-black font-bold">{totalQuantity} item</strong></span>
+                    <div className="flex items-center gap-2 text-[9px] text-black/80 font-medium">
+                      <span className="font-bold text-black">NON-COD • LUNAS</span>
+                      <span>•</span>
+                      <span>{estWeight} kg</span>
+                      <span>•</span>
+                      <span>{totalQuantity} pcs</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -432,7 +431,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
               <div className="grid grid-cols-1 divide-y-2 divide-black border-b-2 border-black">
                 
                 {/* Kepada (Penerima) */}
-                <div className="p-2 space-y-1">
+                <div className="p-2.5 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[9px] font-bold uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-2xs">
                       PENERIMA (TO)
@@ -466,22 +465,6 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
                   <p className="text-[10px] text-black/80 leading-tight">
                     {shipperInfo.address}
                   </p>
-                </div>
-              </div>
-
-              {/* Ekspedisi & Tracking Notes */}
-              <div className="p-2 border-b-2 border-black text-xs flex items-center justify-between">
-                <div>
-                  <span className="text-[9px] text-black/70 uppercase block">Ekspedisi:</span>
-                  <span className="font-bold uppercase text-[11px]">
-                    {order.courier_name || 'Kurir Reguler'} {order.courier_service ? `(${order.courier_service})` : ''}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[9px] text-black/70 uppercase block">Pembayaran:</span>
-                  <span className="font-bold uppercase text-[10px] px-1.5 py-0.5 bg-black text-white rounded-2xs">
-                    NON-COD (LUNAS)
-                  </span>
                 </div>
               </div>
 
