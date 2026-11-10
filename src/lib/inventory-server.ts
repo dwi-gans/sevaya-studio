@@ -10,7 +10,7 @@ import {
   generateDefaultVariantsForProduct,
 } from '@/integrations/supabase/inventory';
 import { DbProduct, DEFAULT_DB_PRODUCTS } from '@/integrations/supabase/products';
-import { setCachedProducts, getCachedProducts } from '@/lib/products-cache';
+import { setCachedProducts, getCachedProducts, invalidateCachedProducts } from '@/lib/products-cache';
 
 const INVENTORY_FILE = 'inventory.json';
 const MUTATIONS_FILE = 'stock_mutations.json';
@@ -54,6 +54,31 @@ function writeLocalFile(filename: string, data: unknown) {
 
 async function downloadFromStorage<T>(filename: string): Promise<T | null> {
   try {
+    // 1. Direct REST fetch with cache-busting timestamp & no-store headers to guarantee bypass of Cloudflare CDN
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceKey) {
+      try {
+        const bustUrl = `${supabaseUrl}/storage/v1/object/catalog/${filename}?t=${Date.now()}`;
+        const res = await fetch(bustUrl, {
+          headers: {
+            Authorization: `Bearer ${serviceKey}`,
+            'Cache-Control': 'no-cache, no-store, max-age=0',
+            Pragma: 'no-cache',
+          },
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const text = await res.text();
+          if (text) {
+            return JSON.parse(text) as T;
+          }
+        }
+      } catch {
+        // Fall back to standard download
+      }
+    }
+
     const { data, error } = await supabaseAdmin.storage
       .from('catalog')
       .download(filename);
@@ -80,6 +105,7 @@ async function uploadToStorage(filename: string, data: unknown): Promise<boolean
       .upload(filename, buffer, {
         contentType: 'application/json',
         upsert: true,
+        cacheControl: '0',
       });
     if (error) {
       console.error(`[Storage] Upload "${filename}" error:`, error.message);
@@ -121,11 +147,17 @@ export function invalidateServerInventoryCache() {
     globalThis.__sevayaInventoryCache.mutations = null;
     globalThis.__sevayaInventoryCache.variantTs = 0;
   }
+  _serverCachedVariants = null;
+  _serverCachedMutations = null;
+  invalidateCachedProducts();
 }
 
-export async function getServerProducts(): Promise<DbProduct[]> {
+export async function getServerProducts(forceRefresh = false): Promise<DbProduct[]> {
+  if (forceRefresh) {
+    invalidateCachedProducts();
+  }
   const { products: cached, expired } = getCachedProducts();
-  if (cached && !expired && cached.length > 0) {
+  if (!forceRefresh && cached && !expired && cached.length > 0) {
     return cached;
   }
 
@@ -182,7 +214,7 @@ export async function getServerInventoryVariants(forceRefresh = false): Promise<
   // 3. Last resort: generate default variants — JANGAN upload balik ke Storage
   //    karena bisa menimpa data stok yang sebenarnya ada (bug utama "stok habis saat refresh")
   console.warn('[getServerInventoryVariants] Storage dan disk kosong — generating default variants (stock=0). Pastikan SUPABASE_SERVICE_ROLE_KEY valid dan Storage bucket "catalog" dapat diakses.');
-  const products = await getServerProducts();
+  const products = await getServerProducts(forceRefresh);
   const allVariants: ProductVariant[] = [];
   for (const p of products) {
     allVariants.push(...generateDefaultVariantsForProduct(p));
@@ -202,10 +234,13 @@ export async function saveServerInventoryVariants(variants: ProductVariant[]): P
   await uploadToStorage(INVENTORY_FILE, variants);
 }
 
-export async function getServerStockMutations(): Promise<StockMutation[]> {
+export async function getServerStockMutations(forceRefresh = false): Promise<StockMutation[]> {
   const cache = globalThis.__sevayaInventoryCache!;
-  if (cache.mutations && cache.mutations.length > 0) {
+  if (!forceRefresh && cache.mutations && cache.mutations.length > 0) {
     return cache.mutations;
+  }
+  if (!forceRefresh && _serverCachedMutations && _serverCachedMutations.length > 0) {
+    return _serverCachedMutations;
   }
 
   const fromStorage = await downloadFromStorage<StockMutation[]>(MUTATIONS_FILE);
@@ -360,18 +395,25 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
     : [{ name: 'Default', color: '#1A1A1A' }];
   const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L'];
 
-  const allowedColorNames = new Set(swatches.map((s) => s.name.trim().toLowerCase()));
-  const allowedSizes = new Set(sizes.map((sz) => sz.trim().toLowerCase()));
-
   let changed = false;
 
-  // 1. Hapus varian lama yang warna atau ukurannya sudah dihapus dari katalog produk
+  // 1. Hapus varian lama HANYA jika produk / warna / ukuran benar-benar dihapus dari katalog produk
   let updatedList = existing.filter((v) => {
-    if (v.productId !== String(product.id)) {
+    if (String(v.productId).trim() !== String(product.id).trim()) {
       return true;
     }
-    const isColorValid = allowedColorNames.has(v.colorName.trim().toLowerCase());
-    const isSizeValid = allowedSizes.has(v.size.trim().toLowerCase());
+    const vColorNorm = v.colorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isColorValid = swatches.some((s) => {
+      const sNorm = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return s.name.trim().toLowerCase() === v.colorName.trim().toLowerCase() || sNorm === vColorNorm;
+    });
+
+    const vSizeNorm = v.size.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isSizeValid = sizes.some((sz) => {
+      const szNorm = sz.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return sz.trim().toLowerCase() === v.size.trim().toLowerCase() || szNorm === vSizeNorm;
+    });
+
     if (!isColorValid || !isSizeValid) {
       changed = true;
       return false; // Hapus varian ini dari inventaris
@@ -381,11 +423,22 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
 
   // 2. Pastikan setiap varian kombinasi aktif (swatch x size) sudah tersedia
   for (const sw of swatches) {
+    const swNorm = sw.name.toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const sz of sizes) {
+      const szNorm = sz.toLowerCase().replace(/[^a-z0-9]/g, '');
       const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
-      const foundIdx = updatedList.findIndex(
-        (v) => v.id === variantId || (v.productId === String(product.id) && v.colorName.toLowerCase() === sw.name.toLowerCase() && v.size.toLowerCase() === sz.toLowerCase())
-      );
+      const foundIdx = updatedList.findIndex((v) => {
+        if (v.id === variantId) return true;
+        if (String(v.productId).trim() === String(product.id).trim()) {
+          const vColorNorm = v.colorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const vSizeNorm = v.size.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return (
+            (v.colorName.toLowerCase().trim() === sw.name.toLowerCase().trim() || vColorNorm === swNorm) &&
+            (v.size.toLowerCase().trim() === sz.toLowerCase().trim() || vSizeNorm === szNorm)
+          );
+        }
+        return false;
+      });
 
       if (foundIdx === -1) {
         const sku = generateVariantSku(product.title, product.id, sw.name, sz);
@@ -405,12 +458,20 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
         changed = true;
       } else {
         const curr = updatedList[foundIdx]!;
-        if (curr.productTitle !== product.title || curr.productSlug !== product.slug || curr.colorHex !== sw.color) {
+        if (
+          curr.productTitle !== product.title ||
+          curr.productSlug !== product.slug ||
+          (sw.color && curr.colorHex !== sw.color) ||
+          curr.colorName !== sw.name ||
+          curr.size !== sz
+        ) {
           updatedList[foundIdx] = {
             ...curr,
             productTitle: product.title,
             productSlug: product.slug,
+            colorName: sw.name,
             colorHex: sw.color || curr.colorHex,
+            size: sz,
             updatedAt: new Date().toISOString(),
           };
           changed = true;
@@ -424,7 +485,7 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
   }
 
   // Sinkronkan total stok ke katalog produk
-  const productVariants = updatedList.filter((v) => v.productId === String(product.id));
+  const productVariants = updatedList.filter((v) => String(v.productId).trim() === String(product.id).trim());
   const totalStock = productVariants.reduce((sum, v) => sum + v.stock, 0);
   try {
     const products = await getServerProducts();
@@ -458,29 +519,31 @@ export async function ensureServerVariantsForProduct(product: DbProduct): Promis
  */
 export async function cleanServerOrphanedVariants(forceRefresh = false): Promise<ProductVariant[]> {
   const [products, variants] = await Promise.all([
-    getServerProducts(),
+    getServerProducts(forceRefresh),
     getServerInventoryVariants(forceRefresh),
   ]);
 
   const productMap = new Map<string, DbProduct>();
   products.forEach((p) => {
-    productMap.set(String(p.id), p);
+    productMap.set(String(p.id).trim(), p);
   });
 
   let changed = false;
 
   // 1. Hapus varian yang produk atau warna atau ukurannya sudah dihapus dari katalog
   let cleaned = variants.filter((v) => {
-    const parent = productMap.get(v.productId);
+    const parent = productMap.get(String(v.productId).trim());
     if (!parent) {
       changed = true;
       return false; // Produk induk sudah dihapus
     }
 
     if (parent.swatches && parent.swatches.length > 0) {
-      const colorValid = parent.swatches.some(
-        (s) => s.name.trim().toLowerCase() === v.colorName.trim().toLowerCase()
-      );
+      const vColorNorm = v.colorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const colorValid = parent.swatches.some((s) => {
+        const sNorm = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return s.name.trim().toLowerCase() === v.colorName.trim().toLowerCase() || sNorm === vColorNorm;
+      });
       if (!colorValid) {
         changed = true;
         return false; // Warna sudah dihapus dari katalog
@@ -488,9 +551,11 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
     }
 
     if (parent.sizes && parent.sizes.length > 0) {
-      const sizeValid = parent.sizes.some(
-        (sz) => sz.trim().toLowerCase() === v.size.trim().toLowerCase()
-      );
+      const vSizeNorm = v.size.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const sizeValid = parent.sizes.some((sz) => {
+        const szNorm = sz.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return sz.trim().toLowerCase() === v.size.trim().toLowerCase() || szNorm === vSizeNorm;
+      });
       if (!sizeValid) {
         changed = true;
         return false; // Ukuran sudah dihapus dari katalog
@@ -508,15 +573,22 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
     const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['All Size'];
 
     for (const sw of swatches) {
+      const swNorm = sw.name.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (const sz of sizes) {
+        const szNorm = sz.toLowerCase().replace(/[^a-z0-9]/g, '');
         const variantId = `${product.id}-${sw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${sz.toLowerCase()}`;
-        const foundIdx = cleaned.findIndex(
-          (v) =>
-            v.id === variantId ||
-            (v.productId === String(product.id) &&
-              v.colorName.toLowerCase().trim() === sw.name.toLowerCase().trim() &&
-              v.size.toLowerCase().trim() === sz.toLowerCase().trim())
-        );
+        const foundIdx = cleaned.findIndex((v) => {
+          if (v.id === variantId) return true;
+          if (String(v.productId).trim() === String(product.id).trim()) {
+            const vColorNorm = v.colorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const vSizeNorm = v.size.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return (
+              (v.colorName.toLowerCase().trim() === sw.name.toLowerCase().trim() || vColorNorm === swNorm) &&
+              (v.size.toLowerCase().trim() === sz.toLowerCase().trim() || vSizeNorm === szNorm)
+            );
+          }
+          return false;
+        });
 
         if (foundIdx === -1) {
           const sku = generateVariantSku(product.title, product.id, sw.name, sz);
@@ -535,18 +607,22 @@ export async function cleanServerOrphanedVariants(forceRefresh = false): Promise
           });
           changed = true;
         } else {
-          // Update metadata jika judul produk, slug, atau warna hex diperbarui
+          // Update metadata jika judul produk, slug, warna hex, atau nama warna/ukuran diperbarui
           const curr = cleaned[foundIdx]!;
           if (
             curr.productTitle !== product.title ||
             curr.productSlug !== product.slug ||
-            (sw.color && curr.colorHex !== sw.color)
+            (sw.color && curr.colorHex !== sw.color) ||
+            curr.colorName !== sw.name ||
+            curr.size !== sz
           ) {
             cleaned[foundIdx] = {
               ...curr,
               productTitle: product.title,
               productSlug: product.slug,
+              colorName: sw.name,
               colorHex: sw.color || curr.colorHex,
+              size: sz,
               updatedAt: new Date().toISOString(),
             };
             changed = true;

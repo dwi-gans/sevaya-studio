@@ -849,14 +849,14 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                                             {v ? (
                                               <button
                                                 type="button"
-                                                onClick={() => setMutationTarget({ variant: v, availableVariants: colorVariants, type: 'in' })}
-                                                title={`Masuk stok: ${colorName} Size ${sz}`}
+                                                onClick={() => setMutationTarget({ variant: v, availableVariants: colorVariants, type: 'adjustment' })}
+                                                title={`Klik untuk ubah stok: ${colorName} Size ${sz} (Stok saat ini: ${v.stock} pcs)`}
                                                 className={`inline-flex flex-col items-center gap-0 cursor-pointer rounded-lg px-2 py-1 transition hover:scale-105 active:scale-95 ${
                                                   szStatus === 'out'
-                                                    ? 'bg-rose-50 text-rose-700'
+                                                    ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
                                                     : szStatus === 'low'
-                                                    ? 'bg-amber-50 text-amber-800'
-                                                    : 'bg-emerald-50/60 text-emerald-800'
+                                                    ? 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                                    : 'bg-emerald-50/60 text-emerald-800 hover:bg-emerald-100'
                                                 }`}
                                               >
                                                 <span className="text-xs font-bold tabular-nums">{v.stock}</span>
@@ -901,6 +901,15 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                                             >
                                               <Icon name="remove" size={11} />
                                               <span>Keluar</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'adjustment' })}
+                                              className="inline-flex items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
+                                              title="Atur Stok Langsung (Penyesuaian Opname)"
+                                            >
+                                              <Icon name="tune" size={11} />
+                                              <span>Atur</span>
                                             </button>
                                           </div>
                                         ) : (

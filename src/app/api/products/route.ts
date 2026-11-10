@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
       .upload(PRODUCTS_FILE, buffer, {
         contentType: 'application/json',
         upsert: true,
+        cacheControl: '0',
       })
       .catch(() => {/* offline — disk already saved */});
 

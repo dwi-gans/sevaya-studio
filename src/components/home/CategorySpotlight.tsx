@@ -60,6 +60,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
             >
               <StudioImage
                 src={abaya?.image || '/images/figma_abaya_banner.webp'}
+                fallbackSrc="/images/figma_abaya_banner.webp"
                 alt={abaya?.title || 'ABAYA Collection'}
                 fill
                 preset="spotlight"
@@ -82,6 +83,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
             >
               <StudioImage
                 src={khimar?.image || '/images/khiban-banner-v2.jpg'}
+                fallbackSrc="/images/khiban-banner-v2.jpg"
                 alt={khimar?.title || 'KHIMAR Collection'}
                 fill
                 preset="spotlight"

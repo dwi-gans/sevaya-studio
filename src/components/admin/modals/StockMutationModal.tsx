@@ -38,7 +38,9 @@ export default function StockMutationModal({
 }: StockMutationModalProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(variant);
   const [type, setType] = useState<MutationType>(defaultType);
-  const [quantity, setQuantity] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>(
+    defaultType === 'adjustment' ? String(variant.stock) : ''
+  );
   const [reason, setReason] = useState<MutationReason>(
     REASON_OPTIONS_BY_TYPE[defaultType][0] || 'OTHER'
   );
@@ -49,7 +51,10 @@ export default function StockMutationModal({
 
   useEffect(() => {
     setSelectedVariant(variant);
-  }, [variant]);
+    if (defaultType === 'adjustment') {
+      setQuantity(String(variant.stock));
+    }
+  }, [variant, defaultType]);
 
   const qty = parseInt(quantity, 10);
   const isPositiveInt = !isNaN(qty) && qty > 0;
@@ -81,6 +86,11 @@ export default function StockMutationModal({
   const handleTypeChange = (newType: MutationType) => {
     setType(newType);
     setError(null);
+    if (newType === 'adjustment') {
+      setQuantity(String(selectedVariant.stock));
+    } else {
+      setQuantity('');
+    }
     const firstReason = REASON_OPTIONS_BY_TYPE[newType][0];
     if (firstReason) setReason(firstReason);
   };
@@ -205,7 +215,12 @@ export default function StockMutationModal({
                     <button
                       key={v.id}
                       type="button"
-                      onClick={() => setSelectedVariant(v)}
+                      onClick={() => {
+                        setSelectedVariant(v);
+                        if (type === 'adjustment') {
+                          setQuantity(String(v.stock));
+                        }
+                      }}
                       className={`flex flex-col items-center justify-center py-2 px-2 rounded-xl border text-center transition cursor-pointer active:scale-95 ${
                         isSelected
                           ? 'bg-black text-white border-black shadow-xs font-bold'

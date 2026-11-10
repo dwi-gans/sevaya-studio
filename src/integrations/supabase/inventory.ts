@@ -176,7 +176,8 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
       const res = await fetch(`/api/admin/inventory${forceRefresh ? '?refresh=true' : ''}`, {
         headers: {
           'x-admin-key': 'sevaya-admin',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, max-age=0',
+          Pragma: 'no-cache',
         },
         cache: 'no-store',
       });
@@ -206,10 +207,12 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
       const parsed = JSON.parse(text) as ProductVariant[];
       if (Array.isArray(parsed) && parsed.length > 0) {
         _cachedVariants = parsed;
-        try {
-          localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify(parsed));
-        } catch {
-          // ignore
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify(parsed));
+          } catch {
+            // ignore
+          }
         }
         return parsed;
       }
@@ -218,8 +221,8 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
     // Ignore & lanjut fallback
   }
 
-  // 3. Fallback offline: localStorage — hanya digunakan jika kedua network request di atas gagal
-  if (typeof window !== 'undefined') {
+  // 3. Fallback offline: localStorage — hanya digunakan jika network gagal dan tidak forceRefresh
+  if (!forceRefresh && typeof window !== 'undefined') {
     try {
       const local = localStorage.getItem(LS_VARIANTS_KEY);
       if (local) {
@@ -247,7 +250,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
 }
 
 /**
- * Simpan varian inventaris ke Cloud Storage & localStorage
+ * Simpan varian inventaris ke Server API (service role) & localStorage
  */
 export async function saveInventoryVariants(variants: ProductVariant[]): Promise<void> {
   _cachedVariants = variants;
@@ -258,17 +261,19 @@ export async function saveInventoryVariants(variants: ProductVariant[]): Promise
     } catch {
       // ignore
     }
-  }
 
-  try {
-    const jsonStr = JSON.stringify(variants, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    await supabase.storage.from('catalog').upload(INVENTORY_FILE, blob, {
-      upsert: true,
-      contentType: 'application/json',
-    });
-  } catch (err) {
-    console.warn('[saveInventoryVariants] cloud sync error:', err);
+    try {
+      await fetch('/api/admin/inventory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': 'sevaya-admin',
+        },
+        body: JSON.stringify({ variants }),
+      });
+    } catch (err) {
+      console.warn('[saveInventoryVariants] API sync error:', err);
+    }
   }
 }
 

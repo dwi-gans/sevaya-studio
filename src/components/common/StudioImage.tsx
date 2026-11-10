@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 
 export interface StudioImageProps extends Omit<ImageProps, 'quality'> {
@@ -31,6 +33,7 @@ const PRESET_SIZES: Record<NonNullable<StudioImageProps['preset']>, string> = {
  * - Enforces 95 HD quality preset globally
  * - Optimized for Retina displays & modern Next.js image pipeline
  * - Prevents touching dozens of files when tuning image rules or CDN paths
+ * - Built-in fallback error resilience: swaps automatically to fallbackSrc if remote image fails
  */
 export function StudioImage({
   quality = 95,
@@ -40,21 +43,37 @@ export function StudioImage({
   alt = '',
   className = '',
   fallbackSrc = '/images/catalog/catalog-01.jpg',
+  onError,
   ...rest
 }: StudioImageProps) {
+  const initialSrc = src || fallbackSrc;
+  const [currentSrc, setCurrentSrc] = useState(initialSrc);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(src || fallbackSrc);
+    setHasError(false);
+  }, [src, fallbackSrc]);
+
   const resolvedSizes = sizes || (preset ? PRESET_SIZES[preset] : undefined);
-  const resolvedSrc = src || fallbackSrc;
-  const isDataUrl = typeof resolvedSrc === 'string' && resolvedSrc.startsWith('data:');
-  const isRemoteHttp = typeof resolvedSrc === 'string' && resolvedSrc.startsWith('http');
+  const isDataUrl = typeof currentSrc === 'string' && currentSrc.startsWith('data:');
+  const isRemoteHttp = typeof currentSrc === 'string' && currentSrc.startsWith('http');
 
   return (
     <Image
-      src={resolvedSrc}
+      src={currentSrc}
       alt={alt}
       quality={quality}
       sizes={resolvedSizes}
       unoptimized={isDataUrl || isRemoteHttp || rest.unoptimized}
       className={className}
+      onError={(e) => {
+        if (!hasError && fallbackSrc && currentSrc !== fallbackSrc) {
+          setHasError(true);
+          setCurrentSrc(fallbackSrc);
+        }
+        onError?.(e);
+      }}
       {...rest}
     />
   );

@@ -564,10 +564,9 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
   // ── 0. Server-Side Instant Disk Read (0 ms, Zero Delay) ────────────────────
   if (isServer) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const fs = require('fs');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const path = require('path');
+      const dynamicRequire = eval('require');
+      const fs = dynamicRequire('fs');
+      const path = dynamicRequire('path');
       const diskPath = path.join(process.cwd(), '.data', 'sections.json');
       if (fs.existsSync(diskPath)) {
         const fileContent = fs.readFileSync(diskPath, 'utf-8');
