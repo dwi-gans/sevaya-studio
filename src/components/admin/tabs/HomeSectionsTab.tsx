@@ -956,7 +956,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               Cinematic Video Player Showcase
             </h3>
             <p className="text-[11px] text-black/60 mt-0.5">
-              Pemutar video sinematik beranda toko. Admin dapat memutar dan menguji videonya langsung di sini, mengunggah video baru (.mp4/.webm), serta mengganti cover poster.
+              Pemutar video sinematik beranda toko. Video diputar otomatis (autoplay, loop &amp; muted) langsung di beranda toko secara mulus tanpa jeda cover poster.
             </p>
           </div>
           <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[9px] font-semibold">
@@ -977,13 +977,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black shadow-inner">
             <video
-              key={`${narrative.videoSrc || '/videos/kani.mp4'}_${narrative.videoPoster || ''}`}
+              key={narrative.videoSrc || '/videos/kani.mp4'}
               src={narrative.videoSrc || '/videos/kani.mp4'}
-              poster={
-                narrative.videoPoster && narrative.videoPoster !== '/images/figma_video_cover.png'
-                  ? narrative.videoPoster
-                  : '/images/kani_poster.webp'
-              }
               controls
               playsInline
               preload="metadata"
@@ -992,104 +987,56 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </div>
         </div>
 
-        {/* 2 Management Cards: Video File & Video Poster */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-          {/* Card 1: Ganti Berkas Video */}
-          <div className="rounded-xl border border-black/15 bg-neutral-50 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
-                  1. Berkas Video
-                </span>
-                <h4 className="text-xs font-bold text-black uppercase tracking-wider">
-                  Sumber Berkas Video
-                </h4>
-              </div>
-              <UploadActionGroup
-                target="home-video-src"
-                label="Unggah"
-                uploadingTarget={uploadingTarget}
-                onDirectUpload={resolvedDirectUpload}
-                onOpenImagePicker={onOpenImagePicker}
-                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
-                uploadButtonLabel="Unggah Video (MP4)"
-                hidePicker={true}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-medium text-black/70">
-                URL / Path Berkas Video
-              </label>
-              <input
-                type="text"
-                value={narrative.videoSrc || ''}
-                onChange={(e) => updateNarrativeField('videoSrc', e.target.value)}
-                placeholder="/videos/kani.mp4 atau URL CDN eksternal"
-                className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-[9.5px] text-black/50 truncate max-w-[200px]" title={narrative.videoSrc || '/videos/kani.mp4'}>
-                Aktif: {narrative.videoSrc ? narrative.videoSrc.split('/').pop() : 'kani.mp4'}
+        {/* Management Card: Video File */}
+        <div className="rounded-xl border border-black/15 bg-neutral-50 p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                Berkas Video Beranda
               </span>
-              <button
-                type="button"
-                onClick={() => updateNarrativeField('videoSrc', '/videos/kani.mp4')}
-                className="text-[9.5px] font-medium text-neutral-600 hover:text-black underline cursor-pointer"
-              >
-                Reset ke kani.mp4
-              </button>
+              <h4 className="text-xs font-bold text-black uppercase tracking-wider">
+                Sumber Berkas Video (.mp4 / .webm)
+              </h4>
+              <p className="text-[11px] text-black/60 mt-0.5">
+                Video akan langsung diputar otomatis tanpa jeda poster cover statis.
+              </p>
             </div>
+            <UploadActionGroup
+              target="home-video-src"
+              label="Unggah"
+              uploadingTarget={uploadingTarget}
+              onDirectUpload={resolvedDirectUpload}
+              onOpenImagePicker={onOpenImagePicker}
+              accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+              uploadButtonLabel="Unggah Video (MP4)"
+              hidePicker={true}
+            />
           </div>
 
-          {/* Card 2: Cover Poster Video */}
-          <div className="rounded-xl border border-black/15 bg-neutral-50 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
-                  2. Cover Poster
-                </span>
-                <h4 className="text-xs font-bold text-black uppercase tracking-wider">
-                  Foto Poster Thumbnail
-                </h4>
-              </div>
-              <UploadActionGroup
-                target="home-video-poster"
-                label="Pilih Galeri"
-                currentImage={narrative.videoPoster}
-                uploadingTarget={uploadingTarget}
-                onDirectUpload={resolvedDirectUpload}
-                onOpenImagePicker={onOpenImagePicker}
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-medium text-black/70">
+              URL / Path Berkas Video
+            </label>
+            <input
+              type="text"
+              value={narrative.videoSrc || ''}
+              onChange={(e) => updateNarrativeField('videoSrc', e.target.value)}
+              placeholder="/videos/kani.mp4 atau URL CDN eksternal"
+              className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+            />
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-medium text-black/70">
-                URL Cover Poster
-              </label>
-              <input
-                type="text"
-                value={narrative.videoPoster || ''}
-                onChange={(e) => updateNarrativeField('videoPoster', e.target.value)}
-                placeholder="/images/kani_poster.webp atau URL gambar cloud"
-                className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-[9.5px] text-black/50 truncate max-w-[200px]" title={narrative.videoPoster || '/images/kani_poster.webp'}>
-                Aktif: {narrative.videoPoster ? narrative.videoPoster.split('/').pop() : 'kani_poster.webp'}
-              </span>
-              <button
-                type="button"
-                onClick={() => updateNarrativeField('videoPoster', '/images/kani_poster.webp')}
-                className="text-[9.5px] font-medium text-neutral-600 hover:text-black underline cursor-pointer"
-              >
-                Reset ke Default
-              </button>
-            </div>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[9.5px] text-black/50 truncate max-w-[280px]" title={narrative.videoSrc || '/videos/kani.mp4'}>
+              Aktif: <strong className="text-black">{narrative.videoSrc ? narrative.videoSrc.split('/').pop() : 'kani.mp4'}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => updateNarrativeField('videoSrc', '/videos/kani.mp4')}
+              className="text-[9.5px] font-medium text-neutral-600 hover:text-black underline cursor-pointer"
+            >
+              Reset ke Default (kani.mp4)
+            </button>
           </div>
         </div>
       </section>
