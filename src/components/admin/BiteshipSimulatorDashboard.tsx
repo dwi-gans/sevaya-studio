@@ -139,13 +139,7 @@ function OrderDetailModal({
       const extraPayload: Partial<AdminOrder> = {
         tracking_number: trackingInput || undefined,
       };
-      if (newStatus === 'shipped') {
-        extraPayload.biteship_status = 'dropping_off';
-      } else if (newStatus === 'delivered') {
-        extraPayload.biteship_status = 'delivered';
-      } else if (newStatus === 'processing') {
-        extraPayload.biteship_status = 'picking_up';
-      } else if (newStatus === 'cancelled') {
+      if (newStatus === 'cancelled') {
         extraPayload.biteship_status = 'cancelled';
       }
 
@@ -153,6 +147,22 @@ function OrderDetailModal({
       addLog(`✅ Status berhasil diubah ke: ${newStatus}`);
     } catch (e) {
       addLog(`❌ Gagal: ${e instanceof Error ? e.message : 'Error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiteshipSimulation = async (bsStatus: string, internalStatus: string) => {
+    setLoading(true);
+    addLog(`Simulasi status Biteship → ${bsStatus}...`);
+    try {
+      await onStatusUpdate(order.id, internalStatus, {
+        biteship_status: bsStatus,
+        tracking_number: trackingInput || order.tracking_number,
+      });
+      addLog(`✅ Status Biteship diubah ke: ${bsStatus}`);
+    } catch (e) {
+      addLog(`❌ Gagal simulasi: ${e instanceof Error ? e.message : 'Error'}`);
     } finally {
       setLoading(false);
     }
@@ -215,7 +225,7 @@ function OrderDetailModal({
               <span className="hidden xs:inline">Cetak Label</span>
             </button>
             <StatusBadge status={order.status} type="internal" />
-            {order.biteship_status && (
+            {order.biteship_order_id && order.biteship_status && (
               <span className="hidden xs:inline-flex">
                 <StatusBadge status={order.biteship_status} type="biteship" />
               </span>
@@ -426,7 +436,7 @@ function OrderDetailModal({
                             type="button"
                             disabled={loading || order.biteship_status === btn.val}
                             onClick={() => {
-                              handleInternalStatusChange(btn.internal);
+                              handleBiteshipSimulation(btn.val, btn.internal);
                             }}
                             className={`min-h-[36px] rounded-full border px-2.5 py-1 text-[10px] font-semibold transition active:scale-95 ${
                               order.biteship_status === btn.val
@@ -968,7 +978,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                           <StatusBadge status={o.status} type="internal" />
                         </td>
                         <td className="px-4 py-3.5">
-                          {o.biteship_status ? (
+                          {o.biteship_order_id && o.biteship_status ? (
                             <StatusBadge status={o.biteship_status} type="biteship" />
                           ) : (
                             <span className="text-black/50">—</span>
@@ -1028,7 +1038,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <StatusBadge status={o.status} type="internal" />
-                        {o.biteship_status && (
+                        {o.biteship_order_id && o.biteship_status && (
                           <StatusBadge status={o.biteship_status} type="biteship" />
                         )}
                       </div>

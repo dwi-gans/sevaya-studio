@@ -53,7 +53,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    const orders = rawOrders ?? [];
+    const orders = (rawOrders ?? []).map((ord) => {
+      // Proteksi: jika order belum pernah di-request ke Biteship, jangan tampilkan status logistik palsu
+      if (!ord.biteship_order_id && ord.biteship_status) {
+        ord.biteship_status = null;
+      }
+      return ord;
+    });
 
     // External N+1 API calls are only executed when explicitly requested (?sync=true)
     // to keep admin page loads under 100ms instead of blocking for 10+ seconds.
@@ -228,19 +234,8 @@ export async function PATCH(req: NextRequest) {
     if (biteship_order_id !== undefined) updatePayload.biteship_order_id = biteship_order_id;
     if (biteship_status !== undefined) {
       updatePayload.biteship_status = biteship_status;
-    } else {
-      // Auto-align biteship_status if not explicitly provided
-      if (status === 'shipped') {
-        updatePayload.biteship_status = 'dropping_off';
-      } else if (status === 'delivered') {
-        updatePayload.biteship_status = 'delivered';
-      } else if (status === 'processing') {
-        updatePayload.biteship_status = 'picking_up';
-      } else if (status === 'cancelled') {
-        updatePayload.biteship_status = 'cancelled';
-      } else if (status === 'pending_payment') {
-        updatePayload.biteship_status = 'confirmed';
-      }
+    } else if (status === 'cancelled') {
+      updatePayload.biteship_status = 'cancelled';
     }
 
     // If changing status to 'cancelled', also cancel on Biteship

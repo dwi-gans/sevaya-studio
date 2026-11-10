@@ -147,8 +147,6 @@ export function invalidateServerInventoryCache() {
     globalThis.__sevayaInventoryCache.mutations = null;
     globalThis.__sevayaInventoryCache.variantTs = 0;
   }
-  _serverCachedVariants = null;
-  _serverCachedMutations = null;
   invalidateCachedProducts();
 }
 
@@ -238,9 +236,6 @@ export async function getServerStockMutations(forceRefresh = false): Promise<Sto
   const cache = globalThis.__sevayaInventoryCache!;
   if (!forceRefresh && cache.mutations && cache.mutations.length > 0) {
     return cache.mutations;
-  }
-  if (!forceRefresh && _serverCachedMutations && _serverCachedMutations.length > 0) {
-    return _serverCachedMutations;
   }
 
   const fromStorage = await downloadFromStorage<StockMutation[]>(MUTATIONS_FILE);
