@@ -54,6 +54,8 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
           if (
             s.image === prev.image &&
             s.mobileImage === prev.mobileImage &&
+            s.position === prev.position &&
+            s.mobilePosition === prev.mobilePosition &&
             s.badge === prev.badge &&
             s.ctaShop === prev.ctaShop &&
             s.ctaLookbook === prev.ctaLookbook
@@ -94,7 +96,7 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
   const bgStyle: React.CSSProperties = {
     backgroundImage: `url(${desktopSrc})`,
     backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    backgroundPosition: hero?.position || 'center',
     backgroundColor: '#1C1917',
   };
 
@@ -120,8 +122,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="block sm:hidden h-full w-full object-cover object-center"
-                style={{ imageRendering: 'auto' }}
+                className="block sm:hidden h-full w-full object-cover"
+                style={{
+                  imageRendering: 'auto',
+                  objectPosition: hero?.mobilePosition || hero?.position || 'center',
+                }}
                 onError={() => {
                   console.warn('[Hero] Mobile hero image failed to load, falling back to local asset');
                   setMobileSrc(PRIMARY_HERO);
@@ -135,8 +140,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="hidden sm:block h-full w-full object-cover object-center"
-                style={{ imageRendering: 'auto' }}
+                className="hidden sm:block h-full w-full object-cover"
+                style={{
+                  imageRendering: 'auto',
+                  objectPosition: hero?.position || 'center',
+                }}
                 onError={() => {
                   console.warn('[Hero] Desktop hero image failed to load, falling back to local asset');
                   setDesktopSrc(PRIMARY_HERO);
@@ -151,8 +159,11 @@ export function HeroSection({ initialHero }: HeroSectionProps) {
               loading="eager"
               fetchPriority="high"
               decoding="async"
-              className="h-full w-full object-cover object-center"
-              style={{ imageRendering: 'auto' }}
+              className="h-full w-full object-cover"
+              style={{
+                imageRendering: 'auto',
+                objectPosition: hero?.position || 'center',
+              }}
               onError={() => {
                 console.warn('[Hero] Hero image failed to load, falling back to local asset');
                 setDesktopSrc(PRIMARY_HERO);

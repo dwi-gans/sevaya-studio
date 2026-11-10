@@ -10,8 +10,8 @@ interface AdminHeaderProps {
   toggleSidebar: () => void;
   setIsMobileMenuOpen: (open: boolean) => void;
   activeTab: AdminTab;
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
+  searchQuery?: string;
+  setSearchQuery?: (q: string) => void;
 }
 
 export function AdminHeader({
@@ -19,8 +19,6 @@ export function AdminHeader({
   toggleSidebar,
   setIsMobileMenuOpen,
   activeTab,
-  searchQuery,
-  setSearchQuery,
 }: AdminHeaderProps) {
   return (
     <header
@@ -75,26 +73,6 @@ export function AdminHeader({
             />
           </div>
         </button>
-
-        {(activeTab === 'orders' || activeTab === 'catalog' || activeTab === 'media') && (
-          <div className="relative flex-1 max-w-xs hidden sm:block">
-            <Icon
-              name="search"
-              size={16}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#514346]"
-            />
-            <input
-              className="w-full h-9 pl-8 pr-12 border border-[#d5c2c5]/50 bg-[#f9f9f8] text-[#1a1c1c] text-[12px] focus:outline-none focus:border-[#1a1c1c] transition-colors"
-              placeholder="Cari pesanan, SKU, atau aset..."
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-[#eeeeed] border border-[#d5c2c5]/40 text-[10px] font-mono text-[#514346]">
-              ⌘K
-            </span>
-          </div>
-        )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

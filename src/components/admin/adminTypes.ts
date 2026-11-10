@@ -24,6 +24,7 @@ export type ImagePickerTarget =
   | 'home-about-1'
   | 'home-about-2'
   | 'home-video-poster'
+  | 'home-video-src'
   | 'textiles'
   | 'journal-0'
   | 'journal-1'

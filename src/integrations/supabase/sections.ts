@@ -7,6 +7,8 @@ export interface HeroSectionData {
   desc: string;
   image: string;
   mobileImage?: string;
+  position?: string;
+  mobilePosition?: string;
   ctaLookbook: string;
   ctaShop: string;
 }
@@ -16,6 +18,7 @@ export interface SpotlightItem {
   title: string;
   subtitle: string;
   image: string;
+  position?: string;
   href: string;
 }
 
@@ -59,6 +62,8 @@ export interface HomeNarrativeConfig {
   aboutImage?: string;
   aboutImage1?: string;
   aboutImage2?: string;
+  aboutPosition?: string;
+  aboutPosition2?: string;
 }
 
 export interface HomeJournalHeaderConfig {
@@ -362,6 +367,8 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     desc: 'An exploration of architectural modest silhouettes, honoring stillness and enduring luxury.',
     image: '/images/hero_optimized.webp',
     mobileImage: '',
+    position: 'center',
+    mobilePosition: 'center',
     ctaLookbook: 'Lookbook',
     ctaShop: 'Shop The Collection',
   },
@@ -374,6 +381,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       title: 'Abaya',
       subtitle: 'Modest Drapery',
       image: '/images/catalog/catalog-01.jpg',
+      position: 'center',
       href: '/product/fina-abaya-stripe-2',
     },
     {
@@ -381,6 +389,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       title: 'Khimar',
       subtitle: 'Silk Kaftans',
       image: '/images/catalog/catalog-04.jpg',
+      position: 'center',
       href: '/shop',
     },
   ],
@@ -508,6 +517,8 @@ export function getCachedSiteSections(): SiteSectionsConfig {
             ...DEFAULT_SITE_SECTIONS.hero,
             ...(parsed.hero || {}),
             image: sanitizeHeroImage(parsed.hero?.image),
+            position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
+            mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
           },
           closerLook: {
             ...DEFAULT_CLOSER_LOOK,
@@ -581,6 +592,8 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
               ...(parsed.hero || {}),
               image: sanitizeHeroImage(parsed.hero?.image),
               mobileImage: parsed.hero?.mobileImage ? sanitizeHeroImage(parsed.hero?.mobileImage) : '',
+              position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
+              mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
             },
             closerLook: {
               ...DEFAULT_CLOSER_LOOK,
@@ -647,6 +660,8 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...(rawSections.hero || {}),
             image: sanitizeHeroImage(rawSections.hero?.image),
             mobileImage: rawSections.hero?.mobileImage ? sanitizeHeroImage(rawSections.hero?.mobileImage) : '',
+            position: rawSections.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
+            mobilePosition: rawSections.hero?.mobilePosition || rawSections.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
           },
           closerLook: {
             ...DEFAULT_CLOSER_LOOK,
@@ -720,6 +735,8 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...DEFAULT_SITE_SECTIONS.hero,
             ...(parsed.hero || {}),
             image: sanitizeHeroImage(parsed.hero?.image),
+            position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
+            mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
           },
           closerLook: {
             ...DEFAULT_CLOSER_LOOK,

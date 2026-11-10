@@ -50,11 +50,16 @@ export default function StockMutationModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedVariant(variant);
+    if (defaultType === 'out' && variant.stock <= 0 && availableVariants) {
+      const withStock = availableVariants.find((v) => v.stock > 0);
+      setSelectedVariant(withStock || variant);
+    } else {
+      setSelectedVariant(variant);
+    }
     if (defaultType === 'adjustment') {
       setQuantity(String(variant.stock));
     }
-  }, [variant, defaultType]);
+  }, [variant, defaultType, availableVariants]);
 
   const qty = parseInt(quantity, 10);
   const isPositiveInt = !isNaN(qty) && qty > 0;
@@ -86,6 +91,12 @@ export default function StockMutationModal({
   const handleTypeChange = (newType: MutationType) => {
     setType(newType);
     setError(null);
+    if (newType === 'out' && selectedVariant.stock <= 0 && availableVariants) {
+      const withStock = availableVariants.find((v) => v.stock > 0);
+      if (withStock) {
+        setSelectedVariant(withStock);
+      }
+    }
     if (newType === 'adjustment') {
       setQuantity(String(selectedVariant.stock));
     } else {
@@ -196,6 +207,48 @@ export default function StockMutationModal({
 
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="overflow-y-auto px-4 sm:px-6 py-4 space-y-4 text-xs">
+          {/* Tipe Mutasi Pills */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 mb-1.5">
+              Jenis Perubahan Stok
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleTypeChange('in')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
+                  type === 'in'
+                    ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
+                }`}
+              >
+                + Stok Masuk
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeChange('out')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
+                  type === 'out'
+                    ? 'bg-rose-700 text-white border-rose-700 shadow-xs'
+                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
+                }`}
+              >
+                − Stok Keluar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeChange('adjustment')}
+                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
+                  type === 'adjustment'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
+                }`}
+              >
+                Penyesuaian
+              </button>
+            </div>
+          </div>
+
           {/* Pilihan Ukuran (Size Selector) - Hanya jika ada varian ukuran lain */}
           {availableVariants && availableVariants.length > 1 && (
             <div>
@@ -283,48 +336,6 @@ export default function StockMutationModal({
                   </>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Tipe Mutasi Pills */}
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 mb-1.5">
-              Jenis Perubahan Stok
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleTypeChange('in')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
-                  type === 'in'
-                    ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
-                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
-                }`}
-              >
-                + Stok Masuk
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeChange('out')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
-                  type === 'out'
-                    ? 'bg-rose-700 text-white border-rose-700 shadow-xs'
-                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
-                }`}
-              >
-                − Stok Keluar
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeChange('adjustment')}
-                className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition active:scale-95 text-center cursor-pointer ${
-                  type === 'adjustment'
-                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                    : 'bg-white border-black/15 text-black/70 hover:bg-black/5'
-                }`}
-              >
-                Penyesuaian
-              </button>
             </div>
           </div>
 

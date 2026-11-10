@@ -899,6 +899,14 @@ export default function AdminPage() {
         return next;
       });
       showToast('Cover video beranda tersimpan otomatis!');
+    } else if (target === 'home-video-src') {
+      setSections((prev) => {
+        const nextNarrative = { ...(prev.narrative || {}), videoSrc: urlOrPath };
+        const next = { ...prev, narrative: nextNarrative };
+        saveSiteSections(next);
+        return next;
+      });
+      showToast('Berkas video beranda berhasil diperbarui!');
     } else if (target === 'textiles') {
       setSections((prev) => {
         const next = {
@@ -1124,27 +1132,31 @@ export default function AdminPage() {
         (typeof cropperModalConfig.file === 'string' ? cropperModalConfig.file : '');
       let finalUrl = existingUrl || '';
 
-      // Hanya upload crop jika sumber asli adalah File lokal dari laptop/HP (bukan URL cloud yang sudah ada).
-      // Jika sumber sudah berupa URL remote, gunakan URL asli agar tidak membuat duplikat file di media library.
+      // Upload file master asli hanya jika sumber adalah File lokal baru dari laptop/HP
       const sourceIsLocalFile = cropperModalConfig.file instanceof File;
 
-      if (sourceIsLocalFile && result.file && result.file.size > 0 && result.wasCropped) {
-        showToast('Mengunggah foto baru ke cloud storage...');
+      if (sourceIsLocalFile) {
+        showToast('Mengunggah foto master ke cloud storage...');
         try {
-          const uploadedUrl = await uploadFileToStorage(result.file, 'uploads');
+          // Unggah file master resolusi penuh 1x saja tanpa duplikasi potongan canvas
+          const uploadedUrl = await uploadFileToStorage(cropperModalConfig.file as File, 'uploads');
           if (uploadedUrl) {
             finalUrl = uploadedUrl;
+            // Ubah file di state cropper jadi string URL agar jika lanjut ke mobile crop tidak upload ulang
+            setCropperModalConfig((prev) => ({ ...prev, file: uploadedUrl }));
           }
         } catch (err) {
-          console.warn('[Cropper] Upload ke storage gagal, fallback ke dataUrl:', err);
+          console.warn('[Cropper] Upload ke storage gagal:', err);
           finalUrl = existingUrl || result.dataUrl || '';
         }
       } else if (!finalUrl) {
-        // Sumber sudah berupa URL remote - gunakan langsung tanpa upload ulang
+        // Sumber sudah berupa URL remote / string — gunakan langsung tanpa upload
         finalUrl = existingUrl || result.dataUrl || '';
       }
 
       if (!finalUrl || !currentTarget) return;
+
+      const position = result.position || 'center';
 
       if (currentTarget === 'hero' || currentTarget === 'hero-mobile') {
         const targetMode = result.targetMode || (currentTarget === 'hero-mobile' ? 'mobile' : 'desktop');
@@ -1153,7 +1165,15 @@ export default function AdminPage() {
             ...prev,
             hero: {
               ...prev.hero,
-              ...(targetMode === 'mobile' ? { mobileImage: finalUrl } : { image: finalUrl }),
+              ...(targetMode === 'mobile'
+                ? {
+                    mobileImage: finalUrl,
+                    mobilePosition: position,
+                  }
+                : {
+                    image: finalUrl,
+                    position: position,
+                  }),
             },
           };
           saveSiteSections(next);
@@ -1161,14 +1181,65 @@ export default function AdminPage() {
         });
         showToast(
           targetMode === 'mobile'
-            ? 'Foto Hero Mobile tersimpan otomatis!'
-            : 'Foto Hero Desktop tersimpan otomatis!',
+            ? 'Posisi Hero Mobile tersimpan!'
+            : 'Posisi Hero Desktop tersimpan!',
         );
         if (result.shouldClose) {
           closeUniversalCropper();
         }
+      } else if (currentTarget === 'spotlight-0') {
+        setSections((prev) => {
+          const nextSpotlight = [...prev.spotlight];
+          if (nextSpotlight[0]) {
+            nextSpotlight[0] = { ...nextSpotlight[0], image: finalUrl, position };
+          }
+          const next = { ...prev, spotlight: nextSpotlight };
+          saveSiteSections(next);
+          return next;
+        });
+        showToast('Posisi Banner Abaya tersimpan!');
+        closeUniversalCropper();
+      } else if (currentTarget === 'spotlight-1') {
+        setSections((prev) => {
+          const nextSpotlight = [...prev.spotlight];
+          if (nextSpotlight[1]) {
+            nextSpotlight[1] = { ...nextSpotlight[1], image: finalUrl, position };
+          }
+          const next = { ...prev, spotlight: nextSpotlight };
+          saveSiteSections(next);
+          return next;
+        });
+        showToast('Posisi Banner Khimar tersimpan!');
+        closeUniversalCropper();
+      } else if (currentTarget === 'home-about' || currentTarget === 'home-about-1') {
+        setSections((prev) => {
+          const nextNarrative = {
+            ...(prev.narrative || {}),
+            aboutImage: finalUrl,
+            aboutImage1: finalUrl,
+            aboutPosition: position,
+          };
+          const next = { ...prev, narrative: nextNarrative };
+          saveSiteSections(next);
+          return next;
+        });
+        showToast('Posisi Foto About SEVAYA tersimpan!');
+        closeUniversalCropper();
+      } else if (currentTarget === 'home-about-2') {
+        setSections((prev) => {
+          const nextNarrative = {
+            ...(prev.narrative || {}),
+            aboutImage2: finalUrl,
+            aboutPosition2: position,
+          };
+          const next = { ...prev, narrative: nextNarrative };
+          saveSiteSections(next);
+          return next;
+        });
+        showToast('Posisi Foto About SEVAYA #2 tersimpan!');
+        closeUniversalCropper();
       } else {
-        // Untuk spotlight-0, spotlight-1, home-about-1, home-about-2
+        // Untuk target lainnya
         applyImageToTarget(currentTarget, finalUrl);
         closeUniversalCropper();
       }
@@ -1640,6 +1711,7 @@ export default function AdminPage() {
               setIsImagePickerOpen(true);
             }}
             onFileUploadDirect={handleSectionFileUpload}
+            onOpenCropper={openCropperForTarget}
             showToast={showToast}
           />
         )}

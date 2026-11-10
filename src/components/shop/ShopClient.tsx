@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { getDbProducts } from '@/integrations/supabase';
@@ -142,18 +141,11 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
-      {/* Top Breadcrumb & Editorial Header */}
+      {/* Top Editorial Header */}
       <div className="border-b border-[#E5E5E5]/60 bg-[#FFFFFF]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mb-2 flex items-center gap-2 text-[9px] tracking-widest text-[#666666] uppercase">
-                <Link href="/" className="hover:text-[#000000] transition-colors">
-                  Home
-                </Link>
-                <span>/</span>
-                <span className="text-[#000000] font-medium">Collections</span>
-              </div>
               <h1 className="font-headline text-2xl font-light tracking-tight text-[#000000] uppercase sm:text-3xl lg:text-4xl">
                 Ready to Wear
               </h1>

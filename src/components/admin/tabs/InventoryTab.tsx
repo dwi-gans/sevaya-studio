@@ -944,34 +944,34 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                                       {/* Quick action buttons */}
                                       <td className="py-2.5 px-3 sm:px-4 text-right">
                                         {firstVariant ? (
-                                          <div className="inline-flex items-center gap-1">
+                                          <div className="inline-flex items-center gap-1.5">
                                             <button
                                               type="button"
-                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'in' })}
-                                              className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
-                                              title="Stok Masuk (+)"
+                                              onClick={() => {
+                                                const targetVariant = colorVariants.find((v) => v.stock > 0) || firstVariant;
+                                                setMutationTarget({
+                                                  variant: targetVariant,
+                                                  availableVariants: colorVariants,
+                                                  type: 'in',
+                                                });
+                                              }}
+                                              className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 py-1 text-[10.5px] font-bold text-black hover:bg-black hover:text-white transition active:scale-95 cursor-pointer shadow-2xs"
+                                              title="Catat Stok Masuk atau Keluar (+ / -)"
                                             >
-                                              <Icon name="add" size={11} />
-                                              <span>Masuk</span>
+                                              <span className="font-mono text-xs leading-none font-bold">±</span>
+                                              <span>Keluar / Masuk</span>
                                             </button>
                                             <button
                                               type="button"
-                                              disabled={firstVariant.stock <= 0}
-                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'out' })}
-                                              className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-bold transition ${
-                                                firstVariant.stock <= 0
-                                                  ? 'border-black/10 bg-black/5 text-black/30 cursor-not-allowed'
-                                                  : 'border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 active:scale-95 cursor-pointer'
-                                              }`}
-                                              title={firstVariant.stock <= 0 ? 'Stok varian habis (0 pcs)' : 'Stok Keluar (-)'}
-                                            >
-                                              <Icon name="remove" size={11} />
-                                              <span>Keluar</span>
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => setMutationTarget({ variant: firstVariant, availableVariants: colorVariants, type: 'adjustment' })}
-                                              className="inline-flex items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
+                                              onClick={() => {
+                                                const targetVariant = colorVariants.find((v) => v.stock > 0) || firstVariant;
+                                                setMutationTarget({
+                                                  variant: targetVariant,
+                                                  availableVariants: colorVariants,
+                                                  type: 'adjustment',
+                                                });
+                                              }}
+                                              className="inline-flex items-center gap-1 rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-1 text-[10.5px] font-bold text-amber-900 hover:bg-amber-100 transition active:scale-95 cursor-pointer shadow-2xs"
                                               title="Atur Stok Langsung (Penyesuaian Opname)"
                                             >
                                               <Icon name="tune" size={11} />
@@ -1108,34 +1108,20 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                           </span>
                         </td>
                         <td className="py-2.5 px-3 sm:px-4 text-right">
-                          <div className="inline-flex items-center gap-1">
+                          <div className="inline-flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'in' })}
-                              className="inline-flex items-center gap-0.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 hover:bg-emerald-100 transition active:scale-95 cursor-pointer"
-                              title="Stok Masuk"
+                              className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2.5 py-1 text-[10.5px] font-bold text-black hover:bg-black hover:text-white transition active:scale-95 cursor-pointer shadow-2xs"
+                              title="Catat Stok Masuk atau Keluar (+ / -)"
                             >
-                              <Icon name="add" size={11} />
-                              <span>Masuk</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={variant.stock <= 0}
-                              onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'out' })}
-                              className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition ${
-                                variant.stock <= 0
-                                  ? 'border-black/10 bg-black/5 text-black/30 cursor-not-allowed'
-                                  : 'border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 active:scale-95 cursor-pointer'
-                              }`}
-                              title={variant.stock <= 0 ? 'Stok varian habis (0 pcs)' : 'Stok Keluar'}
-                            >
-                              <Icon name="remove" size={11} />
-                              <span>Keluar</span>
+                              <span className="font-mono text-xs leading-none font-bold">±</span>
+                              <span>Keluar / Masuk</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => setMutationTarget({ variant, availableVariants: rowVariants, type: 'adjustment' })}
-                              className="inline-flex items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
+                              className="inline-flex items-center gap-1 rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-1 text-[10.5px] font-bold text-amber-900 hover:bg-amber-100 transition active:scale-95 cursor-pointer shadow-2xs"
                               title="Penyesuaian Opname"
                             >
                               <Icon name="tune" size={11} />

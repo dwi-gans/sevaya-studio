@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+import { Crop } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
 import {
   SiteSectionsConfig,
@@ -25,9 +26,16 @@ interface AdminImgPreviewProps {
   fallback: string;
   alt?: string;
   className?: string;
+  position?: string;
 }
 
-const AdminImgPreview: React.FC<AdminImgPreviewProps> = ({ src, fallback, alt = '', className = '' }) => {
+const AdminImgPreview: React.FC<AdminImgPreviewProps> = ({
+  src,
+  fallback,
+  alt = '',
+  className = '',
+  position,
+}) => {
   const resolved =
     src?.trim() && src !== 'undefined' && src !== 'null' && !src.startsWith('blob:')
       ? src.trim()
@@ -49,13 +57,19 @@ const AdminImgPreview: React.FC<AdminImgPreviewProps> = ({ src, fallback, alt = 
       fill
       unoptimized
       className={`object-cover ${className}`.trim()}
+      style={{ objectPosition: position || 'center' }}
       onError={() => setImgSrc(fallback)}
     />
   );
 };
 
-const HeroAdminPreview: React.FC<{ src?: string | null }> = ({ src }) => (
-  <AdminImgPreview src={src} fallback="/images/hero_optimized.webp" alt="Hero Preview" />
+const HeroAdminPreview: React.FC<{ src?: string | null; position?: string }> = ({ src, position }) => (
+  <AdminImgPreview
+    src={src}
+    fallback="/images/hero_optimized.webp"
+    alt="Hero Preview"
+    position={position}
+  />
 );
 
 interface UploadActionGroupProps {
@@ -65,14 +79,25 @@ interface UploadActionGroupProps {
   uploadingTarget: ImagePickerTarget | null;
   onDirectUpload: (target: ImagePickerTarget, file: File) => void | Promise<void>;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
+  onOpenCropper?: (fileOrUrl: File | string, target: ImagePickerTarget, mode?: 'desktop' | 'mobile') => void;
+  cropperMode?: 'desktop' | 'mobile';
+  accept?: string;
+  uploadButtonLabel?: string;
+  hidePicker?: boolean;
 }
 
 const UploadActionGroup: React.FC<UploadActionGroupProps> = ({
   target,
   label = 'Pilih Galeri',
+  currentImage,
   uploadingTarget,
   onDirectUpload,
   onOpenImagePicker,
+  onOpenCropper,
+  cropperMode,
+  accept = 'image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif',
+  uploadButtonLabel,
+  hidePicker = false,
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const isUploadingThis = uploadingTarget === target;
@@ -81,7 +106,7 @@ const UploadActionGroup: React.FC<UploadActionGroupProps> = ({
       <input
         type="file"
         ref={inputRef}
-        accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif"
+        accept={accept}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -97,20 +122,34 @@ const UploadActionGroup: React.FC<UploadActionGroupProps> = ({
         disabled={isUploadingThis || uploadingTarget !== null}
         onClick={() => inputRef.current?.click()}
         className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-0.5 text-[9px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
-        title="Unggah foto langsung"
+        title="Unggah berkas langsung"
       >
         <Icon name="upload" size={11} />
-        <span>{isUploadingThis ? 'Mengunggah...' : 'Unggah'}</span>
+        <span>{isUploadingThis ? 'Mengunggah...' : (uploadButtonLabel || 'Unggah')}</span>
       </button>
 
-      <button
-        type="button"
-        onClick={() => onOpenImagePicker(target)}
-        className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer"
-      >
-        <Icon name="image" size={11} />
-        <span>{label}</span>
-      </button>
+      {!hidePicker && (
+        <button
+          type="button"
+          onClick={() => onOpenImagePicker(target)}
+          className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer"
+        >
+          <Icon name="image" size={11} />
+          <span>{label}</span>
+        </button>
+      )}
+
+      {onOpenCropper && currentImage && (
+        <button
+          type="button"
+          onClick={() => onOpenCropper(currentImage, target, cropperMode || 'desktop')}
+          className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-0.5 text-[9px] font-medium text-black hover:border-black active:scale-95 transition cursor-pointer shadow-2xs"
+          title="Atur titik fokus dan posisi framing"
+        >
+          <Crop className="h-2.5 w-2.5" />
+          <span>Atur Posisi</span>
+        </button>
+      )}
     </div>
   );
 };
@@ -120,8 +159,9 @@ interface HomeSectionsTabProps {
   setSections: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   articles?: Article[];
   onOpenImagePicker: (target: ImagePickerTarget) => void;
-  /** Dipanggil saat upload file â€” parent dapat intercept (mis. untuk image cropper hero) */
+  /** Dipanggil saat upload file — parent dapat intercept (mis. untuk image cropper hero) */
   onFileUploadDirect?: (target: ImagePickerTarget, file: File) => void | Promise<void>;
+  onOpenCropper?: (fileOrUrl: File | string, target: ImagePickerTarget, mode?: 'desktop' | 'mobile') => void;
   showToast: (msg: string) => void;
 }
 
@@ -131,8 +171,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   articles,
   onOpenImagePicker,
   onFileUploadDirect,
+  onOpenCropper,
   showToast,
 }) => {
+  const [heroPreviewMode, setHeroPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const hero = sections.hero || DEFAULT_SITE_SECTIONS.hero;
   const closerLook = sections.closerLook || DEFAULT_CLOSER_LOOK;
   const spotlightIntro = sections.spotlightIntro || DEFAULT_SITE_SECTIONS.spotlightIntro || '';
@@ -166,6 +208,8 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           next = { ...next, closerLook: { ...(next.closerLook || DEFAULT_CLOSER_LOOK), image: publicUrl } };
         } else if (target === 'home-video-poster') {
           next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), videoPoster: publicUrl } };
+        } else if (target === 'home-video-src') {
+          next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), videoSrc: publicUrl } };
         } else if (target === 'home-about' || target === 'home-about-1') {
           next = { ...next, narrative: { ...(next.narrative || DEFAULT_HOME_NARRATIVE), aboutImage: publicUrl, aboutImage1: publicUrl } };
         } else if (target === 'home-about-2') {
@@ -369,47 +413,108 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
         {/* Hero Photo Preview */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <label className="text-[10px] font-bold tracking-wider text-black/80 uppercase block">
                 Foto Latar Hero (Utama)
               </label>
               <p className="text-[10px] text-black/50">
-                Pilih atau unggah foto untuk mengatur posisi crop Desktop &amp; Mobile langsung di cropper
+                Pilih atau unggah foto master untuk mengatur posisi framing Desktop &amp; Mobile
               </p>
             </div>
-            <UploadActionGroup
-              target="hero"
-              label="Pilih Galeri"
-              currentImage={hero.image}
-              uploadingTarget={uploadingTarget}
-              onDirectUpload={resolvedDirectUpload}
-              onOpenImagePicker={onOpenImagePicker}
-            />
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="inline-flex rounded-full border border-black/15 bg-neutral-100 p-0.5 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setHeroPreviewMode('desktop')}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-semibold transition-all ${
+                    heroPreviewMode === 'desktop'
+                      ? 'bg-black text-white shadow-xs'
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Desktop 16:9
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroPreviewMode('mobile')}
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-semibold transition-all ${
+                    heroPreviewMode === 'mobile'
+                      ? 'bg-black text-white shadow-xs'
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Mobile 9:16
+                </button>
+              </div>
+              <UploadActionGroup
+                target={heroPreviewMode === 'mobile' ? 'hero-mobile' : 'hero'}
+                label="Pilih Galeri"
+                currentImage={heroPreviewMode === 'mobile' ? (hero.mobileImage || hero.image) : hero.image}
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+                onOpenCropper={onOpenCropper}
+                cropperMode={heroPreviewMode}
+              />
+            </div>
           </div>
 
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
-            <HeroAdminPreview src={hero.image?.trim()} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
-              <span className="text-[9px] tracking-widest uppercase opacity-90">
-                {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
-              </span>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="rounded bg-white text-black px-2 py-0.5 text-[9px] font-semibold uppercase">
-                  {hero.ctaShop || 'Shop The Collection'}
+          {heroPreviewMode === 'desktop' ? (
+            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black/5 shadow-inner">
+              <HeroAdminPreview src={hero.image?.trim()} position={hero.position} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
+                <span className="text-[9px] tracking-widest uppercase opacity-90">
+                  {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
                 </span>
-                <span className="rounded border border-white text-white px-2 py-0.5 text-[9px] font-semibold uppercase">
-                  {hero.ctaLookbook || 'Lookbook'}
-                </span>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="rounded bg-white text-black px-2 py-0.5 text-[9px] font-semibold uppercase">
+                    {hero.ctaShop || 'Shop The Collection'}
+                  </span>
+                  <span className="rounded border border-white text-white px-2 py-0.5 text-[9px] font-semibold uppercase">
+                    {hero.ctaLookbook || 'Lookbook'}
+                  </span>
+                </div>
               </div>
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[9px] font-medium px-2.5 py-1 rounded-full backdrop-blur-xs border border-white/20">
+                Fokus Desktop: {hero.position || 'center'}
+              </div>
+              {hero.mobileImage && hero.mobileImage !== hero.image && (
+                <div className="absolute top-3 right-3 bg-black/75 text-white text-[9px] font-medium px-2.5 py-1 rounded-full backdrop-blur-xs border border-white/20 flex items-center gap-1.5">
+                  <span>📱</span>
+                  <span>Mobile Custom Aktif</span>
+                </div>
+              )}
             </div>
-            {hero.mobileImage && hero.mobileImage !== hero.image && (
-              <div className="absolute top-3 right-3 bg-black/75 text-white text-[9px] font-medium px-2.5 py-1 rounded-full backdrop-blur-xs border border-white/20 flex items-center gap-1.5">
-                <span>📱</span>
-                <span>Crop Mobile Aktif</span>
+          ) : (
+            <div className="flex flex-col items-center justify-center bg-neutral-900/5 py-4 rounded-xl border border-black/10">
+              <div className="relative aspect-[9/16] w-[210px] sm:w-[230px] overflow-hidden rounded-2xl border-4 border-black/85 bg-black shadow-2xl">
+                <HeroAdminPreview
+                  src={(hero.mobileImage || hero.image)?.trim()}
+                  position={hero.mobilePosition || hero.position}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex flex-col justify-end p-3 text-white">
+                  <span className="text-[8px] tracking-widest uppercase opacity-90 leading-tight">
+                    {hero.badge || 'TIMELESS • INTENTIONAL • EFFORTLESS'}
+                  </span>
+                  <div className="flex flex-col gap-1 mt-2">
+                    <span className="rounded bg-white text-black px-2 py-0.5 text-[8px] font-semibold uppercase text-center">
+                      {hero.ctaShop || 'Shop The Collection'}
+                    </span>
+                    <span className="rounded border border-white text-white px-2 py-0.5 text-[8px] font-semibold uppercase text-center">
+                      {hero.ctaLookbook || 'Lookbook'}
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute top-2 left-2 bg-black/70 text-white text-[8px] font-medium px-2 py-0.5 rounded-full backdrop-blur-xs border border-white/20">
+                  Fokus: {hero.mobilePosition || hero.position || 'center'}
+                </div>
               </div>
-            )}
-          </div>
+              <p className="text-[10px] text-black/50 mt-2">
+                Simulasi tampilan Hero di layar smartphone portrait (9:16)
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Inputs */}
@@ -661,12 +766,21 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kiri #1
               </span>
-              <UploadActionGroup target="spotlight-0" label="Pilih" currentImage={spotlight[0]?.image} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+              <UploadActionGroup
+                target="spotlight-0"
+                label="Pilih"
+                currentImage={spotlight[0]?.image}
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+                onOpenCropper={onOpenCropper}
+              />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
               <AdminImgPreview
                 src={spotlight[0]?.image}
+                position={spotlight[0]?.position}
                 fallback="/images/figma_abaya_banner.webp"
                 alt="Spotlight 1"
               />
@@ -699,12 +813,21 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               <span className="text-[9px] font-bold tracking-widest text-black/60 uppercase">
                 Kolom Kanan #2
               </span>
-              <UploadActionGroup target="spotlight-1" label="Pilih" currentImage={spotlight[1]?.image} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+              <UploadActionGroup
+                target="spotlight-1"
+                label="Pilih"
+                currentImage={spotlight[1]?.image}
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+                onOpenCropper={onOpenCropper}
+              />
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white">
               <AdminImgPreview
                 src={spotlight[1]?.image}
+                position={spotlight[1]?.position}
                 fallback="/images/figma_khiban_banner.webp"
                 alt="Spotlight 2"
               />
@@ -827,56 +950,146 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 4 â€¢ Video
+              Bagian 4 • Video
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Cinematic Video Player Showcase
             </h3>
+            <p className="text-[11px] text-black/60 mt-0.5">
+              Pemutar video sinematik beranda toko. Admin dapat memutar dan menguji videonya langsung di sini, mengunggah video baru (.mp4/.webm), serta mengganti cover poster.
+            </p>
           </div>
-          <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
-            Cinematic Screen
+          <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[9px] font-semibold">
+            Live Player
           </span>
         </div>
 
-        <div className="space-y-3">
-          {/* Poster Preview */}
-          <div className="space-y-2">
+        {/* Live Video Player Preview */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-bold tracking-wider text-black/80 uppercase block">
+              Pemutar Video Langsung (Live Video Player)
+            </label>
+            <span className="text-[10px] text-black/50">
+              Gunakan tombol play untuk memutar &amp; menguji video langsung di admin
+            </span>
+          </div>
+
+          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black shadow-inner">
+            <video
+              key={`${narrative.videoSrc || '/videos/kani.mp4'}_${narrative.videoPoster || ''}`}
+              src={narrative.videoSrc || '/videos/kani.mp4'}
+              poster={
+                narrative.videoPoster && narrative.videoPoster !== '/images/figma_video_cover.png'
+                  ? narrative.videoPoster
+                  : '/images/kani_poster.webp'
+              }
+              controls
+              playsInline
+              preload="metadata"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* 2 Management Cards: Video File & Video Poster */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          {/* Card 1: Ganti Berkas Video */}
+          <div className="rounded-xl border border-black/15 bg-neutral-50 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-                Cover Poster Video (Sebelum Dimainkan)
-              </label>
-              <UploadActionGroup target="home-video-poster" label="Pilih Galeri" currentImage={narrative.videoPoster} uploadingTarget={uploadingTarget} onDirectUpload={resolvedDirectUpload} onOpenImagePicker={onOpenImagePicker} />
+              <div>
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                  1. Berkas Video
+                </span>
+                <h4 className="text-xs font-bold text-black uppercase tracking-wider">
+                  Sumber Berkas Video
+                </h4>
+              </div>
+              <UploadActionGroup
+                target="home-video-src"
+                label="Unggah"
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                uploadButtonLabel="Unggah Video (MP4)"
+                hidePicker={true}
+              />
             </div>
 
-            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-black/15 bg-black">
-              <AdminImgPreview
-                src={narrative.videoPoster}
-                fallback="/images/kani_poster.webp"
-                alt="Video Cover"
-                className="opacity-90"
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-black/70">
+                URL / Path Berkas Video
+              </label>
+              <input
+                type="text"
+                value={narrative.videoSrc || ''}
+                onChange={(e) => updateNarrativeField('videoSrc', e.target.value)}
+                placeholder="/videos/kani.mp4 atau URL CDN eksternal"
+                className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
               />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="rounded-full bg-white/20 p-3 backdrop-blur-xs">
-                  <Icon name="play" size={24} className="text-white" />
-                </div>
-              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[9.5px] text-black/50 truncate max-w-[200px]" title={narrative.videoSrc || '/videos/kani.mp4'}>
+                Aktif: {narrative.videoSrc ? narrative.videoSrc.split('/').pop() : 'kani.mp4'}
+              </span>
+              <button
+                type="button"
+                onClick={() => updateNarrativeField('videoSrc', '/videos/kani.mp4')}
+                className="text-[9.5px] font-medium text-neutral-600 hover:text-black underline cursor-pointer"
+              >
+                Reset ke kani.mp4
+              </button>
             </div>
           </div>
 
-          <div className="space-y-1 pt-1">
-            <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase">
-              URL Berkas Video MP4
-            </label>
-            <input
-              type="text"
-              value={narrative.videoSrc}
-              onChange={(e) => updateNarrativeField('videoSrc', e.target.value)}
-              placeholder="/videos/kani.mp4 atau URL video hosting eksternal"
-              className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
-            />
-            <p className="text-[10px] text-black/50">
-              Mendukung path lokal di folder public (misal: /videos/kani.mp4) atau URL streaming CDN.
-            </p>
+          {/* Card 2: Cover Poster Video */}
+          <div className="rounded-xl border border-black/15 bg-neutral-50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                  2. Cover Poster
+                </span>
+                <h4 className="text-xs font-bold text-black uppercase tracking-wider">
+                  Foto Poster Thumbnail
+                </h4>
+              </div>
+              <UploadActionGroup
+                target="home-video-poster"
+                label="Pilih Galeri"
+                currentImage={narrative.videoPoster}
+                uploadingTarget={uploadingTarget}
+                onDirectUpload={resolvedDirectUpload}
+                onOpenImagePicker={onOpenImagePicker}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-black/70">
+                URL Cover Poster
+              </label>
+              <input
+                type="text"
+                value={narrative.videoPoster || ''}
+                onChange={(e) => updateNarrativeField('videoPoster', e.target.value)}
+                placeholder="/images/kani_poster.webp atau URL gambar cloud"
+                className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[9.5px] text-black/50 truncate max-w-[200px]" title={narrative.videoPoster || '/images/kani_poster.webp'}>
+                Aktif: {narrative.videoPoster ? narrative.videoPoster.split('/').pop() : 'kani_poster.webp'}
+              </span>
+              <button
+                type="button"
+                onClick={() => updateNarrativeField('videoPoster', '/images/kani_poster.webp')}
+                className="text-[9.5px] font-medium text-neutral-600 hover:text-black underline cursor-pointer"
+              >
+                Reset ke Default
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -1048,11 +1261,13 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 uploadingTarget={uploadingTarget}
                 onDirectUpload={resolvedDirectUpload}
                 onOpenImagePicker={onOpenImagePicker}
+                onOpenCropper={onOpenCropper}
               />
             </div>
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-black/15 bg-white shadow-xs">
               <AdminImgPreview
                 src={narrative.aboutImage || narrative.aboutImage1}
+                position={narrative.aboutPosition}
                 fallback="/images/figma_about_1.webp"
                 alt="About Foto SEVAYA"
               />

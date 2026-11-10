@@ -27,6 +27,8 @@ export interface CropperResult {
   originalUrl?: string;
   /** Data URL base64 untuk penyimpanan instan tanpa unggah ulang ke cloud */
   dataUrl?: string;
+  /** Posisi focal point dalam format CSS object-position (misal: "50% 25%") */
+  position?: string;
   /** Mode target hasil crop: desktop atau mobile */
   targetMode?: 'desktop' | 'mobile';
   /** Apakah modal harus ditutup setelah simpan (default: true) */
@@ -88,6 +90,7 @@ export function ImageCropperModal({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropAreaPercent, setCropAreaPercent] = useState<Area | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(initialMode);
   const [activeRatio, setActiveRatio] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -203,7 +206,8 @@ export function ImageCropperModal({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onCancel]);
 
-  const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
+  const onCropComplete = useCallback((croppedArea: Area, areaPixels: Area) => {
+    setCropAreaPercent(croppedArea);
     setCroppedAreaPixels(areaPixels);
   }, []);
 
@@ -218,18 +222,15 @@ export function ImageCropperModal({
   const handleRotateRight = () => setRotation((r) => r + 90);
 
   const handleConfirm = async () => {
-    if (!file || !imageSrc || !croppedAreaPixels) return;
+    if (!file || !imageSrc) return;
     setIsLoading(true);
     try {
-      const result = await getCroppedImage(
-        imageSrc,
-        croppedAreaPixels,
-        rotation,
-        file,
-        preset.outputMaxWidth,
-        preset.outputFormat ?? 'image/webp',
-        preset.quality ?? 0.98,
-      );
+      // Hitung CSS object-position (focal point) berdasarkan area framing
+      const focalX = cropAreaPercent ? Math.round(cropAreaPercent.x + cropAreaPercent.width / 2) : 50;
+      const focalY = cropAreaPercent ? Math.round(cropAreaPercent.y + cropAreaPercent.height / 2) : 50;
+      const clampedX = Math.max(0, Math.min(100, isNaN(focalX) ? 50 : focalX));
+      const clampedY = Math.max(0, Math.min(100, isNaN(focalY) ? 50 : focalY));
+      const position = `${clampedX}% ${clampedY}%`;
 
       const currentMode = viewMode;
       const isMobileSupported = Boolean(preset.mobileAspect);
@@ -237,9 +238,17 @@ export function ImageCropperModal({
       const willTransitionToMobile = isMobileSupported && currentMode === 'desktop';
       const shouldClose = !willTransitionToMobile;
 
+      const dummyFile = file instanceof File ? file : new File([], 'image.jpg', { type: 'image/jpeg' });
+      const dummyBlob = new Blob([]);
+
       await onConfirm({
-        ...result,
+        file: dummyFile,
+        blob: dummyBlob,
+        width: croppedAreaPixels?.width || 0,
+        height: croppedAreaPixels?.height || 0,
         wasCropped: true,
+        originalUrl: typeof file === 'string' ? file : undefined,
+        position,
         targetMode: currentMode,
         shouldClose,
       });
@@ -254,7 +263,7 @@ export function ImageCropperModal({
         setMobileSaved(true);
       }
     } catch (err) {
-      setCropError(err instanceof Error ? err.message : 'Gagal memproses gambar.');
+      setCropError(err instanceof Error ? err.message : 'Gagal memproses posisi gambar.');
     } finally {
       setIsLoading(false);
     }
@@ -274,6 +283,7 @@ export function ImageCropperModal({
             height: 0,
             wasCropped: false,
             originalUrl: file,
+            position: 'center',
             targetMode: 'desktop',
             shouldClose: false,
           });
@@ -284,6 +294,7 @@ export function ImageCropperModal({
             height: 0,
             wasCropped: false,
             originalUrl: file,
+            position: 'center',
             targetMode: 'mobile',
             shouldClose: true,
           });
@@ -295,6 +306,7 @@ export function ImageCropperModal({
             height: 0,
             wasCropped: false,
             originalUrl: file,
+            position: 'center',
             shouldClose: true,
           });
         }
@@ -307,6 +319,7 @@ export function ImageCropperModal({
             width: 0,
             height: 0,
             wasCropped: false,
+            position: 'center',
             targetMode: 'desktop',
             shouldClose: false,
           });
@@ -316,6 +329,7 @@ export function ImageCropperModal({
             width: 0,
             height: 0,
             wasCropped: false,
+            position: 'center',
             targetMode: 'mobile',
             shouldClose: true,
           });
@@ -326,6 +340,7 @@ export function ImageCropperModal({
             width: 0,
             height: 0,
             wasCropped: false,
+            position: 'center',
             shouldClose: true,
           });
         }
@@ -464,7 +479,7 @@ export function ImageCropperModal({
                 </div>
               </div>
               <span className="hidden sm:inline text-[9px] font-semibold uppercase tracking-wider text-black/40">
-                Ultra HD • Anti-Burik
+                Ultra HD • Fokus Otomatis
               </span>
             </div>
           )}

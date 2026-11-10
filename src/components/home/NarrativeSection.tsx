@@ -146,6 +146,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
                   fill
                   preset="spotlight"
                   className="object-cover transition duration-700 hover:scale-105"
+                  style={{ objectPosition: narrative.aboutPosition || 'center' }}
                 />
               </div>
             </RevealOnScroll>

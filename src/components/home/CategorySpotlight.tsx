@@ -65,6 +65,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
                 fill
                 preset="spotlight"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
+                style={{ objectPosition: abaya?.position || 'center' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">
@@ -87,7 +88,8 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
                 alt={khimar?.title || 'KHIMAR Collection'}
                 fill
                 preset="spotlight"
-                className="object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                style={{ objectPosition: khimar?.position || 'top center' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent transition-opacity group-hover:opacity-90" />
               <div className="absolute bottom-3 left-3 z-10 sm:bottom-6 sm:left-6">

@@ -922,7 +922,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                       'Pelanggan',
                       'Wilayah Tujuan',
                       'Total Item',
-                      'Total Ongkir',
+                      'Harga & Ongkir',
                       'Kurir / Resi',
                       'Status',
                       'Biteship',
@@ -965,8 +965,21 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                         <td className="px-4 py-3.5 text-center font-semibold text-black">
                           {totalItems}
                         </td>
-                        <td className="px-4 py-3.5 font-semibold text-black">
-                          {formatIDR(o.shipping_cost || 0)}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <p className="font-bold text-xs text-black">
+                            {formatIDR(o.grand_total || ((o.subtotal || 0) + (o.shipping_cost || 0)))}
+                          </p>
+                          <p className="text-[10px] text-black/60">
+                            Produk: {formatIDR(o.subtotal || 0)}
+                          </p>
+                          <p className="text-[10px] text-emerald-800 font-medium">
+                            + Ongkir: {formatIDR(o.shipping_cost || 0)}
+                          </p>
+                          {Boolean(o.discount && o.discount > 0) && (
+                            <p className="text-[9.5px] text-red-600">
+                              - Diskon: {formatIDR(o.discount || 0)}
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3.5">
                           <p className="text-black">{o.courier_name || '—'}</p>
@@ -1057,7 +1070,7 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                       </div>
                     </div>
 
-                    {/* Courier & Shipping Cost */}
+                    {/* Courier & Shipping / Price Breakdown */}
                     <div className="flex items-center justify-between rounded-xl bg-black/5 px-3 py-2 text-xs">
                       <div>
                         <p className="font-semibold text-black">{o.courier_name || 'Kurir Reguler'}</p>
@@ -1066,10 +1079,13 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
                         ) : (
                           <p className="text-[10px] text-black/50">Belum ada resi</p>
                         )}
+                        <p className="text-[10px] text-black/60 mt-0.5">{totalItems} Item • Produk: {formatIDR(o.subtotal || 0)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-black/50">{totalItems} Item</p>
-                        <p className="font-bold text-black">{formatIDR(o.shipping_cost || 0)}</p>
+                        <p className="text-[10px] text-emerald-800 font-medium">+ Ongkir: {formatIDR(o.shipping_cost || 0)}</p>
+                        <p className="font-bold text-xs text-black mt-0.5">
+                          Total: {formatIDR(o.grand_total || ((o.subtotal || 0) + (o.shipping_cost || 0)))}
+                        </p>
                       </div>
                     </div>
 

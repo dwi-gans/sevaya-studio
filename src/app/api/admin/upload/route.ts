@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Robust Content-Type detection for Mac / Safari / HEIC / generic octet-stream
+      // Robust Content-Type detection for Mac / Safari / HEIC / video / generic octet-stream
       let detectedContentType = file.type;
       if (!detectedContentType || detectedContentType === 'application/octet-stream') {
         const ext = file.name.split('.').pop()?.toLowerCase() || '';
@@ -135,6 +135,10 @@ export async function POST(req: NextRequest) {
         else if (ext === 'avif') detectedContentType = 'image/avif';
         else if (ext === 'svg') detectedContentType = 'image/svg+xml';
         else if (ext === 'heic' || ext === 'heif') detectedContentType = 'image/heic';
+        else if (ext === 'mp4' || ext === 'm4v') detectedContentType = 'video/mp4';
+        else if (ext === 'webm') detectedContentType = 'video/webm';
+        else if (ext === 'mov') detectedContentType = 'video/quicktime';
+        else if (file.type && file.type.startsWith('video/')) detectedContentType = file.type;
         else detectedContentType = 'image/jpeg';
       }
 
