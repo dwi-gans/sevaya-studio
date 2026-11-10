@@ -129,7 +129,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
   const [shipperInfo, setShipperInfo] = useState({
     name: 'SEVAYA',
     phone: '0851 9099 3087',
-    address: 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
+    address: 'Patraland Amarta Apartment (Jl. Palagan Tentara Pelajar No.KM 7, Sariharjo, Ngaglik, Sleman, DI Yogyakarta 55581)',
   });
   const [isEditingShipper, setIsEditingShipper] = useState(false);
   const [savingShipper, setSavingShipper] = useState(false);
@@ -151,7 +151,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
           setShipperInfo({
             name: s.shipper_name || 'SEVAYA',
             phone: s.shipper_phone || '0851 9099 3087',
-            address: fullAddress || s.origin_address || 'Jl. Kebon Jeruk No. 10, Kebon Jeruk, Jakarta Barat 11450',
+            address: fullAddress || s.origin_address || 'Patraland Amarta Apartment (Jl. Palagan Tentara Pelajar No.KM 7, Sariharjo, Ngaglik, Sleman, DI Yogyakarta 55581)',
           });
         }
       })
@@ -168,7 +168,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
           shipper_name: shipperInfo.name,
           shipper_phone: shipperInfo.phone,
           origin_address: shipperInfo.address,
-          origin_postal_code: 11450,
+          origin_postal_code: 55581,
         }),
       });
       setIsEditingShipper(false);

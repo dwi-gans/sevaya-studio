@@ -49,13 +49,14 @@ export const SettingsTab: React.FC = () => {
   const [formData, setFormData] = useState<ShippingOriginData>({
     shipper_name: 'SEVAYA',
     shipper_phone: '0851 9099 3087',
-    shipper_email: 'info@sevaya-studio.com',
+    shipper_email: 'sevayaofficial@gmail.com',
     shipper_organization: 'SEVAYA',
-    origin_address: 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-    origin_note: 'Toko SEVAYA',
-    origin_postal_code: 11450,
-    origin_area_id: 'IDNP6IDNC149IDND847IDZ11450',
-    origin_area_name: 'Kebon Jeruk, Jakarta Barat',
+    origin_address:
+      'Patraland Amarta Apartment (Jl. Palagan Tentara Pelajar No.KM 7, RW.5, Mudal, Sariharjo, Kec. Ngaglik, Kabupaten Sleman, Daerah Istimewa Yogyakarta',
+    origin_note: 'Bisa langsung sama admin/bisa juga semisal admin sibuk dititipkan security',
+    origin_postal_code: 55581,
+    origin_area_id: 'IDNP5IDNC412IDND5050IDZ55581',
+    origin_area_name: 'Ngaglik, Sleman, DI Yogyakarta. 55581',
   });
 
   // Area search state for relocation / autocomplete
@@ -331,7 +332,7 @@ export const SettingsTab: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, origin_postal_code: Number(e.target.value) || 0 })
                     }
-                    placeholder="Contoh: 11450"
+                    placeholder="Contoh: 55581"
                     className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-lg border border-black/20 focus:border-black focus:outline-none transition min-h-[42px] bg-white text-black font-mono"
                   />
                 </div>

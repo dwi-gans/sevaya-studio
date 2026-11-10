@@ -26,13 +26,18 @@ export async function POST(req: NextRequest) {
     const payload = {
       shipper_contact_name: body.shipper_name || process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA',
       shipper_contact_phone: body.shipper_phone || process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '0851 9099 3087',
-      shipper_contact_email: body.shipper_email || process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
+      shipper_contact_email: body.shipper_email || process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'sevayaofficial@gmail.com',
       shipper_organization: 'SEVAYA',
       origin_contact_name: body.shipper_name || process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA',
       origin_contact_phone: body.shipper_phone || process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '0851 9099 3087',
-      origin_address: body.origin_address || process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-      origin_note: process.env.BITESHIP_ORIGIN_NOTE || 'Toko SEVAYA',
-      origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450,
+      origin_address:
+        body.origin_address ||
+        process.env.BITESHIP_ORIGIN_ADDRESS ||
+        'Patraland Amarta Apartment (Jl. Palagan Tentara Pelajar No.KM 7, RW.5, Mudal, Sariharjo, Kec. Ngaglik, Kabupaten Sleman, Daerah Istimewa Yogyakarta',
+      origin_note:
+        process.env.BITESHIP_ORIGIN_NOTE ||
+        'Bisa langsung sama admin/bisa juga semisal admin sibuk dititipkan security',
+      origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 55581,
       destination_contact_name: body.destination_name || 'Test Customer',
       destination_contact_phone: body.destination_phone || '08987654321',
       destination_contact_email: body.destination_email || 'test@customer.com',

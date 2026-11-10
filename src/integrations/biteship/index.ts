@@ -217,8 +217,8 @@ export async function getBiteshipRates(
   params: GetRatesParams,
 ): Promise<{ rates: BiteshipRateOption[]; notice?: string }> {
   const originPostal =
-    params.origin_postal_code || Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450;
-  const originArea = params.origin_area_id || process.env.BITESHIP_ORIGIN_AREA_ID || '';
+    params.origin_postal_code || Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 55581;
+  const originArea = params.origin_area_id || process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP5IDNC412IDND5050IDZ55581';
 
   const defaultItems: BiteshipItem[] = [
     {

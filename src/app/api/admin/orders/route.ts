@@ -373,7 +373,7 @@ export async function POST(req: NextRequest) {
       origin_contact_phone: originSettings.shipper_phone,
       origin_address: originSettings.origin_address,
       origin_note: originSettings.origin_note || 'Toko SEVAYA',
-      origin_postal_code: originSettings.origin_postal_code || 11450,
+      origin_postal_code: originSettings.origin_postal_code || 55581,
       ...(originSettings.origin_area_id ? { origin_area_id: originSettings.origin_area_id } : {}),
       destination_contact_name: destination_name || order.customer_name || 'Customer',
       destination_contact_phone: destination_phone || order.customer_phone || '08000000000',

@@ -21,13 +21,17 @@ const DATA_DIR = path.join(process.cwd(), '.data');
 export const DEFAULT_SHIPPING_ORIGIN: ShippingOriginSettings = {
   shipper_name: process.env.BITESHIP_ORIGIN_CONTACT_NAME || 'SEVAYA',
   shipper_phone: process.env.BITESHIP_ORIGIN_CONTACT_PHONE || '0851 9099 3087',
-  shipper_email: process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'info@sevaya-studio.com',
+  shipper_email: process.env.BITESHIP_ORIGIN_CONTACT_EMAIL || 'sevayaofficial@gmail.com',
   shipper_organization: 'SEVAYA',
-  origin_address: process.env.BITESHIP_ORIGIN_ADDRESS || 'Jl. Kebon Jeruk No. 10, Jakarta Barat',
-  origin_note: process.env.BITESHIP_ORIGIN_NOTE || 'Toko SEVAYA',
-  origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 11450,
-  origin_area_id: process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP6IDNC149IDND847IDZ11450',
-  origin_area_name: 'Kebon Jeruk, Jakarta Barat',
+  origin_address:
+    process.env.BITESHIP_ORIGIN_ADDRESS ||
+    'Patraland Amarta Apartment (Jl. Palagan Tentara Pelajar No.KM 7, RW.5, Mudal, Sariharjo, Kec. Ngaglik, Kabupaten Sleman, Daerah Istimewa Yogyakarta',
+  origin_note:
+    process.env.BITESHIP_ORIGIN_NOTE ||
+    'Bisa langsung sama admin/bisa juga semisal admin sibuk dititipkan security',
+  origin_postal_code: Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) || 55581,
+  origin_area_id: process.env.BITESHIP_ORIGIN_AREA_ID || 'IDNP5IDNC412IDND5050IDZ55581',
+  origin_area_name: 'Ngaglik, Sleman, DI Yogyakarta. 55581',
 };
 
 // In-memory cache (1 minute TTL on server)
