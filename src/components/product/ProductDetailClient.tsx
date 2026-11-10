@@ -225,6 +225,25 @@ export function ProductDetailClient({
   // 3. Ubah gambar utama ke foto pertama warna tersebut
   const handleSelectColor = (colorOption: ProductColorOption) => {
     setSelectedColor(colorOption);
+    setQuantity(1);
+
+    // Jika size yang aktif stoknya 0 pada warna baru, otomatis pilih size yang ada stok
+    if (variants.length > 0) {
+      const colorVariants = variants.filter(
+        (v) => v.colorName.trim().toLowerCase() === colorOption.name.trim().toLowerCase()
+      );
+      const currentSizeStock = colorVariants.find(
+        (v) => v.size.trim().toUpperCase() === selectedSize.trim().toUpperCase()
+      )?.stock ?? 0;
+
+      if (currentSizeStock <= 0) {
+        const inStock = colorVariants.find((v) => v.stock > 0);
+        if (inStock) {
+          setSelectedSize(inStock.size);
+        }
+      }
+    }
+
     const photos = colorPhotoMap[colorOption.name.toLowerCase()];
     if (photos && photos.length > 0) {
       setGalleryImages(photos);
@@ -396,6 +415,22 @@ export function ProductDetailClient({
         if (Array.isArray(data.variants) && data.variants.length > 0) {
           setVariants(data.variants);
           setVariantsReady(true);
+
+          // Otomatis pilih size yang memiliki stok tersedia untuk warna aktif agar tidak langsung "OUT OF STOCK"
+          const colorVariants = data.variants.filter(
+            (v: ProductVariant) => v.colorName.trim().toLowerCase() === selectedColor.name.trim().toLowerCase()
+          );
+          if (colorVariants.length > 0) {
+            const currentVar = colorVariants.find(
+              (v: ProductVariant) => v.size.trim().toUpperCase() === selectedSize.trim().toUpperCase()
+            );
+            if (!currentVar || currentVar.stock <= 0) {
+              const inStock = colorVariants.find((v: ProductVariant) => v.stock > 0);
+              if (inStock) {
+                setSelectedSize(inStock.size);
+              }
+            }
+          }
         } else {
           setVariantsReady(true);
         }

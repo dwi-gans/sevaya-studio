@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }
     // Otomatis bersihkan varian yatim (produk yang sudah dihapus / warna & ukuran yang dihapus dari katalog)
     const [variants, mutations] = await Promise.all([
-      cleanServerOrphanedVariants(),
+      cleanServerOrphanedVariants(forceRefresh),
       getServerStockMutations(),
     ]);
 

@@ -126,7 +126,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
   }, []);
 
   useEffect(() => {
-    fetchInventory();
+    fetchInventory(true);
   }, [fetchInventory]);
 
   // Helper untuk memvalidasi apakah varian masih aktif di katalog produk

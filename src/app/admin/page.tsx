@@ -313,7 +313,7 @@ export default function AdminPage() {
     let isMounted = true;
     setSections(getCachedSiteSections());
 
-    Promise.all([getDbProducts(true), getSiteSections(true), getInventoryVariants()])
+    Promise.all([getDbProducts(true), getSiteSections(true), getInventoryVariants(true)])
       .then(([dbProds, siteSections, invVariants]) => {
         if (!isMounted) return;
         const syncedProds = dbProds.map((p) => {

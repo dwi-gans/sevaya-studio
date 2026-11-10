@@ -149,16 +149,28 @@ export function invalidateInventoryCache(): void {
 }
 
 /**
- * Ambil semua varian inventaris (dengan fallback auto-generator dari katalog produk)
+ * Ambil semua varian inventaris (dengan fallback auto-generator dari katalog produk).
+ *
+ * Urutan prioritas:
+ * 1. In-memory cache (hanya jika bukan forceRefresh) — paling cepat
+ * 2. Server API /api/admin/inventory — sumber kebenaran utama (selalu diutamakan setelah cache miss)
+ * 3. Supabase Storage via anon client — fallback jika API down
+ * 4. localStorage — fallback offline terakhir
+ * 5. Auto-generate default — last resort (stok = 0)
+ *
+ * Catatan: localStorage TIDAK pernah digunakan sebelum mencoba network,
+ * sehingga browser reload (F5) tidak bisa menyajikan data stale dari localStorage.
  */
 export async function getInventoryVariants(forceRefresh = false): Promise<ProductVariant[]> {
   if (forceRefresh) {
     invalidateInventoryCache();
   } else if (_cachedVariants && _cachedVariants.length > 0) {
+    // In-memory cache masih ada — kembalikan tanpa round-trip ke network
     return _cachedVariants;
   }
 
-  // 1. Prioritaskan server API endpoint (/api/admin/inventory) yang didukung service-role & persistensi disk
+  // 1. Prioritaskan server API endpoint (/api/admin/inventory) — selalu bypass localStorage
+  //    sehingga browser reload tidak pernah mendapat data stale
   if (typeof window !== 'undefined') {
     try {
       const res = await fetch(`/api/admin/inventory${forceRefresh ? '?refresh=true' : ''}`, {
@@ -173,6 +185,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
         if (json && json.success && Array.isArray(json.variants) && json.variants.length > 0) {
           _cachedVariants = json.variants;
           try {
+            // Update localStorage agar sinkron dengan data server terbaru
             localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify(json.variants));
           } catch {
             // ignore
@@ -181,11 +194,11 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
         }
       }
     } catch {
-      // fallback jika network gagal
+      // Network error — lanjut ke fallback Supabase Storage
     }
   }
 
-  // 2. Coba dari Cloud Storage via anon Supabase client
+  // 2. Fallback: Supabase Storage via anon client (jika API tidak tersedia)
   try {
     const { data, error } = await supabase.storage.from('catalog').download(INVENTORY_FILE);
     if (!error && data) {
@@ -193,6 +206,11 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
       const parsed = JSON.parse(text) as ProductVariant[];
       if (Array.isArray(parsed) && parsed.length > 0) {
         _cachedVariants = parsed;
+        try {
+          localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify(parsed));
+        } catch {
+          // ignore
+        }
         return parsed;
       }
     }
@@ -200,7 +218,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
     // Ignore & lanjut fallback
   }
 
-  // 3. Coba localStorage (browser)
+  // 3. Fallback offline: localStorage — hanya digunakan jika kedua network request di atas gagal
   if (typeof window !== 'undefined') {
     try {
       const local = localStorage.getItem(LS_VARIANTS_KEY);
@@ -216,7 +234,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
     }
   }
 
-  // 4. Fallback terakhir: Auto-generate dari daftar produk yang ada di katalog
+  // 4. Last resort: Auto-generate dari daftar produk (stok = 0, tidak di-upload ke Storage)
   const products = await getDbProducts();
   const allVariants: ProductVariant[] = [];
   for (const p of products) {
@@ -224,7 +242,7 @@ export async function getInventoryVariants(forceRefresh = false): Promise<Produc
   }
 
   _cachedVariants = allVariants;
-  await saveInventoryVariants(allVariants);
+  // JANGAN upload ke Storage — ini hanya fallback sementara, stok aktual ada di Storage
   return allVariants;
 }
 
