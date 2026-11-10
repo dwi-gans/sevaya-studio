@@ -36,6 +36,9 @@ export function mapDbProductToProduct(item: DbProduct): Product {
             name: s.name,
             color: s.color,
             image: s.image && !s.image.includes('logo_ibey') ? s.image : fallbackImage,
+            images: Array.isArray(s.images)
+              ? s.images.filter((img) => img && img.trim() !== '' && !img.includes('logo_ibey'))
+              : undefined,
           }))
         : [
             { name: 'Black', color: '#1A1A1A', image: fallbackImage },

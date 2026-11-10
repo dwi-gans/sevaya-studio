@@ -22,7 +22,7 @@ export interface Product {
   category?: string;
   inStock?: boolean;
   stock?: number;
-  swatches: { name: string; color: string; image?: string }[];
+  swatches: { name: string; color: string; image?: string; images?: string[] }[];
   sizes?: string[];
   fabric?: string;
   material?: string;
@@ -48,12 +48,12 @@ export function ProductCard({
     product.inStock === false ||
     (typeof product.stock === 'number' && product.stock <= 0);
 
-  // Swatch aktif: prioritas ke swatch yang di-hover oleh kursor, lalu swatch yang diklik/dipilih
+  // Swatch aktif: prioritas ke swatch yang di-hover oleh kursor, lalu swatch yang diklik/dipilih, default ke swatch pertama
   const activeSwatch = hoveredSwatch
     ? product.swatches?.find((s) => s.name === hoveredSwatch)
     : selectedSwatch
     ? product.swatches?.find((s) => s.name === selectedSwatch)
-    : null;
+    : product.swatches?.[0] || null;
 
   const currentActiveName = activeSwatch?.name || product.swatches?.[0]?.name;
 
@@ -78,16 +78,11 @@ export function ProductCard({
   }, [targetDisplayImage]);
 
   const displayImage = (imageError && imageError === targetDisplayImage)
-    ? (product.image || '/images/catalog/catalog-01.jpg')
+    ? (targetDisplayImage !== product.image && product.image ? product.image : '/images/catalog/catalog-01.jpg')
     : targetDisplayImage;
 
-  // Format gambar: Supabase dan Unsplash didukung langsung oleh Next.js optimizer (WebP otomatis)
-  const isOptimizableRemote =
-    !displayImage.startsWith('http') ||
-    displayImage.includes('supabase.co') ||
-    displayImage.includes('unsplash.com') ||
-    displayImage.includes('googleusercontent.com');
-  const shouldBeUnoptimized = !isOptimizableRemote;
+  // Gambar remote (http / https) disajikan unoptimized agar browser memuat langsung dari CDN tanpa diproses ulang oleh server Next.js (menghindari error decode Turbopack)
+  const shouldBeUnoptimized = displayImage.startsWith('http');
 
   // Foto kedua saat hover (hanya jika produk tidak memiliki banyak swatch warna)
   const secondaryImage =

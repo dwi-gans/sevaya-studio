@@ -92,14 +92,35 @@ async function uploadToStorage(filename: string, data: unknown): Promise<boolean
   }
 }
 
-// In-memory caches to guarantee microsecond server performance
-let _serverCachedVariants: ProductVariant[] | null = null;
-let _serverCachedMutations: StockMutation[] | null = null;
+// In-memory caches — survive hot-reload in dev with globalThis trick
+declare global {
+  // eslint-disable-next-line no-var
+  var __sevayaInventoryCache: {
+    variants: ProductVariant[] | null;
+    mutations: StockMutation[] | null;
+    variantTs: number;
+  } | undefined;
+}
+
+if (!globalThis.__sevayaInventoryCache) {
+  globalThis.__sevayaInventoryCache = { variants: null, mutations: null, variantTs: 0 };
+}
+
+// TTL: 60 detik — cukup fresh untuk UX real-time, cukup panjang untuk performa
+const INVENTORY_CACHE_TTL_MS = 60 * 1000;
+
+function isCacheStale(): boolean {
+  const ts = globalThis.__sevayaInventoryCache?.variantTs ?? 0;
+  return Date.now() - ts >= INVENTORY_CACHE_TTL_MS;
+}
 
 /** Invalidate cache in-memory agar request berikutnya ambil fresh dari Supabase Storage */
 export function invalidateServerInventoryCache() {
-  _serverCachedVariants = null;
-  _serverCachedMutations = null;
+  if (globalThis.__sevayaInventoryCache) {
+    globalThis.__sevayaInventoryCache.variants = null;
+    globalThis.__sevayaInventoryCache.mutations = null;
+    globalThis.__sevayaInventoryCache.variantTs = 0;
+  }
 }
 
 export async function getServerProducts(): Promise<DbProduct[]> {
@@ -134,14 +155,18 @@ export async function saveServerProducts(products: DbProduct[]): Promise<void> {
 }
 
 export async function getServerInventoryVariants(forceRefresh = false): Promise<ProductVariant[]> {
-  if (!forceRefresh && _serverCachedVariants && _serverCachedVariants.length > 0) {
-    return _serverCachedVariants;
+  const cache = globalThis.__sevayaInventoryCache!;
+
+  // Return in-memory cache only if still fresh and not forced
+  if (!forceRefresh && cache.variants && cache.variants.length > 0 && !isCacheStale()) {
+    return cache.variants;
   }
 
   // 1. Supabase Storage (source of truth — selalu diutamakan agar data tidak stale di Vercel)
   const fromStorage = await downloadFromStorage<ProductVariant[]>(INVENTORY_FILE);
   if (Array.isArray(fromStorage) && fromStorage.length > 0) {
-    _serverCachedVariants = fromStorage;
+    cache.variants = fromStorage;
+    cache.variantTs = Date.now();
     writeLocalFile(INVENTORY_FILE, fromStorage);
     return fromStorage;
   }
@@ -149,44 +174,50 @@ export async function getServerInventoryVariants(forceRefresh = false): Promise<
   // 2. Disk fallback (hanya dev/sandbox, ephemeral di Vercel)
   const fromLocal = readLocalFile<ProductVariant[]>(INVENTORY_FILE);
   if (Array.isArray(fromLocal) && fromLocal.length > 0) {
-    _serverCachedVariants = fromLocal;
+    cache.variants = fromLocal;
+    cache.variantTs = Date.now();
     return fromLocal;
   }
 
-  // 3. Last resort: generate default variants from catalog products (stock = 0)
-  console.warn('[getServerInventoryVariants] Storage dan disk kosong — generating default variants. Pastikan SUPABASE_SERVICE_ROLE_KEY valid.');
+  // 3. Last resort: generate default variants — JANGAN upload balik ke Storage
+  //    karena bisa menimpa data stok yang sebenarnya ada (bug utama "stok habis saat refresh")
+  console.warn('[getServerInventoryVariants] Storage dan disk kosong — generating default variants (stock=0). Pastikan SUPABASE_SERVICE_ROLE_KEY valid dan Storage bucket "catalog" dapat diakses.');
   const products = await getServerProducts();
   const allVariants: ProductVariant[] = [];
   for (const p of products) {
     allVariants.push(...generateDefaultVariantsForProduct(p));
   }
 
-  _serverCachedVariants = allVariants;
-  await saveServerInventoryVariants(allVariants);
+  // Simpan ke cache in-memory saja (dengan TTL pendek 10 detik), jangan upload ke Storage
+  cache.variants = allVariants;
+  cache.variantTs = Date.now() - INVENTORY_CACHE_TTL_MS + 10_000; // expire dalam ~10 detik
   return allVariants;
 }
 
 export async function saveServerInventoryVariants(variants: ProductVariant[]): Promise<void> {
-  _serverCachedVariants = variants;
+  const cache = globalThis.__sevayaInventoryCache!;
+  cache.variants = variants;
+  cache.variantTs = Date.now();
   writeLocalFile(INVENTORY_FILE, variants);
   await uploadToStorage(INVENTORY_FILE, variants);
 }
 
 export async function getServerStockMutations(): Promise<StockMutation[]> {
-  if (_serverCachedMutations && _serverCachedMutations.length > 0) {
-    return _serverCachedMutations;
+  const cache = globalThis.__sevayaInventoryCache!;
+  if (cache.mutations && cache.mutations.length > 0) {
+    return cache.mutations;
   }
 
   const fromStorage = await downloadFromStorage<StockMutation[]>(MUTATIONS_FILE);
   if (Array.isArray(fromStorage)) {
-    _serverCachedMutations = fromStorage;
+    cache.mutations = fromStorage;
     writeLocalFile(MUTATIONS_FILE, fromStorage);
     return fromStorage;
   }
 
   const fromLocal = readLocalFile<StockMutation[]>(MUTATIONS_FILE);
   if (Array.isArray(fromLocal)) {
-    _serverCachedMutations = fromLocal;
+    cache.mutations = fromLocal;
     return fromLocal;
   }
 
@@ -194,7 +225,8 @@ export async function getServerStockMutations(): Promise<StockMutation[]> {
 }
 
 export async function saveServerStockMutations(mutations: StockMutation[]): Promise<void> {
-  _serverCachedMutations = mutations;
+  const cache = globalThis.__sevayaInventoryCache!;
+  cache.mutations = mutations;
   writeLocalFile(MUTATIONS_FILE, mutations);
   await uploadToStorage(MUTATIONS_FILE, mutations);
 }

@@ -87,10 +87,18 @@ export function QuickAddModal({
     if (activeSwatch?.image) {
       addPhoto(activeSwatch.image);
     }
+    if (activeSwatch?.images && activeSwatch.images.length > 0) {
+      activeSwatch.images.forEach((img) => addPhoto(img));
+    }
 
     // 2. Masukkan SEMUA foto dari tiap varian warna (swatches) agar sejak pertama kali buka sudah bisa discroll lengkap
     if (swatches && swatches.length > 0) {
-      swatches.forEach((s) => addPhoto(s.image));
+      swatches.forEach((s) => {
+        addPhoto(s.image);
+        if (s.images && s.images.length > 0) {
+          s.images.forEach((img) => addPhoto(img));
+        }
+      });
     }
 
     // 3. Masukkan foto utama produk jika belum ada di list
@@ -140,6 +148,22 @@ export function QuickAddModal({
         if (!active) return;
         if (data && data.success && Array.isArray(data.variants)) {
           setVariants(data.variants);
+
+          // Otomatis pilih size yang memiliki stok tersedia untuk warna aktif agar modal tidak langsung "OUT OF STOCK"
+          const colorVariants = data.variants.filter(
+            (v: ProductVariant) => v.colorName.trim().toLowerCase() === initialC.trim().toLowerCase()
+          );
+          if (colorVariants.length > 0) {
+            const currentVar = colorVariants.find(
+              (v: ProductVariant) => v.size.trim().toLowerCase() === (sizes[0] || 'S').trim().toLowerCase()
+            );
+            if (!currentVar || currentVar.stock <= 0) {
+              const inStock = colorVariants.find((v: ProductVariant) => v.stock > 0);
+              if (inStock) {
+                setSelectedSize(inStock.size);
+              }
+            }
+          }
         }
       })
       .catch((err) => {
@@ -211,6 +235,23 @@ export function QuickAddModal({
   const handleSelectColor = (swatchName: string) => {
     setSelectedColor(swatchName);
     setQuantity(1);
+
+    // Jika size yang aktif stoknya 0 pada warna baru, otomatis pilih size yang ada stok
+    if (variants.length > 0) {
+      const colorVariants = variants.filter(
+        (v) => v.colorName.trim().toLowerCase() === swatchName.trim().toLowerCase()
+      );
+      const currentSizeStock = colorVariants.find(
+        (v) => v.size.trim().toLowerCase() === selectedSize.trim().toLowerCase()
+      )?.stock ?? 0;
+
+      if (currentSizeStock <= 0) {
+        const inStock = colorVariants.find((v) => v.stock > 0);
+        if (inStock) {
+          setSelectedSize(inStock.size);
+        }
+      }
+    }
 
     const targetSwatch = swatches.find(
       (s) => s.name.trim().toLowerCase() === swatchName.trim().toLowerCase()
