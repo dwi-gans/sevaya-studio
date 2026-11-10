@@ -136,23 +136,11 @@ export async function getCroppedImage(
   cropCtx.imageSmoothingEnabled = true;
   cropCtx.imageSmoothingQuality = 'high';
 
-  // Resolusi Cerdas (Anti-Burik):
-  // Jika crop berorientasi Landscape (Desktop 16:9), pastikan resolusi output minimal 1920x1080 (Full HD).
-  // Jika sumber foto hanya 1024px (seperti foto katalog/WA), canvas akan melakukan upsampling bicubic
-  // berkualitas tinggi ke 1920px sehingga tidak pecah saat dirender di layar laptop/PC.
-  const isLandscape = pixelCrop.width / pixelCrop.height >= 1.3;
-  let targetWidth = pixelCrop.width;
-
-  if (isLandscape) {
-    // Standar minimum Full HD untuk desktop landscape
-    const minDesktopWidth = 1920;
-    targetWidth = Math.min(outputMaxWidth, Math.max(minDesktopWidth, pixelCrop.width));
-  } else {
-    // Standar minimum untuk mobile portrait (9:16)
-    const minMobileWidth = 1080;
-    targetWidth = Math.min(outputMaxWidth, Math.max(minMobileWidth, pixelCrop.width));
-  }
-
+  // Resolusi Cerdas (Anti-Burik & Tajam HD):
+  // 1. Pertahankan ketajaman 100% resolusi asli dari kamera/foto user (1:1 native pixels).
+  // 2. Batasi hanya jika melebihi outputMaxWidth agar file tetap ringan dan cepat dimuat.
+  // 3. JANGAN PERNAH memaksa upscaling buatan (Math.max) jika sumber lebih kecil karena akan membuat gambar kabur/burik.
+  const targetWidth = Math.min(outputMaxWidth, pixelCrop.width);
   const scale = targetWidth / pixelCrop.width;
   const outW = Math.round(pixelCrop.width * scale);
   const outH = Math.round(pixelCrop.height * scale);
@@ -160,21 +148,82 @@ export async function getCroppedImage(
   cropCanvas.width = outW;
   cropCanvas.height = outH;
 
-  cropCtx.drawImage(
-    rotCanvas,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    outW,
-    outH,
-  );
+  // Stepped Downsampling untuk foto beresolusi tinggi (4K/3K):
+  // Jika downsampling melebihi rasio 1.5x, lakukan pengecilan bertahap agar detail serat kain & ketajaman tetap utuh
+  if (pixelCrop.width > outW * 1.5) {
+    let curW = pixelCrop.width;
+    let curH = pixelCrop.height;
+
+    // Canvas perantara pertama (crop asli)
+    let curCanvas = document.createElement('canvas');
+    curCanvas.width = curW;
+    curCanvas.height = curH;
+    let curCtx = curCanvas.getContext('2d');
+    if (curCtx) {
+      curCtx.imageSmoothingEnabled = true;
+      curCtx.imageSmoothingQuality = 'high';
+      curCtx.drawImage(
+        rotCanvas,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        curW,
+        curH,
+      );
+
+      // Langkah pengecilan separuh (halving) hingga mendekati target
+      while (curW * 0.5 > outW) {
+        curW = Math.round(curW * 0.5);
+        curH = Math.round(curH * 0.5);
+        const nextCanvas = document.createElement('canvas');
+        nextCanvas.width = curW;
+        nextCanvas.height = curH;
+        const nextCtx = nextCanvas.getContext('2d');
+        if (nextCtx) {
+          nextCtx.imageSmoothingEnabled = true;
+          nextCtx.imageSmoothingQuality = 'high';
+          nextCtx.drawImage(curCanvas, 0, 0, curW, curH);
+          curCanvas = nextCanvas;
+        } else {
+          break;
+        }
+      }
+
+      // Draw final ke cropCanvas dengan ketajaman maksimum
+      cropCtx.drawImage(curCanvas, 0, 0, curW, curH, 0, 0, outW, outH);
+    } else {
+      cropCtx.drawImage(
+        rotCanvas,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        outW,
+        outH,
+      );
+    }
+  } else {
+    cropCtx.drawImage(
+      rotCanvas,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      outW,
+      outH,
+    );
+  }
 
   const dataUrl = cropCanvas.toDataURL(outputFormat, quality);
 
-  const blob = await new Promise<Blob>((resolve, reject) => {
+  let blob = await new Promise<Blob>((resolve, reject) => {
     cropCanvas.toBlob(
       (b) => {
         if (b) resolve(b);
@@ -185,9 +234,21 @@ export async function getCroppedImage(
     );
   });
 
-  // Pastikan ekstensi dan MIME type selalu cocok dengan tipe output blob yang sebenarnya
-  const actualType = blob.type || outputFormat;
-  const ext = actualType === 'image/webp' ? 'webp' : (actualType === 'image/png' ? 'png' : 'jpg');
+  // Proteksi: Jika browser fallback ke image/png uncompressed (karena tidak mendukung webp di canvas)
+  // ubah ke image/jpeg kualitas tinggi (0.94) agar gambar tetap HD tajam dan TIDAK menjadi file raksasa 4MB
+  let finalMime = blob.type || outputFormat;
+  if (outputFormat === 'image/webp' && finalMime === 'image/png') {
+    const jpegBlob = await new Promise<Blob | null>((resolve) => {
+      cropCanvas.toBlob((b) => resolve(b), 'image/jpeg', 0.94);
+    });
+    if (jpegBlob && jpegBlob.size > 0) {
+      blob = jpegBlob;
+      finalMime = 'image/jpeg';
+    }
+  }
+
+  // Nama file: sesuaikan ekstensi dengan tipe final sebenarnya
+  const ext = finalMime === 'image/webp' ? 'webp' : (finalMime === 'image/png' ? 'png' : 'jpg');
   const baseName =
     originalFile instanceof File
       ? originalFile.name.replace(/\.[^.]+$/, '')
@@ -196,7 +257,7 @@ export async function getCroppedImage(
           : 'hero-image');
   const fileName = `${baseName}.${ext}`;
 
-  const file = new File([blob], fileName, { type: actualType });
+  const file = new File([blob], fileName, { type: finalMime });
 
   return { blob, file, width: outW, height: outH, dataUrl };
 }

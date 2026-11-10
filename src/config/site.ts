@@ -1,7 +1,7 @@
 /** Static brand metadata for Sevaya. */
 export const siteConfig = {
   name: 'SEVAYA',
-  tagline: 'Modern Modest Silhouettes & Luxury Abayas',
+  tagline: 'Timeless modestwear for everyday life & comfort',
   description:
     'Elevated, serene, and luxurious digital commerce experience for modern modest fashion. Free-flowing, expressive, and quietly harmonious silhouettes created for tropical serenity.',
   locale: 'id-ID',

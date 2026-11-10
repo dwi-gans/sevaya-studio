@@ -10,7 +10,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
   title: {
-    default: `${siteConfig.name} — Modern Modest Silhouettes & Luxury Abayas`,
+    default: `${siteConfig.name} — ${siteConfig.tagline}`,
     template: `%s | ${siteConfig.name}`,
   },
   description:
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     canonical: publicEnv.siteUrl,
   },
   openGraph: {
-    title: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
+    title: 'SEVAYA — Timeless modestwear for everyday life & comfort',
     description:
       'Koleksi busana abaya dan french khimar modern dengan bahan cupro silk premium. Siluet mengalir, elegan, dan tenang.',
     url: publicEnv.siteUrl,
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
+        alt: 'SEVAYA — Timeless modestwear for everyday life & comfort',
       },
     ],
     locale: 'id_ID',
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SEVAYA — Modern Modest Silhouettes & Luxury Abayas',
+    title: 'SEVAYA — Timeless modestwear for everyday life & comfort',
     description:
       'Studio busana abaya dan french khimar modern premium. Siluet mengalir elegan dan tenang.',
     images: ['/images/og-image.jpg'],
@@ -111,7 +111,11 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
               '@context': 'https://schema.org',
               '@type': 'ClothingStore',
               name: 'SEVAYA',
-              alternateName: ['Sevaya Studio', 'Sevaya Abaya', 'SEVAYA Luxury Abayas'],
+              alternateName: [
+                'Sevaya Studio',
+                'Sevaya Abaya',
+                'SEVAYA — Timeless modestwear for everyday life & comfort',
+              ],
               url: publicEnv.siteUrl,
               logo: `${publicEnv.siteUrl}/images/logo.png`,
               image: `${publicEnv.siteUrl}/images/og-image.jpg`,
