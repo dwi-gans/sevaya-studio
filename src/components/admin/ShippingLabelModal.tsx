@@ -15,6 +15,8 @@ export interface ShippingLabelOrder {
   courier_service?: string;
   courier_duration?: string;
   tracking_number?: string;
+  biteship_order_id?: string;
+  biteship_status?: string;
   payment_method?: string;
   subtotal?: number;
   grand_total?: number;
@@ -201,8 +203,9 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
   const totalQuantity = itemsList.reduce((s, i) => s + (i.qty || i.quantity || 1), 0);
   const estWeight = Math.max(1, Math.round(totalQuantity * 0.5 * 10) / 10);
 
-  const barcodeValue = order.tracking_number?.trim() || order.order_number;
-  const isManualShipping = !order.tracking_number;
+  const isBiteshipPickup = Boolean(order.biteship_order_id);
+  const barcodeValue = order.tracking_number?.trim() || order.biteship_order_id || order.order_number;
+  const isManualShipping = !isBiteshipPickup;
 
   const handlePrint = () => {
     window.print();
@@ -288,7 +291,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
           <div className="border-b border-black/10 bg-[#FAF9F6] px-5 py-2.5 text-[11px] text-black/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 print:hidden">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-black">
-                {isManualShipping ? '📦 Mode: Kirim Sendiri / Drop Off' : '🚚 Mode: Pick Up Kurir (Biteship)'}
+                {isManualShipping ? '📦 Mode: Kirim Manual / Drop-Off (Tanpa Barcode)' : '🚚 Mode: Pick Up Kurir (Biteship - Barcode Aktif)'}
               </span>
               <span className="text-black/40">•</span>
               <span className="text-black/60 truncate max-w-xs">
@@ -393,14 +396,37 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
               </div>
 
               {/* Barcode & Waybill Section */}
-              <div className="py-2.5 border-b-2 border-black text-center bg-black/2 print:bg-transparent">
-                <BarcodeSVG value={barcodeValue} />
-                <div className="flex items-center justify-between px-2 pt-1 text-[9px] text-black/70">
-                  <span>Ref: #{order.order_number}</span>
-                  <span>Berat: {estWeight} kg</span>
-                  <span>Qty: {totalQuantity} pcs</span>
+              {isBiteshipPickup ? (
+                <div className="py-2.5 border-b-2 border-black text-center bg-black/2 print:bg-transparent">
+                  <BarcodeSVG value={barcodeValue} />
+                  <div className="flex items-center justify-between px-2 pt-1 text-[9px] text-black/70">
+                    <span className="font-mono font-bold">Resi: {barcodeValue}</span>
+                    <span>Berat: {estWeight} kg</span>
+                    <span>Qty: {totalQuantity} pcs</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="py-2.5 px-3 border-b-2 border-black bg-neutral-50/70 print:bg-transparent">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-block text-[9px] font-black uppercase tracking-wider bg-black text-white px-2 py-0.5 rounded-2xs">
+                        DROP-OFF GERAI
+                      </span>
+                      <span className="text-[10px] font-bold text-black font-mono">
+                        #{order.order_number}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-semibold text-black/70 uppercase">
+                      NON-COD • LUNAS
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1.5 text-[9px] text-black/70 border-t border-black/10 mt-1.5">
+                    <span>Ekspedisi: <strong className="text-black font-bold uppercase">{order.courier_name || 'Reguler'}</strong></span>
+                    <span>Est. Berat: <strong className="text-black font-bold">{estWeight} kg</strong></span>
+                    <span>Total Isi: <strong className="text-black font-bold">{totalQuantity} item</strong></span>
+                  </div>
+                </div>
+              )}
 
               {/* Address Section: Recipient & Sender */}
               <div className="grid grid-cols-1 divide-y-2 divide-black border-b-2 border-black">
