@@ -8,6 +8,7 @@ import { mapDbProductToProduct } from '@/features/catalog';
 import { Icon } from '@/components/ui/Icon';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Collections' },
@@ -144,16 +145,18 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
       {/* Top Editorial Header */}
       <div className="border-b border-[#E5E5E5]/60 bg-[#FFFFFF]">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="font-headline text-base font-medium tracking-[0.18em] text-[#000000] uppercase sm:text-xl lg:text-2xl">
-                Ready to Wear
-              </h1>
-              <p className="mt-1 text-[11px] text-[#666666] tracking-wide">
-                Architectural modest silhouettes, pure fabrics, and refined craftsmanship.
-              </p>
+          <RevealOnScroll variant="fade-up">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h1 className="font-headline text-base font-medium tracking-[0.18em] text-[#000000] uppercase sm:text-xl lg:text-2xl">
+                  Ready to Wear
+                </h1>
+                <p className="mt-1 text-[11px] text-[#666666] tracking-wide">
+                  Architectural modest silhouettes, pure fabrics, and refined craftsmanship.
+                </p>
+              </div>
             </div>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
 
@@ -161,90 +164,103 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Active Search Notification */}
         {searchQuery && (
-          <div className="mb-6 flex items-center justify-between rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-4 py-3 text-[10px] text-[#000000]">
-            <div className="flex items-center gap-2">
-              <Icon name="search" size={16} className="text-[#666666] shrink-0" />
-              <span>
-                {language === 'id' ? 'Hasil pencarian untuk:' : 'Search results for:'}{' '}
-                <strong className="font-semibold text-[#000000]">&ldquo;{searchQuery}&rdquo;</strong>{' '}
-                <span className="text-[#666666]">
-                  ({filteredProducts.length} {language === 'id' ? 'produk' : 'pieces'})
+          <RevealOnScroll variant="fade-up">
+            <div className="mb-6 flex items-center justify-between rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-4 py-3 text-[10px] text-[#000000]">
+              <div className="flex items-center gap-2">
+                <Icon name="search" size={16} className="text-[#666666] shrink-0" />
+                <span>
+                  {language === 'id' ? 'Hasil pencarian untuk:' : 'Search results for:'}{' '}
+                  <strong className="font-semibold text-[#000000]">&ldquo;{searchQuery}&rdquo;</strong>{' '}
+                  <span className="text-[#666666]">
+                    ({filteredProducts.length} {language === 'id' ? 'produk' : 'pieces'})
+                  </span>
                 </span>
-              </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-medium text-[#000000] shadow-xs hover:bg-[#FFFFFF] transition cursor-pointer"
+              >
+                <Icon name="close" size={12} />
+                <span>{language === 'id' ? 'Hapus' : 'Clear'}</span>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-medium text-[#000000] shadow-xs hover:bg-[#FFFFFF] transition cursor-pointer"
-            >
-              <Icon name="close" size={12} />
-              <span>{language === 'id' ? 'Hapus' : 'Clear'}</span>
-            </button>
-          </div>
+          </RevealOnScroll>
         )}
 
         {/* Category Filter Pills (Journal style) */}
-        <nav aria-label="Kategori Produk" className="mb-6 sm:mb-8">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-            {CATEGORIES.map((cat) => {
-              const isActive = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategorySelect(cat.id)}
-                  className={`shrink-0 rounded-none px-3.5 py-1.5 text-[10px] tracking-wider uppercase transition-all duration-200 border cursor-pointer ${
-                    isActive
-                      ? 'bg-[#000000] text-[#FFFFFF] border-[#000000] font-semibold'
-                      : 'bg-transparent text-[#666666] border-black/15 hover:border-black/50 hover:text-black'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+        <RevealOnScroll variant="fade-up" delayMs={40}>
+          <nav aria-label="Kategori Produk" className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+              {CATEGORIES.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(cat.id)}
+                    className={`shrink-0 rounded-none px-3.5 py-1.5 text-[10px] tracking-wider uppercase transition-all duration-200 border cursor-pointer ${
+                      isActive
+                        ? 'bg-[#000000] text-[#FFFFFF] border-[#000000] font-semibold'
+                        : 'bg-transparent text-[#666666] border-black/15 hover:border-black/50 hover:text-black'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </RevealOnScroll>
 
         {/* Responsive Grid */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
             {filteredProducts.map((p, idx) => (
-              <ProductCard key={p.id} product={p} priority={idx < 4} />
+              <RevealOnScroll
+                key={p.id}
+                variant="editorial"
+                delayMs={Math.min((idx % 4) * 60, 180)}
+                className="h-full"
+              >
+                <ProductCard product={p} priority={idx < 4} />
+              </RevealOnScroll>
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#CCCCCC] p-8 text-center">
-            <Icon name="search" size={32} className="text-[#999999] mb-3" />
-            <h3 className="font-headline text-sm font-semibold tracking-wide text-[#000000] uppercase">
-              No Pieces Found
-            </h3>
-            <p className="mt-1 max-w-xs text-[10px] text-[#666666]">
-              {searchQuery
-                ? `No results matching "${searchQuery}". Try searching with different keywords.`
-                : 'No pieces currently available in this category.'}
-            </p>
-            <div className="mt-5 flex gap-2">
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="rounded-full bg-[#000000] px-4 py-2 text-[10px] font-semibold tracking-wider text-white uppercase hover:bg-[#333333] transition cursor-pointer"
-                >
-                  Clear Search
-                </button>
-              )}
-              {activeCategory !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => handleCategorySelect('all')}
-                  className="rounded-full border border-[#000000] bg-white px-4 py-2 text-[10px] font-semibold tracking-wider text-[#000000] uppercase hover:bg-[#F5F5F5] transition cursor-pointer"
-                >
-                  View All Products
-                </button>
-              )}
+          <RevealOnScroll variant="fade-up">
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#CCCCCC] p-8 text-center">
+              <Icon name="search" size={32} className="text-[#999999] mb-3" />
+              <h3 className="font-headline text-sm font-semibold tracking-wide text-[#000000] uppercase">
+                No Pieces Found
+              </h3>
+              <p className="mt-1 max-w-xs text-[10px] text-[#666666]">
+                {searchQuery
+                  ? `No results matching "${searchQuery}". Try searching with different keywords.`
+                  : 'No pieces currently available in this category.'}
+              </p>
+              <div className="mt-5 flex gap-2">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="rounded-full bg-[#000000] px-4 py-2 text-[10px] font-semibold tracking-wider text-white uppercase hover:bg-[#333333] transition cursor-pointer"
+                  >
+                    Clear Search
+                  </button>
+                )}
+                {activeCategory !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCategorySelect('all')}
+                    className="rounded-full border border-[#000000] bg-white px-4 py-2 text-[10px] font-semibold tracking-wider text-[#000000] uppercase hover:bg-[#F5F5F5] transition cursor-pointer"
+                  >
+                    View All Products
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          </RevealOnScroll>
         )}
       </div>
 
