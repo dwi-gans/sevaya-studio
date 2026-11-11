@@ -82,6 +82,7 @@ import {
   Newspaper,
   Play,
   Save,
+  ZoomIn,
 } from 'lucide-react';
 
 export type IconName =
@@ -177,6 +178,7 @@ export type IconName =
   | 'newspaper'
   | 'done'
   | 'play'
+  | 'zoom_in'
   | 'save';
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
@@ -272,6 +274,7 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   newspaper: Newspaper,
   done: Check,
   play: Play,
+  zoom_in: ZoomIn,
   save: Save,
 };
 

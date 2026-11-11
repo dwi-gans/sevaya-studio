@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StudioImage } from '@/components/common';
@@ -13,6 +13,7 @@ import { ProductVariant } from '@/integrations/supabase/inventory';
 import { mapDbProductToProduct } from '@/features/catalog';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Footer } from '@/components/layout/Footer';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
 export interface ProductColorOption {
   name: string;
@@ -219,10 +220,96 @@ export function ProductDetailClient({
     )
   );
 
+  // Fullscreen Zoom Lightbox state & Mobile swipe carousel ref
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+  const mobileGalleryRef = useRef<HTMLDivElement>(null);
+  const mobileThumbnailBarRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Galeri lengkap seluruh produk (semua angle + foto swatches)
+  const allGalleryImages = useMemo(() => {
+    return buildGalleryList(
+      dbProduct.image,
+      dbProduct.images,
+      dbProduct.swatches
+    );
+  }, [dbProduct.image, dbProduct.images, dbProduct.swatches]);
+
+  // Cleanup scroll timeout saat unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
+
+  // Auto-scroll mobile thumbnail bar agar thumbnail aktif selalu tampak
+  useEffect(() => {
+    if (!mobileThumbnailBarRef.current) return;
+    const activeThumb = mobileThumbnailBarRef.current.querySelector<HTMLElement>(
+      '[data-active="true"]'
+    );
+    if (activeThumb) {
+      activeThumb.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [activeGalleryIndex, activeImage]);
+
+  // Lock body scroll saat zoom modal terbuka
+  useEffect(() => {
+    if (zoomOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [zoomOpen]);
+
+  // Tutup zoom modal dengan tombol Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && zoomOpen) {
+        setZoomOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomOpen]);
+
+  // Handler saat mobile carousel digeser / di-swipe secara horizontal oleh user
+  const handleGalleryScroll = useCallback(() => {
+    if (isProgrammaticScroll.current) return;
+    if (!mobileGalleryRef.current) return;
+    const scrollLeft = mobileGalleryRef.current.scrollLeft;
+    const width = mobileGalleryRef.current.clientWidth;
+    if (width > 0) {
+      const newIndex = Math.round(scrollLeft / width);
+      if (newIndex !== activeGalleryIndex && galleryImages[newIndex]) {
+        setActiveGalleryIndex(newIndex);
+        const newImg = galleryImages[newIndex]!;
+        setActiveImage(newImg);
+        // Sync swatch jika foto ini milik warna tertentu
+        const matched = colors.find(
+          (c) => c.image && c.image.trim() === newImg.trim()
+        );
+        if (matched && matched.name.toLowerCase() !== selectedColor.name.toLowerCase()) {
+          setSelectedColor(matched);
+        }
+      }
+    }
+  }, [activeGalleryIndex, galleryImages, colors, selectedColor.name]);
+
   // Handler saat user mengklik Swatch Warna:
-  // 1. Ubah warna terpilih
-  // 2. Filter galeri ke foto-foto warna tersebut (1–4 foto)
-  // 3. Ubah gambar utama ke foto pertama warna tersebut
+  // 1. Ubah warna terpilih & kuantitas
+  // 2. Jika warna punya foto banyak tersendiri (>1), tampilkan foto khusus warna itu
+  //    Jika hanya 1 foto cover, pertahankan galeri produk (allGalleryImages) dan highlight thumbnail warna tersebut
+  // 3. Scroll mobile carousel ke foto warna yang dipilih tanpa glitch / layout jumping
   const handleSelectColor = (colorOption: ProductColorOption) => {
     setSelectedColor(colorOption);
     setQuantity(1);
@@ -244,18 +331,51 @@ export function ProductDetailClient({
       }
     }
 
-    const photos = colorPhotoMap[colorOption.name.toLowerCase()];
-    if (photos && photos.length > 0) {
-      setGalleryImages(photos);
-      setActiveImage(photos[0]!);
+    const specificPhotos = colorPhotoMap[colorOption.name.trim().toLowerCase()];
+    const hasDedicatedGallery = specificPhotos && specificPhotos.length > 1;
+
+    let targetGallery: string[];
+    let targetIndex = 0;
+    let targetImage: string;
+
+    if (hasDedicatedGallery) {
+      // Warna ini punya multi-foto tersendiri
+      targetGallery = specificPhotos;
+      targetImage = specificPhotos[0]!;
+      targetIndex = 0;
     } else {
-      const validImage =
+      // Warna ini hanya punya 1 foto cover.
+      // Pertahankan allGalleryImages agar kotak thumbnail TIDAK hilang atau collapsing!
+      targetImage =
         colorOption.image && !colorOption.image.includes('logo_ibey')
           ? colorOption.image
-          : dbProduct.image || '/images/catalog/catalog-01.jpg';
-      setGalleryImages([validImage]);
-      setActiveImage(validImage);
+          : specificPhotos?.[0] || dbProduct.image || '/images/catalog/catalog-01.jpg';
+
+      if (allGalleryImages.includes(targetImage)) {
+        targetGallery = allGalleryImages;
+        targetIndex = allGalleryImages.indexOf(targetImage);
+      } else {
+        targetGallery = [targetImage, ...allGalleryImages.filter((img) => img !== targetImage)];
+        targetIndex = 0;
+      }
     }
+
+    isProgrammaticScroll.current = true;
+    setGalleryImages(targetGallery);
+    setActiveImage(targetImage);
+    setActiveGalleryIndex(targetIndex);
+
+    if (mobileGalleryRef.current) {
+      const width = mobileGalleryRef.current.clientWidth;
+      if (width > 0) {
+        mobileGalleryRef.current.scrollTo({ left: targetIndex * width, behavior: 'auto' });
+      }
+    }
+
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 150);
   };
 
   // Baca query parameter ?color= dari URL jika user datang dari klik swatch di card katalog
@@ -273,10 +393,35 @@ export function ProductDetailClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handler saat user mengklik thumbnail di galeri bawah:
-  // Galeri sudah difilter per warna, jadi cukup update activeImage saja
+  // Handler saat user mengklik thumbnail di galeri:
+  // 1. Update activeImage & activeGalleryIndex
+  // 2. Scroll mobile carousel secara halus ke foto tersebut
+  // 3. Two-way sync: jika thumbnail ini milik salah satu warna, pilih warna tersebut
   const handleSelectGalleryImage = (imgSrc: string) => {
     setActiveImage(imgSrc);
+    const idx = galleryImages.findIndex((img) => img === imgSrc);
+    if (idx !== -1) {
+      setActiveGalleryIndex(idx);
+      if (mobileGalleryRef.current) {
+        isProgrammaticScroll.current = true;
+        const width = mobileGalleryRef.current.clientWidth;
+        if (width > 0) {
+          mobileGalleryRef.current.scrollTo({ left: idx * width, behavior: 'smooth' });
+        }
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = setTimeout(() => {
+          isProgrammaticScroll.current = false;
+        }, 350);
+      }
+    }
+
+    // Two-way sync: jika thumbnail ini cocok dengan swatch warna, otomatis aktifkan warnanya
+    const matchedColor = colors.find(
+      (c) => c.image && c.image.trim() === imgSrc.trim()
+    );
+    if (matchedColor && matchedColor.name.toLowerCase() !== selectedColor.name.toLowerCase()) {
+      setSelectedColor(matchedColor);
+    }
   };
 
   // Stok varian spesifik yang dipilih (warna + size)
@@ -396,9 +541,9 @@ export function ProductDetailClient({
           (c) => c.name.trim().toLowerCase() === pName
         );
         const resolvedColor = matched || freshColors[0]!;
-        // Perbarui galeri foto untuk warna yang aktif
+        // Perbarui galeri foto untuk warna yang aktif (hanya ganti jika warna punya multi-foto tersendiri)
         const freshPhotos = freshMap[resolvedColor.name.trim().toLowerCase()];
-        if (freshPhotos && freshPhotos.length > 0) {
+        if (freshPhotos && freshPhotos.length > 1) {
           setGalleryImages(freshPhotos);
         } else {
           setGalleryImages(buildGalleryList(found.image, found.images, found.swatches));
@@ -514,11 +659,93 @@ export function ProductDetailClient({
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black">
-      <main className="w-full flex-1 pt-1.5 sm:pt-5 pb-20">
-        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <main className="w-full flex-1 pb-20">
+        
+        {/* ── 1. MOBILE FULL-SCREEN IMAGE HERO (< lg) — MATCHING TAZA ── */}
+        <section className="lg:hidden relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[560px] bg-[#F7F5F0] overflow-hidden select-none">
+          {/* Floating Back Button (Top Left) */}
+          <button
+            type="button"
+            onClick={handleBack}
+            className="absolute top-3.5 left-3.5 z-30 flex h-8 items-center gap-1.5 rounded-full bg-white/85 px-3 text-[10px] font-medium tracking-[0.16em] uppercase text-black backdrop-blur-md shadow-xs border border-black/10 active:scale-95 transition cursor-pointer"
+            aria-label="Kembali"
+          >
+            <Icon name="arrow_back" size={13} />
+            <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
+          </button>
+
+          {/* Floating Zoom Button (Top Right) — matches taza screenshot */}
+          <button
+            type="button"
+            onClick={() => setZoomOpen(true)}
+            className="absolute top-3.5 right-3.5 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-black backdrop-blur-md shadow-xs border border-black/10 hover:bg-white active:scale-95 transition cursor-pointer"
+            aria-label="Zoom Photo"
+            title="Lihat foto resolusi penuh"
+          >
+            <Icon name="zoom_in" size={18} />
+          </button>
+
+          {/* Badge Label (Best Seller / Trending / Sale) */}
+          {dbProduct.badge && (
+            <span
+              className={`absolute top-13 left-3.5 z-20 px-2.5 py-1 text-[8px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs border ${
+                dbProduct.badge.toLowerCase().includes('best')
+                  ? 'bg-[#1C1917]/95 text-[#FBF9F5] border-black/30'
+                  : dbProduct.badge.toLowerCase().includes('trend')
+                  ? 'bg-[#FAF8F5]/95 text-[#2C2723] border-[#DDD5C7]'
+                  : 'bg-[#1C1917]/95 text-[#FBF9F5] border-black/30'
+              }`}
+            >
+              <span className="mr-1 opacity-75">✦</span>
+              {dbProduct.badge}
+            </span>
+          )}
+
+          {/* Mobile Fullscreen Swipeable Gallery */}
+          <div
+            ref={mobileGalleryRef}
+            onScroll={handleGalleryScroll}
+            className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar touch-pan-x"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {galleryImages.map((imgSrc, idx) => (
+              <div
+                key={`mob-${imgSrc}-${idx}`}
+                className="relative h-full w-full shrink-0 snap-center cursor-zoom-in"
+                style={{ scrollSnapAlign: 'center' }}
+                onClick={() => setZoomOpen(true)}
+              >
+                <StudioImage
+                  src={imgSrc}
+                  alt={`${title} - view ${idx + 1}`}
+                  fill
+                  priority={idx === 0}
+                  preset="full"
+                  onError={() => {
+                    const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
+                    if (imgSrc !== fallback) {
+                      setActiveImage(fallback);
+                    }
+                  }}
+                  unoptimized={
+                    !imgSrc.startsWith('/') &&
+                    !imgSrc.includes('supabase.co') &&
+                    !imgSrc.includes('unsplash.com')
+                  }
+                  className="object-cover object-top"
+                />
+              </div>
+            ))}
+          </div>
+
+
+        </section>
+
+        {/* ── 2. MAIN CONTAINER (DETAILS & DESKTOP GALLERY) ── */}
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-8">
           
-          {/* Tombol Back Simple di Kiri Atas */}
-          <div className="mb-1 sm:mb-4">
+          {/* Desktop-only Back Button */}
+          <div className="hidden lg:block mb-4">
             <button
               type="button"
               onClick={handleBack}
@@ -536,9 +763,45 @@ export function ProductDetailClient({
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14 items-start">
             
-            {/* ── KOLOM KIRI (lg:col-span-6): DETAIL PRODUK & FORM PEMBELIAN ── */}
-            <div className="order-2 flex flex-col lg:order-1 lg:col-span-6 space-y-6">
+            {/* ── KOLOM DETAIL & FORM PEMBELIAN ── */}
+            <div className="flex flex-col lg:col-span-6 space-y-6">
               
+              {/* ── DERETAN THUMBNAIL MOBILE (Muncul saat discroll ke bawah foto utama 100%) ── */}
+              {galleryImages.length > 1 && (
+                <div
+                  ref={mobileThumbnailBarRef}
+                  className="lg:hidden -mx-4 px-4 overflow-x-auto no-scrollbar"
+                >
+                  <div className="flex items-center gap-2.5 py-1.5">
+                    {galleryImages.map((imgSrc, idx) => {
+                      const isActive = idx === activeGalleryIndex || activeImage === imgSrc;
+                      return (
+                        <button
+                          key={`mob-thumb-bar-${imgSrc}-${idx}`}
+                          type="button"
+                          data-active={isActive ? 'true' : 'false'}
+                          onClick={() => handleSelectGalleryImage(imgSrc)}
+                          className={`relative h-18 w-13.5 sm:h-20 sm:w-15 shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all ${
+                            isActive
+                              ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100'
+                              : 'opacity-50 hover:opacity-90 border border-black/10'
+                          }`}
+                          aria-label={`Thumbnail ${idx + 1}`}
+                        >
+                          <StudioImage
+                            src={imgSrc}
+                            alt={`Thumbnail ${idx + 1}`}
+                            fill
+                            preset="thumbnail"
+                            className="object-cover object-top"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
                 {dbProduct.badge && (
                   <div className="mb-2.5">
@@ -790,9 +1053,26 @@ export function ProductDetailClient({
 
             </div>
 
-            {/* ── KOLOM KANAN (lg:col-span-6): GALERI FOTO PRODUK PORTRAIT ── */}
-            <div className="order-1 flex flex-col items-center lg:items-start lg:order-2 lg:col-span-6 static lg:sticky lg:top-24 w-full">
-              <div className="relative aspect-[3/4] w-full max-w-[420px] sm:max-w-none sm:h-[52vh] sm:max-h-[460px] lg:h-[72vh] lg:max-h-[610px] xl:max-h-[630px] sm:w-auto overflow-hidden bg-[#ECE8E1] border border-black/5 mx-auto lg:mx-0">
+            {/* ── KOLOM KANAN (lg:col-span-6): DESKTOP STICKY GALLERY (hidden di mobile, lg:flex di desktop) ── */}
+            <div className="hidden lg:flex flex-col items-start lg:col-span-6 static lg:sticky lg:top-24 w-full">
+              <div
+                className="relative aspect-[3/4] w-full max-h-[640px] xl:max-h-[680px] overflow-hidden bg-[#ECE8E1] border border-black/5 cursor-zoom-in group"
+                onClick={() => setZoomOpen(true)}
+              >
+                {/* Desktop Zoom button on hover */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setZoomOpen(true);
+                  }}
+                  className="absolute top-3.5 right-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-black backdrop-blur-md shadow-xs border border-black/10 hover:bg-white active:scale-95 transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                  aria-label="Zoom Photo"
+                  title="Lihat foto resolusi penuh"
+                >
+                  <Icon name="zoom_in" size={18} />
+                </button>
+
                 {dbProduct.badge && (
                   <span
                     className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
@@ -829,18 +1109,18 @@ export function ProductDetailClient({
               </div>
 
               {galleryImages.length > 1 && (
-                <div className="no-scrollbar mt-2 sm:mt-2.5 flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 overflow-x-auto py-0.5 w-full">
+                <div className="no-scrollbar mt-3 flex items-center justify-start gap-2.5 overflow-x-auto py-1.5 w-full">
                   {galleryImages.map((imgSrc, idx) => {
-                    const isActive = activeImage === imgSrc;
+                    const isActive = idx === activeGalleryIndex || activeImage === imgSrc;
                     return (
                       <button
-                        key={`${imgSrc}-${idx}`}
+                        key={`desk-thumb-${imgSrc}-${idx}`}
                         type="button"
                         onClick={() => handleSelectGalleryImage(imgSrc)}
-                        className={`relative h-13 w-9.5 sm:h-14 sm:w-10.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer ${
+                        className={`relative h-15 w-11.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all ${
                           isActive
-                            ? 'ring-2 ring-black ring-offset-1 opacity-100'
-                            : 'opacity-65 hover:opacity-100 border border-black/10'
+                            ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100'
+                            : 'opacity-50 hover:opacity-90 border border-black/10'
                         }`}
                         aria-label={`Thumbnail photo ${idx + 1}`}
                       >
@@ -873,29 +1153,105 @@ export function ProductDetailClient({
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <section className="mt-24 border-t border-black/10 pt-16">
-              <div className="mb-8 flex items-center justify-between">
-                <h2 className="text-xs sm:text-sm font-normal tracking-[0.2em] uppercase text-black">
-                  Related Products
-                </h2>
-                <Link
-                  href="/shop"
-                  className="text-[10px] tracking-[0.16em] uppercase text-black/60 hover:text-black underline underline-offset-4 transition-colors"
-                >
-                  View All
-                </Link>
-              </div>
+            <RevealOnScroll variant="fade-up">
+              <section className="mt-20 sm:mt-24 border-t border-black/10 pt-12 sm:pt-16">
+                <div className="mb-8 flex items-center justify-between">
+                  <h2 className="text-xs sm:text-sm font-normal tracking-[0.2em] uppercase text-black">
+                    Related Products
+                  </h2>
+                  <Link
+                    href="/shop"
+                    className="text-[10px] tracking-[0.16em] uppercase text-black/60 hover:text-black underline underline-offset-4 transition-colors"
+                  >
+                    View All
+                  </Link>
+                </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-                {relatedProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            </section>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+                  {relatedProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </section>
+            </RevealOnScroll>
           )}
 
         </div>
       </main>
+
+      {/* ── FULLSCREEN LIGHTBOX ZOOM MODAL ── */}
+      {zoomOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-2 sm:p-6 select-none animate-in fade-in duration-200"
+          onClick={() => setZoomOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setZoomOpen(false)}
+            className="absolute top-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30 transition cursor-pointer"
+            aria-label="Tutup Zoom"
+          >
+            <Icon name="close" size={24} />
+          </button>
+
+          {/* Photo Counter */}
+          {galleryImages.length > 1 && (
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 z-50 rounded-full bg-white/10 px-3.5 py-1 text-xs font-mono tracking-widest text-white backdrop-blur-xs">
+              {activeGalleryIndex + 1} / {galleryImages.length}
+            </div>
+          )}
+
+          {/* Navigation Arrows if > 1 photo */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const prev = (activeGalleryIndex - 1 + galleryImages.length) % galleryImages.length;
+                  setActiveGalleryIndex(prev);
+                  setActiveImage(galleryImages[prev]!);
+                }}
+                className="absolute left-3 sm:left-6 z-50 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30 transition cursor-pointer"
+                aria-label="Foto Sebelumnya"
+              >
+                <Icon name="chevron_left" size={26} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const next = (activeGalleryIndex + 1) % galleryImages.length;
+                  setActiveGalleryIndex(next);
+                  setActiveImage(galleryImages[next]!);
+                }}
+                className="absolute right-3 sm:right-6 z-50 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30 transition cursor-pointer"
+                aria-label="Foto Selanjutnya"
+              >
+                <Icon name="chevron_right" size={26} />
+              </button>
+            </>
+          )}
+
+          {/* High-res Image Display */}
+          <div
+            className="relative h-full w-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <StudioImage
+              src={galleryImages[activeGalleryIndex] || activeImage}
+              alt={`${title} - full preview`}
+              fill
+              preset="full"
+              priority
+              className="object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
