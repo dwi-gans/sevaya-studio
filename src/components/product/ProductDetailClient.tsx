@@ -244,17 +244,29 @@ export function ProductDetailClient({
     };
   }, []);
 
-  // Auto-scroll mobile thumbnail bar agar thumbnail aktif selalu tampak
+  // Auto-scroll mobile thumbnail bar secara horizontal saja (jangan scroll halaman vertikal!)
+  const hasMountedThumbSync = useRef(false);
   useEffect(() => {
-    if (!mobileThumbnailBarRef.current) return;
-    const activeThumb = mobileThumbnailBarRef.current.querySelector<HTMLElement>(
+    if (!hasMountedThumbSync.current) {
+      hasMountedThumbSync.current = true;
+      return;
+    }
+    const container = mobileThumbnailBarRef.current;
+    if (!container) return;
+    const activeThumb = container.querySelector<HTMLElement>(
       '[data-active="true"]'
     );
     if (activeThumb) {
-      activeThumb.scrollIntoView({
+      const containerRect = container.getBoundingClientRect();
+      const thumbRect = activeThumb.getBoundingClientRect();
+      const targetLeft =
+        container.scrollLeft +
+        (thumbRect.left - containerRect.left) -
+        container.clientWidth / 2 +
+        thumbRect.width / 2;
+      container.scrollTo({
+        left: Math.max(0, targetLeft),
         behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
       });
     }
   }, [activeGalleryIndex, activeImage]);
@@ -663,43 +675,27 @@ export function ProductDetailClient({
         
         {/* ── 1. MOBILE FULL-SCREEN IMAGE HERO (< lg) — MATCHING TAZA ── */}
         <section className="lg:hidden relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[560px] bg-[#F7F5F0] overflow-hidden select-none">
-          {/* Floating Back Button (Top Left) */}
+          {/* Floating Back Button (Top Left) — Transparan */}
           <button
             type="button"
             onClick={handleBack}
-            className="absolute top-3.5 left-3.5 z-30 flex h-8 items-center gap-1.5 rounded-full bg-white/85 px-3 text-[10px] font-medium tracking-[0.16em] uppercase text-black backdrop-blur-md shadow-xs border border-black/10 active:scale-95 transition cursor-pointer"
+            className="absolute top-3 left-2.5 z-30 inline-flex h-9 items-center gap-1.5 rounded-full bg-transparent px-2.5 text-[10px] font-medium tracking-[0.16em] uppercase text-black/80 hover:text-black active:scale-95 active:opacity-50 transition cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))]"
             aria-label="Kembali"
           >
-            <Icon name="arrow_back" size={13} />
+            <Icon name="arrow_back" size={15} strokeWidth={1.6} />
             <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
           </button>
 
-          {/* Floating Zoom Button (Top Right) — matches taza screenshot */}
+          {/* Floating Zoom Button (Top Right) — Transparan */}
           <button
             type="button"
             onClick={() => setZoomOpen(true)}
-            className="absolute top-3.5 right-3.5 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-black backdrop-blur-md shadow-xs border border-black/10 hover:bg-white active:scale-95 transition cursor-pointer"
+            className="absolute top-2.5 right-2.5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-black/80 hover:text-black active:scale-95 active:opacity-50 transition cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))]"
             aria-label="Zoom Photo"
             title="Lihat foto resolusi penuh"
           >
-            <Icon name="zoom_in" size={18} />
+            <Icon name="zoom_in" size={20} strokeWidth={1.6} />
           </button>
-
-          {/* Badge Label (Best Seller / Trending / Sale) */}
-          {dbProduct.badge && (
-            <span
-              className={`absolute top-13 left-3.5 z-20 px-2.5 py-1 text-[8px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs border ${
-                dbProduct.badge.toLowerCase().includes('best')
-                  ? 'bg-[#1C1917]/95 text-[#FBF9F5] border-black/30'
-                  : dbProduct.badge.toLowerCase().includes('trend')
-                  ? 'bg-[#FAF8F5]/95 text-[#2C2723] border-[#DDD5C7]'
-                  : 'bg-[#1C1917]/95 text-[#FBF9F5] border-black/30'
-              }`}
-            >
-              <span className="mr-1 opacity-75">✦</span>
-              {dbProduct.badge}
-            </span>
-          )}
 
           {/* Mobile Fullscreen Swipeable Gallery */}
           <div
@@ -1059,18 +1055,18 @@ export function ProductDetailClient({
                 className="relative aspect-[3/4] w-full max-h-[640px] xl:max-h-[680px] overflow-hidden bg-[#ECE8E1] border border-black/5 cursor-zoom-in group"
                 onClick={() => setZoomOpen(true)}
               >
-                {/* Desktop Zoom button on hover */}
+                {/* Desktop Zoom button on hover — Transparan */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setZoomOpen(true);
                   }}
-                  className="absolute top-3.5 right-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-black backdrop-blur-md shadow-xs border border-black/10 hover:bg-white active:scale-95 transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                  className="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-black/80 hover:text-black active:scale-95 transition opacity-0 group-hover:opacity-100 cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))]"
                   aria-label="Zoom Photo"
                   title="Lihat foto resolusi penuh"
                 >
-                  <Icon name="zoom_in" size={18} />
+                  <Icon name="zoom_in" size={20} strokeWidth={1.6} />
                 </button>
 
                 {dbProduct.badge && (
