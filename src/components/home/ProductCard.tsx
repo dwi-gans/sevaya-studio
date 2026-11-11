@@ -157,7 +157,7 @@ export function ProductCard({
               setImageError(displayImage);
               setIsLoaded(true);
             }}
-            className={`pointer-events-none select-none object-cover transition-all duration-300 ease-out ${
+            className={`pointer-events-none select-none object-cover transition-[opacity,transform] duration-300 ease-out ${
               isLoaded ? 'opacity-100 scale-100' : 'opacity-90 scale-[1.01]'
             } ${isOutOfStock ? 'grayscale-[15%] opacity-90' : ''} ${
               secondaryImage
@@ -175,7 +175,7 @@ export function ProductCard({
               fill
               preset="catalog"
               unoptimized={!secondaryImage.startsWith('/') && !secondaryImage.includes('supabase.co')}
-              className="pointer-events-none select-none object-cover opacity-0 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
+              className="pointer-events-none select-none object-cover opacity-0 transition-[opacity,transform] duration-500 ease-out group-hover:opacity-100 group-hover:scale-105"
               draggable={false}
             />
           )}

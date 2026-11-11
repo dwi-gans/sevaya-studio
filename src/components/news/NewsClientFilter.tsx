@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { StudioImage } from '@/components/common';
 import { Icon } from '@/components/ui/Icon';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 import type { Article } from '@/integrations/supabase/articles';
 
 interface NewsClientFilterProps {
@@ -32,7 +33,7 @@ export function NewsClientFilter({
   return (
     <>
       {/* Category Pill Filter */}
-      <nav aria-label="Kategori Artikel" className="my-6">
+      <RevealOnScroll variant="fade-up" delayMs={30} as="nav" aria-label="Kategori Artikel" className="my-6">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
           {categories.map((cat) => {
             const isActive = selectedCategory.toLowerCase() === cat.toLowerCase();
@@ -52,11 +53,11 @@ export function NewsClientFilter({
             );
           })}
         </div>
-      </nav>
+      </RevealOnScroll>
 
       {/* Featured Lead Story */}
       {featuredArticle && (
-        <section className="mb-10 sm:mb-12">
+        <RevealOnScroll variant="editorial" delayMs={80} as="section" className="mb-10 sm:mb-12">
           <Link
             href={`/news/${encodeURIComponent(featuredArticle.slug)}`}
             className="group block rounded-none border border-black/15 bg-white p-4 sm:p-6 shadow-xs hover:border-black/50 hover:shadow-md transition duration-200"
@@ -99,7 +100,7 @@ export function NewsClientFilter({
               </div>
             </div>
           </Link>
-        </section>
+        </RevealOnScroll>
       )}
 
       {/* Article Grid */}
@@ -123,42 +124,48 @@ export function NewsClientFilter({
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 lg:gap-6">
-            {listArticles.map((article) => (
-              <Link
+            {listArticles.map((article, idx) => (
+              <RevealOnScroll
                 key={article.id}
-                href={`/news/${encodeURIComponent(article.slug)}`}
-                className="group block rounded-none border border-black/15 bg-white overflow-hidden shadow-xs hover:border-black/50 hover:shadow-md transition duration-200 flex flex-col justify-between"
+                variant="editorial"
+                delayMs={(idx % 6) * 70}
+                className="h-full"
               >
-                <div className="relative aspect-square w-full overflow-hidden bg-black/5">
-                  <StudioImage
-                    src={article.image}
-                    alt={article.title}
-                    fill
-                    preset="catalog"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-4">
-                  <div>
-                    <span className="text-[9px] sm:text-[10px] font-semibold tracking-widest text-[#666666] uppercase">
-                      {article.category}
-                    </span>
-                    <h3 className="mt-1 font-headline text-[10px] sm:text-xs font-semibold text-[#000000] group-hover:text-[#555555] transition-colors leading-snug line-clamp-2">
-                      {article.title}
-                    </h3>
+                <Link
+                  href={`/news/${encodeURIComponent(article.slug)}`}
+                  className="group block rounded-none border border-black/15 bg-white overflow-hidden shadow-xs hover:border-black/50 hover:shadow-md transition duration-200 flex flex-col justify-between h-full"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden bg-black/5">
+                    <StudioImage
+                      src={article.image}
+                      alt={article.title}
+                      fill
+                      preset="catalog"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   </div>
-                  <div className="mt-2.5">
-                    <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-[#666666]">
-                      <span>{article.date}</span>
-                    </div>
-                    <div className="mt-2 pt-0.5">
-                      <span className="inline-block text-[10px] sm:text-[10px] font-normal text-[#000000] border-b border-[#000000] pb-0.5 transition group-hover:text-[#555555] group-hover:border-[#555555]">
-                        Read more
+                  <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-4">
+                    <div>
+                      <span className="text-[9px] sm:text-[10px] font-semibold tracking-widest text-[#666666] uppercase">
+                        {article.category}
                       </span>
+                      <h3 className="mt-1 font-headline text-[10px] sm:text-xs font-semibold text-[#000000] group-hover:text-[#555555] transition-colors leading-snug line-clamp-2">
+                        {article.title}
+                      </h3>
+                    </div>
+                    <div className="mt-2.5">
+                      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-[#666666]">
+                        <span>{article.date}</span>
+                      </div>
+                      <div className="mt-2 pt-0.5">
+                        <span className="inline-block text-[10px] sm:text-[10px] font-normal text-[#000000] border-b border-[#000000] pb-0.5 transition group-hover:text-[#555555] group-hover:border-[#555555]">
+                          Read more
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </RevealOnScroll>
             ))}
           </div>
         )}

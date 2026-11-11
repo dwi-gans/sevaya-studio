@@ -53,20 +53,15 @@ export function Header() {
   const [customerOpen, setCustomerOpen] = useState(false);
   const [lookbookOpen, setLookbookOpen] = useState(false);
   const [lookbookLinks, setLookbookLinks] = useState(LOOKBOOK_LINKS);
-  const [catalogItems, setCatalogItems] = useState<SearchItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const cached = loadFromLocalStorage();
-      if (cached && cached.length > 0) {
-        return cached.filter((p) => !p.hidden).map(mapDbProductToSearchItem);
-      }
-    }
-    return SEARCH_CATALOG;
-  });
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<SearchItem[]>(SEARCH_CATALOG);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const cached = loadFromLocalStorage();
+    if (cached && cached.length > 0) {
+      setCatalogItems(cached.filter((p) => !p.hidden).map(mapDbProductToSearchItem));
+    }
   }, []);
 
   const displayUser = mounted ? user : null;
@@ -96,25 +91,6 @@ export function Header() {
         setLookbookLinks(live.lookbookLinks);
       }
     });
-  }, []);
-
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled((prev) => {
-            const next = window.scrollY > 20;
-            return prev !== next ? next : prev;
-          });
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Close search overlay on Escape key
@@ -161,7 +137,10 @@ export function Header() {
 
   return (
     <>
-      <header className="pt-safe fixed top-0 z-40 w-full border-b border-black/10 bg-white/95 text-black shadow-sm backdrop-blur-xl">
+      <header
+        suppressHydrationWarning
+        className="pt-safe fixed top-0 z-40 w-full border-b border-black/10 bg-white/95 text-black shadow-sm backdrop-blur-md"
+      >
         <div className="relative mx-auto flex h-16 w-full items-center justify-between px-3 sm:px-6 lg:px-8">
           {isAuthPage ? (
             /* Auth Page Variant: Back Button + Centered Logo + Close Button */

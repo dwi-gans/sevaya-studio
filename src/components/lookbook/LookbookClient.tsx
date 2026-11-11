@@ -5,6 +5,7 @@ import { StudioImage } from '@/components/common';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 import { LookbookPageConfig, getSiteSections } from '@/integrations/supabase';
 
 interface LookbookClientProps {
@@ -80,20 +81,22 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
 
         {/* Section 1: Campaign Hero Header */}
         <header className="mx-auto mb-8 sm:mb-10 max-w-2xl text-center px-4">
-          <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            {cfg.heroSubtitle || 'SEVAYA • SEVILLA'}
-          </span>
-          <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
-            {cfg.heroTitle || 'SEVILLA ABAYA'}
-          </h1>
-          <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
-            {cfg.seasonDesc ||
-              "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments."}
-          </p>
+          <RevealOnScroll variant="fade-up">
+            <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
+              {cfg.heroSubtitle || 'SEVAYA • SEVILLA'}
+            </span>
+            <h1 className="mt-2 font-sans text-base sm:text-xl lg:text-2xl font-medium tracking-[0.18em] text-[#000000] uppercase">
+              {cfg.heroTitle || 'SEVILLA ABAYA'}
+            </h1>
+            <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
+              {cfg.seasonDesc ||
+                "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments."}
+            </p>
+          </RevealOnScroll>
         </header>
 
         {/* Section 2: Editorial Hero Photo */}
-        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+        <RevealOnScroll variant="editorial" delayMs={80} className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <StudioImage
               src={cfg.heroImage || '/images/sevaya_first_chapter.jpg'}
@@ -104,7 +107,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               className="object-cover object-center"
             />
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Section 3: The Seed of The Story (Features with Custom Purpose Points) */}
         {(() => {
@@ -121,7 +124,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
           if (points.length === 0) return null;
 
           return (
-            <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+            <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
               <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
                 {cfg.seasonTitle || 'The Seed of The Story'}
               </h2>
@@ -133,36 +136,40 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                   </li>
                 ))}
               </ul>
-            </section>
+            </RevealOnScroll>
           );
         })()}
 
         {/* Centered Editorial Collage — 2 Photos Side by Side */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
-              <StudioImage
-                src={cfg.collagePortrait || '/images/lookbook_figma_0.png'}
-                alt="Floraison Botanical Silhouette"
-                fill
-                preset="spotlight"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
-              <StudioImage
-                src={cfg.collageDetail1 || '/images/figma_about_1.png'}
-                alt="Floraison Textile Flow"
-                fill
-                preset="spotlight"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
+            <RevealOnScroll variant="editorial" delayMs={0}>
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
+                <StudioImage
+                  src={cfg.collagePortrait || '/images/lookbook_figma_0.png'}
+                  alt="Floraison Botanical Silhouette"
+                  fill
+                  preset="spotlight"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            </RevealOnScroll>
+            <RevealOnScroll variant="editorial" delayMs={150}>
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
+                <StudioImage
+                  src={cfg.collageDetail1 || '/images/figma_about_1.png'}
+                  alt="Floraison Textile Flow"
+                  fill
+                  preset="spotlight"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            </RevealOnScroll>
           </div>
         </div>
 
         {/* Section 4: Fabric Story */}
-        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+        <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
             {cfg.panorama1Title || 'Fabric Story'}
           </h2>
@@ -170,10 +177,10 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
             {cfg.panorama1Desc ||
               'A Fabric Chosen for Its Feel. 60% Cupro · 40% Viscose A thoughtful blend selected for its silky touch, soft feel, and fluid drape. Cupro is a regenerated cellulose fibre made from cotton linter, a material left over from cotton processing. Viscose is also a regenerated cellulose fibre, commonly made from wood pulp or other cellulose sources. Together, they create a fabric with an elegant fall and a smooth, refined appearance—bringing ease and understated sophistication to everyday dressing. We believe the fabric is an essential part of the experience: not only how a garment looks, but how it moves and feels when you wear it.'}
           </p>
-        </section>
+        </RevealOnScroll>
 
         {/* Centered Editorial Feature Image — Panorama 1 */}
-        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+        <RevealOnScroll variant="editorial" delayMs={80} className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <StudioImage
               src={cfg.panorama1 || '/images/figma_hero.png'}
@@ -183,10 +190,10 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               className="object-cover object-center"
             />
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Section 5: The Seed of The Story / Specifications */}
-        <section className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
+        <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
             {cfg.triptychTitle || 'The Seed of The Story'}
           </h2>
@@ -197,43 +204,49 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
             {cfg.triptychTagline || 'SEVAYA — Slow fashion, thoughtfully made.'}
           </p>
-        </section>
+        </RevealOnScroll>
 
         {/* Centered Gallery — 3 Photos Side by Side (Triptych) */}
         <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="grid grid-cols-3 gap-3">
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <StudioImage
-                src={cfg.triptych1 || '/images/lookbook_figma_2.png'}
-                alt="Floraison Texture Detail 1"
-                fill
-                preset="thumbnail"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <StudioImage
-                src={cfg.triptych2 || '/images/lookbook_figma_3.png'}
-                alt="Floraison Texture Detail 2"
-                fill
-                preset="thumbnail"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
-              <StudioImage
-                src={cfg.triptych3 || '/images/lookbook_figma_4.png'}
-                alt="Floraison Texture Detail 3"
-                fill
-                preset="thumbnail"
-                className="object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
+            <RevealOnScroll variant="editorial" delayMs={0}>
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+                <StudioImage
+                  src={cfg.triptych1 || '/images/lookbook_figma_2.png'}
+                  alt="Floraison Texture Detail 1"
+                  fill
+                  preset="thumbnail"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            </RevealOnScroll>
+            <RevealOnScroll variant="editorial" delayMs={120}>
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+                <StudioImage
+                  src={cfg.triptych2 || '/images/lookbook_figma_3.png'}
+                  alt="Floraison Texture Detail 2"
+                  fill
+                  preset="thumbnail"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            </RevealOnScroll>
+            <RevealOnScroll variant="editorial" delayMs={240}>
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
+                <StudioImage
+                  src={cfg.triptych3 || '/images/lookbook_figma_4.png'}
+                  alt="Floraison Texture Detail 3"
+                  fill
+                  preset="thumbnail"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            </RevealOnScroll>
           </div>
         </div>
 
         {/* Centered Final Movement Frame */}
-        <div className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
+        <RevealOnScroll variant="editorial" delayMs={80} className="mx-auto mb-7 sm:mb-8 max-w-2xl px-2 sm:px-4">
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <StudioImage
               src={cfg.fullDress || '/images/lookbook_figma_5.png'}
@@ -243,27 +256,29 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               className="object-cover object-center"
             />
           </div>
-        </div>
+        </RevealOnScroll>
       </main>
 
       {/* Section: SHOP THE COLLECTION */}
       <section className="border-t border-[#E5E5E5] pt-10 pb-12 sm:pt-12 sm:pb-16 bg-white/40 overflow-hidden w-full">
         {/* Title */}
-        <div className="mx-auto mb-8 flex max-w-4xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
-            {cfg.shopTag || 'SHOP THE COLLECTION'}
-          </span>
-          <h2 className="mt-1 font-sans text-sm font-medium tracking-[0.15em] text-[#000000] uppercase sm:text-lg">
-            {cfg.shopTitle || cfg.heroTitle || 'SEVILLA ABAYA'}
-          </h2>
-          <p className="mt-2 text-[10px] sm:text-xs text-[#555555] max-w-md font-light">
-            {cfg.shopDesc ||
-              'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.'}
-          </p>
-        </div>
+        <RevealOnScroll variant="fade-up">
+          <div className="mx-auto mb-8 flex max-w-4xl flex-col items-center px-4 text-center sm:px-6 lg:px-8">
+            <span className="text-[10px] font-semibold tracking-[0.25em] text-[#666666] uppercase">
+              {cfg.shopTag || 'SHOP THE COLLECTION'}
+            </span>
+            <h2 className="mt-1 font-sans text-sm font-medium tracking-[0.15em] text-[#000000] uppercase sm:text-lg">
+              {cfg.shopTitle || cfg.heroTitle || 'SEVILLA ABAYA'}
+            </h2>
+            <p className="mt-2 text-[10px] sm:text-xs text-[#555555] max-w-md font-light">
+              {cfg.shopDesc ||
+                'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.'}
+            </p>
+          </div>
+        </RevealOnScroll>
 
         {/* Product Cards Row */}
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll variant="editorial" delayMs={100} className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div
             ref={scrollRef}
             onMouseDown={handleMouseDown}
@@ -315,7 +330,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               ))
             )}
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       <Footer />

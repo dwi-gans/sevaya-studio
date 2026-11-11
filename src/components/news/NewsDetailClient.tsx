@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { StudioImage } from '@/components/common';
 import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 import { Article } from '@/integrations/supabase/articles';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -25,7 +26,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-20">
         
         {/* Top Navigation Back to News */}
-        <div className="mb-8">
+        <RevealOnScroll variant="fade-up" delayMs={0} className="mb-8">
           <Link
             href="/news"
             className="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-widest text-[#777777] uppercase transition hover:text-black"
@@ -33,42 +34,45 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
             <Icon name="arrow_back" size={14} />
             <span>{t('news.back_to_news')}</span>
           </Link>
-        </div>
+        </RevealOnScroll>
 
         {/* Article Header */}
-        <header className="text-center mb-8 sm:mb-10 space-y-3">
+        <RevealOnScroll variant="fade-up" delayMs={50} as="header" className="text-center mb-8 sm:mb-10 space-y-3">
           <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.25em] text-[#888888] uppercase block">
             {article.date}
           </span>
           <h1 className="font-headline text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-[#000000] uppercase leading-tight max-w-2xl mx-auto">
             {article.title}
           </h1>
-        </header>
+        </RevealOnScroll>
 
-        {/* Hero Photo */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-black/5 mb-2">
-          <StudioImage
-            src={article.image}
-            alt={article.title}
-            fill
-            priority
-            preset="full"
-            className="object-cover"
-          />
-        </div>
-        {/* Hero Caption */}
-        {article.hero_caption && article.hero_caption.trim() !== '' && (
-          <p className="text-[10px] text-center text-[#777777] italic tracking-wide mb-8">
-            {article.hero_caption}
-          </p>
-        )}
+        {/* Hero Photo & Caption */}
+        <RevealOnScroll variant="editorial" delayMs={100} className="mb-8">
+          <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-black/5 mb-2">
+            <StudioImage
+              src={article.image}
+              alt={article.title}
+              fill
+              priority
+              preset="full"
+              className="object-cover"
+            />
+          </div>
+          {article.hero_caption && article.hero_caption.trim() !== '' && (
+            <p className="text-[10px] text-center text-[#777777] italic tracking-wide">
+              {article.hero_caption}
+            </p>
+          )}
+        </RevealOnScroll>
 
         {/* Article Body Content */}
         <article className="prose prose-neutral max-w-none space-y-6 text-[#222222] text-xs sm:text-[13px] leading-relaxed">
           {article.excerpt && (
-            <p className="font-serif italic text-black/80 sm:text-sm leading-relaxed border-l-2 border-black/20 pl-4 py-1">
-              {article.excerpt}
-            </p>
+            <RevealOnScroll variant="fade-up" delayMs={40}>
+              <p className="font-serif italic text-black/80 sm:text-sm leading-relaxed border-l-2 border-black/20 pl-4 py-1">
+                {article.excerpt}
+              </p>
+            </RevealOnScroll>
           )}
 
           {article.content?.map((paragraph, index) => (
@@ -78,7 +82,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
               </p>
 
               {index === 0 && middleImage && (
-                <div className="my-8 space-y-3">
+                <RevealOnScroll variant="editorial" delayMs={50} className="my-8 space-y-3">
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
                     <StudioImage
                       src={middleImage}
@@ -93,11 +97,11 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       {article.image_captions[0]}
                     </p>
                   )}
-                </div>
+                </RevealOnScroll>
               )}
 
               {index > 0 && extraImages[index - 1] && (
-                <div className="my-8 space-y-3">
+                <RevealOnScroll variant="editorial" delayMs={50} className="my-8 space-y-3">
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
                     <StudioImage
                       src={extraImages[index - 1]!}
@@ -112,7 +116,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                       {article.image_captions[index]}
                     </p>
                   )}
-                </div>
+                </RevealOnScroll>
               )}
             </React.Fragment>
           ))}
@@ -122,7 +126,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
               {extraImages.slice((article.content?.length || 1) - 1).map((img, i) => {
                 const imgIdx = (article.content?.length || 1) + i;
                 return (
-                  <div key={i} className="space-y-3">
+                  <RevealOnScroll key={i} variant="editorial" delayMs={50} className="space-y-3">
                     <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5">
                       <StudioImage
                         src={img}
@@ -137,7 +141,7 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
                         {article.image_captions[imgIdx]}
                       </p>
                     )}
-                  </div>
+                  </RevealOnScroll>
                 );
               })}
             </div>
@@ -145,42 +149,45 @@ export function NewsDetailClient({ article, relatedArticles }: NewsDetailClientP
         </article>
 
         {/* Category Tag */}
-        <div className="mt-12 pt-6 border-t border-black/10 flex items-center justify-between text-xs text-[#666666]">
+        <RevealOnScroll variant="fade-up" className="mt-12 pt-6 border-t border-black/10 flex items-center justify-between text-xs text-[#666666]">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider">
             <span>{t('news.category_label')}:</span>
             <span className="font-semibold text-black">{article.category}</span>
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Related Articles Section */}
         {relatedArticles.length > 0 && (
           <section className="mt-16 pt-10 border-t border-black/15">
-            <h2 className="text-[11px] font-semibold tracking-[0.2em] text-[#888888] uppercase mb-6 text-center">
-              {t('news.related_title')}
-            </h2>
+            <RevealOnScroll variant="fade-up">
+              <h2 className="text-[11px] font-semibold tracking-[0.2em] text-[#888888] uppercase mb-6 text-center">
+                {t('news.related_title')}
+              </h2>
+            </RevealOnScroll>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {relatedArticles.map((rel) => (
-                <Link
-                  key={rel.id}
-                  href={`/news/${encodeURIComponent(rel.slug)}`}
-                  className="group block space-y-2.5"
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/5">
-                    <StudioImage
-                      src={rel.image}
-                      alt={rel.title}
-                      fill
-                      preset="catalog"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <span className="text-[9px] font-semibold tracking-wider text-[#888888] uppercase block">
-                    {rel.date}
-                  </span>
-                  <h3 className="font-headline text-xs font-semibold text-black group-hover:text-[#555555] transition leading-snug line-clamp-2">
-                    {rel.title}
-                  </h3>
-                </Link>
+              {relatedArticles.map((rel, idx) => (
+                <RevealOnScroll key={rel.id} variant="editorial" delayMs={idx * 100}>
+                  <Link
+                    href={`/news/${encodeURIComponent(rel.slug)}`}
+                    className="group block space-y-2.5"
+                  >
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/5">
+                      <StudioImage
+                        src={rel.image}
+                        alt={rel.title}
+                        fill
+                        preset="catalog"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <span className="text-[9px] font-semibold tracking-wider text-[#888888] uppercase block">
+                      {rel.date}
+                    </span>
+                    <h3 className="font-headline text-xs font-semibold text-black group-hover:text-[#555555] transition leading-snug line-clamp-2">
+                      {rel.title}
+                    </h3>
+                  </Link>
+                </RevealOnScroll>
               ))}
             </div>
           </section>

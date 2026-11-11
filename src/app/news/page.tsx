@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Footer } from '@/components/layout/Footer';
 import { Icon } from '@/components/ui/Icon';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 import { getArticles, ARTICLE_CATEGORIES } from '@/integrations/supabase/articles';
 import { NewsClientFilter } from '@/components/news/NewsClientFilter';
 
@@ -21,7 +22,7 @@ export default async function NewsIndexPage() {
       <main className="mx-auto w-full max-w-5xl lg:max-w-6xl flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-16">
 
         {/* Editorial Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+        <RevealOnScroll variant="fade-up" className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
           <div>
             <span className="text-[10px] sm:text-[10px] font-semibold tracking-widest text-[#666666] uppercase">
               SEVAYA JOURNAL & ATELIER NOTES
@@ -33,7 +34,7 @@ export default async function NewsIndexPage() {
           <p className="text-[10px] sm:text-xs text-[#555555] max-w-sm leading-relaxed sm:text-right">
             Reflections on modest elegance, explorations of pure materials, and creative studio notes.
           </p>
-        </div>
+        </RevealOnScroll>
 
         {/* Client-side category filter + article rendering */}
         <NewsClientFilter

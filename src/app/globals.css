@@ -89,7 +89,7 @@
   }
 
   body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: auto;
   }
 
   h1,
