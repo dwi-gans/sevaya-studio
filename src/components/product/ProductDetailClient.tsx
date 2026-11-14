@@ -294,6 +294,31 @@ export function ProductDetailClient({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [zoomOpen]);
 
+  // Deteksi gesture tap pada mobile hero image (membedakan tap murni untuk zoom vs swipe/scroll vertikal)
+  const heroTouchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  const handleHeroTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      heroTouchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    }
+  };
+
+  const handleHeroTouchEnd = (e: React.TouchEvent) => {
+    if (!heroTouchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - heroTouchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - heroTouchStartRef.current.y);
+      const dt = Date.now() - heroTouchStartRef.current.time;
+      // Jika pergerakan jari < 10px dan durasi tap < 350ms, user men-tap foto untuk zoom
+      if (dx < 10 && dy < 10 && dt < 350) {
+        setZoomOpen(true);
+      }
+    }
+    heroTouchStartRef.current = null;
+  };
+
   // Handler saat mobile carousel digeser / di-swipe secara horizontal oleh user
   const handleGalleryScroll = useCallback(() => {
     if (isProgrammaticScroll.current) return;
@@ -674,7 +699,7 @@ export function ProductDetailClient({
       <main className="w-full flex-1 pb-20">
         
         {/* ── 1. MOBILE FULL-SCREEN IMAGE HERO (< lg) — MATCHING TAZA ── */}
-        <section className="lg:hidden relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[560px] bg-[#F7F5F0] overflow-hidden select-none">
+        <section className="lg:hidden relative w-full h-[calc(100svh-4rem)] sm:h-[calc(100dvh-4rem)] min-h-[560px] bg-[#F7F5F0] overflow-hidden">
           {/* Floating Back Button (Top Left) — Transparan */}
           <button
             type="button"
@@ -701,15 +726,22 @@ export function ProductDetailClient({
           <div
             ref={mobileGalleryRef}
             onScroll={handleGalleryScroll}
-            className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar touch-pan-x"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            onTouchStart={handleHeroTouchStart}
+            onTouchEnd={handleHeroTouchEnd}
+            className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorX: 'contain',
+            }}
           >
             {galleryImages.map((imgSrc, idx) => (
-              <div
+              <button
                 key={`mob-${imgSrc}-${idx}`}
-                className="relative h-full w-full shrink-0 snap-center cursor-zoom-in"
-                style={{ scrollSnapAlign: 'center' }}
+                type="button"
+                aria-label={`Lihat foto ${idx + 1} resolusi penuh`}
                 onClick={() => setZoomOpen(true)}
+                className="relative h-full w-full shrink-0 snap-center cursor-pointer md:cursor-zoom-in block p-0 border-0 bg-transparent text-left focus:outline-none"
+                style={{ scrollSnapAlign: 'center' }}
               >
                 <StudioImage
                   src={imgSrc}
@@ -728,13 +760,11 @@ export function ProductDetailClient({
                     !imgSrc.includes('supabase.co') &&
                     !imgSrc.includes('unsplash.com')
                   }
-                  className="object-cover object-top"
+                  className="object-cover object-top pointer-events-none select-none"
                 />
-              </div>
+              </button>
             ))}
           </div>
-
-
         </section>
 
         {/* ── 2. MAIN CONTAINER (DETAILS & DESKTOP GALLERY) ── */}
