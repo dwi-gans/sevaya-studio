@@ -813,8 +813,8 @@ export function ProductDetailClient({
         {/* ── 2. MAIN CONTAINER (DETAILS & DESKTOP GALLERY) ── */}
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-8">
           
-          {/* Desktop-only Back Button & Breadcrumbs */}
-          <div className="hidden lg:flex items-center justify-between mb-4 animate-product-fade-1">
+          {/* Desktop-only Back Button */}
+          <div className="hidden lg:block mb-4 animate-product-fade-1">
             <button
               type="button"
               onClick={handleBack}
@@ -828,15 +828,6 @@ export function ProductDetailClient({
               />
               <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
             </button>
-
-            {/* Minimalist Editorial Breadcrumb */}
-            <div className="text-[10px] font-normal tracking-[0.2em] uppercase text-black/40 flex items-center gap-2">
-              <Link href="/" className="hover:text-black transition-colors">Home</Link>
-              <span>/</span>
-              <Link href="/shop" className="hover:text-black transition-colors">Shop</Link>
-              <span>/</span>
-              <span className="text-black/80 truncate max-w-[200px]">{title}</span>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14 items-start">
