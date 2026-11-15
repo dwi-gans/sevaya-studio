@@ -28,6 +28,8 @@ export {
   getSiteSections,
   getCachedSiteSections,
   saveSiteSections,
+  cleanMojibake,
+  deepCleanMojibake,
   DEFAULT_SITE_SECTIONS,
   DEFAULT_CLOSER_LOOK,
   DEFAULT_HOME_NARRATIVE,

@@ -10,6 +10,7 @@ import {
   DEFAULT_HOME_NARRATIVE,
   DEFAULT_JOURNAL_HEADER,
   SiteSectionsConfig,
+  deepCleanMojibake,
 } from '@/integrations/supabase/sections';
 
 export const runtime = 'nodejs';
@@ -179,7 +180,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const incomingSections = (body.sections || body) as Partial<SiteSectionsConfig>;
+    const incomingSections = deepCleanMojibake((body.sections || body) as Partial<SiteSectionsConfig>);
 
     if (!incomingSections || typeof incomingSections !== 'object') {
       return NextResponse.json(
@@ -203,7 +204,7 @@ export async function POST(req: NextRequest) {
     }
 
     const base = existingSections || DEFAULT_SITE_SECTIONS;
-    const merged = mergeDeep(base, incomingSections);
+    const merged = deepCleanMojibake(mergeDeep(base, incomingSections));
 
     // 2. Write to disk first
     writeLocalSections(merged);

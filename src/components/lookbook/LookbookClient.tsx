@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
-import { LookbookPageConfig, getSiteSections } from '@/integrations/supabase';
+import { LookbookPageConfig, getSiteSections, cleanMojibake } from '@/integrations/supabase';
 
 interface LookbookClientProps {
   initialConfig: LookbookPageConfig;
@@ -89,8 +89,10 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               {cfg.heroTitle || 'SEVILLA ABAYA'}
             </h1>
             <p className="mt-4 text-[10px] sm:text-[11px] leading-relaxed text-[#333333] font-light max-w-xl mx-auto">
-              {cfg.seasonDesc ||
-                "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments."}
+              {cleanMojibake(
+                cfg.seasonDesc ||
+                  "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments."
+              )}
             </p>
           </RevealOnScroll>
         </header>
@@ -126,13 +128,13 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
           return (
             <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
               <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-                {cfg.seasonTitle || 'The Seed of The Story'}
+                {cleanMojibake(cfg.seasonTitle || 'The Seed of The Story')}
               </h2>
               <ul className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] space-y-2">
                 {points.map((pt, idx) => (
                   <li key={idx}>
-                    <span className="font-medium text-[#000000]">{pt.title}:</span>{' '}
-                    {pt.desc}
+                    <span className="font-medium text-[#000000]">{cleanMojibake(pt.title)}:</span>{' '}
+                    {cleanMojibake(pt.desc)}
                   </li>
                 ))}
               </ul>
@@ -171,11 +173,13 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         {/* Section 4: Fabric Story */}
         <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.panorama1Title || 'Fabric Story'}
+            {cleanMojibake(cfg.panorama1Title || 'Fabric Story')}
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {cfg.panorama1Desc ||
-              'A Fabric Chosen for Its Feel. 60% Cupro · 40% Viscose A thoughtful blend selected for its silky touch, soft feel, and fluid drape. Cupro is a regenerated cellulose fibre made from cotton linter, a material left over from cotton processing. Viscose is also a regenerated cellulose fibre, commonly made from wood pulp or other cellulose sources. Together, they create a fabric with an elegant fall and a smooth, refined appearance—bringing ease and understated sophistication to everyday dressing. We believe the fabric is an essential part of the experience: not only how a garment looks, but how it moves and feels when you wear it.'}
+            {cleanMojibake(
+              cfg.panorama1Desc ||
+                'A Fabric Chosen for Its Feel. 60% Cupro · 40% Viscose A thoughtful blend selected for its silky touch, soft feel, and fluid drape. Cupro is a regenerated cellulose fibre made from cotton linter, a material left over from cotton processing. Viscose is also a regenerated cellulose fibre, commonly made from wood pulp or other cellulose sources. Together, they create a fabric with an elegant fall and a smooth, refined appearance—bringing ease and understated sophistication to everyday dressing. We believe the fabric is an essential part of the experience: not only how a garment looks, but how it moves and feels when you wear it.'
+            )}
           </p>
         </RevealOnScroll>
 
@@ -195,14 +199,16 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
         {/* Section 5: The Seed of The Story / Specifications */}
         <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.triptychTitle || 'The Seed of The Story'}
+            {cleanMojibake(cfg.triptychTitle || 'The Seed of The Story')}
           </h2>
           <div className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] whitespace-pre-line">
-            {cfg.triptychDesc ||
-              '• A graceful, flowing silhouette • Soft-touch fabric with an elegant drape • Hidden side pockets for everyday convenience • Front zipper for ease of wear • Abstract button detail at the sleeve • Designed for versatile modest styling\n\nFabric composition: 60% Cupro, 40% Viscose\nCare: Follow the garment\'s care label to maintain its texture, shape, and appearance.'}
+            {cleanMojibake(
+              cfg.triptychDesc ||
+                '• A graceful, flowing silhouette • Soft-touch fabric with an elegant drape • Hidden side pockets for everyday convenience • Front zipper for ease of wear • Abstract button detail at the sleeve • Designed for versatile modest styling\n\nFabric composition: 60% Cupro, 40% Viscose\nCare: Follow the garment\'s care label to maintain its texture, shape, and appearance.'
+            )}
           </div>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
-            {cfg.triptychTagline || 'SEVAYA — Slow fashion, thoughtfully made.'}
+            {cleanMojibake(cfg.triptychTagline || 'SEVAYA — Slow fashion, thoughtfully made.')}
           </p>
         </RevealOnScroll>
 

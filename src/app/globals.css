@@ -460,3 +460,80 @@
     -webkit-backface-visibility: hidden;
   }
 }
+
+/* ── Product Detail Entrance Animations ── */
+@keyframes productHeroReveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.04) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0) translateZ(0);
+  }
+}
+
+@keyframes productFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes subtleSheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@keyframes gentlePulseSlow {
+  0%, 100% {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(4px);
+  }
+}
+
+.animate-product-hero {
+  animation: productHeroReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center center;
+}
+
+.animate-product-fade-1 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+.animate-product-fade-2 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
+.animate-product-fade-3 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+}
+
+.animate-product-fade-4 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+
+.animate-product-fade-5 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both;
+}
+
+.animate-product-fade-6 {
+  animation: productFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both;
+}
+
+.animate-scroll-indicator {
+  animation: gentlePulseSlow 2.2s ease-in-out infinite;
+}
+

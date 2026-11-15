@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ProductCard, Product } from '@/components/home/ProductCard';
 import { Icon } from '@/components/ui/Icon';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
-import { LookbookPageConfig, getSiteSections } from '@/integrations/supabase';
+import { LookbookPageConfig, getSiteSections, cleanMojibake } from '@/integrations/supabase';
 
 interface LookbookVolumeClientProps {
   slug: string;
@@ -213,10 +213,10 @@ export function LookbookVolumeClient({
         {/* Section 5: The Autumn Collection */}
         <RevealOnScroll variant="fade-up" className="mx-auto mb-6 sm:mb-8 max-w-2xl text-left px-4">
           <h2 className="font-sans text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#000000] uppercase mb-3">
-            {cfg.triptychTitle || 'The Autumn Collection'}
+            {cleanMojibake(cfg.triptychTitle || 'The Autumn Collection')}
           </h2>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543]">
-            {cfg.triptychDesc || 'Deep terracotta, espresso, and sage tones echoing nature’s autumn transitions.'}
+            {cleanMojibake(cfg.triptychDesc || 'Deep terracotta, espresso, and sage tones echoing nature’s autumn transitions.')}
           </p>
           <p className="font-sans text-[10px] sm:text-[11px] leading-relaxed sm:leading-loose text-[#4A4543] mt-3 font-medium tracking-wide uppercase">
             SEVAYA — Slow fashion, thoughtfully made.

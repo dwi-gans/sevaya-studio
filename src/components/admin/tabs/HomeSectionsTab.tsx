@@ -18,7 +18,7 @@ import type { Article } from '@/integrations/supabase/articles';
 import { INITIAL_ARTICLES } from '@/data/newsArticles';
 import type { ImagePickerTarget } from '../adminTypes';
 
-// â”€â”€ Upload Action Group (harus di luar komponen agar tidak re-create saat render) â”€â”€
+// ── Upload Action Group (harus di luar komponen agar tidak re-create saat render) ──
 // ── Admin image preview with auto-fallback ──────────────────────────────────
 // Mencegah tampilan "gambar rusak/corrupt" di admin ketika URL cloud sudah dihapus.
 interface AdminImgPreviewProps {
@@ -189,7 +189,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   };
   const journal = sections.journal?.length ? sections.journal : DEFAULT_SITE_SECTIONS.journal;
 
-  // â”€â”€ Direct Upload Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Direct Upload Handler ──────────────────────────────────────────────
   const [uploadingTarget, setUploadingTarget] = useState<ImagePickerTarget | null>(null);
 
   const handleDirectUpload = async (target: ImagePickerTarget, file: File) => {
@@ -236,7 +236,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         saveSiteSections(next);
         return next;
       });
-      showToast('âœ“ Foto berhasil diunggah & langsung tersimpan di Cloud Beranda!');
+      showToast('✓ Foto berhasil diunggah & langsung tersimpan di Cloud Beranda!');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal mengunggah foto';
       showToast(`Upload gagal: ${msg}`);
@@ -281,7 +281,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
     setSections((prev) => {
       const nextJournal = [...(prev.journal?.length ? prev.journal : DEFAULT_SITE_SECTIONS.journal)];
-      const formattedDate = art.category ? `${art.date} â€¢ ${art.category}` : art.date;
+      const formattedDate = art.category ? `${art.date} • ${art.category}` : art.date;
       nextJournal[slotIdx] = {
         id: `journal-${slotIdx + 1}`,
         title: art.title,
@@ -295,7 +295,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
     showToast(`Slot #${slotIdx + 1} diatur ke artikel "${art.title}"!`);
   };
 
-  // â”€â”€ Updaters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Updaters ─────────────────────────────────────────────────────────────
   const updateHeroField = (field: keyof typeof hero, val: string) => {
     setSections((prev) => ({
       ...prev,
@@ -373,7 +373,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4 pb-20">
-      {/* â”€â”€ HEADER TITLE & ACTION â”€â”€ */}
+      {/* ── HEADER TITLE & ACTION ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/10 pb-4">
         <div>
           <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase">
@@ -390,14 +390,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
 
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 1: HERO SECTION (BANNER UTAMA) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 1 â€¢ Atas
+              Bagian 1 • Atas
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Hero Banner Utama
@@ -527,7 +527,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
               type="text"
               value={hero.badge}
               onChange={(e) => updateHeroField('badge', e.target.value)}
-              placeholder="Contoh: TIMELESS â€¢ INTENTIONAL â€¢ EFFORTLESS"
+              placeholder="Contoh: TIMELESS • INTENTIONAL • EFFORTLESS"
               className="w-full rounded border border-black/20 bg-white px-3 py-1.5 text-xs text-black focus:border-black focus:outline-none"
             />
           </div>
@@ -560,14 +560,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION: A CLOSER LOOK AT (VOL 1: SEVILLA ABAYA) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-black/10 pb-3 gap-2">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian Eksklusif â€¢ Editorial Collection
+              Bagian Eksklusif • Editorial Collection
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               A Closer Look At (Vol 1: Sevilla Abaya)
@@ -586,7 +586,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 };
                 setSections(next);
                 saveSiteSections(next);
-                showToast('âœ“ Data Closer Look berhasil disimpan ke cloud!');
+                showToast('✓ Data Closer Look berhasil disimpan ke cloud!');
               }}
               className="inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1 text-[10px] font-semibold text-white uppercase tracking-wider hover:bg-black/85 transition active:scale-95 cursor-pointer shadow-2xs"
             >
@@ -712,7 +712,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   };
                   setSections(next);
                   saveSiteSections(next);
-                  showToast('âœ“ Data Closer Look berhasil disimpan ke cloud!');
+                  showToast('✓ Data Closer Look berhasil disimpan ke cloud!');
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white tracking-wider hover:bg-black/85 transition active:scale-95 cursor-pointer shadow-xs"
               >
@@ -724,14 +724,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 2: CATEGORY SPOTLIGHT (2 KARTU MENYAMPING) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 2 â€¢ Sorotan
+              Bagian 2 • Sorotan
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Category Spotlight (2 Kolom Menyamping)
@@ -856,14 +856,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 3: NARRATIVE (ELEGANCE IN SIMPLICITY) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 3 â€¢ Filosofi
+              Bagian 3 • Filosofi
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Narasi Filosofi (Elegance in Simplicity)
@@ -943,9 +943,9 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 4: CINEMATIC VIDEO SHOWCASE */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
@@ -1041,14 +1041,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 5: BRAND PILLARS (OUR CORE VALUES - 3 MENYAMPING) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 5 â€¢ Nilai Inti
+              Bagian 5 • Nilai Inti
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Brand Pillars (3 Pilar Menyamping)
@@ -1175,14 +1175,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 6: ABOUT SEVAYA (2 FOTO MENYAMPING & CERITA) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 6 â€¢ Tentang Brand
+              Bagian 6 • Tentang Brand
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               About SEVAYA (Foto Card Lebar & Cerita)
@@ -1282,14 +1282,14 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 7: JOURNAL & READING CORNER (2 ARTIKEL MENYAMPING) */}
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ════════════════════════════════════════════════════════════════════════ */}
       <section className="rounded-2xl border border-black/15 bg-white p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-black/10 pb-3">
           <div>
             <span className="text-[9px] font-bold tracking-widest text-black/40 uppercase">
-              Bagian 7 â€¢ Jurnal
+              Bagian 7 • Jurnal
             </span>
             <h3 className="text-sm font-bold text-black uppercase tracking-wider">
               Our Reading Corner (Jurnal Beranda)
@@ -1305,7 +1305,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           {/* Header Left: Manifesto */}
           <div className="space-y-2">
             <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase">
-              Header Kiri â€¢ Studio Manifesto
+              Header Kiri • Studio Manifesto
             </span>
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-black/60 uppercase">Tagline</label>
@@ -1313,7 +1313,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                 type="text"
                 value={journalHeader.manifestoTag}
                 onChange={(e) => updateJournalHeaderField('manifestoTag', e.target.value)}
-                placeholder="Philosophy â€¢ Studio Manifesto"
+                placeholder="Philosophy • Studio Manifesto"
                 className="w-full rounded border border-black/20 bg-white px-2 py-1 text-xs text-black focus:border-black focus:outline-none"
               />
             </div>
@@ -1342,7 +1342,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           {/* Header Right: Reading Corner */}
           <div className="space-y-2">
             <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase">
-              Header Kanan â€¢ Reading Corner
+              Header Kanan • Reading Corner
             </span>
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-black/60 uppercase">Badge Atas</label>
@@ -1410,7 +1410,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   SLOT ARTIKEL #1 (KIRI)
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {selectedArt0 ? 'âœ“ Terhubung ke Jurnal' : 'Belum Dipilih'}
+                  {selectedArt0 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
                 </span>
               </div>
 
@@ -1476,7 +1476,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   SLOT ARTIKEL #2 (KANAN)
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {selectedArt1 ? 'âœ“ Terhubung ke Jurnal' : 'Belum Dipilih'}
+                  {selectedArt1 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
                 </span>
               </div>
 
@@ -1538,7 +1538,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </div>
       </section>
 
-      {/* â”€â”€ BOTTOM STICKY SAVE BAR â”€â”€ */}
+      {/* ── BOTTOM STICKY SAVE BAR ── */}
       <div className="sticky bottom-4 z-20 flex items-center justify-between gap-3 rounded-2xl border border-black/20 bg-white/95 px-5 py-3 shadow-xl backdrop-blur-md">
         <div className="flex items-center gap-2">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />

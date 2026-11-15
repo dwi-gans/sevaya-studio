@@ -545,15 +545,54 @@ export function getCachedSiteSections(): SiteSectionsConfig {
             ...(parsed.lookbookVolumesConfig || {}),
           },
         };
-        _cachedSiteSections = merged;
+        const cleanMerged = deepCleanMojibake(merged);
+        _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
-        return merged;
+        return cleanMerged;
       }
     } catch (e) {
       console.warn('Failed to parse site sections from localStorage', e);
     }
   }
   return DEFAULT_SITE_SECTIONS;
+}
+
+/**
+ * Sanitizes mojibake characters resulting from mis-encoded UTF-8 / Windows-1252 strings.
+ * e.g. â€¢ -> •, â€” -> —, Â· -> ·, etc.
+ */
+export function cleanMojibake(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  return text
+    .replace(/â€¢/g, '•')
+    .replace(/â€”/g, '—')
+    .replace(/â€“/g, '–')
+    .replace(/â€œ/g, '“')
+    .replace(/â€/g, '”')
+    .replace(/â€˜/g, '‘')
+    .replace(/â€™/g, '’')
+    .replace(/Â·/g, '·')
+    .replace(/âœ“/g, '✓')
+    .replace(/â”€/g, '─')
+    .replace(/â•/g, '═')
+    .replace(/Â /g, ' ');
+}
+
+export function deepCleanMojibake<T>(obj: T): T {
+  if (typeof obj === 'string') {
+    return cleanMojibake(obj) as unknown as T;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(deepCleanMojibake) as unknown as T;
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const cleaned: Record<string, any> = {};
+    for (const [key, val] of Object.entries(obj)) {
+      cleaned[key] = deepCleanMojibake(val);
+    }
+    return cleaned as T;
+  }
+  return obj;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -620,10 +659,11 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
               ...(parsed.lookbookVolumesConfig || {}),
             },
           };
-          _cachedSiteSections = merged;
+          const cleanMerged = deepCleanMojibake(merged);
+          _cachedSiteSections = cleanMerged;
           _cachedSectionsTime = Date.now();
           _isServerFetched = true;
-          return merged;
+          return cleanMerged;
         }
       }
     } catch {
@@ -689,18 +729,19 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
           },
         };
 
-        _cachedSiteSections = merged;
+        const cleanMerged = deepCleanMojibake(merged);
+        _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
         _isServerFetched = true;
         // Keep localStorage in sync as an offline cache
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanMerged));
           } catch {
             // ignore quota errors
           }
         }
-        return merged;
+        return cleanMerged;
       }
     }
   } catch (err) {
@@ -763,9 +804,10 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
             ...(parsed.lookbookVolumesConfig || {}),
           },
         };
-        _cachedSiteSections = merged;
+        const cleanMerged = deepCleanMojibake(merged);
+        _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
-        return merged;
+        return cleanMerged;
       }
     } catch (e) {
       console.warn('[sections] Failed to parse localStorage', e);
@@ -785,14 +827,15 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
  * Also updates in-memory cache and LocalStorage immediately for instant UI feedback.
  */
 export async function saveSiteSections(sections: SiteSectionsConfig): Promise<boolean> {
+  const cleanSections = deepCleanMojibake(sections);
   // Instant local cache update
-  _cachedSiteSections = sections;
+  _cachedSiteSections = cleanSections;
   _cachedSectionsTime = Date.now();
   _isServerFetched = true;
 
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sections));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanSections));
     } catch {
       // ignore quota errors
     }
@@ -806,7 +849,7 @@ export async function saveSiteSections(sections: SiteSectionsConfig): Promise<bo
         'Content-Type': 'application/json',
         'x-admin-key': 'sevaya-admin',
       },
-      body: JSON.stringify({ sections }),
+      body: JSON.stringify({ sections: cleanSections }),
     });
     if (!res.ok) {
       const err = (await res.json().catch(() => ({}))) as { error?: string };

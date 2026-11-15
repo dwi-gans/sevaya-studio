@@ -228,6 +228,21 @@ export function ProductDetailClient({
   const isProgrammaticScroll = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Micro-interaction states for Add to Cart and mobile hero scroll hint
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [justAddedToCart, setJustAddedToCart] = useState(false);
+  const [hasScrolledHero, setHasScrolledHero] = useState(false);
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      if (window.scrollY > 35) {
+        setHasScrolledHero(true);
+      }
+    };
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, []);
+
   // Galeri lengkap seluruh produk (semua angle + foto swatches)
   const allGalleryImages = useMemo(() => {
     return buildGalleryList(
@@ -321,6 +336,7 @@ export function ProductDetailClient({
 
   // Handler saat mobile carousel digeser / di-swipe secara horizontal oleh user
   const handleGalleryScroll = useCallback(() => {
+    setHasScrolledHero(true);
     if (isProgrammaticScroll.current) return;
     if (!mobileGalleryRef.current) return;
     const scrollLeft = mobileGalleryRef.current.scrollLeft;
@@ -659,6 +675,12 @@ export function ProductDetailClient({
         quantity: remainingCanAdd,
         stock: availableStock,
       });
+      setIsAddingToCart(true);
+      setTimeout(() => {
+        setIsAddingToCart(false);
+        setJustAddedToCart(true);
+        setTimeout(() => setJustAddedToCart(false), 1600);
+      }, 250);
       return;
     }
 
@@ -674,6 +696,13 @@ export function ProductDetailClient({
       quantity,
       stock: availableStock,
     });
+
+    setIsAddingToCart(true);
+    setTimeout(() => {
+      setIsAddingToCart(false);
+      setJustAddedToCart(true);
+      setTimeout(() => setJustAddedToCart(false), 1600);
+    }, 250);
 
     showToast(`Ditambahkan ke keranjang: ${title} (${selectedColor.name})`);
   };
@@ -704,7 +733,7 @@ export function ProductDetailClient({
           <button
             type="button"
             onClick={handleBack}
-            className="absolute top-3 left-2.5 z-30 inline-flex h-9 items-center gap-1.5 rounded-full bg-transparent px-2.5 text-[10px] font-medium tracking-[0.16em] uppercase text-black/80 hover:text-black active:scale-95 active:opacity-50 transition cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))]"
+            className="absolute top-3 left-2.5 z-30 inline-flex h-9 items-center gap-1.5 rounded-full bg-transparent px-2.5 text-[10px] font-medium tracking-[0.16em] uppercase text-black/80 hover:text-black active:scale-95 active:opacity-50 transition-all duration-300 cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))] animate-product-fade-1"
             aria-label="Kembali"
           >
             <Icon name="arrow_back" size={15} strokeWidth={1.6} />
@@ -715,7 +744,7 @@ export function ProductDetailClient({
           <button
             type="button"
             onClick={() => setZoomOpen(true)}
-            className="absolute top-2.5 right-2.5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-black/80 hover:text-black active:scale-95 active:opacity-50 transition cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))]"
+            className="absolute top-2.5 right-2.5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-black/80 hover:text-black active:scale-95 active:opacity-50 transition-all duration-300 cursor-pointer [filter:drop-shadow(0_1px_3px_rgba(255,255,255,0.95))] animate-product-fade-1"
             aria-label="Zoom Photo"
             title="Lihat foto resolusi penuh"
           >
@@ -743,35 +772,49 @@ export function ProductDetailClient({
                 className="relative h-full w-full shrink-0 snap-center cursor-pointer md:cursor-zoom-in block p-0 border-0 bg-transparent text-left focus:outline-none"
                 style={{ scrollSnapAlign: 'center' }}
               >
-                <StudioImage
-                  src={imgSrc}
-                  alt={`${title} - view ${idx + 1}`}
-                  fill
-                  priority={idx === 0}
-                  preset="full"
-                  onError={() => {
-                    const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
-                    if (imgSrc !== fallback) {
-                      setActiveImage(fallback);
+                <div className={`relative h-full w-full ${idx === 0 ? 'animate-product-hero' : ''}`}>
+                  <StudioImage
+                    src={imgSrc}
+                    alt={`${title} - view ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    preset="full"
+                    onError={() => {
+                      const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
+                      if (imgSrc !== fallback) {
+                        setActiveImage(fallback);
+                      }
+                    }}
+                    unoptimized={
+                      !imgSrc.startsWith('/') &&
+                      !imgSrc.includes('supabase.co') &&
+                      !imgSrc.includes('unsplash.com')
                     }
-                  }}
-                  unoptimized={
-                    !imgSrc.startsWith('/') &&
-                    !imgSrc.includes('supabase.co') &&
-                    !imgSrc.includes('unsplash.com')
-                  }
-                  className="object-cover object-top pointer-events-none select-none"
-                />
+                    className="object-cover object-top pointer-events-none select-none"
+                  />
+                </div>
               </button>
             ))}
+          </div>
+
+          {/* Floating Subtle Scroll Cue (Fades out when scrolled) */}
+          <div
+            className={`absolute bottom-4 inset-x-0 z-20 flex justify-center pointer-events-none transition-all duration-500 ${
+              hasScrolledHero ? 'opacity-0 translate-y-3' : 'opacity-100 translate-y-0'
+            }`}
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-white/90 text-[9px] font-medium tracking-[0.2em] uppercase shadow-sm animate-scroll-indicator">
+              <span>Scroll for details</span>
+              <Icon name="expand_more" size={13} strokeWidth={2.2} />
+            </div>
           </div>
         </section>
 
         {/* ── 2. MAIN CONTAINER (DETAILS & DESKTOP GALLERY) ── */}
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-8">
           
-          {/* Desktop-only Back Button */}
-          <div className="hidden lg:block mb-4">
+          {/* Desktop-only Back Button & Breadcrumbs */}
+          <div className="hidden lg:flex items-center justify-between mb-4 animate-product-fade-1">
             <button
               type="button"
               onClick={handleBack}
@@ -785,6 +828,15 @@ export function ProductDetailClient({
               />
               <span>{language === 'id' ? 'Kembali' : 'Back'}</span>
             </button>
+
+            {/* Minimalist Editorial Breadcrumb */}
+            <div className="text-[10px] font-normal tracking-[0.2em] uppercase text-black/40 flex items-center gap-2">
+              <Link href="/" className="hover:text-black transition-colors">Home</Link>
+              <span>/</span>
+              <Link href="/shop" className="hover:text-black transition-colors">Shop</Link>
+              <span>/</span>
+              <span className="text-black/80 truncate max-w-[200px]">{title}</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-14 items-start">
@@ -796,7 +848,7 @@ export function ProductDetailClient({
               {galleryImages.length > 1 && (
                 <div
                   ref={mobileThumbnailBarRef}
-                  className="lg:hidden -mx-4 px-4 overflow-x-auto no-scrollbar"
+                  className="lg:hidden -mx-4 px-4 overflow-x-auto no-scrollbar animate-product-fade-1"
                 >
                   <div className="flex items-center gap-2.5 py-1.5">
                     {galleryImages.map((imgSrc, idx) => {
@@ -807,10 +859,10 @@ export function ProductDetailClient({
                           type="button"
                           data-active={isActive ? 'true' : 'false'}
                           onClick={() => handleSelectGalleryImage(imgSrc)}
-                          className={`relative h-18 w-13.5 sm:h-20 sm:w-15 shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all ${
+                          className={`relative h-18 w-13.5 sm:h-20 sm:w-15 shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all duration-300 ${
                             isActive
-                              ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100'
-                              : 'opacity-50 hover:opacity-90 border border-black/10'
+                              ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100 scale-100 shadow-xs'
+                              : 'opacity-50 hover:opacity-90 border border-black/10 hover:scale-[1.02]'
                           }`}
                           aria-label={`Thumbnail ${idx + 1}`}
                         >
@@ -828,11 +880,12 @@ export function ProductDetailClient({
                 </div>
               )}
 
-              <div>
+              {/* Title, Badge, Price */}
+              <div className="animate-product-fade-2">
                 {dbProduct.badge && (
                   <div className="mb-2.5">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[8.5px] sm:text-[9px] font-medium tracking-[0.22em] uppercase border shadow-2xs ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 text-[8.5px] sm:text-[9px] font-medium tracking-[0.22em] uppercase border shadow-2xs transition-transform duration-300 hover:scale-105 ${
                         dbProduct.badge.toLowerCase().includes('best')
                           ? 'bg-[#1C1917] text-[#FBF9F5] border-black/30'
                           : dbProduct.badge.toLowerCase().includes('trend')
@@ -853,7 +906,8 @@ export function ProductDetailClient({
                 </p>
               </div>
 
-              <div className="text-[11px] leading-relaxed text-black/70">
+              {/* Description */}
+              <div className="text-[11px] leading-relaxed text-black/70 animate-product-fade-3">
                 {dbProduct.description ? (
                   <p className="whitespace-pre-line leading-relaxed">{dbProduct.description}</p>
                 ) : (
@@ -864,7 +918,7 @@ export function ProductDetailClient({
               </div>
 
               {/* Pilihan Warna */}
-              <div className="pt-2">
+              <div className="pt-2 animate-product-fade-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-black">
                     COLOR &mdash;{' '}
@@ -885,20 +939,20 @@ export function ProductDetailClient({
                         <button
                           type="button"
                           onClick={() => handleSelectColor(c)}
-                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full cursor-pointer ${
+                          className={`group relative flex h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-all duration-300 ${
                             c.outOfStock
                               ? 'opacity-60'
-                              : ''
+                              : 'hover:scale-110 active:scale-95'
                           } ${
                             isSelected
-                              ? 'ring-1 ring-black ring-offset-2 ring-offset-white'
+                              ? 'scale-110 ring-1.5 ring-black ring-offset-2 ring-offset-white shadow-xs'
                               : 'ring-1 ring-black/20 hover:ring-black/60'
                           }`}
                           title={c.outOfStock ? `${c.name} — Stok Habis` : c.name}
                           aria-label={`Pilih warna ${c.name}${c.outOfStock ? ' (Stok Habis)' : ''}`}
                         >
                           <span
-                            className="h-full w-full rounded-full border border-black/10"
+                            className="h-full w-full rounded-full border border-black/10 transition-transform duration-300"
                             style={{ backgroundColor: c.hex }}
                           />
 
@@ -914,125 +968,151 @@ export function ProductDetailClient({
                 </div>
               </div>
 
-              {/* Pilihan Ukuran */}
-              <div>
-                <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
-                  SIZE
-                </span>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {sizeOptions.map((sz) => {
-                    const isSelected = selectedSize.trim().toUpperCase() === sz.trim().toUpperCase();
-                    // Cek apakah kombinasi warna+size ini habis
-                    // Only mark sold-out after variants confirmed from live API (prevents 1s flicker)
-                    const szVariant = variantsReady && variants.length > 0
-                      ? variants.find(
-                          (v) =>
-                            v.colorName.trim().toLowerCase() === selectedColor.name.trim().toLowerCase() &&
-                            v.size.trim().toUpperCase() === sz.trim().toUpperCase()
-                        )
-                      : undefined;
-                    const isSzSoldOut = szVariant !== undefined && szVariant.stock <= 0;
-                    return (
-                      <button
-                        key={sz}
-                        type="button"
-                        onClick={() => !isSzSoldOut && setSelectedSize(sz)}
-                        disabled={isSzSoldOut}
-                        className={`h-9 min-w-[46px] border px-4 text-[10px] tracking-wider uppercase font-normal inline-flex items-center justify-center transition-colors ${
-                          isSzSoldOut
-                            ? 'border-black/[0.08] bg-white text-black/25 cursor-not-allowed line-through'
-                            : isSelected
-                            ? 'border-black bg-white text-black font-medium ring-1 ring-black cursor-pointer'
-                            : 'border-black/[0.12] bg-white text-black/75 hover:border-black hover:text-black cursor-pointer'
-                        }`}
-                      >
-                        {sz}
-                      </button>
-                    );
-                  })}
+              {/* Pilihan Ukuran, Material, Kuantitas */}
+              <div className="space-y-6 animate-product-fade-5">
+                {/* Pilihan Ukuran */}
+                <div>
+                  <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
+                    SIZE
+                  </span>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {sizeOptions.map((sz) => {
+                      const isSelected = selectedSize.trim().toUpperCase() === sz.trim().toUpperCase();
+                      // Cek apakah kombinasi warna+size ini habis
+                      // Only mark sold-out after variants confirmed from live API (prevents 1s flicker)
+                      const szVariant = variantsReady && variants.length > 0
+                        ? variants.find(
+                            (v) =>
+                              v.colorName.trim().toLowerCase() === selectedColor.name.trim().toLowerCase() &&
+                              v.size.trim().toUpperCase() === sz.trim().toUpperCase()
+                          )
+                        : undefined;
+                      const isSzSoldOut = szVariant !== undefined && szVariant.stock <= 0;
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => !isSzSoldOut && setSelectedSize(sz)}
+                          disabled={isSzSoldOut}
+                          className={`h-9 min-w-[46px] border px-4 text-[10px] tracking-wider uppercase font-normal inline-flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                            isSzSoldOut
+                              ? 'border-black/[0.08] bg-white text-black/25 cursor-not-allowed line-through'
+                              : isSelected
+                              ? 'border-black bg-white text-black font-medium ring-1 ring-black cursor-pointer shadow-xs'
+                              : 'border-black/[0.12] bg-white text-black/75 hover:border-black hover:text-black cursor-pointer'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Material Produk (Spesifikasi Material) */}
-              <div>
-                <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
-                  MATERIAL
-                </span>
-                <div className="mt-2.5">
-                  <div className="inline-flex items-center justify-center h-9 border border-black/[0.12] bg-white px-4 text-[10px] font-normal tracking-wider text-black select-none uppercase">
-                    {dbProduct.material || dbProduct.fabric || '100% Cupro Silk Linen'}
+                {/* Material Produk (Spesifikasi Material) */}
+                <div>
+                  <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
+                    MATERIAL
+                  </span>
+                  <div className="mt-2.5">
+                    <div className="inline-flex items-center justify-center h-9 border border-black/[0.12] bg-white px-4 text-[10px] font-normal tracking-wider text-black select-none uppercase transition-colors hover:border-black/30">
+                      {dbProduct.material || dbProduct.fabric || '100% Cupro Silk Linen'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Kuantitas */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
+                      QUANTITY
+                    </span>
+                    {isOutOfStock && variantsReady ? (
+                      <span className="text-[9.5px] font-normal text-rose-600 uppercase tracking-wider">
+                        Stok Habis
+                      </span>
+                    ) : variantsReady && availableStock <= 5 ? (
+                      <span className="text-[9.5px] font-normal text-amber-700">
+                        Sisa {availableStock} lagi
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-2.5 inline-flex items-center h-9 border border-black/[0.12] bg-white">
+                    <button
+                      type="button"
+                      disabled={isOutOfStock || quantity <= 1}
+                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                      className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center active:scale-90"
+                      aria-label="Kurangi kuantitas"
+                    >
+                      &minus;
+                    </button>
+                    <span className="h-full w-10 flex items-center justify-center text-[11px] font-normal text-black border-x border-black/[0.08]">
+                      {isOutOfStock ? 0 : quantity}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isOutOfStock || quantity >= availableStock}
+                      onClick={() => setQuantity((prev) => Math.min(availableStock, prev + 1))}
+                      className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center active:scale-90"
+                      aria-label="Tambah kuantitas"
+                    >
+                      &#43;
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Kuantitas */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-normal tracking-[0.16em] uppercase text-black/60">
-                    QUANTITY
-                  </span>
-                  {isOutOfStock && variantsReady ? (
-                    <span className="text-[9.5px] font-normal text-rose-600 uppercase tracking-wider">
-                      Stok Habis
-                    </span>
-                  ) : variantsReady && availableStock <= 5 ? (
-                    <span className="text-[9.5px] font-normal text-amber-700">
-                      Sisa {availableStock} lagi
-                    </span>
-                  ) : null}
-                </div>
-                <div className="mt-2.5 inline-flex items-center h-9 border border-black/[0.12] bg-white">
-                  <button
-                    type="button"
-                    disabled={isOutOfStock || quantity <= 1}
-                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center"
-                    aria-label="Kurangi kuantitas"
-                  >
-                    &minus;
-                  </button>
-                  <span className="h-full w-10 flex items-center justify-center text-[11px] font-normal text-black border-x border-black/[0.08]">
-                    {isOutOfStock ? 0 : quantity}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={isOutOfStock || quantity >= availableStock}
-                    onClick={() => setQuantity((prev) => Math.min(availableStock, prev + 1))}
-                    className="h-full px-3 text-[11px] text-black/60 hover:text-black transition-colors hover:bg-black/5 cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center"
-                    aria-label="Tambah kuantitas"
-                  >
-                    &#43;
-                  </button>
-                </div>
-              </div>
-
-              {/* Tombol ADD TO CART */}
-              <div className="pt-2">
+              {/* Tombol ADD TO CART dengan Micro-Feedback & Sheen */}
+              <div className="pt-2 animate-product-fade-6">
                 <button
                   type="button"
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || isAddingToCart}
                   onClick={handleAddToCart}
-                  className="w-full bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors cursor-pointer active:opacity-90 disabled:bg-black/30 disabled:cursor-not-allowed"
+                  className="relative w-full overflow-hidden bg-[#1A1A1A] hover:bg-black py-4 text-center text-xs font-semibold tracking-[0.2em] text-white uppercase transition-all duration-300 cursor-pointer active:scale-[0.99] disabled:bg-black/30 disabled:cursor-not-allowed group shadow-xs hover:shadow-md"
                 >
-                  {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
+                  {/* Subtle Luxury Sheen effect on hover */}
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/12 to-transparent group-hover:animate-[subtleSheen_1.1s_ease-in-out]" />
+
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {isOutOfStock ? (
+                      'OUT OF STOCK'
+                    ) : justAddedToCart ? (
+                      <span className="inline-flex items-center gap-1.5 text-white animate-in zoom-in-95 duration-200">
+                        <Icon name="check" size={15} strokeWidth={2.5} />
+                        <span>ADDED TO BAG</span>
+                      </span>
+                    ) : isAddingToCart ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        <span>ADDING...</span>
+                      </span>
+                    ) : (
+                      'ADD TO CART'
+                    )}
+                  </span>
                 </button>
               </div>
 
-              {/* Accordion: FABRIC & SIZING */}
-              <div className="border-t border-black/15 pt-2">
+              {/* Accordion: FABRIC & SIZING dengan smooth height & rotating toggle */}
+              <div className="border-t border-black/15 pt-2 animate-product-fade-6">
                 <div className="border-b border-black/15">
                   <button
                     type="button"
                     onClick={() => setFabricOpen(!fabricOpen)}
-                    className="flex w-full items-center justify-between py-3.5 text-left text-[11px] font-medium tracking-[0.16em] text-black uppercase transition-colors hover:text-black/70 cursor-pointer"
+                    className="flex w-full items-center justify-between py-3.5 text-left text-[11px] font-medium tracking-[0.16em] text-black uppercase transition-colors hover:text-black/70 cursor-pointer group"
                   >
                     <span>FABRIC</span>
-                    <span className="text-xs font-light text-black">
-                      {fabricOpen ? '−' : '+'}
+                    <span className={`text-xs font-light text-black transition-transform duration-300 ${fabricOpen ? 'rotate-45' : 'rotate-0'}`}>
+                      +
                     </span>
                   </button>
-                  {fabricOpen && (
-                    <div className="pb-4 text-[11px] leading-relaxed text-black/70">
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      fabricOpen ? 'grid-rows-[1fr] opacity-100 pb-4' : 'grid-rows-[0fr] opacity-0 pb-0'
+                    }`}
+                  >
+                    <div className="overflow-hidden text-[11px] leading-relaxed text-black/70">
                       {dbProduct.fabric ? (
                         <p className="whitespace-pre-line leading-relaxed">{dbProduct.fabric}</p>
                       ) : (
@@ -1041,22 +1121,26 @@ export function ProductDetailClient({
                         </p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div className="border-b border-black/15">
                   <button
                     type="button"
                     onClick={() => setSizingOpen(!sizingOpen)}
-                    className="flex w-full items-center justify-between py-3.5 text-left text-[11px] font-medium tracking-[0.16em] text-black uppercase transition-colors hover:text-black/70 cursor-pointer"
+                    className="flex w-full items-center justify-between py-3.5 text-left text-[11px] font-medium tracking-[0.16em] text-black uppercase transition-colors hover:text-black/70 cursor-pointer group"
                   >
                     <span>SIZING</span>
-                    <span className="text-xs font-light text-black">
-                      {sizingOpen ? '−' : '+'}
+                    <span className={`text-xs font-light text-black transition-transform duration-300 ${sizingOpen ? 'rotate-45' : 'rotate-0'}`}>
+                      +
                     </span>
                   </button>
-                  {sizingOpen && (
-                    <div className="pb-4 text-[11px] leading-relaxed text-black/70">
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      sizingOpen ? 'grid-rows-[1fr] opacity-100 pb-4' : 'grid-rows-[0fr] opacity-0 pb-0'
+                    }`}
+                  >
+                    <div className="overflow-hidden text-[11px] leading-relaxed text-black/70">
                       {dbProduct.sizing ? (
                         <div className="whitespace-pre-line leading-relaxed">{dbProduct.sizing}</div>
                       ) : (
@@ -1073,14 +1157,14 @@ export function ProductDetailClient({
                         </>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
             </div>
 
             {/* ── KOLOM KANAN (lg:col-span-6): DESKTOP STICKY GALLERY (hidden di mobile, lg:flex di desktop) ── */}
-            <div className="hidden lg:flex flex-col items-start lg:col-span-6 static lg:sticky lg:top-24 w-full">
+            <div className="hidden lg:flex flex-col items-start lg:col-span-6 static lg:sticky lg:top-24 w-full animate-product-fade-1">
               <div
                 className="relative aspect-[3/4] w-full max-h-[640px] xl:max-h-[680px] overflow-hidden bg-[#ECE8E1] border border-black/5 cursor-zoom-in group"
                 onClick={() => setZoomOpen(true)}
@@ -1101,7 +1185,7 @@ export function ProductDetailClient({
 
                 {dbProduct.badge && (
                   <span
-                    className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs ${
+                    className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[7.5px] sm:text-[8.5px] font-medium tracking-[0.22em] uppercase backdrop-blur-xs shadow-xs transition-transform duration-300 hover:scale-105 ${
                       dbProduct.badge.toLowerCase().includes('best')
                         ? 'bg-[#1C1917]/95 text-[#FBF9F5] border border-white/20'
                         : dbProduct.badge.toLowerCase().includes('trend')
@@ -1113,25 +1197,27 @@ export function ProductDetailClient({
                     {dbProduct.badge}
                   </span>
                 )}
-                <StudioImage
-                  src={activeImage}
-                  alt={`${title} - ${selectedColor.name}`}
-                  fill
-                  priority
-                  preset="spotlight"
-                  onError={() => {
-                    const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
-                    if (activeImage !== fallback) {
-                      setActiveImage(fallback);
+                <div key={activeImage} className="relative h-full w-full animate-product-hero">
+                  <StudioImage
+                    src={activeImage}
+                    alt={`${title} - ${selectedColor.name}`}
+                    fill
+                    priority
+                    preset="spotlight"
+                    onError={() => {
+                      const fallback = dbProduct.image || '/images/catalog/catalog-01.jpg';
+                      if (activeImage !== fallback) {
+                        setActiveImage(fallback);
+                      }
+                    }}
+                    unoptimized={
+                      !activeImage.startsWith('/') &&
+                      !activeImage.includes('supabase.co') &&
+                      !activeImage.includes('unsplash.com')
                     }
-                  }}
-                  unoptimized={
-                    !activeImage.startsWith('/') &&
-                    !activeImage.includes('supabase.co') &&
-                    !activeImage.includes('unsplash.com')
-                  }
-                  className="object-cover object-top"
-                />
+                    className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                  />
+                </div>
               </div>
 
               {galleryImages.length > 1 && (
@@ -1143,10 +1229,10 @@ export function ProductDetailClient({
                         key={`desk-thumb-${imgSrc}-${idx}`}
                         type="button"
                         onClick={() => handleSelectGalleryImage(imgSrc)}
-                        className={`relative h-15 w-11.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all ${
+                        className={`relative h-15 w-11.5 flex-shrink-0 overflow-hidden bg-[#ECE8E1] cursor-pointer transition-all duration-300 ${
                           isActive
-                            ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100'
-                            : 'opacity-50 hover:opacity-90 border border-black/10'
+                            ? 'ring-1.5 ring-black ring-offset-2 ring-offset-white opacity-100 scale-100 shadow-xs'
+                            : 'opacity-50 hover:opacity-90 border border-black/10 hover:scale-[1.03]'
                         }`}
                         aria-label={`Thumbnail photo ${idx + 1}`}
                       >
