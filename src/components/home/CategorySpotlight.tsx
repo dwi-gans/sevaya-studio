@@ -48,7 +48,7 @@ export function CategorySpotlight({ initialSpotlight, initialIntro }: CategorySp
   const khimar = spotlight[1];
 
   return (
-    <section className="w-full bg-white pt-2 sm:pt-4 pb-4 sm:pb-6 text-black section--light">
+    <section className="w-full bg-white pt-2 sm:pt-4 pb-0 sm:pb-3 text-black section--light">
       <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         {/* 2 Category Banners: ABAYA & KHIMAR */}
         <div className="grid grid-cols-2 gap-3 sm:gap-6">

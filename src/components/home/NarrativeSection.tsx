@@ -42,7 +42,7 @@ export function NarrativeSection({ initialNarrative }: NarrativeSectionProps = {
   return (
     <div className="w-full bg-white text-black section--light">
       {/* 1. Elegance in Simplicity Narrative */}
-      <section className="mx-auto max-w-3xl px-4 py-10 sm:py-14 text-center sm:px-6">
+      <section className="mx-auto max-w-3xl px-4 pt-4 sm:pt-8 pb-10 sm:pb-14 text-center sm:px-6">
         <RevealOnScroll variant="fade-up">
           <h2 className="font-sans text-sm sm:text-base md:text-[17px] font-normal tracking-wide text-black uppercase">
             {narrative.eleganceTitle || 'Elegance in Simplicity'}
