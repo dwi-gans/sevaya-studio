@@ -44,6 +44,11 @@ export default async function HomePage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">
+      {/* Semantic H1 for Googlebot and Screen Readers */}
+      <h1 className="sr-only">
+        SEVAYA Studio — Koleksi Busana Abaya & French Khimar Modern Indonesia
+      </h1>
+
       {/* 1. Hero Section matching Figma: TIMELESS • INTENTIONAL • EFFORTLESS */}
       <HeroSection initialHero={activeSections?.hero} />
 

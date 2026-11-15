@@ -16,6 +16,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/shop`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.95,
+    },
+    {
       url: `${baseUrl}/lookbook`,
       lastModified: now,
       changeFrequency: 'weekly',
@@ -34,22 +40,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/contact`,
+      url: `${baseUrl}/customer/faq`,
       lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.7,
+      priority: 0.6,
     },
     {
-      url: `${baseUrl}/terms`,
+      url: `${baseUrl}/customer/shipping-information`,
       lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.4,
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     {
-      url: `${baseUrl}/privacy`,
+      url: `${baseUrl}/customer/returns-exchanges`,
       lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.4,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/customer/terms-of-service`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ];
 
