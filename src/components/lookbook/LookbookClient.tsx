@@ -322,7 +322,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
                   key={prod.id}
                   className={`shrink-0 snap-center ${
                     displayedProducts.length === 1
-                      ? 'w-[48vw] max-w-[195px] sm:w-[320px] md:w-[300px]'
+                      ? 'w-[58vw] max-w-[240px] sm:max-w-none sm:w-[280px] md:w-[280px] lg:w-[300px]'
                       : displayedProducts.length === 2
                       ? 'w-[40vw] max-w-[170px] sm:max-w-none sm:w-[44vw] md:w-[280px]'
                       : displayedProducts.length === 3
