@@ -28,6 +28,7 @@ export type ImagePickerTarget =
   | 'textiles'
   | 'journal-0'
   | 'journal-1'
+  | 'journal-2'
   | `lookbook-${number}`
   | `lbpage-${string}`
   | 'conscious-hero'

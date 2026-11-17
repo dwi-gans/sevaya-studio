@@ -22,9 +22,19 @@ interface JournalSectionProps {
 export function JournalSection({ initialArticles, initialHeader }: JournalSectionProps = {}) {
   const { t } = useLanguage();
   const [articles, setArticles] = useState<JournalArticleData[]>(() => {
-    if (initialArticles && initialArticles.length > 0) return initialArticles;
+    if (initialArticles && initialArticles.length >= 3) return initialArticles.slice(0, 3);
+    const list = initialArticles && initialArticles.length > 0 ? [...initialArticles] : [];
     const cached = getCachedSiteSections();
-    return cached?.journal?.length ? cached.journal : DEFAULT_SITE_SECTIONS.journal;
+    const source = cached?.journal?.length ? cached.journal : DEFAULT_SITE_SECTIONS.journal;
+    const existing = new Set(list.map((a) => a.href || a.title));
+    for (const item of source) {
+      if (list.length >= 3) break;
+      if (!existing.has(item.href || item.title)) {
+        list.push(item);
+        existing.add(item.href || item.title);
+      }
+    }
+    return list.slice(0, 3);
   });
 
   const [header, setHeader] = useState<HomeJournalHeaderConfig>(() => {
@@ -34,37 +44,27 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
   });
 
   useLayoutEffect(() => {
-    if (!initialArticles || !initialArticles.length) {
+    if (initialArticles && initialArticles.length >= 3) {
+      setArticles(initialArticles.slice(0, 3));
+    } else if (!initialArticles || !initialArticles.length) {
       const cached = getCachedSiteSections();
-      if (cached?.journal?.length) setArticles(cached.journal);
+      if (cached?.journal?.length && cached.journal.length >= 3) setArticles(cached.journal.slice(0, 3));
       if (cached?.journalHeader && !initialHeader) setHeader(cached.journalHeader);
     }
   }, [initialArticles, initialHeader]);
 
   useEffect(() => {
-    // Fetch artikel terbaru dari DB (via /api/journal) — override sections.journal
-    fetch('/api/journal')
-      .then((r) => r.json())
-      .then((data: { articles?: JournalArticleData[] }) => {
-        if (Array.isArray(data.articles) && data.articles.length > 0) {
-          setArticles(data.articles);
-        } else if (!initialArticles?.length) {
-          // Fallback: ambil dari sections config hanya jika tidak ada SSR data
-          getSiteSections().then((sections) => {
-            if (sections.journal?.length) setArticles(sections.journal);
-            if (sections.journalHeader && !initialHeader) setHeader(sections.journalHeader);
-          });
-        }
-      })
-      .catch(() => {
-        // Fallback jika fetch gagal, hanya jika tidak ada SSR data
-        if (!initialArticles?.length) {
-          getSiteSections().then((sections) => {
-            if (sections.journal?.length) setArticles(sections.journal);
-            if (sections.journalHeader && !initialHeader) setHeader(sections.journalHeader);
-          });
-        }
-      });
+    // Fetch artikel dari /api/journal jika artikel kurang dari 3
+    if (!initialArticles || initialArticles.length < 3) {
+      fetch('/api/journal')
+        .then((r) => r.json())
+        .then((data: { articles?: JournalArticleData[] }) => {
+          if (Array.isArray(data.articles) && data.articles.length >= 3) {
+            setArticles(data.articles.slice(0, 3));
+          }
+        })
+        .catch(() => {});
+    }
 
     // Refresh journalHeader dari sections hanya jika tidak ada dari SSR
     if (!initialHeader) {
@@ -72,7 +72,7 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
         if (sections.journalHeader) setHeader(sections.journalHeader);
       });
     }
-  }, []);
+  }, [initialArticles, initialHeader]);
 
   return (
     <section className="w-full bg-black text-white section--dark py-8 sm:py-12 overflow-hidden" id="journal">
@@ -91,8 +91,8 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
             </p>
           </div>
 
-          {/* Right Column: OUR READING CORNER → */}
-          <div className="flex flex-col md:items-end md:text-right pb-1 md:pb-0">
+          {/* Right Column: OUR READING CORNER → (Hanya di md+ desktop; di mobile pindah ke slot kartu ke-3) */}
+          <div className="hidden md:flex flex-col md:items-end md:text-right pb-1 md:pb-0">
             <Link
               href={header.journalLinkUrl || '/news'}
               className="group inline-flex items-center gap-1.5 font-sans text-xs sm:text-sm font-medium tracking-wider text-white uppercase transition-colors hover:text-white/70"
@@ -103,12 +103,13 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
           </div>
         </RevealOnScroll>
 
-        {/* ── CARD BOXES CONTAINER (2 MENYAMPING DALAM 1 FRAME DI MOBILE & DESKTOP) ── */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:gap-6">
-          {articles.map((item, idx) => (
+        {/* ── CARD BOXES CONTAINER (2 KOLOM DI MOBILE, 3 KOLOM DI DESKTOP) ── */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 md:gap-6">
+          {/* 1. SLOT ARTIKEL #1 & #2 (Tampil di Mobile & Desktop) */}
+          {articles.slice(0, 2).map((item, idx) => (
             <RevealOnScroll key={`${item.id}-${idx}`} variant="editorial" delayMs={idx * 120}>
-              <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-2.5 sm:p-4 md:p-5 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                <Link href={item.href || '/news'} className="relative aspect-[4/3] sm:aspect-[16/10] w-full overflow-hidden bg-black/5 block">
+              <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 p-2.5 sm:p-3.5 md:p-4 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                <Link href={item.href || '/news'} className="relative aspect-[4/3] sm:aspect-[16/10] md:aspect-[4/3] w-full overflow-hidden bg-black/5 block">
                   <StudioImage
                     src={item.image}
                     alt={item.title}
@@ -118,17 +119,17 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
                   />
                 </Link>
 
-                <div className="flex flex-1 flex-col justify-between pt-2.5 sm:pt-4">
+                <div className="flex flex-1 flex-col justify-between pt-2 sm:pt-3">
                   <div>
-                    <span className="text-[9px] sm:text-[10px] md:text-[11px] font-medium tracking-wide text-black/60">
+                    <span className="block text-[8px] sm:text-[9.5px] md:text-[10.5px] font-medium tracking-wide text-black/60 leading-tight">
                       {item.date}
                     </span>
                     <Link href={item.href || '/news'}>
-                      <h4 className="mt-1 font-sans text-[10px] sm:text-xs md:text-sm font-semibold tracking-wider text-black uppercase transition-colors group-hover:text-black/70 line-clamp-2">
+                      <h4 className="mt-1 font-sans text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide text-black uppercase transition-colors group-hover:text-black/70 line-clamp-2">
                         {item.title}
                       </h4>
                     </Link>
-                    <p className="mt-1 sm:mt-2 text-[9px] sm:text-[10px] md:text-[11px] leading-relaxed text-black/70 line-clamp-2 sm:line-clamp-3">
+                    <p className="mt-1 text-[8.5px] sm:text-[9.5px] md:text-[10.5px] leading-relaxed text-black/70 line-clamp-2 sm:line-clamp-3">
                       {item.excerpt}
                     </p>
                   </div>
@@ -136,6 +137,52 @@ export function JournalSection({ initialArticles, initialHeader }: JournalSectio
               </article>
             </RevealOnScroll>
           ))}
+
+          {/* 2. SLOT #3: ARTIKEL KE-3 (Hanya tampil di Desktop md+, di mobile HAPUS total) */}
+          {articles[2] && (
+            <div className="hidden md:block h-full">
+              <RevealOnScroll key={`${articles[2].id}-2`} variant="editorial" delayMs={240}>
+                <article className="group flex h-full flex-col overflow-hidden bg-white border border-white/10 md:p-4 text-black shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                  <Link href={articles[2].href || '/news'} className="relative aspect-[4/3] w-full overflow-hidden bg-black/5 block">
+                    <StudioImage
+                      src={articles[2].image}
+                      alt={articles[2].title}
+                      fill
+                      preset="journal"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </Link>
+
+                  <div className="flex flex-1 flex-col justify-between pt-3">
+                    <div>
+                      <span className="block text-[10.5px] font-medium tracking-wide text-black/60 leading-tight truncate">
+                        {articles[2].date}
+                      </span>
+                      <Link href={articles[2].href || '/news'}>
+                        <h4 className="mt-1 font-sans text-sm font-semibold tracking-wide text-black uppercase transition-colors group-hover:text-black/70 line-clamp-2">
+                          {articles[2].title}
+                        </h4>
+                      </Link>
+                      <p className="mt-1 text-[10.5px] leading-relaxed text-black/70 line-clamp-3">
+                        {articles[2].excerpt}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </RevealOnScroll>
+            </div>
+          )}
+        </div>
+
+        {/* ── MOBILE CTA LINK: OUR READING CORNER → (Pindah ke bawah 2 kartu di mobile, rata kanan elegan) ── */}
+        <div className="mt-4 flex justify-end md:hidden">
+          <Link
+            href={header.journalLinkUrl || '/news'}
+            className="group inline-flex items-center gap-1.5 font-sans text-[11px] font-medium tracking-wider text-white uppercase transition-colors hover:text-white/70"
+          >
+            <span>{header.journalTitle || 'OUR READING CORNER'}</span>
+            <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
+          </Link>
         </div>
       </div>
     </section>

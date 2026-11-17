@@ -327,7 +327,7 @@ export async function deleteArticle(id: string): Promise<boolean> {
  * shape so the homepage JournalSection can display them dynamically from DB.
  * Falls back to empty array if DB is unreachable (homepage will use sections.json default).
  */
-export async function getLatestArticlesForJournal(limit = 2): Promise<
+export async function getLatestArticlesForJournal(limit = 3): Promise<
   Array<{ id: string; title: string; date: string; excerpt: string; image: string; href: string }>
 > {
   try {

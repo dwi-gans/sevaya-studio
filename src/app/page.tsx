@@ -26,7 +26,7 @@ export default async function HomePage() {
       console.warn('getSiteSections fallback error:', err);
       return DEFAULT_SITE_SECTIONS;
     }),
-    getLatestArticlesForJournal(2).catch((err) => {
+    getLatestArticlesForJournal(3).catch((err) => {
       console.warn('getLatestArticlesForJournal fallback error:', err);
       return [];
     }),
@@ -36,11 +36,57 @@ export default async function HomePage() {
     Array.isArray(products) && products.length > 0 ? products : DEFAULT_BEST_SELLERS;
   const activeSections = sections || DEFAULT_SITE_SECTIONS;
 
-  // Gunakan artikel terbaru dari DB jika ada; fallback ke activeSections.journal (manual config)
-  const journalArticles =
-    latestArticles && latestArticles.length > 0
-      ? latestArticles
-      : activeSections?.journal || DEFAULT_SITE_SECTIONS.journal;
+  // Susun artikel jurnal: ikuti urutan pilihan admin (via href/slug) tapi selalu pakai gambar & data terbaru dari DB.
+  // Pastikan selalu genap 3 artikel agar tampil 3 kotak di beranda (desktop & mobile).
+  let journalArticles: typeof DEFAULT_SITE_SECTIONS.journal = [];
+  const adminJournal = activeSections?.journal || [];
+
+  if (latestArticles && latestArticles.length > 0) {
+    const hydrated = adminJournal.map((slot) => {
+      const slugFromHref = slot.href ? slot.href.split('/').pop() : null;
+      const dbArticle = slugFromHref
+        ? latestArticles.find((a) => a.href.endsWith(`/${slugFromHref}`))
+        : null;
+      // Kalau artikel dari slot admin ditemukan di DB, gunakan data DB (gambar terbaru)
+      // Kalau tidak ditemukan (artikel dihapus/belum publish), gunakan data slot admin apa adanya
+      return dbArticle ?? slot;
+    });
+
+    // Jika adminJournal kurang dari 3, tambahkan artikel terbaru dari DB agar selalu 3 kotak
+    const usedSlugs = new Set(
+      hydrated
+        .map((h) => (h.href ? h.href.split('/').pop() : ''))
+        .filter(Boolean)
+    );
+    for (const art of latestArticles) {
+      if (hydrated.length >= 3) break;
+      const artSlug = art.href ? art.href.split('/').pop() : '';
+      if (artSlug && !usedSlugs.has(artSlug)) {
+        hydrated.push(art);
+        usedSlugs.add(artSlug);
+      }
+    }
+    journalArticles = hydrated.slice(0, 3);
+  } else if (adminJournal.length > 0) {
+    journalArticles = [...adminJournal];
+  }
+
+  // Pengaman jika masih kurang dari 3: lengkapi dari DEFAULT_SITE_SECTIONS.journal
+  if (journalArticles.length < 3) {
+    const usedSlugs = new Set(
+      journalArticles
+        .map((h) => (h.href ? h.href.split('/').pop() : ''))
+        .filter(Boolean)
+    );
+    for (const def of DEFAULT_SITE_SECTIONS.journal) {
+      if (journalArticles.length >= 3) break;
+      const defSlug = def.href ? def.href.split('/').pop() : '';
+      if (!defSlug || !usedSlugs.has(defSlug)) {
+        journalArticles.push(def);
+        if (defSlug) usedSlugs.add(defSlug);
+      }
+    }
+  }
 
   return (
     <main className="relative flex min-h-screen w-full flex-col bg-[#FFFFFF]">

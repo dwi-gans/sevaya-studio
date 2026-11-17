@@ -15,7 +15,7 @@ export async function GET() {
       .select('id, slug, title, date, excerpt, image')
       .eq('published', true)
       .order('created_at', { ascending: false })
-      .limit(2);
+      .limit(3);
 
     if (error || !data || data.length === 0) {
       return NextResponse.json({ articles: [] });

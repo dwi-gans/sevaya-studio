@@ -402,21 +402,32 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   journal: [
     {
       id: 'journal-1',
-      title: 'Rangkuman 26°Rhapsody: Menanam, Mekar, Berbuah, dan Arti Bertumbuh',
-      date: '5 Okt 2026 • Catatan Bab',
+      title: 'POP-UP VOL.1 - Andalusia in Bloom',
+      date: 'September 9-10, 2026 • Event',
       excerpt:
-        'Pertumbuhan bukanlah panen sekali jadi. Ini adalah kesabaran merawat akar kita, menyadari bahwa setiap diri bertumbuh dengan caranya masing-masing...',
-      image: '/images/catalog/catalog-11.jpg',
-      href: '/news',
+        'Some stories begin with a place, and some places stay with us long after we leave. For our founder, that place was Spain...',
+      image:
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240875994_5q50_DSCF5960.jpg',
+      href: '/news/sevaya-hadir-dengan-booth-abaya-di-event-wtp',
     },
     {
       id: 'journal-2',
-      title: 'Saatnya Membuka Lembaran Baru dan Merayakan Hal-Hal Sederhana',
-      date: '26 Sep 2026 • Refleksi',
+      title: 'A Journey Toward More Thoughtful Fashion',
+      date: 'Oct 18, 2026 • Journal',
       excerpt:
-        'Belajar merangkul transformasi kecil dan hening dalam kehidupan modest masa kini dengan siluet sejuk dan bernapas alami...',
-      image: '/images/catalog/catalog-12.jpg',
-      href: '/news',
+        'Our journey began with a simple thought: fashion does not always have to move faster to be meaningful...',
+      image: '/images/catalog/catalog-11.jpg',
+      href: '/news/the-art-of-fewer-better-choices',
+    },
+    {
+      id: 'journal-3',
+      title: 'Beyond What We Wear',
+      date: 'September 1, 2026 • Journal',
+      excerpt:
+        'We believe that what we receive is never entirely ours. Every provision is a blessing from Allah...',
+      image:
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794243371694_rwql_SEVAYA_Instagram_Post_-_3.png',
+      href: '/news/beyond-what-we-wear',
     },
   ],
   lookbook: [

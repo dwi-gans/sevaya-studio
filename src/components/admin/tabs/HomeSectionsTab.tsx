@@ -232,6 +232,10 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           const j = [...(next.journal?.length ? next.journal : DEFAULT_SITE_SECTIONS.journal)];
           if (j[1]) j[1] = { ...j[1], image: publicUrl };
           next = { ...next, journal: j };
+        } else if (target === 'journal-2') {
+          const j = [...(next.journal?.length ? next.journal : DEFAULT_SITE_SECTIONS.journal)];
+          if (j[2]) j[2] = { ...j[2], image: publicUrl };
+          next = { ...next, journal: j };
         }
         saveSiteSections(next);
         return next;
@@ -353,6 +357,11 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
     (a) =>
       a.title === journal[1]?.title ||
       (journal[1]?.href && journal[1].href.endsWith(`/${a.slug}`))
+  );
+  const selectedArt2 = availableArticles.find(
+    (a) =>
+      a.title === journal[2]?.title ||
+      (journal[2]?.href && journal[2].href.endsWith(`/${a.slug}`))
   );
 
   const handleSaveAll = () => {
@@ -1296,7 +1305,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             </h3>
           </div>
           <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-[9px] font-semibold text-black/60 border border-black/10">
-            2 Card Berdampingan
+            3 Card Berdampingan
           </span>
         </div>
 
@@ -1399,15 +1408,15 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
           </div>
 
           <label className="text-[10px] font-bold tracking-wider text-black/60 uppercase block">
-            2 Slot Kartu Artikel (Tampil Berdampingan di Beranda Toko)
+            3 Slot Kartu Artikel (Tampil Berdampingan di Beranda Toko)
           </label>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Article Slot 1 */}
             <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/[0.03] p-3.5">
               <div className="flex items-center justify-between border-b border-black/10 pb-2">
                 <span className="text-[10px] font-bold tracking-widest text-black/70 uppercase">
-                  SLOT ARTIKEL #1 (KIRI)
+                  SLOT ARTIKEL #1
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   {selectedArt0 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
@@ -1473,7 +1482,7 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
             <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/[0.03] p-3.5">
               <div className="flex items-center justify-between border-b border-black/10 pb-2">
                 <span className="text-[10px] font-bold tracking-widest text-black/70 uppercase">
-                  SLOT ARTIKEL #2 (KANAN)
+                  SLOT ARTIKEL #2
                 </span>
                 <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   {selectedArt1 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
@@ -1530,6 +1539,72 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
                   </p>
                   <div className="pt-2 flex items-center justify-between border-t border-black/10 text-[10px] text-black/40 font-mono">
                     <span className="truncate">Tautan: {journal[1]?.href || '/news'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Article Slot 3 */}
+            <div className="flex flex-col gap-3 rounded-xl border border-black/15 bg-black/[0.03] p-3.5">
+              <div className="flex items-center justify-between border-b border-black/10 pb-2">
+                <span className="text-[10px] font-bold tracking-widest text-black/70 uppercase">
+                  SLOT ARTIKEL #3
+                </span>
+                <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  {selectedArt2 ? '✓ Terhubung ke Jurnal' : 'Belum Dipilih'}
+                </span>
+              </div>
+
+              {/* Selector dari News */}
+              <div className="space-y-1.5 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <label className="text-[10px] font-bold text-black uppercase block">
+                  Pilih Artikel untuk Ditampilkan:
+                </label>
+                <select
+                  value={selectedArt2?.id || ''}
+                  onChange={(e) => handleSelectArticleForSlot(2, e.target.value)}
+                  className="w-full rounded-md border border-black/25 bg-white px-2.5 py-1.5 text-xs text-black font-medium focus:border-black focus:outline-none"
+                >
+                  <option value="">-- Pilih Artikel dari Database News --</option>
+                  {availableArticles.map((art) => (
+                    <option key={art.id} value={art.id}>
+                      [{art.category}] {art.title} ({art.date})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Read-Only Live Preview Card (Terhubung langsung ke artikel) */}
+              <div className="space-y-2 bg-white p-3 rounded-lg border border-black/15 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-black/50 uppercase tracking-wider">
+                    Preview Tampilan di Beranda:
+                  </span>
+                  <span className="text-[8.5px] font-medium text-black/40 italic">
+                    Read-only (sinkron otomatis)
+                  </span>
+                </div>
+
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10 bg-black/5">
+                  <AdminImgPreview
+                    src={journal[2]?.image}
+                    fallback="/images/catalog/catalog-11.jpg"
+                    alt={journal[2]?.title || 'Artikel 3'}
+                  />
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
+                    {journal[2]?.date || 'Tanggal & Kategori'}
+                  </span>
+                  <h4 className="text-xs font-bold text-black leading-snug line-clamp-2">
+                    {journal[2]?.title || 'Pilih artikel di atas...'}
+                  </h4>
+                  <p className="text-[11px] text-black/60 leading-relaxed line-clamp-3">
+                    {journal[2]?.excerpt || 'Ringkasan artikel akan tampil di sini...'}
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-black/10 text-[10px] text-black/40 font-mono">
+                    <span className="truncate">Tautan: {journal[2]?.href || '/news'}</span>
                   </div>
                 </div>
               </div>
