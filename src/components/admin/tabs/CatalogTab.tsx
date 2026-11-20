@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import type { DbProduct, ProductSwatch } from '@/integrations/supabase';
+import { CatalogGridSkeleton } from '@/components/admin/shared/AdminSkeleton';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 type Product = DbProduct;
 
 interface CatalogTabProps {
@@ -113,11 +115,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
 
       {/* Product Grid */}
       {isLoading && products.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-2xl border border-black/15 bg-white">
-          <span className="text-xs tracking-wider text-black/70 uppercase">
-            Memuat data produk...
-          </span>
-        </div>
+        <CatalogGridSkeleton count={8} />
       ) : filteredProducts.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-black/15 bg-white p-6 text-center">
           <Icon name="shopping_bag" size={28} className="text-black/70" />
@@ -134,11 +132,16 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
-          {filteredProducts.map((product) => (
-            <div
+          {filteredProducts.map((product, idx) => (
+            <RevealOnScroll
               key={product.id}
-              className="group flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/30"
+              delayMs={Math.min(idx * 30, 240)}
+              durationMs={380}
+              variant="editorial"
             >
+              <div
+                className="group flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] transition hover:border-black/30 h-full"
+              >
               {/* Thumbnail Image */}
               <div className="relative aspect-[3/4] w-full bg-black/5">
                 <Image
@@ -330,6 +333,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({
                 </div>
               </div>
             </div>
+          </RevealOnScroll>
           ))}
         </div>
       )}

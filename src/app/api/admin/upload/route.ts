@@ -72,7 +72,21 @@ export async function GET(req: NextRequest) {
         };
       });
 
-    return NextResponse.json({ success: true, files });
+    const totalBytes = data.reduce((acc, item) => acc + (item.metadata?.size || 0), 0);
+    const maxQuotaGb = Number(process.env.SUPABASE_STORAGE_MAX_GB) || 1;
+    const maxBytes = maxQuotaGb * 1024 * 1024 * 1024;
+    const percentUsed = Math.min(100, Math.max(0.1, Number(((totalBytes / maxBytes) * 100).toFixed(1))));
+
+    const storageStats = {
+      totalBytes,
+      formattedSize: formatBytes(totalBytes),
+      maxBytes,
+      maxFormatted: `${maxQuotaGb} GB`,
+      percentUsed,
+      fileCount: files.length,
+    };
+
+    return NextResponse.json({ success: true, files, storageStats });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Gagal memuat berkas';
     return NextResponse.json({ success: false, error: msg }, { status: 500 });

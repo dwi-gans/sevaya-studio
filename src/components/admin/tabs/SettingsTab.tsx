@@ -17,6 +17,7 @@ import {
   Clock,
   Check,
 } from 'lucide-react';
+import { SettingsFormSkeleton } from '@/components/admin/shared/AdminSkeleton';
 
 interface ShippingOriginData {
   shipper_name: string;
@@ -255,10 +256,7 @@ export const SettingsTab: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
-            <RefreshCw className="w-6 h-6 animate-spin text-black/40" />
-            <p className="text-xs text-black/50">Memuat konfigurasi alamat dari cloud...</p>
-          </div>
+          <SettingsFormSkeleton />
         ) : (
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

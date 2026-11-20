@@ -10,6 +10,8 @@ import {
 import { DbProduct } from '@/integrations/supabase/products';
 import { Icon } from '@/components/ui/Icon';
 import StockMutationModal, { REASON_LABELS } from '@/components/admin/modals/StockMutationModal';
+import { InventoryGroupedSkeleton, InventoryTelemetrySkeleton, InventoryTableSkeleton } from '@/components/admin/shared/AdminSkeleton';
+import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
 interface InventoryTelemetry {
   totalVariants: number;
@@ -680,12 +682,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
 
       {/* Loading State */}
       {loading ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-          <Icon name="refresh" size={24} className="animate-spin text-black/40" />
-          <span className="text-xs font-semibold tracking-wider text-black/60 uppercase">
-            Memuat data stok &amp; inventaris...
-          </span>
-        </div>
+        <InventoryGroupedSkeleton count={4} />
       ) : activeView === 'grouped' ? (
         /* ═══════════════════════════════════════════════════════════════
            MODE 1: HIERARCHICAL / GROUPED BY PARENT PRODUCT (DEFAULT)
@@ -700,21 +697,23 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
               </p>
             </div>
           ) : groupedProducts.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border border-black/15 bg-white">
-              <Icon name="refresh" size={20} className="animate-spin text-black/30" />
-              <span className="text-xs text-black/40">Memuat produk...</span>
-            </div>
+            <InventoryGroupedSkeleton count={3} />
           ) : (
-            groupedProducts.map((prod) => {
+            groupedProducts.map((prod, idx) => {
               const isExpanded = expandedProductIds[prod.id] !== false;
               const status = getStockStatus(prod.totalStock, 3);
               const badge = STATUS_BADGE[status];
 
               return (
-                <div
+                <RevealOnScroll
                   key={prod.id}
-                  className="rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden transition"
+                  delayMs={Math.min(idx * 30, 180)}
+                  durationMs={350}
+                  variant="editorial"
                 >
+                  <div
+                    className="rounded-xl sm:rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden transition"
+                  >
                   {/* Product Card Header Summary */}
                   <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
                     <div className="flex items-center gap-3 min-w-0">
@@ -992,7 +991,8 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
                       })()}
                     </div>
                   )}
-                </div>
+                  </div>
+                </RevealOnScroll>
               );
             })
           )}
@@ -1008,10 +1008,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
               <p className="text-xs font-bold text-black">Tidak ada varian yang cocok</p>
             </div>
           ) : filteredVariants.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center gap-2">
-              <Icon name="refresh" size={20} className="animate-spin text-black/30" />
-              <span className="text-xs text-black/40">Memuat varian...</span>
-            </div>
+            <InventoryTableSkeleton rows={5} />
           ) : (
             <div
               id="table-container-flat"

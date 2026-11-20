@@ -30,6 +30,7 @@ import { AdminTab, ImagePickerTarget } from '@/components/admin/adminTypes';
 import { AdminLoginView } from '@/components/admin/shared/AdminLoginView';
 import { AdminSidebar } from '@/components/admin/shared/AdminSidebar';
 import { AdminHeader } from '@/components/admin/shared/AdminHeader';
+import { AdminPageAuthSkeleton } from '@/components/admin/shared/AdminSkeleton';
 
 // Admin Modals
 import { ProductModal, ProductFormData } from '@/components/admin/modals/ProductModal';
@@ -1620,16 +1621,7 @@ export default function AdminPage() {
 
   // 0. AUTH HYDRATION CHECK
   if (!isClient || !authChecked) {
-    return (
-      <div className="min-h-screen w-full bg-[#f9f9f8] text-[#1a1c1c] antialiased flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1a1c1c] border-t-transparent" />
-          <span className="font-mono text-xs tracking-wider text-[#514346] uppercase">
-            Memuat Sevaya Studio...
-          </span>
-        </div>
-      </div>
-    );
+    return <AdminPageAuthSkeleton />;
   }
 
   // 1. ADMIN LOGIN VIEW
@@ -1679,92 +1671,94 @@ export default function AdminPage() {
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
-        {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
+        <div key={activeTab} className="animate-luxury-fade-up">
+          {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
 
-        {activeTab === 'inventory' && (
-          <InventoryTab products={products} onStockMutated={handleStockMutated} />
-        )}
+          {activeTab === 'inventory' && (
+            <InventoryTab products={products} onStockMutated={handleStockMutated} />
+          )}
 
-        {activeTab === 'catalog' && (
-          <CatalogTab
-            products={products}
-            filteredProducts={filteredProducts}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onOpenCreateModal={handleOpenCreateModal}
-            onOpenEditModal={handleOpenEditModal}
-            onToggleHide={handleToggleHide}
-            onSetBadge={handleSetBadge}
-            onDeleteProduct={handleDeleteProduct}
-            onRefresh={handleRefreshProducts}
-          />
-        )}
+          {activeTab === 'catalog' && (
+            <CatalogTab
+              products={products}
+              filteredProducts={filteredProducts}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onOpenCreateModal={handleOpenCreateModal}
+              onOpenEditModal={handleOpenEditModal}
+              onToggleHide={handleToggleHide}
+              onSetBadge={handleSetBadge}
+              onDeleteProduct={handleDeleteProduct}
+              onRefresh={handleRefreshProducts}
+            />
+          )}
 
-        {activeTab === 'section-home' && (
-          <HomeSectionsTab
-            sections={sections}
-            setSections={setSections}
-            articles={articles}
-            onOpenImagePicker={(target) => {
-              setImagePickerTarget(target);
-              setIsImagePickerOpen(true);
-            }}
-            onFileUploadDirect={handleSectionFileUpload}
-            onOpenCropper={openCropperForTarget}
-            showToast={showToast}
-          />
-        )}
+          {activeTab === 'section-home' && (
+            <HomeSectionsTab
+              sections={sections}
+              setSections={setSections}
+              articles={articles}
+              onOpenImagePicker={(target) => {
+                setImagePickerTarget(target);
+                setIsImagePickerOpen(true);
+              }}
+              onFileUploadDirect={handleSectionFileUpload}
+              onOpenCropper={openCropperForTarget}
+              showToast={showToast}
+            />
+          )}
 
-        {activeTab === 'section-news' && (
-          <NewsTab
-            articles={articles}
-            newsFilterCategory={newsFilterCategory}
-            setNewsFilterCategory={setNewsFilterCategory}
-            newsSearchQuery={newsSearchQuery}
-            setNewsSearchQuery={setNewsSearchQuery}
-            onOpenCreateArticleModal={handleOpenCreateArticleModal}
-            onOpenEditArticleModal={handleOpenEditArticleModal}
-            onToggleFeaturedArticle={handleToggleFeaturedArticle}
-            onDeleteArticle={handleDeleteArticle}
-          />
-        )}
+          {activeTab === 'section-news' && (
+            <NewsTab
+              articles={articles}
+              newsFilterCategory={newsFilterCategory}
+              setNewsFilterCategory={setNewsFilterCategory}
+              newsSearchQuery={newsSearchQuery}
+              setNewsSearchQuery={setNewsSearchQuery}
+              onOpenCreateArticleModal={handleOpenCreateArticleModal}
+              onOpenEditArticleModal={handleOpenEditArticleModal}
+              onToggleFeaturedArticle={handleToggleFeaturedArticle}
+              onDeleteArticle={handleDeleteArticle}
+            />
+          )}
 
-        {activeTab === 'section-lookbook' && (
-          <LookbookTab
-            sections={sections}
-            setSections={setSections}
-            selectedLookbookVolId={selectedLookbookVolId}
-            setSelectedLookbookVolId={setSelectedLookbookVolId}
-            onOpenImagePicker={(target) => {
-              setImagePickerTarget(target);
-              setIsImagePickerOpen(true);
-            }}
-            showToast={showToast}
-            products={products}
-          />
-        )}
+          {activeTab === 'section-lookbook' && (
+            <LookbookTab
+              sections={sections}
+              setSections={setSections}
+              selectedLookbookVolId={selectedLookbookVolId}
+              setSelectedLookbookVolId={setSelectedLookbookVolId}
+              onOpenImagePicker={(target) => {
+                setImagePickerTarget(target);
+                setIsImagePickerOpen(true);
+              }}
+              showToast={showToast}
+              products={products}
+            />
+          )}
 
-        {activeTab === 'section-conscious' && (
-          <ConsciousTab
-            sections={sections}
-            setSections={setSections}
-            showToast={showToast}
-            onOpenImagePicker={(target) => {
-              setImagePickerTarget(target);
-              setIsImagePickerOpen(true);
-            }}
-          />
-        )}
+          {activeTab === 'section-conscious' && (
+            <ConsciousTab
+              sections={sections}
+              setSections={setSections}
+              showToast={showToast}
+              onOpenImagePicker={(target) => {
+                setImagePickerTarget(target);
+                setIsImagePickerOpen(true);
+              }}
+            />
+          )}
 
-        {activeTab === 'media' && (
-          <MediaLibraryTab
-            onFileUpload={handleFileUpload}
-            showToast={showToast}
-          />
-        )}
+          {activeTab === 'media' && (
+            <MediaLibraryTab
+              onFileUpload={handleFileUpload}
+              showToast={showToast}
+            />
+          )}
 
-        {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'settings' && <SettingsTab />}
+        </div>
       </main>
 
       {/* Product CRUD Modal */}
