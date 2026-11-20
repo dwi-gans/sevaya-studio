@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { SettingsFormSkeleton } from '@/components/admin/shared/AdminSkeleton';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
 
 interface ShippingOriginData {
   shipper_name: string;
@@ -41,7 +42,17 @@ interface AreaSearchResult {
   administrative_division_level_3_name?: string;
 }
 
-export const SettingsTab: React.FC = () => {
+interface SettingsTabProps {
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
+}
+
+export const SettingsTab: React.FC<SettingsTabProps> = ({
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
+}) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -180,34 +191,26 @@ export const SettingsTab: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-5 px-1 sm:px-0">
-      {/* Header */}
-      <div className="flex flex-col gap-1 pb-2">
-        <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
-          Sistem &amp; Pengaturan
-        </span>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h2 className="text-base sm:text-xl font-bold tracking-tight text-black">
-            Pengaturan Alamat Penjemputan &amp; Sistem
-          </h2>
-          {formData.updated_at && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-black/50 font-normal">
-              <Clock className="w-3.5 h-3.5 text-black/40" />
-              Terakhir diperbarui:{' '}
-              {new Date(formData.updated_at).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-          )}
-        </div>
-        <p className="text-[11px] sm:text-xs text-black/60 mt-0">
-          Atur alamat toko/gudang penjemputan paket kurir Biteship. Anda dapat mengubah alamat kapan saja jika berpindah lokasi gudang/toko.
-        </p>
-      </div>
+    <div className="w-full">
+      <AdminPageHeader
+        title="Pengaturan Studio & CDN"
+        subtitle="Konfigurasi lokasi asal penjemputan paket kurir Biteship, kontak, dan integrasi store."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || loading}
+          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+        >
+          <Save className="w-3.5 h-3.5 stroke-2" />
+          <span>{saving ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>
+        </button>
+      </AdminPageHeader>
+
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-5">
 
       {/* Alert / Feedback Notification */}
       {feedback && (
@@ -615,6 +618,7 @@ export const SettingsTab: React.FC = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -2,6 +2,8 @@ import React from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { Article, ARTICLE_CATEGORIES } from '@/integrations/supabase/articles';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
+import { Plus } from 'lucide-react';
 
 interface NewsTabProps {
   articles: Article[];
@@ -13,6 +15,9 @@ interface NewsTabProps {
   onOpenEditArticleModal: (art: Article) => void;
   onToggleFeaturedArticle: (id: string) => void;
   onDeleteArticle: (id: string, title: string) => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 export const NewsTab: React.FC<NewsTabProps> = ({
@@ -25,6 +30,9 @@ export const NewsTab: React.FC<NewsTabProps> = ({
   onOpenEditArticleModal,
   onToggleFeaturedArticle,
   onDeleteArticle,
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
 }) => {
   const filtered = articles.filter((a) => {
     const matchesCat =
@@ -39,19 +47,25 @@ export const NewsTab: React.FC<NewsTabProps> = ({
   });
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4">
-      {/* Top Toolbar */}
-      <div className="pb-2">
-        <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-          Editorial &amp; Storefront
-        </span>
-        <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-          Manajemen News &amp; Editorial (Jurnal)
-        </h2>
-        <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-          Kelola artikel berita, jurnal filosofi brand, dan wawasan busana modest.
-        </p>
-      </div>
+    <div className="w-full">
+      <AdminPageHeader
+        title="News & Editorial (Jurnal)"
+        subtitle="Publikasi artikel, kabar peluncuran koleksi, dan cerita modest fashion."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={onOpenCreateArticleModal}
+          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5 stroke-2" />
+          <span>Tulis Artikel</span>
+        </button>
+      </AdminPageHeader>
+
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4">
 
       {/* Telemetry Summary Card */}
       <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
@@ -246,6 +260,7 @@ export const NewsTab: React.FC<NewsTabProps> = ({
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

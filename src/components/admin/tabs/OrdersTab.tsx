@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { PanelLeft, RefreshCw, Store } from 'lucide-react';
 import { detectOrderCourier } from '@/lib/courier-utils';
 import { ShippingLabelModal } from '../ShippingLabelModal';
 import { InventoryTableSkeleton } from '../shared/AdminSkeleton';
+import { AdminPageHeader } from '../shared/AdminPageHeader';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -552,9 +555,17 @@ function OrderDetailModal({
 
 interface OrdersTabProps {
   onOrdersCountChange?: (count: number) => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
-export function OrdersTab({ onOrdersCountChange }: OrdersTabProps = {}) {
+export function OrdersTab({
+  onOrdersCountChange,
+  isSidebarOpen = true,
+  toggleSidebar,
+  setIsMobileMenuOpen,
+}: OrdersTabProps = {}) {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -728,36 +739,33 @@ export function OrdersTab({ onOrdersCountChange }: OrdersTabProps = {}) {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
-        <div>
-          <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
-            Transaksi &amp; Logistik
-          </span>
-          <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-            Pesanan &amp; Pengiriman
-          </h2>
-          <p className="text-[11px] text-black/60 mt-0">
-            Pantau transaksi pelanggan, status pengiriman kurir, dan nomor resi secara real-time.
-          </p>
-        </div>
+    <div className="w-full">
+      {/* ===== Header Sesuai Desain SEVAYA ===== */}
+      <AdminPageHeader
+        title="Pesanan & Pengiriman"
+        subtitle="Pantau transaksi pelanggan, status pengiriman kurir, dan nomor resi secara real-time."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <span className="flex items-center gap-2 text-xs text-[#6b655e] whitespace-nowrap before:content-[''] before:w-1.5 before:h-1.5 before:rounded-full before:bg-[#1f7a4d]">
+          Diperbarui <time className="font-mono">{lastRefresh ? lastRefresh.toLocaleTimeString('id-ID') : '12.23.49'}</time>
+        </span>
 
-        <div className="flex items-center gap-3">
-          {lastRefresh && (
-            <span className="text-[11px] text-black/50">
-              Update: {lastRefresh.toLocaleTimeString('id-ID')}
-            </span>
-          )}
-          <button
-            onClick={() => fetchOrders(true, true)}
-            disabled={refreshing}
-            className="rounded-full border border-black/20 bg-white px-3.5 py-1.5 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 active:scale-95 disabled:opacity-40"
-          >
-            {refreshing ? '↻ Menyinkronkan...' : '↻ Segarkan & Sinkron'}
-          </button>
-        </div>
-      </div>
+        <button
+          type="button"
+          onClick={() => fetchOrders(true, true)}
+          disabled={refreshing}
+          className="h-10 px-4.5 flex items-center gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          title="Sinkronkan data pesanan"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? 'Menyinkronkan...' : 'Sinkron'}</span>
+        </button>
+      </AdminPageHeader>
+
+      {/* Konten Halaman */}
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-6">
 
       {/* Unified KPI Summary Card */}
       <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3.5 sm:space-y-5">
@@ -1084,6 +1092,7 @@ export function OrdersTab({ onOrdersCountChange }: OrdersTabProps = {}) {
         isOpen={Boolean(printOrder)}
         onClose={() => setPrintOrder(null)}
       />
+      </div>
     </div>
   );
 }

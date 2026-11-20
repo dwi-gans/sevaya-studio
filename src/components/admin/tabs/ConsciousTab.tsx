@@ -11,12 +11,17 @@ import {
 } from '@/integrations/supabase';
 import { uploadFileToStorage } from '@/integrations/supabase/storage';
 import type { ImagePickerTarget } from '../adminTypes';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
+import { Save } from 'lucide-react';
 
 interface ConsciousTabProps {
   sections: SiteSectionsConfig;
   setSections?: React.Dispatch<React.SetStateAction<SiteSectionsConfig>>;
   onOpenImagePicker: (target: ImagePickerTarget) => void;
   showToast?: (msg: string) => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 export const ConsciousTab: React.FC<ConsciousTabProps> = ({
@@ -24,6 +29,9 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   setSections,
   onOpenImagePicker,
   showToast,
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
 }) => {
   const [cfg, setCfg] = useState<ConsciousPageConfig>(() => ({
     ...DEFAULT_CONSCIOUS_PAGE,
@@ -250,19 +258,26 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
   );
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4 pb-24">
-      {/* Header */}
-      <div className="pb-2">
-        <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-          About • Copywriting & Media
-        </span>
-        <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-          Halaman About SEVAYA
-        </h2>
-        <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-          Edit semua teks copywriting dan foto di halaman About/Conscious. Visual Page Mirror — urutan sama dengan halaman user.
-        </p>
-      </div>
+    <div className="w-full">
+      <AdminPageHeader
+        title="Tentang Toko (About)"
+        subtitle="Cerita komitmen keberlanjutan, material etis, dan filosofi studio."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={handleSaveAll}
+          disabled={saving}
+          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+        >
+          <Save className="w-3.5 h-3.5 stroke-2" />
+          <span>{saving ? 'Menyimpan...' : saved ? 'Tersimpan ✓' : 'Simpan Perubahan'}</span>
+        </button>
+      </AdminPageHeader>
+
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4 pb-24">
 
       {/* ── 1. HERO BANNER ─────────────────────────────────────────────── */}
       <SectionCard num="1" title="Banner Hero Utama">
@@ -428,5 +443,6 @@ export const ConsciousTab: React.FC<ConsciousTabProps> = ({
         </button>
       </div>
     </div>
+  </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Crop } from 'lucide-react';
+import { Crop, Save } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
 import {
   SiteSectionsConfig,
   DEFAULT_SITE_SECTIONS,
@@ -163,6 +164,9 @@ interface HomeSectionsTabProps {
   onFileUploadDirect?: (target: ImagePickerTarget, file: File) => void | Promise<void>;
   onOpenCropper?: (fileOrUrl: File | string, target: ImagePickerTarget, mode?: 'desktop' | 'mobile') => void;
   showToast: (msg: string) => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
@@ -173,6 +177,9 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   onFileUploadDirect,
   onOpenCropper,
   showToast,
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
 }) => {
   const [heroPreviewMode, setHeroPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const hero = sections.hero || DEFAULT_SITE_SECTIONS.hero;
@@ -381,23 +388,25 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4 pb-20">
-      {/* ── HEADER TITLE & ACTION ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/10 pb-4">
-        <div>
-          <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase">
-            Visual Page Editor
-          </span>
-          <h2 className="text-base sm:text-xl font-bold tracking-tight text-black">
-            Edit Halaman Beranda (Homepage)
-          </h2>
-          <p className="text-[11px] text-black/60 mt-0.5">
-            Layout editor ini mengalir persis dari atas ke bawah sesuai urutan tampilan beranda toko Anda.
-          </p>
-        </div>
+    <div className="w-full">
+      <AdminPageHeader
+        title="Beranda (Homepage)"
+        subtitle="Tata letak etalase, banner hero, dan kurasi konten halaman depan toko."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={handleSaveAll}
+          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+        >
+          <Save className="w-3.5 h-3.5 stroke-2" />
+          <span>Simpan Perubahan</span>
+        </button>
+      </AdminPageHeader>
 
-
-      </div>
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4 pb-20">
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 1: HERO SECTION (BANNER UTAMA) */}
@@ -1632,5 +1641,6 @@ export const HomeSectionsTab: React.FC<HomeSectionsTabProps> = ({
         </button>
       </div>
     </div>
+  </div>
   );
 };

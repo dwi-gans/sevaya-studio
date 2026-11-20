@@ -12,6 +12,8 @@ import { Icon } from '@/components/ui/Icon';
 import StockMutationModal, { REASON_LABELS } from '@/components/admin/modals/StockMutationModal';
 import { InventoryGroupedSkeleton, InventoryTelemetrySkeleton, InventoryTableSkeleton } from '@/components/admin/shared/AdminSkeleton';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
+import { RefreshCw } from 'lucide-react';
 
 interface InventoryTelemetry {
   totalVariants: number;
@@ -24,6 +26,9 @@ interface InventoryTelemetry {
 interface InventoryTabProps {
   products: DbProduct[];
   onStockMutated?: (productId: string, totalStock: number) => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 type StockFilter = 'all' | 'ready' | 'low' | 'out';
@@ -66,7 +71,13 @@ const MUTATION_TYPE_INFO: Record<MutationType, { label: string; className: strin
   },
 };
 
-export default function InventoryTab({ products, onStockMutated }: InventoryTabProps) {
+export default function InventoryTab({
+  products,
+  onStockMutated,
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
+}: InventoryTabProps) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [mutations, setMutations] = useState<StockMutation[]>([]);
   const [telemetry, setTelemetry] = useState<InventoryTelemetry | null>(null);
@@ -385,45 +396,39 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-3 sm:space-y-4">
-      {/* Top Toolbar */}
-      <div className="flex items-center justify-between gap-2 pb-1 sm:pb-2">
-        <div className="min-w-0">
-          <span className="text-[9px] font-bold tracking-widest text-black/50 uppercase block">
-            Transaksi &amp; Logistik
-          </span>
-          <h2 className="text-sm sm:text-base font-bold tracking-tight text-black truncate">
-            Inventaris &amp; Stok Fisik
-          </h2>
-          <p className="text-[11px] text-black/50 mt-0 hidden sm:block">
-            Stok terpusat per produk, warna &amp; ukuran. Jumlah stok di katalog disinkronkan otomatis dari sini.
-          </p>
-        </div>
+    <div className="w-full">
+      <AdminPageHeader
+        title="Inventaris & Stok Varian"
+        subtitle="Monitoring ketersediaan fisik abaya, varian warna/ukuran, dan mutasi kartu stok."
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        <button
+          type="button"
+          onClick={handleGenerateVariants}
+          disabled={loading || generating}
+          className="h-10 px-4 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          title="Sinkronkan varian warna & ukuran dari semua produk katalog"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${generating ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
+          <span className="sm:hidden">Sinkron</span>
+        </button>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleGenerateVariants}
-            disabled={loading || generating}
-            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full bg-black px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold text-white transition hover:bg-black/85 active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
-            title="Sinkronkan varian warna & ukuran dari semua produk katalog"
-          >
-            <Icon name="refresh" size={13} className={generating ? 'animate-spin' : ''} />
-            <span>{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
-          </button>
+        <button
+          type="button"
+          onClick={() => fetchInventory(true)}
+          disabled={loading}
+          className="h-10 px-3.5 flex items-center gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
+          title="Segarkan data inventaris"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${loading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Segarkan</span>
+        </button>
+      </AdminPageHeader>
 
-          <button
-            type="button"
-            onClick={() => fetchInventory(true)}
-            disabled={loading}
-            className="shrink-0 inline-flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold text-black transition hover:bg-black/5 active:scale-95 disabled:opacity-50 cursor-pointer"
-            title="Segarkan data inventaris"
-          >
-            <Icon name="refresh" size={13} className={loading ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">Segarkan</span>
-          </button>
-        </div>
-      </div>
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4">
 
       {/* Telemetry Summary Card (Swipeable on Mobile) */}
       <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden">
@@ -1301,6 +1306,7 @@ export default function InventoryTab({ products, onStockMutated }: InventoryTabP
           onSuccess={handleMutationSuccess}
         />
       )}
+      </div>
     </div>
   );
 }

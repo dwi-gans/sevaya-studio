@@ -10,6 +10,8 @@ import {
   getDbProducts,
 } from '@/integrations/supabase';
 import type { ImagePickerTarget } from '../adminTypes';
+import { AdminPageHeader } from '@/components/admin/shared/AdminPageHeader';
+import { Plus, ArrowLeft, Save } from 'lucide-react';
 
 interface LookbookTabProps {
   sections: SiteSectionsConfig;
@@ -19,6 +21,9 @@ interface LookbookTabProps {
   onOpenImagePicker: (target: ImagePickerTarget) => void;
   showToast: (msg: string) => void;
   products?: DbProduct[];
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 export const LookbookTab: React.FC<LookbookTabProps> = ({
@@ -29,6 +34,9 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   onOpenImagePicker,
   showToast,
   products = [],
+  isSidebarOpen,
+  toggleSidebar,
+  setIsMobileMenuOpen,
 }) => {
   const [viewMode, setViewMode] = useState<'list' | 'edit'>('list');
   const [filterStatus, setFilterStatus] = useState<'all' | 'posted' | 'hidden'>('all');
@@ -455,7 +463,55 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] space-y-4 pb-20">
+    <div className="w-full">
+      <AdminPageHeader
+        title={viewMode === 'list' ? 'Lookbook Studio' : `Edit: ${activeVolLabel}`}
+        subtitle={
+          viewMode === 'list'
+            ? 'Kurasi volume editorial visual dan katalog kampanye eksklusif.'
+            : 'Pengaturan editorial visual, narasi cerita, dan kurasi etalase volume ini.'
+        }
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      >
+        {viewMode === 'list' ? (
+          <button
+            type="button"
+            onClick={() => {
+              setNewVolTitle(`Vol ${currentLinks.length + 1}: `);
+              setNewVolSeason("'26");
+              setNewVolBadge('NEW');
+              setIsAddVolumeOpen(true);
+            }}
+            className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-2" />
+            <span>Tambah Volume</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className="h-10 px-3.5 flex items-center gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 stroke-2" />
+              <span>Daftar Volume</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveAll}
+              className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5 stroke-2" />
+              <span>Simpan Perubahan</span>
+            </button>
+          </div>
+        )}
+      </AdminPageHeader>
+
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4 pb-20">
       {/* ══ MODAL TAMBAH VOLUME BARU (Shared) ══ */}
       {isAddVolumeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
@@ -549,19 +605,6 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
             VIEW 1: OVERVIEW GRID DAFTAR VOLUME (HERO CARDS + TELEMETRY)
            ═══════════════════════════════════════════════════════════════════ */
         <div className="space-y-4">
-          {/* Top Title & Header */}
-          <div className="pb-2">
-            <span className="hidden sm:block text-[9px] font-bold tracking-widest text-black/50 uppercase">
-              Editorial &amp; Storefront Showcase
-            </span>
-            <h2 className="text-sm sm:text-xl font-bold tracking-tight text-black">
-              Manajemen Volume Lookbook
-            </h2>
-            <p className="hidden sm:block text-[11px] text-black/60 mt-0.5">
-              Kelola koleksi volume lookbook, foto hero sampul, editorial visual, dan status rilis publik.
-            </p>
-          </div>
-
           {/* Telemetry Summary Card (Mirrors NewsTab 3 columns) */}
           <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
             <div className="grid grid-cols-3 divide-x divide-[rgba(0,0,0,0.12)]/50 gap-0">
@@ -1757,6 +1800,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

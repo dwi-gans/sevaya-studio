@@ -29,7 +29,6 @@ import { Article } from '@/integrations/supabase/articles';
 import { AdminTab, ImagePickerTarget } from '@/components/admin/adminTypes';
 import { AdminLoginView } from '@/components/admin/shared/AdminLoginView';
 import { AdminSidebar } from '@/components/admin/shared/AdminSidebar';
-import { AdminHeader } from '@/components/admin/shared/AdminHeader';
 import { AdminPageAuthSkeleton } from '@/components/admin/shared/AdminSkeleton';
 
 // Admin Modals
@@ -1655,27 +1654,30 @@ export default function AdminPage() {
         onLogout={handleAdminLogout}
       />
 
-      {/* Header Bar */}
-      <AdminHeader
-        isSidebarOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-        activeTab={activeTab}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
-
       {/* Main Tab Content */}
       <main
-        className={`relative min-h-screen bg-[#f9f9f8] px-3 pb-16 pt-16 sm:px-5 sm:pt-20 lg:px-6 xl:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative min-h-screen bg-[#faf9f7] px-0 pt-0 pb-16 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >
         <div key={activeTab} className="animate-luxury-fade-up">
-          {activeTab === 'orders' && <OrdersTab onOrdersCountChange={setOrdersCount} />}
+          {activeTab === 'orders' && (
+            <OrdersTab
+              onOrdersCountChange={setOrdersCount}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+            />
+          )}
 
           {activeTab === 'inventory' && (
-            <InventoryTab products={products} onStockMutated={handleStockMutated} />
+            <InventoryTab
+              products={products}
+              onStockMutated={handleStockMutated}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+            />
           )}
 
           {activeTab === 'catalog' && (
@@ -1691,6 +1693,9 @@ export default function AdminPage() {
               onSetBadge={handleSetBadge}
               onDeleteProduct={handleDeleteProduct}
               onRefresh={handleRefreshProducts}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
@@ -1706,6 +1711,9 @@ export default function AdminPage() {
               onFileUploadDirect={handleSectionFileUpload}
               onOpenCropper={openCropperForTarget}
               showToast={showToast}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
@@ -1720,6 +1728,9 @@ export default function AdminPage() {
               onOpenEditArticleModal={handleOpenEditArticleModal}
               onToggleFeaturedArticle={handleToggleFeaturedArticle}
               onDeleteArticle={handleDeleteArticle}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
@@ -1735,6 +1746,9 @@ export default function AdminPage() {
               }}
               showToast={showToast}
               products={products}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
@@ -1747,6 +1761,9 @@ export default function AdminPage() {
                 setImagePickerTarget(target);
                 setIsImagePickerOpen(true);
               }}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
@@ -1754,10 +1771,19 @@ export default function AdminPage() {
             <MediaLibraryTab
               onFileUpload={handleFileUpload}
               showToast={showToast}
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
             />
           )}
 
-          {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+            />
+          )}
         </div>
       </main>
 
