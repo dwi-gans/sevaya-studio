@@ -42,7 +42,7 @@ import { ImageCropperModal, CropperResult, RatioOption } from '@/components/imag
 import { CROP_PRESETS, CropPreset } from '@/config/image-crop-presets';
 
 // Admin Tabs
-import { BiteshipSimulatorDashboard } from '@/components/admin/BiteshipSimulatorDashboard';
+import { OrdersTab } from '@/components/admin/tabs/OrdersTab';
 import { CatalogTab } from '@/components/admin/tabs/CatalogTab';
 import InventoryTab from '@/components/admin/tabs/InventoryTab';
 import { HomeSectionsTab } from '@/components/admin/tabs/HomeSectionsTab';
@@ -1672,7 +1672,7 @@ export default function AdminPage() {
         }`}
       >
         <div key={activeTab} className="animate-luxury-fade-up">
-          {activeTab === 'orders' && <BiteshipSimulatorDashboard onOrdersCountChange={setOrdersCount} />}
+          {activeTab === 'orders' && <OrdersTab onOrdersCountChange={setOrdersCount} />}
 
           {activeTab === 'inventory' && (
             <InventoryTab products={products} onStockMutated={handleStockMutated} />

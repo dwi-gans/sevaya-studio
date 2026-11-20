@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { detectOrderCourier } from '@/lib/courier-utils';
-import { ShippingLabelModal } from './ShippingLabelModal';
-import { InventoryTableSkeleton } from './shared/AdminSkeleton';
+import { ShippingLabelModal } from '../ShippingLabelModal';
+import { InventoryTableSkeleton } from '../shared/AdminSkeleton';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -550,11 +550,11 @@ function OrderDetailModal({
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-interface BiteshipSimulatorDashboardProps {
+interface OrdersTabProps {
   onOrdersCountChange?: (count: number) => void;
 }
 
-export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimulatorDashboardProps = {}) {
+export function OrdersTab({ onOrdersCountChange }: OrdersTabProps = {}) {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -1087,3 +1087,5 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
     </div>
   );
 }
+
+export { OrdersTab as BiteshipSimulatorDashboard };
