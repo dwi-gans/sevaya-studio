@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Image from 'next/image';
 import { detectOrderCourier } from '@/lib/courier-utils';
 import { ShippingLabelModal } from './ShippingLabelModal';
+import { InventoryTableSkeleton } from './shared/AdminSkeleton';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -563,21 +564,6 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [error, setError] = useState('');
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-
-  const scrollTable = (offset: number) => {
-    tableContainerRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
-  };
-
-  const scrollToLeftEdge = () => {
-    tableContainerRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
-  };
-
-  const scrollToRightEdge = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollTo({ left: tableContainerRef.current.scrollWidth, behavior: 'smooth' });
-    }
-  };
 
   const fetchOrders = useCallback(async (silent = false, sync = false) => {
     if (!silent) setLoading(true);
@@ -862,57 +848,15 @@ export function BiteshipSimulatorDashboard({ onOrdersCountChange }: BiteshipSimu
 
       {/* Orders Table */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center rounded-2xl border border-black/15 bg-white">
-          <div className="text-xs text-black/70">Memuat data pesanan dari Supabase...</div>
+        <div className="rounded-2xl border border-black/15 bg-white overflow-hidden shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+          <InventoryTableSkeleton rows={6} />
         </div>
       ) : (
         filtered.length > 0 && (
           <div className="space-y-4">
-            {/* Desktop Table Scroll Bar & Controls */}
-            <div className="hidden md:flex items-center justify-between rounded-xl border border-black/15 bg-black/5 px-4 py-2 text-xs">
-              <div className="flex items-center gap-2 text-black/70">
-                <span className="font-bold text-black">{filtered.length} Pesanan</span>
-                <span>&bull;</span>
-                <span className="text-[11px] text-[#7C726E]">
-                  Gunakan tombol geser di kanan untuk melihat kolom secara penuh
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={scrollToLeftEdge}
-                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
-                >
-                  ⏮ Paling Kiri
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollTable(-320)}
-                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
-                >
-                  &larr; Geser Kiri
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollTable(320)}
-                  className="rounded-full border border-black/20 bg-white px-3 py-1 text-[11px] font-medium text-black transition hover:bg-black/5"
-                >
-                  Geser Kanan &rarr;
-                </button>
-                <button
-                  type="button"
-                  onClick={scrollToRightEdge}
-                  className="rounded-full bg-black px-3.5 py-1 text-[11px] font-medium text-white transition hover:bg-black/85"
-                >
-                  Kolom Aksi ⏭
-                </button>
-              </div>
-            </div>
-
             {/* Desktop Table View */}
             <div
-              ref={tableContainerRef}
-              className="hidden md:block overflow-x-auto rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)] scroll-smooth"
+              className="hidden md:block overflow-x-auto rounded-2xl border border-black/15 bg-white shadow-[0_1px_4px_rgba(27,23,24,0.03)]"
             >
               <table className="w-full text-xs min-w-[1050px]">
                 <thead>
