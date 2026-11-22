@@ -250,7 +250,7 @@ export const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
   seasonDesc:
     "Sevilla Abaya An everyday expression of quiet elegance. Meet the Sevilla Abaya, our signature piece inspired by the timeless beauty of Andalusia. Designed with a graceful, flowing silhouette, Sevilla brings together a soft drape, thoughtful details, and a versatile design that feels equally at home in your everyday routine and special moments. Made from a blend of 60% cupro and 40% viscose, the fabric offers a silky-soft touch and fluid movement, creating a look that feels polished without trying too hard. Because elegance doesn't have to be complicated.",
   heroImage:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.webp',
 
   seasonTitle: 'The Seed of The Story',
   purpose1Title: 'Two looks in one',
@@ -312,27 +312,27 @@ export const DEFAULT_LOOKBOOK_VOL2_CONFIG: LookbookPageConfig = {
   seasonDesc:
     'An ode to the beauty of everyday moments.\n\nMeet Alma, a piece designed to accompany you through the little moments that make life meaningful.\n\nCrafted from 60% Cupro and 40% Viscose, its silky-soft texture, lightweight feel, and naturally fluid drape bring effortless comfort to your everyday wardrobe.\n\nSubtle stripes add a quiet character, while its timeless silhouette makes getting dressed feel beautifully simple.\n\nBecause sometimes, the most beautiful moments are found in the ordinary.\n\nALMA - Find beauty in the everyday.',
   collagePortrait:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209708329_ir1a_SEVAYA_Instagram_Post__1_.png',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209708329_ir1a_SEVAYA_Instagram_Post__1_.webp',
   collageDetail1:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209428394_cobm_IMG_3005.jpg',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209428394_cobm_IMG_3005.webp',
   collageDetail2: '/images/figma_about_2.png',
   panorama1:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794307875871_bt0z_IMG_3074.jpeg',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794307875871_bt0z_IMG_3074.webp',
   panorama1Title: 'Fabric Story',
   panorama1Desc:
     'At the heart of ALMA is a thoughtfully selected blend of 60% Cupro 38% Viscose 2 & Polyester.\n\nCupro, a regenerated cellulose fibre derived from cotton linter, is loved for its exceptionally smooth, silky touch. Combined with viscose, it creates a fabric with a beautiful fluid drape and a naturally soft feel.\n\nThe result is a fabric that feels lightweight, breathable, and effortlessly flowy against the skin.\n\nWe believe that what we wear should feel just as beautiful as it looks. That\'s why every fabric choice is an intentional step towards creating modestwear that brings together comfort, timeless design, and a more thoughtful approach to fashion.\n\nSilky-soft. Lightweight. Naturally fluid.',
   panorama2: '/images/lookbook_figma_1.png',
   triptych1:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209346069_i67r_IMG_3007.JPG',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209346069_i67r_IMG_3007.webp',
   triptych2:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209681415_2azw_SEVAYA_Instagram_Post__3_.png',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209681415_2azw_SEVAYA_Instagram_Post__3_.webp',
   triptych3:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209467724_tnjk_IMG_3004.jpg',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209467724_tnjk_IMG_3004.webp',
   triptychTitle: 'A Little Care Goes a Long Way.',
   triptychDesc:
     'Made with a delicate Cupro and Viscose blend, ALMA deserves gentle care to maintain its softness, beautiful drape, and quality over time.\n\nWashing\n\nHand wash gently using cold water.\n\nUse a mild detergent.\n\nAvoid excessive rubbing or scrubbing.\n\nDrying\n\nDo not wring or twist the fabric.\n\nAvoid tumble drying.\n\nAir dry naturally in a shaded area.\n\nImportant Fabric Note\n\nDue to the natural characteristics of regenerated cellulose fibres, slight shrinkage may occur after washing. Gentle handling and proper care will help maintain the fabric\'s quality and shape.\n\nWear it often. Care for it gently. Keep it timeless.',
   fullDress:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209334840_864s_IMG_3006.JPG',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209334840_864s_IMG_3006.webp',
   shopTag: 'SHOP THE COLLECTION',
   shopTitle: 'ALMA CUPRO STRIPES',
   shopDesc:
@@ -421,7 +421,7 @@ export const DEFAULT_CLOSER_LOOK: CloserLookData = {
   paragraph2:
     "We believe that what we wear should feel just as beautiful as it looks. That's why every fabric choice is an intentional step towards creating modestwear that brings together comfort, timeless design, and a more thoughtful approach to fashion.",
   image:
-    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794021316191_9y0f_SEVAYA_Instagram_Post.png',
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794021316191_9y0f_SEVAYA_Instagram_Post.webp',
   linkText: 'Discover Vol 2',
   linkUrl: '/lookbook/vol-2',
 };
@@ -489,7 +489,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       excerpt:
         'Some stories begin with a place, and some places stay with us long after we leave. For our founder, that place was Spain...',
       image:
-        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240875994_5q50_DSCF5960.jpg',
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240875994_5q50_DSCF5960.webp',
       href: '/news/sevaya-hadir-dengan-booth-abaya-di-event-wtp',
     },
     {
@@ -508,7 +508,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       excerpt:
         'We believe that what we receive is never entirely ours. Every provision is a blessing from Allah...',
       image:
-        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794243371694_rwql_SEVAYA_Instagram_Post_-_3.png',
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794243371694_rwql_SEVAYA_Instagram_Post_-_3.webp',
       href: '/news/beyond-what-we-wear',
     },
   ],
@@ -518,7 +518,7 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
       num: 'BAB 1',
       title: 'Sevilla Abaya // Lookbook',
       image:
-        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
+        'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.webp',
     },
   ],
   lookbookLinks: DEFAULT_LOOKBOOK_LINKS,
