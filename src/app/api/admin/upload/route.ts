@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
+import sharp from 'sharp';
 
 export const runtime = 'nodejs';
 
@@ -131,13 +132,9 @@ export async function POST(req: NextRequest) {
     const uploadedAssets = [];
 
     for (const file of rawFiles) {
-      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const timestamp = Date.now();
-      const randomSuffix = Math.random().toString(36).substring(2, 6);
-      const filePath = `${folder}/${timestamp}_${randomSuffix}_${cleanName}`;
-
+      let cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      let buffer = Buffer.from(arrayBuffer);
 
       // Robust Content-Type detection for Mac / Safari / HEIC / video / generic octet-stream
       let detectedContentType = file.type;
@@ -156,6 +153,34 @@ export async function POST(req: NextRequest) {
         else detectedContentType = 'image/jpeg';
       }
 
+      // Server-side WebP optimization safety-net:
+      // Converts any raster image (JPEG, PNG, HEIC, TIFF, uncompressed WebP) to clean WebP (Q85, max 2400px)
+      const isRasterImage =
+        (detectedContentType.startsWith('image/') || /\.(jpe?g|png|webp|avif|heic|heif|bmp|tiff)$/i.test(file.name)) &&
+        detectedContentType !== 'image/svg+xml' &&
+        detectedContentType !== 'image/gif';
+
+      if (isRasterImage) {
+        try {
+          const webpBuffer = await sharp(buffer)
+            .rotate() // auto-orient based on EXIF
+            .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
+            .webp({ quality: 85, effort: 4, smartSubsample: true })
+            .toBuffer();
+
+          buffer = webpBuffer;
+          detectedContentType = 'image/webp';
+          const base = cleanName.substring(0, cleanName.lastIndexOf('.')) || cleanName;
+          cleanName = `${base}.webp`;
+        } catch (sharpErr) {
+          console.warn('Sharp optimization skipped for', file.name, sharpErr);
+        }
+      }
+
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      const filePath = `${folder}/${timestamp}_${randomSuffix}_${cleanName}`;
+
       const { error: uploadError } = await supabaseAdmin.storage
         .from('catalog')
         .upload(filePath, buffer, {
@@ -173,7 +198,7 @@ export async function POST(req: NextRequest) {
         data: { publicUrl },
       } = supabaseAdmin.storage.from('catalog').getPublicUrl(filePath);
 
-      const ext = file.name.split('.').pop()?.toUpperCase() || 'JPG';
+      const ext = cleanName.split('.').pop()?.toUpperCase() || 'WEBP';
       const formattedDate = new Date().toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'short',
@@ -183,10 +208,10 @@ export async function POST(req: NextRequest) {
       }) + ' WIB';
 
       uploadedAssets.push({
-        filename: file.name,
+        filename: cleanName,
         storagePath: filePath,
         collection,
-        size: formatBytes(file.size),
+        size: formatBytes(buffer.length),
         res: '4K High-Res',
         format: `${ext} Master`,
         date: formattedDate,

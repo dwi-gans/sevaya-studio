@@ -120,10 +120,10 @@ export async function uploadFileToStorage(file: File, folder = 'uploads'): Promi
   }
 
   // Fallback: client-side Supabase upload
-  const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const cleanName = fileToUpload.name.replace(/[^a-zA-Z0-9.-]/g, '_');
   const fileName = `${folder}/${Date.now()}_${cleanName}`;
 
-  const { error } = await supabase.storage.from('catalog').upload(fileName, file, {
+  const { error } = await supabase.storage.from('catalog').upload(fileName, fileToUpload, {
     cacheControl: '3600',
     upsert: true,
   });
