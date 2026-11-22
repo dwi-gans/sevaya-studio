@@ -154,13 +154,19 @@ export async function POST(req: NextRequest) {
       }
 
       // Server-side WebP optimization safety-net:
-      // Converts any raster image (JPEG, PNG, HEIC, TIFF, uncompressed WebP) to clean WebP (Q85, max 2400px)
+      // Converts any raster image (JPEG, PNG, HEIC, TIFF, large WebP) to clean WebP (Q85, max 2400px)
       const isRasterImage =
         (detectedContentType.startsWith('image/') || /\.(jpe?g|png|webp|avif|heic|heif|bmp|tiff)$/i.test(file.name)) &&
         detectedContentType !== 'image/svg+xml' &&
         detectedContentType !== 'image/gif';
 
-      if (isRasterImage) {
+      // Avoid lossy generation loss if client already compressed it into a lightweight WebP
+      const isAlreadyOptimizedWebp =
+        detectedContentType === 'image/webp' &&
+        buffer.length <= 800 * 1024 &&
+        cleanName.toLowerCase().endsWith('.webp');
+
+      if (isRasterImage && !isAlreadyOptimizedWebp) {
         try {
           const webpBuffer = await sharp(buffer)
             .rotate() // auto-orient based on EXIF
@@ -170,7 +176,8 @@ export async function POST(req: NextRequest) {
 
           buffer = webpBuffer;
           detectedContentType = 'image/webp';
-          const base = cleanName.substring(0, cleanName.lastIndexOf('.')) || cleanName;
+          const lastDot = cleanName.lastIndexOf('.');
+          const base = lastDot > 0 ? cleanName.substring(0, lastDot) : cleanName;
           cleanName = `${base}.webp`;
         } catch (sharpErr) {
           console.warn('Sharp optimization skipped for', file.name, sharpErr);

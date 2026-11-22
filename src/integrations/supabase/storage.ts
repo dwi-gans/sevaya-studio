@@ -14,7 +14,11 @@ export interface StorageFile {
  */
 export async function compressImageBeforeUpload(file: File): Promise<File> {
   if (typeof window === 'undefined') return file;
-  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+  
+  const isImageMime = file.type.startsWith('image/');
+  const isImageExt = /\.(jpe?g|png|webp|avif)$/i.test(file.name);
+  if (!isImageMime && !isImageExt) return file;
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif' || /\.(svg|gif)$/i.test(file.name)) {
     return file;
   }
   // If already small (< 200 KB), no need to compress further
@@ -57,7 +61,8 @@ export async function compressImageBeforeUpload(file: File): Promise<File> {
             resolve(file);
             return;
           }
-          const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+          const lastDot = file.name.lastIndexOf('.');
+          const baseName = lastDot > 0 ? file.name.substring(0, lastDot) : (file.name || 'image');
           const compressedFile = new File([blob], `${baseName}.webp`, {
             type: 'image/webp',
             lastModified: Date.now(),
