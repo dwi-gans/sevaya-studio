@@ -91,7 +91,7 @@ export async function getCroppedImage(
   originalFile: File | string,
   outputMaxWidth: number,
   outputFormat: 'image/webp' | 'image/jpeg' = 'image/webp',
-  quality = 0.98,
+  quality = 0.85,
 ): Promise<CroppedImageResult> {
   // Koreksi EXIF (hanya untuk File fisik)
   let exifDeg: 0 | 90 | 180 | 270 = 0;

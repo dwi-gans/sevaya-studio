@@ -8,14 +8,85 @@ export interface StorageFile {
 }
 
 /**
+ * Automatically compresses images (JPEG, PNG, WEBP) in the browser before upload.
+ * Reduces 3-8 MB raw camera/design images down to 100-300 KB WebP,
+ * saving over 85-90% of Supabase Storage and bandwidth (Egress).
+ */
+export async function compressImageBeforeUpload(file: File): Promise<File> {
+  if (typeof window === 'undefined') return file;
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+    return file;
+  }
+  // If already small (< 200 KB), no need to compress further
+  if (file.size < 200 * 1024) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX_DIMENSION = 2000;
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
+
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+            return;
+          }
+          const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+          const compressedFile = new File([blob], `${baseName}.webp`, {
+            type: 'image/webp',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        },
+        'image/webp',
+        0.82
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
+/**
  * Uploads an image or asset file to Supabase Storage.
  * Uses the secure server-side admin upload endpoint with fallback to client.
  */
 export async function uploadFileToStorage(file: File, folder = 'uploads'): Promise<string> {
+  const fileToUpload = typeof window !== 'undefined' ? await compressImageBeforeUpload(file) : file;
+
   // Try secure server-side upload first (bypasses RLS with service role)
   try {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
     formData.append('folder', folder);
 
     const res = await fetch('/api/admin/upload', {
@@ -76,11 +147,16 @@ export async function uploadMultipleFilesToStorage(
   folder = 'uploads',
   collection = 'Master Upload Cloud CDN'
 ): Promise<{ success: boolean; files: any[]; urls: string[] }> {
+  const processedFiles =
+    typeof window !== 'undefined'
+      ? await Promise.all(files.map(compressImageBeforeUpload))
+      : files;
+
   const formData = new FormData();
   formData.append('folder', folder);
   formData.append('collection', collection);
 
-  for (const file of files) {
+  for (const file of processedFiles) {
     formData.append('files', file);
   }
 
