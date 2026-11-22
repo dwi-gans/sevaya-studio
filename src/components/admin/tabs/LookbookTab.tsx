@@ -70,7 +70,7 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
   const currentLinks =
     sections.lookbookLinks && sections.lookbookLinks.length > 0
       ? sections.lookbookLinks
-      : [
+      : (DEFAULT_SITE_SECTIONS.lookbookLinks || [
           {
             id: 'vol-1',
             label: 'Vol 1: Sevilla Abaya',
@@ -78,7 +78,14 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
             href: '/lookbook',
             badge: 'NEW',
           },
-        ];
+          {
+            id: 'vol-2',
+            label: 'Vol 2: Alma',
+            season: "'26",
+            href: '/lookbook/vol-2',
+            badge: 'NEW',
+          },
+        ]);
 
   const getVolKey = (link: { id?: string; href: string }) => {
     return link.id || (link.href === '/lookbook' ? 'vol-1' : link.href.replace('/lookbook/', ''));

@@ -242,9 +242,9 @@ export interface SiteSectionsConfig {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEFAULT — synchronized with actual Supabase / Admin state (Sevilla Abaya)
+// DEFAULT — synchronized with actual Supabase / Admin state (Sevilla Abaya & Alma)
 // ─────────────────────────────────────────────────────────────────────────────
-const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
+export const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
   heroSubtitle: 'SEVAYA • SEVILLA',
   heroTitle: 'SEVILLA ABAYA',
   seasonDesc:
@@ -300,7 +300,72 @@ const DEFAULT_LOOKBOOK_CONFIG: LookbookPageConfig = {
   shopTitle: 'SEVILLA ABAYA',
   shopDesc:
     'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.',
-  shopProductIds: [],
+  shopProductIds: ['1794063420037', '1794019430147'],
+};
+
+export const DEFAULT_LOOKBOOK_VOL2_CONFIG: LookbookPageConfig = {
+  heroImage:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/hero_floraison_mobile_1794246268248.webp',
+  heroTitle: 'VOL 2: ALMA CUPRO STRIPES',
+  heroSubtitle: 'SEVAYA • VOL-2',
+  seasonTitle: 'The Seed of The Story',
+  seasonDesc:
+    'An ode to the beauty of everyday moments.\n\nMeet Alma, a piece designed to accompany you through the little moments that make life meaningful.\n\nCrafted from 60% Cupro and 40% Viscose, its silky-soft texture, lightweight feel, and naturally fluid drape bring effortless comfort to your everyday wardrobe.\n\nSubtle stripes add a quiet character, while its timeless silhouette makes getting dressed feel beautifully simple.\n\nBecause sometimes, the most beautiful moments are found in the ordinary.\n\nALMA - Find beauty in the everyday.',
+  collagePortrait:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209708329_ir1a_SEVAYA_Instagram_Post__1_.png',
+  collageDetail1:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209428394_cobm_IMG_3005.jpg',
+  collageDetail2: '/images/figma_about_2.png',
+  panorama1:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794307875871_bt0z_IMG_3074.jpeg',
+  panorama1Title: 'Fabric Story',
+  panorama1Desc:
+    'At the heart of ALMA is a thoughtfully selected blend of 60% Cupro 38% Viscose 2 & Polyester.\n\nCupro, a regenerated cellulose fibre derived from cotton linter, is loved for its exceptionally smooth, silky touch. Combined with viscose, it creates a fabric with a beautiful fluid drape and a naturally soft feel.\n\nThe result is a fabric that feels lightweight, breathable, and effortlessly flowy against the skin.\n\nWe believe that what we wear should feel just as beautiful as it looks. That\'s why every fabric choice is an intentional step towards creating modestwear that brings together comfort, timeless design, and a more thoughtful approach to fashion.\n\nSilky-soft. Lightweight. Naturally fluid.',
+  panorama2: '/images/lookbook_figma_1.png',
+  triptych1:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209346069_i67r_IMG_3007.JPG',
+  triptych2:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209681415_2azw_SEVAYA_Instagram_Post__3_.png',
+  triptych3:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209467724_tnjk_IMG_3004.jpg',
+  triptychTitle: 'A Little Care Goes a Long Way.',
+  triptychDesc:
+    'Made with a delicate Cupro and Viscose blend, ALMA deserves gentle care to maintain its softness, beautiful drape, and quality over time.\n\nWashing\n\nHand wash gently using cold water.\n\nUse a mild detergent.\n\nAvoid excessive rubbing or scrubbing.\n\nDrying\n\nDo not wring or twist the fabric.\n\nAvoid tumble drying.\n\nAir dry naturally in a shaded area.\n\nImportant Fabric Note\n\nDue to the natural characteristics of regenerated cellulose fibres, slight shrinkage may occur after washing. Gentle handling and proper care will help maintain the fabric\'s quality and shape.\n\nWear it often. Care for it gently. Keep it timeless.',
+  fullDress:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794209334840_864s_IMG_3006.JPG',
+  shopTag: 'SHOP THE COLLECTION',
+  shopTitle: 'ALMA CUPRO STRIPES',
+  shopDesc:
+    'Siluet bernapas dan palet warna alami yang dirancang untuk menemani setiap langkah dalam ritme Anda sendiri.',
+  shopProductIds: ['1793862893527'],
+  hidden: false,
+  purposePoints: [
+    {
+      title: 'Subtle Stripe Details',
+      desc: 'A timeless stripe pattern adds a touch of character to the minimalist silhouette, creating a look that feels effortlessly elegant.',
+    },
+    {
+      title: 'Two Functional Side Pockets',
+      desc: 'Thoughtfully placed pockets on both the right and left sides, perfect for keeping your daily essentials within reach.',
+    },
+    {
+      title: '40 cm Front Zipper',
+      desc: 'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.',
+    },
+    {
+      title: 'Premium Cupro Viscose Fabric',
+      desc: 'Crafted from a premium blend of Cupro and Viscose, offering a silky-soft touch, lightweight feel, breathable comfort, and a naturally fluid drape.',
+    },
+  ],
+  purpose1Title: 'Subtle Stripe Details',
+  purpose1Desc:
+    'A timeless stripe pattern adds a touch of character to the minimalist silhouette, creating a look that feels effortlessly elegant.',
+  purpose2Title: 'Two Functional Side Pockets',
+  purpose2Desc:
+    'Thoughtfully placed pockets on both the right and left sides, perfect for keeping your daily essentials within reach.',
+  purpose3Title: '40 cm Front Zipper',
+  purpose3Desc:
+    'Functional pockets on both the right and left sides, perfect for keeping your essentials close at hand.',
 };
 
 export const DEFAULT_HOME_NARRATIVE: HomeNarrativeConfig = {
@@ -350,15 +415,32 @@ export const DEFAULT_JOURNAL_HEADER: HomeJournalHeaderConfig = {
 
 export const DEFAULT_CLOSER_LOOK: CloserLookData = {
   eyebrow: 'A CLOSER LOOK AT',
-  title: 'VOL 1: SEVILLA ABAYA',
+  title: 'VOL 2: ALMA',
   paragraph1:
-    'In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced. In this atmosphere, life moves in its own rhythm; like a Rhapsody: free-flowing, expressive, and quietly harmonious.',
+    'An ode to the beauty of everyday moments.\n\nMeet Alma, a piece designed to accompany you through the little moments that make life meaningful.\n\nCrafted from 60% Cupro and 40% Viscose, its silky-soft texture, lightweight feel, and naturally fluid drape bring effortless comfort to your everyday wardrobe.\n\nSubtle stripes add a quiet character, while its timeless silhouette makes getting dressed feel beautifully simple.\n\nBecause sometimes, the most beautiful moments are found in the ordinary.\n\nALMA - Find beauty in the everyday.',
   paragraph2:
-    'Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That much like nature, we each unfold in our own time and beauty reveals itself when we learn to move with our own rhythm.',
-  image: '/images/lookbook_figma_0.png',
-  linkText: 'Discover Vol 1',
-  linkUrl: '/lookbook',
+    "We believe that what we wear should feel just as beautiful as it looks. That's why every fabric choice is an intentional step towards creating modestwear that brings together comfort, timeless design, and a more thoughtful approach to fashion.",
+  image:
+    'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1794021316191_9y0f_SEVAYA_Instagram_Post.png',
+  linkText: 'Discover Vol 2',
+  linkUrl: '/lookbook/vol-2',
 };
+export const DEFAULT_LOOKBOOK_LINKS: LookbookLinkItem[] = [
+  {
+    id: 'vol-1',
+    label: 'Vol 1: Sevilla Abaya',
+    season: "'26",
+    href: '/lookbook',
+    badge: 'NEW',
+  },
+  {
+    id: 'vol-2',
+    label: 'Vol 2: Alma',
+    season: "'26",
+    href: '/lookbook/vol-2',
+    badge: 'NEW',
+  },
+];
 
 export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
   hero: {
@@ -439,18 +521,11 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
         'https://vhoifosfdzcmtczizzrb.supabase.co/storage/v1/object/public/catalog/uploads/1793240882095_aj89_DSCF5976.jpg',
     },
   ],
-  lookbookLinks: [
-    {
-      id: 'vol-1',
-      label: 'Vol 1: Sevilla Abaya',
-      season: "'26",
-      href: '/lookbook',
-      badge: 'NEW',
-    },
-  ],
+  lookbookLinks: DEFAULT_LOOKBOOK_LINKS,
   lookbookPage: DEFAULT_LOOKBOOK_CONFIG,
   lookbookVolumesConfig: {
     'vol-1': DEFAULT_LOOKBOOK_CONFIG,
+    'vol-2': DEFAULT_LOOKBOOK_VOL2_CONFIG,
   },
   consciousPage: DEFAULT_CONSCIOUS_PAGE,
   conscious: {
@@ -461,6 +536,98 @@ export const DEFAULT_SITE_SECTIONS: SiteSectionsConfig = {
     modalImage: '/images/catalog/catalog-04.jpg',
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Normalization & Deep Merger
+// ─────────────────────────────────────────────────────────────────────────────
+export function normalizeAndMergeSiteSections(
+  incoming?: Partial<SiteSectionsConfig> | null
+): SiteSectionsConfig {
+  if (!incoming || typeof incoming !== 'object') {
+    return DEFAULT_SITE_SECTIONS;
+  }
+
+  // Sanitize Floraison legacy artifact if any
+  let lookbookPage = incoming.lookbookPage;
+  if (
+    lookbookPage?.heroTitle === 'FLORAISON' ||
+    lookbookPage?.heroSubtitle === 'SEVAYA • FLORAISON'
+  ) {
+    lookbookPage = DEFAULT_LOOKBOOK_CONFIG;
+  }
+
+  const lookbookVolumesConfig: Record<string, LookbookPageConfig> = {
+    ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
+    ...(incoming.lookbookVolumesConfig || {}),
+  };
+
+  if (
+    lookbookVolumesConfig['vol-1']?.heroTitle === 'FLORAISON' ||
+    lookbookVolumesConfig['vol-1']?.heroSubtitle === 'SEVAYA • FLORAISON'
+  ) {
+    lookbookVolumesConfig['vol-1'] = DEFAULT_LOOKBOOK_CONFIG;
+  }
+
+  if (!lookbookVolumesConfig['vol-2']) {
+    lookbookVolumesConfig['vol-2'] = DEFAULT_LOOKBOOK_VOL2_CONFIG;
+  }
+
+  // Ensure lookbookLinks always includes both vol-1 and vol-2
+  let lookbookLinks =
+    Array.isArray(incoming.lookbookLinks) && incoming.lookbookLinks.length > 0
+      ? [...incoming.lookbookLinks]
+      : [...DEFAULT_LOOKBOOK_LINKS];
+
+  const vol1Link = DEFAULT_LOOKBOOK_LINKS[0];
+  const vol2Link = DEFAULT_LOOKBOOK_LINKS[1];
+
+  if (vol1Link && !lookbookLinks.some((l) => l.id === 'vol-1' || l.href === '/lookbook')) {
+    lookbookLinks.unshift(vol1Link);
+  }
+  if (vol2Link && !lookbookLinks.some((l) => l.id === 'vol-2' || l.href.includes('vol-2'))) {
+    lookbookLinks.push(vol2Link);
+  }
+
+  const merged: SiteSectionsConfig = {
+    ...DEFAULT_SITE_SECTIONS,
+    ...incoming,
+    hero: {
+      ...DEFAULT_SITE_SECTIONS.hero,
+      ...(incoming.hero || {}),
+      image: sanitizeHeroImage(incoming.hero?.image),
+      mobileImage: incoming.hero?.mobileImage ? sanitizeHeroImage(incoming.hero?.mobileImage) : '',
+      position: incoming.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
+      mobilePosition:
+        incoming.hero?.mobilePosition ||
+        incoming.hero?.position ||
+        DEFAULT_SITE_SECTIONS.hero.mobilePosition,
+    },
+    closerLook: {
+      ...DEFAULT_CLOSER_LOOK,
+      ...(incoming.closerLook || {}),
+    },
+    narrative: {
+      ...DEFAULT_HOME_NARRATIVE,
+      ...(incoming.narrative || {}),
+    },
+    journalHeader: {
+      ...DEFAULT_JOURNAL_HEADER,
+      ...(incoming.journalHeader || {}),
+    },
+    consciousPage: {
+      ...DEFAULT_CONSCIOUS_PAGE,
+      ...(incoming.consciousPage || {}),
+    },
+    lookbookPage: {
+      ...(DEFAULT_SITE_SECTIONS.lookbookPage || DEFAULT_LOOKBOOK_CONFIG),
+      ...(lookbookPage || {}),
+    },
+    lookbookLinks,
+    lookbookVolumesConfig,
+  };
+
+  return deepCleanMojibake(merged);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache
@@ -503,60 +670,7 @@ export function getCachedSiteSections(): SiteSectionsConfig {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
-        if (parsed.hero) {
-          parsed.hero.image = sanitizeHeroImage(parsed.hero.image);
-        }
-        if (
-          parsed.lookbookPage?.heroTitle === 'FLORAISON' ||
-          parsed.lookbookPage?.heroSubtitle === 'SEVAYA • FLORAISON'
-        ) {
-          parsed.lookbookPage = DEFAULT_LOOKBOOK_CONFIG;
-        }
-        if (
-          parsed.lookbookVolumesConfig?.['vol-1']?.heroTitle === 'FLORAISON' ||
-          parsed.lookbookVolumesConfig?.['vol-1']?.heroSubtitle === 'SEVAYA • FLORAISON'
-        ) {
-          parsed.lookbookVolumesConfig = {
-            ...(parsed.lookbookVolumesConfig || {}),
-            'vol-1': DEFAULT_LOOKBOOK_CONFIG,
-          };
-        }
-        const merged: SiteSectionsConfig = {
-          ...DEFAULT_SITE_SECTIONS,
-          ...parsed,
-          hero: {
-            ...DEFAULT_SITE_SECTIONS.hero,
-            ...(parsed.hero || {}),
-            image: sanitizeHeroImage(parsed.hero?.image),
-            position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
-            mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
-          },
-          closerLook: {
-            ...DEFAULT_CLOSER_LOOK,
-            ...(parsed.closerLook || {}),
-          },
-          narrative: {
-            ...DEFAULT_HOME_NARRATIVE,
-            ...(parsed.narrative || {}),
-          },
-          journalHeader: {
-            ...DEFAULT_JOURNAL_HEADER,
-            ...(parsed.journalHeader || {}),
-          },
-          consciousPage: {
-            ...DEFAULT_CONSCIOUS_PAGE,
-            ...(parsed.consciousPage || {}),
-          },
-          lookbookPage: {
-            ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-            ...(parsed.lookbookPage || {}),
-          },
-          lookbookVolumesConfig: {
-            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-            ...(parsed.lookbookVolumesConfig || {}),
-          },
-        };
-        const cleanMerged = deepCleanMojibake(merged);
+        const cleanMerged = normalizeAndMergeSiteSections(parsed);
         _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
         return cleanMerged;
@@ -634,43 +748,7 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
         const cleanContent = fileContent.replace(/^\uFEFF/, '');
         const parsed = JSON.parse(cleanContent) as Partial<SiteSectionsConfig>;
         if (parsed && typeof parsed === 'object') {
-          const merged: SiteSectionsConfig = {
-            ...DEFAULT_SITE_SECTIONS,
-            ...parsed,
-            hero: {
-              ...DEFAULT_SITE_SECTIONS.hero,
-              ...(parsed.hero || {}),
-              image: sanitizeHeroImage(parsed.hero?.image),
-              mobileImage: parsed.hero?.mobileImage ? sanitizeHeroImage(parsed.hero?.mobileImage) : '',
-              position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
-              mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
-            },
-            closerLook: {
-              ...DEFAULT_CLOSER_LOOK,
-              ...(parsed.closerLook || {}),
-            },
-            narrative: {
-              ...DEFAULT_HOME_NARRATIVE,
-              ...(parsed.narrative || {}),
-            },
-            journalHeader: {
-              ...DEFAULT_JOURNAL_HEADER,
-              ...(parsed.journalHeader || {}),
-            },
-            consciousPage: {
-              ...DEFAULT_CONSCIOUS_PAGE,
-              ...(parsed.consciousPage || {}),
-            },
-            lookbookPage: {
-              ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-              ...(parsed.lookbookPage || {}),
-            },
-            lookbookVolumesConfig: {
-              ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-              ...(parsed.lookbookVolumesConfig || {}),
-            },
-          };
-          const cleanMerged = deepCleanMojibake(merged);
+          const cleanMerged = normalizeAndMergeSiteSections(parsed);
           _cachedSiteSections = cleanMerged;
           _cachedSectionsTime = Date.now();
           _isServerFetched = true;
@@ -703,44 +781,7 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
       const json = await res.json();
       const rawSections = (isServer ? json : json.sections) as SiteSectionsConfig | undefined;
       if (rawSections) {
-        const merged: SiteSectionsConfig = {
-          ...DEFAULT_SITE_SECTIONS,
-          ...rawSections,
-          hero: {
-            ...DEFAULT_SITE_SECTIONS.hero,
-            ...(rawSections.hero || {}),
-            image: sanitizeHeroImage(rawSections.hero?.image),
-            mobileImage: rawSections.hero?.mobileImage ? sanitizeHeroImage(rawSections.hero?.mobileImage) : '',
-            position: rawSections.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
-            mobilePosition: rawSections.hero?.mobilePosition || rawSections.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
-          },
-          closerLook: {
-            ...DEFAULT_CLOSER_LOOK,
-            ...(rawSections.closerLook || {}),
-          },
-          narrative: {
-            ...DEFAULT_HOME_NARRATIVE,
-            ...(rawSections.narrative || {}),
-          },
-          journalHeader: {
-            ...DEFAULT_JOURNAL_HEADER,
-            ...(rawSections.journalHeader || {}),
-          },
-          consciousPage: {
-            ...DEFAULT_CONSCIOUS_PAGE,
-            ...(rawSections.consciousPage || {}),
-          },
-          lookbookPage: {
-            ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-            ...(rawSections.lookbookPage || {}),
-          },
-          lookbookVolumesConfig: {
-            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-            ...(rawSections.lookbookVolumesConfig || {}),
-          },
-        };
-
-        const cleanMerged = deepCleanMojibake(merged);
+        const cleanMerged = normalizeAndMergeSiteSections(rawSections);
         _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
         _isServerFetched = true;
@@ -765,57 +806,7 @@ export async function getSiteSections(forceRefresh = false): Promise<SiteSection
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<SiteSectionsConfig>;
-        if (
-          parsed.lookbookPage?.heroTitle === 'FLORAISON' ||
-          parsed.lookbookPage?.heroSubtitle === 'SEVAYA • FLORAISON'
-        ) {
-          parsed.lookbookPage = DEFAULT_LOOKBOOK_CONFIG;
-        }
-        if (
-          parsed.lookbookVolumesConfig?.['vol-1']?.heroTitle === 'FLORAISON' ||
-          parsed.lookbookVolumesConfig?.['vol-1']?.heroSubtitle === 'SEVAYA • FLORAISON'
-        ) {
-          parsed.lookbookVolumesConfig = {
-            ...(parsed.lookbookVolumesConfig || {}),
-            'vol-1': DEFAULT_LOOKBOOK_CONFIG,
-          };
-        }
-        const merged: SiteSectionsConfig = {
-          ...DEFAULT_SITE_SECTIONS,
-          ...parsed,
-          hero: {
-            ...DEFAULT_SITE_SECTIONS.hero,
-            ...(parsed.hero || {}),
-            image: sanitizeHeroImage(parsed.hero?.image),
-            position: parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.position,
-            mobilePosition: parsed.hero?.mobilePosition || parsed.hero?.position || DEFAULT_SITE_SECTIONS.hero.mobilePosition,
-          },
-          closerLook: {
-            ...DEFAULT_CLOSER_LOOK,
-            ...(parsed.closerLook || {}),
-          },
-          narrative: {
-            ...DEFAULT_HOME_NARRATIVE,
-            ...(parsed.narrative || {}),
-          },
-          journalHeader: {
-            ...DEFAULT_JOURNAL_HEADER,
-            ...(parsed.journalHeader || {}),
-          },
-          consciousPage: {
-            ...DEFAULT_CONSCIOUS_PAGE,
-            ...(parsed.consciousPage || {}),
-          },
-          lookbookPage: {
-            ...DEFAULT_SITE_SECTIONS.lookbookPage!,
-            ...(parsed.lookbookPage || {}),
-          },
-          lookbookVolumesConfig: {
-            ...DEFAULT_SITE_SECTIONS.lookbookVolumesConfig,
-            ...(parsed.lookbookVolumesConfig || {}),
-          },
-        };
-        const cleanMerged = deepCleanMojibake(merged);
+        const cleanMerged = normalizeAndMergeSiteSections(parsed);
         _cachedSiteSections = cleanMerged;
         _cachedSectionsTime = Date.now();
         return cleanMerged;

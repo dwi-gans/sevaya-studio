@@ -11,6 +11,7 @@ import {
   DEFAULT_JOURNAL_HEADER,
   SiteSectionsConfig,
   deepCleanMojibake,
+  normalizeAndMergeSiteSections,
 } from '@/integrations/supabase/sections';
 
 export const runtime = 'nodejs';
@@ -52,7 +53,7 @@ function writeLocalSections(sections: SiteSectionsConfig) {
 }
 
 function mergeDeep(base: SiteSectionsConfig, incoming: Partial<SiteSectionsConfig>): SiteSectionsConfig {
-  return {
+  return normalizeAndMergeSiteSections({
     ...base,
     ...incoming,
     hero: {
@@ -95,7 +96,7 @@ function mergeDeep(base: SiteSectionsConfig, incoming: Partial<SiteSectionsConfi
       ...(base.missionTextiles || DEFAULT_SITE_SECTIONS.missionTextiles),
       ...(incoming.missionTextiles || {}),
     },
-  };
+  });
 }
 
 /**
