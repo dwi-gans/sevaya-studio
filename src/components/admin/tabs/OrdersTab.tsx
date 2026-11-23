@@ -117,6 +117,26 @@ function OrderDetailModal({
   const [loading, setLoading] = useState(false);
   const [trackingInput, setTrackingInput] = useState(order.tracking_number || '');
   const [logs, setLogs] = useState<string[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Kunci scroll halaman luar agar tidak ikut naik-turun saat modal rincian terbuka
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.overscrollBehavior = originalOverscroll;
+    };
+  }, []);
+
+  // Pastikan posisi scroll rincian transaksi SELALU mulai dari paling atas saat dibuka
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [order.id]);
 
   const orderCourier = useMemo(() => {
     return detectOrderCourier(order);
@@ -203,10 +223,14 @@ function OrderDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs overscroll-contain"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      onWheel={(e) => e.stopPropagation()}
     >
-      <div className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl flex flex-col overflow-hidden">
+      <div 
+        className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-black/15 bg-white px-4 sm:px-6 py-3.5 sm:py-4 shrink-0">
           <div>
@@ -244,7 +268,10 @@ function OrderDetailModal({
           </div>
         </div>
 
-        <div className="overflow-y-auto p-4 sm:p-6 grid gap-5 sm:gap-6 md:grid-cols-2">
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-y-auto p-4 sm:p-6 grid gap-5 sm:gap-6 md:grid-cols-2 overscroll-contain"
+        >
           {/* Quick Print Card */}
           <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-black/15 bg-[#FAF9F6] p-3.5 sm:px-4">
             <div className="flex items-center gap-3">
