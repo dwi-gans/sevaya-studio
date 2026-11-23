@@ -641,6 +641,8 @@ export function OrdersTab({
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
+  const [courierFilter, setCourierFilter] = useState<string>('all');
+  const [resiFilter, setResiFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
@@ -772,7 +774,17 @@ export function OrdersTab({
     }
   };
 
-  // Stats
+  // Stats & Executive Metrics
+  const validOrders = orders.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
+  const totalRevenue = validOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
+  const avgOrderValue = validOrders.length > 0 ? Math.round(totalRevenue / validOrders.length) : 0;
+
+  const ordersWithResi = orders.filter((o) => Boolean(o.tracking_number?.trim()));
+  const ordersWithoutResi = orders.filter((o) => o.status === 'processing' && !o.tracking_number?.trim());
+
+  const jneOrders = orders.filter((o) => o.courier_name?.toLowerCase().includes('jne'));
+  const sicepatOrders = orders.filter((o) => o.courier_name?.toLowerCase().includes('sicepat'));
+
   const stats = {
     all: orders.length,
     pending_payment: orders.filter((o) => o.status === 'pending_payment').length,
@@ -780,16 +792,28 @@ export function OrdersTab({
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    with_biteship: orders.filter((o) => !!o.biteship_order_id).length,
+    with_resi: ordersWithResi.length,
+    need_resi: ordersWithoutResi.length,
+    jne: jneOrders.length,
+    sicepat: sicepatOrders.length,
   };
-
-  const totalRevenue = orders
-    .filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment')
-    .reduce((s, o) => s + (o.grand_total || 0), 0);
 
   // Filter + search
   const filtered = orders.filter((o) => {
-    const matchFilter = filter === 'all' || o.status === filter;
+    const matchStatus = filter === 'all' || o.status === filter;
+
+    const hasResi = Boolean(o.tracking_number?.trim());
+    const matchResi =
+      resiFilter === 'all' ||
+      (resiFilter === 'has_resi' && hasResi) ||
+      (resiFilter === 'need_resi' && !hasResi && o.status === 'processing');
+
+    const courierLower = (o.courier_name || '').toLowerCase();
+    const matchCourier =
+      courierFilter === 'all' ||
+      (courierFilter === 'jne' && courierLower.includes('jne')) ||
+      (courierFilter === 'sicepat' && courierLower.includes('sicepat'));
+
     const matchSearch =
       !search ||
       o.order_number?.toLowerCase().includes(search.toLowerCase()) ||
@@ -797,17 +821,9 @@ export function OrdersTab({
       o.customer_phone?.includes(search) ||
       o.biteship_order_id?.toLowerCase().includes(search.toLowerCase()) ||
       o.tracking_number?.toLowerCase().includes(search.toLowerCase());
-    return matchFilter && matchSearch;
-  });
 
-  const FILTER_TABS = [
-    { key: 'all', label: `Semua (${stats.all})` },
-    { key: 'pending_payment', label: `Belum Bayar (${stats.pending_payment})` },
-    { key: 'processing', label: `Diproses (${stats.processing})` },
-    { key: 'shipped', label: `Dikirim (${stats.shipped})` },
-    { key: 'delivered', label: `Sampai (${stats.delivered})` },
-    { key: 'cancelled', label: `Dibatalkan (${stats.cancelled})` },
-  ];
+    return matchStatus && matchResi && matchCourier && matchSearch;
+  });
 
   return (
     <div className="w-full">
@@ -838,64 +854,167 @@ export function OrdersTab({
       {/* Konten Halaman */}
       <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-4 sm:space-y-6">
 
-      {/* Unified KPI Summary Card */}
-      <div className="rounded-xl sm:rounded-2xl border border-black/10 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3 sm:space-y-5">
-        <div className="flex items-center justify-between gap-2 border-b border-black/10 pb-3 sm:pb-4">
-          <div>
-            <span className="font-headline text-[9px] sm:text-[10px] font-bold tracking-widest text-black/50 uppercase block">
-              Total Pendapatan Terkonfirmasi
+      {/* Unified Executive KPI Summary Card (Kartu Interaktif Minimalis & Elegan) */}
+      <div className="rounded-xl sm:rounded-2xl border border-black/10 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3 sm:space-y-4">
+        {/* Total Nilai Pesanan & Reset */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-2 border-b border-black/10 pb-3">
+          <div className="flex items-baseline gap-2.5">
+            <span className="font-headline text-[9px] sm:text-[10px] font-bold tracking-widest text-black/50 uppercase">
+              Total Nilai Pesanan Masuk
             </span>
-            <p className="font-headline text-lg sm:text-3xl font-bold text-black mt-0.5 sm:mt-1">
+            <span className="font-headline text-lg sm:text-2xl font-bold text-black tracking-tight">
               {formatIDR(totalRevenue)}
-            </p>
+            </span>
+            <span className="text-xs text-black/40 hidden sm:inline">
+              ({validOrders.length} transaksi)
+            </span>
           </div>
-          <p className="hidden sm:block text-xs text-black/60">
-            Akumulasi transaksi aktif &amp; berhasil diproses
-          </p>
+
+          {filter !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setFilter('all')}
+              className="text-xs font-semibold text-black underline hover:text-black/70 cursor-pointer self-start sm:self-auto"
+            >
+              Tampilkan Semua ({stats.all})
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-3">
+        {/* 6 Minimalist & Functional Interactive Status Cards */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
           {[
-            { label: 'Total Order', value: stats.all, color: 'text-black' },
-            { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8C5D23]' },
-            { label: 'Diproses', value: stats.processing, color: 'text-[#8C4725]' },
-            { label: 'Dikirim', value: stats.shipped, color: 'text-[#186068]' },
-            { label: 'Sampai', value: stats.delivered, color: 'text-[#1E6037]' },
-            { label: 'Dibatalkan', value: stats.cancelled, color: 'text-[#A12B35]' },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="flex flex-col gap-0.5 rounded-lg sm:rounded-xl bg-black/[0.03] p-2 sm:p-3 border border-black/10"
-            >
-              <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-black/60 truncate">
-                {s.label}
-              </span>
-              <span className={`text-sm sm:text-xl font-bold ${s.color}`}>{s.value}</span>
-            </div>
-          ))}
+            { key: 'all', label: 'Semua', value: stats.all, dot: 'bg-black' },
+            { key: 'pending_payment', label: 'Belum Bayar', value: stats.pending_payment, dot: 'bg-[#C2822B]' },
+            { key: 'processing', label: 'Diproses', value: stats.processing, dot: 'bg-[#BF6338]' },
+            { key: 'shipped', label: 'Dikirim', value: stats.shipped, dot: 'bg-[#22848F]' },
+            { key: 'delivered', label: 'Sampai', value: stats.delivered, dot: 'bg-[#2B864E]' },
+            { key: 'cancelled', label: 'Dibatalkan', value: stats.cancelled, dot: 'bg-[#C7404B]' },
+          ].map((s) => {
+            const isActive = filter === s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setFilter(isActive && s.key !== 'all' ? 'all' : s.key)}
+                className={`flex flex-col justify-between text-left rounded-xl p-2.5 sm:p-3.5 transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? 'bg-[#1A1A1A] text-white shadow-sm ring-1 ring-[#1A1A1A]'
+                    : 'bg-black/[0.02] border border-black/10 hover:bg-black/[0.04] hover:border-black/25 text-black'
+                }`}
+                title={`Filter: ${s.label}`}
+              >
+                <div className="flex items-center justify-between gap-1 w-full">
+                  <span className={`text-[10px] sm:text-xs font-medium tracking-wide truncate ${
+                    isActive ? 'text-white/80' : 'text-black/60'
+                  }`}>
+                    {s.label}
+                  </span>
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                    isActive ? 'bg-white' : s.dot
+                  }`} />
+                </div>
+                <div className="mt-2 sm:mt-2.5">
+                  <span className={`text-lg sm:text-2xl font-bold font-headline tracking-tight ${
+                    isActive ? 'text-white' : 'text-black'
+                  }`}>
+                    {s.value}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Search + Filter */}
-      <div className="space-y-2 sm:space-y-3">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Cari nama, no. order, resi, Biteship ID..."
-          className="w-full bg-white px-3.5 py-2 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[38px] rounded-xl border border-black/15 shadow-xs"
-        />
-        <div className="no-scrollbar flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 touch-pan-x">
-          {FILTER_TABS.map((tab) => (
+      {/* Search + Real Logistics Helper Filters */}
+      <div className="space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="relative flex-1">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama pelanggan, no. order (#SVY-...), resi, Biteship ID..."
+              className="w-full bg-white px-3.5 py-2.5 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[40px] rounded-xl border border-black/15 shadow-xs"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-black/40 hover:text-black cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Active Filter Indicator & Reset */}
+          {(filter !== 'all' || resiFilter !== 'all' || courierFilter !== 'all' || search) && (
+            <div className="flex items-center gap-2 bg-black/5 rounded-xl px-3 py-1.5 text-xs text-black/80 shrink-0">
+              <span className="text-[11px] font-medium">
+                Ditemukan <strong>{filtered.length}</strong> pesanan
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilter('all');
+                  setResiFilter('all');
+                  setCourierFilter('all');
+                  setSearch('');
+                }}
+                className="text-[10px] font-bold uppercase tracking-wider text-red-600 hover:text-red-800 underline ml-1 cursor-pointer"
+              >
+                Reset Semua
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Actionable Logistics Filters: Resi & Courier (Bukan Pengulangan Status) */}
+        <div className="no-scrollbar flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 touch-pan-x text-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-black/40 shrink-0 mr-1">
+            Logistik:
+          </span>
+
+          {/* Resi filters */}
+          {[
+            { key: 'all', label: 'Semua Resi' },
+            { key: 'need_resi', label: `⚠️ Perlu Resi (${stats.need_resi})` },
+            { key: 'has_resi', label: `✅ Sudah Ada Resi (${stats.with_resi})` },
+          ].map((rf) => (
             <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`shrink-0 min-h-[30px] sm:min-h-[36px] flex items-center rounded-full border px-3 sm:px-4 py-0.5 text-[11px] sm:text-xs font-semibold transition active:scale-95 ${
-                filter === tab.key
-                  ? 'border-black bg-black text-white shadow-xs'
+              key={rf.key}
+              type="button"
+              onClick={() => setResiFilter(rf.key)}
+              className={`shrink-0 min-h-[30px] flex items-center rounded-full border px-3 py-0.5 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
+                resiFilter === rf.key
+                  ? 'border-black bg-black text-white shadow-xs font-semibold'
                   : 'border-black/15 bg-white text-black/70 hover:border-black hover:bg-black/5'
               }`}
             >
-              {tab.label}
+              {rf.label}
+            </button>
+          ))}
+
+          <span className="text-black/20 shrink-0">|</span>
+
+          {/* Courier filters */}
+          {[
+            { key: 'all', label: 'Semua Kurir' },
+            { key: 'jne', label: `JNE (${stats.jne})` },
+            { key: 'sicepat', label: `SiCepat (${stats.sicepat})` },
+          ].map((cf) => (
+            <button
+              key={cf.key}
+              type="button"
+              onClick={() => setCourierFilter(cf.key)}
+              className={`shrink-0 min-h-[30px] flex items-center rounded-full border px-3 py-0.5 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
+                courierFilter === cf.key
+                  ? 'border-black bg-black text-white shadow-xs font-semibold'
+                  : 'border-black/15 bg-white text-black/70 hover:border-black hover:bg-black/5'
+              }`}
+            >
+              {cf.label}
             </button>
           ))}
         </div>
