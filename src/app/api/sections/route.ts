@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/auth-server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 import {
@@ -236,6 +237,18 @@ export async function POST(req: NextRequest) {
     // Instantly update memory cache
     cachedSections = merged;
     cacheTimestamp = Date.now();
+
+    // Bust ISR cache for all pages that render section data
+    try {
+      revalidatePath('/', 'page');
+      revalidatePath('/lookbook', 'page');
+      revalidatePath('/lookbook/vol-2', 'page');
+      revalidatePath('/lookbook/vol-1', 'page');
+      revalidatePath('/conscious', 'page');
+      revalidatePath('/shop', 'page');
+    } catch {
+      // revalidatePath only works in production/ISR context, ignore in dev
+    }
 
     return NextResponse.json({ success: true, sections: merged });
   } catch (err: unknown) {
