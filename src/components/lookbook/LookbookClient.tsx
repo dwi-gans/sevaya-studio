@@ -102,7 +102,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
           <div className="relative aspect-[4/5] w-full overflow-hidden border border-black/10 bg-black/5 shadow-xs">
             <StudioImage
               src={cfg.heroImage || '/images/sevaya_first_chapter.jpg'}
-              alt="SEVAYA Floraison Campaign Hero"
+              alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} Campaign Hero`}
               fill
               priority
               preset="spotlight"
@@ -149,7 +149,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
                   src={cfg.collagePortrait || '/images/lookbook_figma_0.png'}
-                  alt="Floraison Botanical Silhouette"
+                  alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} — Koleksi 1`}
                   fill
                   preset="spotlight"
                   className="object-cover transition-transform duration-700 hover:scale-105"
@@ -160,7 +160,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
                   src={cfg.collageDetail1 || '/images/figma_about_1.png'}
-                  alt="Floraison Textile Flow"
+                  alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} — Koleksi 2`}
                   fill
                   preset="spotlight"
                   className="object-cover transition-transform duration-700 hover:scale-105"
@@ -219,7 +219,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
                   src={cfg.triptych1 || '/images/lookbook_figma_2.png'}
-                  alt="Floraison Texture Detail 1"
+                  alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} — Detail 1`}
                   fill
                   preset="thumbnail"
                   className="object-cover transition-transform duration-700 hover:scale-105"
@@ -230,7 +230,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
                   src={cfg.triptych2 || '/images/lookbook_figma_3.png'}
-                  alt="Floraison Texture Detail 2"
+                  alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} — Detail 2`}
                   fill
                   preset="thumbnail"
                   className="object-cover transition-transform duration-700 hover:scale-105"
@@ -241,7 +241,7 @@ export function LookbookClient({ initialConfig, initialProducts }: LookbookClien
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-black/5 shadow-xs">
                 <StudioImage
                   src={cfg.triptych3 || '/images/lookbook_figma_4.png'}
-                  alt="Floraison Texture Detail 3"
+                  alt={`SEVAYA ${cfg.heroTitle || 'Lookbook'} — Detail 3`}
                   fill
                   preset="thumbnail"
                   className="object-cover transition-transform duration-700 hover:scale-105"

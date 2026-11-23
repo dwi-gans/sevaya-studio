@@ -442,8 +442,8 @@ export function Header() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={
                   language === 'id'
-                    ? 'Cari abaya, bahan cupro, Floraison...'
-                    : 'Search silhouettes, fabrics, Floraison, abayas...'
+                    ? 'Cari abaya, cupro, Sevilla, Alma...'
+                    : 'Search abayas, fabrics, Sevilla, Alma...'
                 }
                 className="font-body-md text-sm sm:text-base flex-1 bg-transparent text-white placeholder:text-white/40 focus:outline-none"
               />
@@ -541,8 +541,8 @@ export function Header() {
                     </p>
                     <p className="text-xs text-white/60 mt-1">
                       {language === 'id'
-                        ? 'Coba gunakan kata kunci seperti Abaya, Cupro, Stripe, atau Rhapsody.'
-                        : 'Try searching for Abaya, Cupro, Stripe, or Rhapsody.'}
+                        ? 'Coba gunakan kata kunci seperti Abaya, Cupro, Stripe, Alma, atau Sevilla.'
+                        : 'Try searching for Abaya, Cupro, Stripe, Alma, or Sevilla.'}
                     </p>
                   </div>
                 )}

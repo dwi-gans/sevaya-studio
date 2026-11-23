@@ -6,133 +6,14 @@ import { Icon } from '@/components/ui/Icon';
 import { useLanguage } from '@/context/LanguageContext';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 
-export const DEFAULT_BEST_SELLERS: Product[] = [
-  {
-    id: '1',
-    slug: 'fina-abaya-stripe-2',
-    title: 'FINA ABAYA - STRIPE EDITION 2.0',
-    edition: 'Edition 1.0',
-    price: 499000,
-    originalPrice: 599000,
-    badge: 'BEST SELLER',
-    image: '/images/catalog/catalog-01.jpg',
-    images: ['/images/catalog/catalog-01.jpg', '/images/catalog/catalog-02.jpg'],
-    swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-01.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-02.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-01.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-02.jpg' },
-    ],
-  },
-  {
-    id: '2',
-    slug: 'fina-abaya-1',
-    title: 'TALA ABAYA - RHAPSODY',
-    edition: 'Edition 1.0',
-    price: 499000,
-    badge: 'NEW',
-    image: '/images/catalog/catalog-03.jpg',
-    images: ['/images/catalog/catalog-03.jpg', '/images/catalog/catalog-04.jpg'],
-    swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-03.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-04.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-03.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-04.jpg' },
-    ],
-  },
-  {
-    id: '3',
-    slug: 'tala-abaya-cloudmatte',
-    title: 'SEVILLA CUPRO - ABAYA',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-18.jpg',
-    images: ['/images/catalog/catalog-18.jpg', '/images/catalog/catalog-17.jpg'],
-    swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-18.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-17.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-18.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-17.jpg' },
-    ],
-  },
-  {
-    id: '4',
-    slug: 'fina-abaya-stripe-oatmeal',
-    title: 'FINA ABAYA - OATMEAL STRIPE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-13.jpg',
-    images: ['/images/catalog/catalog-13.jpg', '/images/catalog/catalog-14.jpg'],
-    swatches: [
-      { name: 'Dusty Pink', color: '#DCAEAA', image: '/images/catalog/catalog-13.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-14.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-13.jpg' },
-      { name: 'Soft Rose', color: '#EBB4B0', image: '/images/catalog/catalog-14.jpg' },
-    ],
-  },
-  {
-    id: '5',
-    slug: 'fina-abaya-stripe-2',
-    title: 'AMANI MODEST ABAYA - SAGE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-05.jpg',
-    images: ['/images/catalog/catalog-05.jpg', '/images/catalog/catalog-06.jpg'],
-    swatches: [
-      { name: 'Sage Green', color: '#889A84', image: '/images/catalog/catalog-05.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-06.jpg' },
-      { name: 'Rose', color: '#DBA8A0', image: '/images/catalog/catalog-05.jpg' },
-    ],
-  },
-  {
-    id: '6',
-    slug: 'tala-abaya-cloudmatte',
-    title: 'TALA ABAYA - CLOUDMATTE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-07.jpg',
-    images: ['/images/catalog/catalog-07.jpg', '/images/catalog/catalog-08.jpg'],
-    swatches: [
-      { name: 'Beige', color: '#D2BFA6', image: '/images/catalog/catalog-07.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-08.jpg' },
-      { name: 'Mocha', color: '#B28E78', image: '/images/catalog/catalog-07.jpg' },
-    ],
-  },
-  {
-    id: '7',
-    slug: 'fina-abaya-1',
-    title: 'LUNA ESSENTIAL ABAYA',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-10.jpg',
-    images: ['/images/catalog/catalog-10.jpg', '/images/catalog/catalog-09.jpg'],
-    swatches: [
-      { name: 'Grey', color: '#4A4E53', image: '/images/catalog/catalog-10.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-09.jpg' },
-      { name: 'Cream', color: '#E5D6C5', image: '/images/catalog/catalog-10.jpg' },
-    ],
-  },
-  {
-    id: '8',
-    slug: 'fina-abaya-stripe-oatmeal',
-    title: 'NOUR LUXURY SILHOUETTE',
-    edition: 'Edition 1.0',
-    price: 499000,
-    image: '/images/catalog/catalog-15.jpg',
-    images: ['/images/catalog/catalog-15.jpg', '/images/catalog/catalog-16.jpg'],
-    swatches: [
-      { name: 'Espresso', color: '#3A271E', image: '/images/catalog/catalog-15.jpg' },
-      { name: 'Black', color: '#1A1A1A', image: '/images/catalog/catalog-16.jpg' },
-      { name: 'Camel', color: '#A98263', image: '/images/catalog/catalog-15.jpg' },
-    ],
-  },
-];
+// No hardcoded dummy products — always use real data from DB
+export const DEFAULT_BEST_SELLERS: Product[] = [];
 
 interface ProductGridProps {
   products?: Product[];
 }
 
-export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProps) {
+export function ProductGrid({ products = [] }: ProductGridProps) {
   const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDown, setIsDown] = React.useState(false);
@@ -141,7 +22,7 @@ export function ProductGrid({ products = DEFAULT_BEST_SELLERS }: ProductGridProp
   const [hasMoved, setHasMoved] = React.useState(false);
 
   const sortedList = React.useMemo(() => {
-    const raw = products && products.length > 0 ? [...products] : [...DEFAULT_BEST_SELLERS];
+    const raw = products && products.length > 0 ? [...products] : [];
     return raw.sort((a, b) => {
       const aBest = (a.badge || '').toLowerCase().includes('best') ? 1 : 0;
       const bBest = (b.badge || '').toLowerCase().includes('best') ? 1 : 0;

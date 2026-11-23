@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Campaign: Floraison',
+  title: 'Lookbook — SEVAYA Studio',
   description:
-    'Inspired by the life cycle of plants, Floraison reflects on gentle, mindful growth — an invitation to embrace your own rhythm.',
+    'Koleksi editorial SEVAYA. Temukan Vol. 1: Sevilla Abaya dan Vol. 2: Alma — dua koleksi yang diracik dengan cermat untuk menemani momen sehari-hari dengan elegan dan penuh karakter.',
 };
 
 export default function LookbookLayout({ children }: { children: React.ReactNode }) {

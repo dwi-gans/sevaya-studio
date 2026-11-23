@@ -202,19 +202,7 @@ function OrderConfirmationContent() {
     if (dbOrder?.items && Array.isArray(dbOrder.items) && dbOrder.items.length > 0) {
       return dbOrder.items;
     }
-    if (!rawItems) {
-      return [
-        {
-          title: 'Tala Abaya - Rhapsody',
-          color: 'Black',
-          size: 'S–M',
-          edition: 'Classic Cupro Silk',
-          quantity: 1,
-          price: 1339000,
-          image: '/images/catalog/catalog-03.jpg',
-        },
-      ];
-    }
+    if (!rawItems) return [];
     try {
       const parsed = JSON.parse(rawItems);
       return Array.isArray(parsed) && parsed.length > 0 ? parsed : [];
@@ -225,7 +213,7 @@ function OrderConfirmationContent() {
 
   // Split multi-line address
   const addressLines = useMemo(() => {
-    if (!destination) return ['Indonesia'];
+    if (!destination) return ['—'];
     return destination
       .split(/[\r\n,]+/)
       .map((p: string) => p.trim())
@@ -494,11 +482,11 @@ function OrderConfirmationContent() {
               {/* Product Items List */}
               <div className="divide-y divide-neutral-100">
                 {items.map((it: any, idx: number) => {
-                  const title = it.title || it.name || it.productTitle || 'Tala Abaya - Rhapsody';
-                  const price = Number(it.price || 1339000);
+                  const title = it.title || it.name || it.productTitle || '—';
+                  const price = Number(it.price || 0);
                   const qty = Number(it.quantity || it.qty || 1);
                   const variantParts = [it.color, it.size, it.edition].filter(Boolean);
-                  const variant = variantParts.length > 0 ? variantParts.join(' / ') : 'Black / S–M / Classic Cupro Silk';
+                  const variant = variantParts.length > 0 ? variantParts.join(' / ') : '—';
                   const imgUrl = resolveProductImage(it.image);
 
                   return (
