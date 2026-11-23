@@ -104,6 +104,15 @@ export default function OrderDetailPage({
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  type TrackingEvent = { datetime: string; note: string; status?: string };
+  const [trackingData, setTrackingData] = useState<{
+    history: TrackingEvent[];
+    waybill_id: string | null;
+    loading: boolean;
+    error: string | null;
+    loaded: boolean;
+  }>({ history: [], waybill_id: null, loading: false, error: null, loaded: false });
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated && !user) {
       router.push(`/login?redirect=/profile/orders/${orderId}`);
@@ -157,6 +166,40 @@ export default function OrderDetailPage({
   const handlePrint = () => {
     window.print();
   };
+
+  const fetchTracking = async (token: string) => {
+    if (!orderId) return;
+    setTrackingData((p) => ({ ...p, loading: true, error: null }));
+    try {
+      const res = await fetch(`/api/user/orders/${encodeURIComponent(orderId)}/tracking`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setTrackingData({
+          history: json.history ?? [],
+          waybill_id: json.waybill_id ?? null,
+          loading: false,
+          error: null,
+          loaded: true,
+        });
+      } else {
+        setTrackingData((p) => ({ ...p, loading: false, error: json.error || null, loaded: true }));
+      }
+    } catch {
+      setTrackingData((p) => ({ ...p, loading: false, loaded: true }));
+    }
+  };
+
+  // Auto-fetch tracking setelah order berhasil dimuat dan punya resi/biteship
+  useEffect(() => {
+    if (order && (order.tracking_number || order.biteship_order_id) && !trackingData.loaded) {
+      getAccessToken().then((token) => {
+        if (token) fetchTracking(token);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.id, order?.tracking_number, order?.biteship_order_id]);
 
   const copyOrderNumber = () => {
     if (order?.order_number) {
@@ -568,6 +611,91 @@ export default function OrderDetailPage({
               <span>{statusDetail.desc}</span>
             </div>
           </div>
+
+          {/* ── TRACKING TIMELINE (hanya tampil jika ada resi/biteship) ── */}
+          {(order.tracking_number || order.biteship_order_id) && (
+            <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">
+              <div className="flex items-center justify-between border-b border-black/15/70 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/5 text-black">
+                    <Icon name="local_shipping" size={18} />
+                  </div>
+                  <div>
+                    <span className="font-headline text-[10px] font-bold tracking-wider text-black/50 uppercase block">
+                      Riwayat Pengiriman
+                    </span>
+                    <p className="text-xs font-semibold text-black">
+                      {order.courier_name || 'Kurir'}
+                      {order.tracking_number && (
+                        <span className="ml-2 font-mono text-black/50">· {order.tracking_number}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                {trackingData.loaded && !trackingData.loading && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const token = await getAccessToken();
+                      if (token) {
+                        setTrackingData((p) => ({ ...p, loaded: false }));
+                        fetchTracking(token);
+                      }
+                    }}
+                    className="text-[11px] text-black/50 hover:text-black underline underline-offset-2 transition"
+                  >
+                    ↻ Refresh
+                  </button>
+                )}
+              </div>
+
+              {trackingData.loading ? (
+                <div className="flex items-center gap-2.5 py-4 text-xs text-black/50">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent shrink-0" />
+                  <span>Mengambil data perjalanan paket...</span>
+                </div>
+              ) : trackingData.history.length === 0 ? (
+                <div className="rounded-xl bg-black/5 p-4 text-xs text-black/60 text-center">
+                  Paket baru dijemput kurir. Riwayat perjalanan akan muncul di sini.
+                </div>
+              ) : (
+                <div className="space-y-0 relative">
+                  {trackingData.history.map((event, idx) => {
+                    const isLatest = idx === 0;
+                    const eventDate = event.datetime
+                      ? new Date(event.datetime).toLocaleString('id-ID', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '—';
+                    return (
+                      <div key={idx} className="flex gap-4 py-3 relative">
+                        {/* Timeline connector line */}
+                        {idx < trackingData.history.length - 1 && (
+                          <div className="absolute left-[9px] top-[26px] bottom-0 w-px bg-black/10" />
+                        )}
+                        {/* Dot */}
+                        <div
+                          className={`mt-1 h-4 w-4 rounded-full border-2 shrink-0 ${
+                            isLatest ? 'border-black bg-black' : 'border-black/25 bg-white'
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1 pb-1">
+                          <p className={`text-xs leading-snug ${isLatest ? 'font-semibold text-black' : 'text-black/70'}`}>
+                            {event.note || event.status || '—'}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-black/40">{eventDate}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── SECTION 2: DAFTAR PRODUK (Purchased Items) ── */}
           <div className="rounded-2xl border border-black/15 bg-white p-5 sm:p-7 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-4">

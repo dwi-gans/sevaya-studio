@@ -155,6 +155,51 @@ function OrderDetailModal({
   const [mounted, setMounted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Tracking timeline state
+  type TrackingEvent = { datetime: string; note: string; status?: string };
+  const [trackingData, setTrackingData] = useState<{
+    history: TrackingEvent[];
+    order_status: string | null;
+    waybill_id: string | null;
+    loading: boolean;
+    error: string | null;
+  }>({ history: [], order_status: null, waybill_id: null, loading: false, error: null });
+
+  // Status dikontrol Biteship ketika sudah ada biteship_order_id dan status bukan cancelled
+  const isBiteshipControlled =
+    !!order.biteship_order_id && order.biteship_status !== 'cancelled' && order.status !== 'cancelled';
+
+  const fetchTracking = useCallback(async () => {
+    if (!order.biteship_order_id && !order.tracking_number) return;
+    setTrackingData((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const params = order.biteship_order_id
+        ? `biteship_id=${encodeURIComponent(order.biteship_order_id)}`
+        : `waybill_id=${encodeURIComponent(order.tracking_number!)}&courier_code=${encodeURIComponent(
+            order.courier_name?.toLowerCase().split(' ')[0] || 'jne',
+          )}`;
+      const res = await fetch(`/api/admin/orders/tracking?${params}`);
+      const json = await res.json();
+      if (json.success) {
+        setTrackingData({
+          history: json.history ?? [],
+          order_status: json.order_status ?? null,
+          waybill_id: json.waybill_id ?? null,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setTrackingData((prev) => ({ ...prev, loading: false, error: json.error || 'Gagal memuat tracking' }));
+      }
+    } catch (e) {
+      setTrackingData((prev) => ({
+        ...prev,
+        loading: false,
+        error: e instanceof Error ? e.message : 'Error',
+      }));
+    }
+  }, [order.biteship_order_id, order.tracking_number, order.courier_name]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -177,6 +222,13 @@ function OrderDetailModal({
       scrollContainerRef.current.scrollTop = 0;
     }
   }, [order.id]);
+
+  // Auto-fetch tracking ketika modal dibuka dan order punya biteship_order_id atau tracking_number
+  useEffect(() => {
+    if (order.biteship_order_id || order.tracking_number) {
+      fetchTracking();
+    }
+  }, [order.id, fetchTracking]);
 
   const orderCourier = useMemo(() => {
     return detectOrderCourier(order);
@@ -314,32 +366,8 @@ function OrderDetailModal({
           ref={scrollContainerRef}
           className="overflow-y-auto p-4 sm:p-6 grid gap-5 sm:gap-6 md:grid-cols-2 overscroll-contain"
         >
-          {/* Quick Print Card */}
-          <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-black/15 bg-[#FAF9F6] p-3.5 sm:px-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-black text-white flex items-center justify-center text-base shrink-0">
-                🖨️
-              </div>
-              <div>
-                <p className="text-xs font-bold text-black flex items-center gap-1.5">
-                  Label Pengiriman &amp; Packing Slip (Thermal 10×15 cm)
-                </p>
-                <p className="text-[11px] text-black/60">
-                  {order.tracking_number
-                    ? `No. Resi: ${order.tracking_number} (Tercetak otomatis)`
-                    : 'Siap cetak untuk tempel paket (Mode kirim sendiri / drop-off manual)'}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onPrintLabel?.(order)}
-              className="min-h-[36px] px-4 rounded-full bg-black text-white text-xs font-bold transition hover:bg-black/85 active:scale-95 cursor-pointer shrink-0 self-start sm:self-auto flex items-center gap-1.5"
-            >
-              <span>🖨️</span> Cetak Label (A6)
-            </button>
-          </div>
           {/* Left Column */}
+
           <div className="flex flex-col gap-5">
             {/* Customer Info */}
             <section className="space-y-2">
@@ -437,49 +465,164 @@ function OrderDetailModal({
             {/* Update Internal Status */}
             <section className="space-y-2">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
-                Ubah Status Internal
+                Status Pesanan
               </h4>
               <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider">
-                    Nomor Resi
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      value={trackingInput}
-                      onChange={(e) => setTrackingInput(e.target.value)}
-                      placeholder="Masukkan nomor resi..."
-                      className="flex-1 rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
-                    />
-                    <button
-                      type="button"
-                      disabled={loading || trackingInput === (order.tracking_number || '')}
-                      onClick={handleSaveTrackingNumber}
-                      className="px-4 bg-black text-white text-[10px] font-bold tracking-wider uppercase hover:bg-black/85 disabled:opacity-40 transition cursor-pointer shrink-0"
-                    >
-                      Simpan
-                    </button>
+
+                {/* Info banner: status dikunci oleh Biteship */}
+                {isBiteshipControlled && (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-sky-50 border border-sky-200/70 p-3 text-[11px] text-sky-800">
+                    <span className="mt-0.5 shrink-0 text-sm">🔒</span>
+                    <div>
+                      <p className="font-bold">Status dikontrol Biteship</p>
+                      <p className="text-sky-700 mt-0.5 leading-relaxed">
+                        Kurir sudah pick-up. Status akan otomatis update mengikuti posisi paket dari Biteship. Hanya Batalkan yang bisa dilakukan secara manual.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Nomor Resi — selalu bisa edit */}
+                {!isBiteshipControlled && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-black/70 font-medium uppercase tracking-wider">
+                      Nomor Resi
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        value={trackingInput}
+                        onChange={(e) => setTrackingInput(e.target.value)}
+                        placeholder="Masukkan nomor resi..."
+                        className="flex-1 rounded-none border border-black/20 bg-white px-3 py-2 text-base sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[42px] sm:min-h-[36px]"
+                      />
+                      <button
+                        type="button"
+                        disabled={loading || trackingInput === (order.tracking_number || '')}
+                        onClick={handleSaveTrackingNumber}
+                        className="px-4 bg-black text-white text-[10px] font-bold tracking-wider uppercase hover:bg-black/85 disabled:opacity-40 transition cursor-pointer shrink-0"
+                      >
+                        Simpan
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status buttons grid */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  {INTERNAL_STATUSES.map((s) => (
-                    <button
-                      key={s.value}
-                      disabled={loading || order.status === s.value}
-                      onClick={() => handleInternalStatusChange(s.value)}
-                      className={`min-h-[38px] rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95 flex items-center justify-center gap-1.5
-                        ${order.status === s.value
-                          ? `${s.color} ring-2 ring-black/15 shadow-xs font-extrabold`
-                          : 'border-black/15 bg-white text-black/60 hover:bg-black/5 hover:text-black disabled:opacity-40'
-                        }`}
-                    >
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${s.dot} shrink-0`} />
-                      {order.status === s.value ? '✓ ' : ''}{s.label}
-                    </button>
-                  ))}
+                  {INTERNAL_STATUSES.map((s) => {
+                    // Jika Biteship kontrol, hanya tampilkan status saat ini (readonly) + tombol Batalkan
+                    const isCurrentStatus = order.status === s.value;
+                    const isCancelButton = s.value === 'cancelled';
+                    const isDisabled =
+                      loading ||
+                      isCurrentStatus ||
+                      (isBiteshipControlled && !isCancelButton);
+
+                    return (
+                      <button
+                        key={s.value}
+                        disabled={isDisabled}
+                        onClick={() => handleInternalStatusChange(s.value)}
+                        title={isBiteshipControlled && !isCancelButton ? 'Status dikontrol Biteship — tidak bisa diubah manual' : undefined}
+                        className={`min-h-[38px] rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95 flex items-center justify-center gap-1.5
+                          ${isCurrentStatus
+                            ? `${s.color} ring-2 ring-black/15 shadow-xs font-extrabold`
+                            : isBiteshipControlled && !isCancelButton
+                              ? 'border-black/10 bg-black/5 text-black/25 cursor-not-allowed'
+                              : 'border-black/15 bg-white text-black/60 hover:bg-black/5 hover:text-black disabled:opacity-40'
+                          }`}
+                      >
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${s.dot} shrink-0`} />
+                        {isCurrentStatus ? '✓ ' : ''}{s.label}
+                        {isBiteshipControlled && !isCancelButton && !isCurrentStatus && (
+                          <span className="text-black/25">🔒</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </section>
+
+            {/* Riwayat Tracking Biteship */}
+            {(order.biteship_order_id || order.tracking_number) && (
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-black/70">
+                    Riwayat Pengiriman
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={fetchTracking}
+                    disabled={trackingData.loading}
+                    className="text-[10px] text-black/60 hover:text-black underline underline-offset-2 disabled:opacity-50 transition"
+                  >
+                    {trackingData.loading ? '⏳ Memuat...' : '↻ Refresh'}
+                  </button>
+                </div>
+                <div className="rounded-xl border border-black/15 bg-white overflow-hidden">
+                  {trackingData.loading ? (
+                    <div className="p-5 text-center text-xs text-black/50">
+                      ⏳ Mengambil data tracking dari Biteship...
+                    </div>
+                  ) : trackingData.error ? (
+                    <div className="p-4 text-xs text-red-700 bg-red-50 rounded-xl">
+                      ⚠️ {trackingData.error}
+                    </div>
+                  ) : trackingData.history.length === 0 ? (
+                    <div className="p-5 text-center text-xs text-black/50">
+                      {order.biteship_order_id
+                        ? 'Belum ada riwayat pergerakan paket.'
+                        : 'Tidak ada data tracking tersedia.'}
+                    </div>
+                  ) : (
+                    <div className="p-3 space-y-0 max-h-64 overflow-y-auto">
+                      {/* Waybill info row */}
+                      {trackingData.waybill_id && (
+                        <div className="flex items-center gap-2 pb-2.5 mb-2 border-b border-black/10 text-[10px] text-black/60">
+                          <span>No. Resi:</span>
+                          <span className="font-mono font-semibold text-black">{trackingData.waybill_id}</span>
+                        </div>
+                      )}
+                      {/* Timeline events */}
+                      {trackingData.history.map((event, idx) => {
+                        const isLatest = idx === 0;
+                        const eventDate = event.datetime
+                          ? new Date(event.datetime).toLocaleString('id-ID', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '—';
+                        return (
+                          <div key={idx} className="flex gap-3 py-2.5 relative">
+                            {/* Timeline line */}
+                            {idx < trackingData.history.length - 1 && (
+                              <div className="absolute left-[7px] top-[22px] bottom-0 w-px bg-black/10" />
+                            )}
+                            {/* Dot */}
+                            <div
+                              className={`mt-0.5 h-3.5 w-3.5 rounded-full border-2 shrink-0 ${
+                                isLatest
+                                  ? 'border-black bg-black'
+                                  : 'border-black/30 bg-white'
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-[11px] leading-snug ${isLatest ? 'font-bold text-black' : 'text-black/70'}`}>
+                                {event.note || event.status || '—'}
+                              </p>
+                              <p className="text-[10px] text-black/40 mt-0.5">{eventDate}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* Shipping Carrier / Biteship */}
             <section className="space-y-2">
@@ -488,66 +631,36 @@ function OrderDetailModal({
               </h4>
               <div className="rounded-xl border border-black/15 bg-white p-3.5 sm:p-4 space-y-3">
                 {order.biteship_order_id ? (
-                  <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/60 p-3.5 text-xs space-y-2">
-                    <p className="font-bold text-emerald-800">✅ Terhubung ke Biteship</p>
-                    <p className="text-emerald-700 font-mono text-[11px] break-all">{order.biteship_order_id}</p>
-                    <p className="text-emerald-800 text-[11px]">Status Kurir: <strong>{order.biteship_status}</strong></p>
-
-                    <div className="pt-2 border-t border-emerald-200/70">
-                      <span className="text-[10px] text-emerald-900 font-bold uppercase tracking-wider block mb-1.5">
-                        Simulasi Tahapan Kurir:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          { val: 'allocated', label: 'Allocated', internal: 'processing' },
-                          { val: 'picking_up', label: 'Picking Up', internal: 'processing' },
-                          { val: 'picked', label: 'Picked', internal: 'processing' },
-                          { val: 'dropping_off', label: 'Dropping Off', internal: 'shipped' },
-                          { val: 'delivered', label: 'Delivered', internal: 'delivered' },
-                        ].map((btn) => (
-                          <button
-                            key={btn.val}
-                            type="button"
-                            disabled={loading || order.biteship_status === btn.val}
-                            onClick={() => {
-                              handleBiteshipSimulation(btn.val, btn.internal);
-                            }}
-                            className={`min-h-[36px] rounded-full border px-2.5 py-1 text-[10px] font-semibold transition active:scale-95 ${
-                              order.biteship_status === btn.val
-                                ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-                                : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100 disabled:opacity-50'
-                            }`}
-                          >
-                            {btn.label}
-                          </button>
-                        ))}
-                      </div>
+                  <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/60 p-3.5 text-xs space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-700">✅</span>
+                      <p className="font-bold text-emerald-800">Terhubung ke Biteship</p>
                     </div>
-
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="space-y-1 text-[11px]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <span className="text-black/40 w-16 shrink-0">Order ID</span>
+                        <span className="font-mono break-all">{order.biteship_order_id}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-emerald-800">
+                        <span className="text-black/40 w-16 shrink-0">Status</span>
+                        <StatusBadge status={order.biteship_status || ''} type="biteship" />
+                      </div>
+                      {order.tracking_number && (
+                        <div className="flex items-center gap-2 text-emerald-800">
+                          <span className="text-black/40 w-16 shrink-0">No. Resi</span>
+                          <span className="font-mono font-semibold">{order.tracking_number}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-1.5 border-t border-emerald-200/60">
                       <a
                         href="https://dashboard.biteship.com/orders"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-black underline hover:text-black/70"
+                        className="text-[11px] text-emerald-800 underline underline-offset-2 hover:text-emerald-900 transition"
                       >
                         Buka Biteship Dashboard →
                       </a>
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => {
-                          if (confirm('Putus ID Biteship lama agar Anda dapat memesan kurir baru dengan API Live?')) {
-                            onStatusUpdate(order.id, order.status, {
-                              biteship_order_id: null as any,
-                              biteship_status: null as any,
-                            });
-                          }
-                        }}
-                        className="text-[10px] text-red-600 underline hover:text-red-800 transition cursor-pointer"
-                      >
-                        Reset / Panggil Kurir Ulang
-                      </button>
                     </div>
                   </div>
                 ) : (
@@ -668,6 +781,18 @@ export function OrdersTab({
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [error, setError] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchOrders = useCallback(async (silent = false, sync = false) => {
     if (!silent) setLoading(true);
@@ -691,15 +816,29 @@ export function OrdersTab({
     }
   }, []);
 
-  // Periodic polling: fetch orders from DB every 25 seconds only when document is visible
+  // Polling dua lapis:
+  // 1. Load awal → sync ke Biteship langsung (supaya status selalu fresh saat halaman dibuka)
+  // 2. Setiap 25 detik — ambil data DB saja (cepat, tanpa call Biteship)
+  // 3. Setiap 2 menit — sync ulang ke Biteship API
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(() => {
+    fetchOrders(false, true); // load awal: langsung sync ke Biteship
+
+    const dbPoll = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        fetchOrders(true, false);
+        fetchOrders(true, false); // silent, no Biteship sync
       }
     }, 25000);
-    return () => clearInterval(interval);
+
+    const biteshipSync = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchOrders(true, true); // silent + sync Biteship
+      }
+    }, 2 * 60 * 1000); // 2 menit
+
+    return () => {
+      clearInterval(dbPoll);
+      clearInterval(biteshipSync);
+    };
   }, [fetchOrders]);
 
   // Notify parent whenever order count changes (outside render phase)
@@ -834,8 +973,8 @@ export function OrdersTab({
     cancelled: monthOrders.filter((o) => o.status === 'cancelled').length,
   }), [monthOrders]);
 
-  // Export PDF Handler (Membuka jendela cetak format dokumen PDF resmi SEVAYA)
-  const handleExportPDF = () => {
+  // Export PDF Handler (Membuka jendela cetak format dokumen PDF resmi SEVAYA sesuai desain template editorial)
+  const handleExportPDF = (mode: 'sales_only' | 'all_statuses' | 'cancelled_only' | 'current_filter' = 'sales_only') => {
     const monthLabel = selectedMonth === 'all' ? 'Semua Waktu' : formatMonthLabel(selectedMonth);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -843,16 +982,63 @@ export function OrdersTab({
       return;
     }
 
-    const reportOrders = selectedMonth === 'all'
+    // Pool data pesanan berdasarkan bulan yang sedang dipilih
+    const monthPool = selectedMonth === 'all'
       ? orders
       : orders.filter((o) => getOrderMonthKey(o.created_at) === selectedMonth);
 
-    const reportValid = reportOrders.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
-    const reportRevenue = reportValid.reduce((s, o) => s + (o.grand_total || 0), 0);
-    const reportAov = reportValid.length > 0 ? Math.round(reportRevenue / reportValid.length) : 0;
-    const totalOrderSum = reportOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
+    let targetOrders: AdminOrder[] = [];
+    let reportDocTitle = 'LAPORAN PENJUALAN TERKONFIRMASI';
+    let kpi1Label = 'Total penjualan bersih';
+    let kpi2Label = 'Transaksi berhasil';
+    let kpi3Label = 'Rata-rata order (AOV)';
+    let kpi4Label = 'Total produk terjual';
+    let tfootLabel = 'Total Penjualan Bersih';
 
-    const totalGarments = reportOrders.reduce((sum, o) => {
+    if (mode === 'sales_only') {
+      targetOrders = monthPool.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
+      reportDocTitle = 'LAPORAN PENJUALAN TERKONFIRMASI';
+      kpi1Label = 'Total penjualan bersih';
+      kpi2Label = 'Transaksi berhasil';
+      kpi3Label = 'Rata-rata order (AOV)';
+      kpi4Label = 'Total produk terjual';
+      tfootLabel = 'Total Penjualan Bersih';
+    } else if (mode === 'all_statuses') {
+      targetOrders = monthPool;
+      reportDocTitle = 'LAPORAN SEMUA TRANSAKSI';
+      kpi1Label = 'Total seluruh transaksi';
+      kpi2Label = 'Total pesanan';
+      kpi3Label = 'Rata-rata order (AOV)';
+      kpi4Label = 'Total produk tercatat';
+      tfootLabel = 'Total Seluruh Transaksi';
+    } else if (mode === 'cancelled_only') {
+      targetOrders = monthPool.filter((o) => o.status === 'cancelled');
+      reportDocTitle = 'LAPORAN PESANAN DIBATALKAN';
+      kpi1Label = 'Total nilai dibatalkan';
+      kpi2Label = 'Pesanan dibatalkan';
+      kpi3Label = 'Rata-rata order batal';
+      kpi4Label = 'Total produk batal';
+      tfootLabel = 'Total Nilai Dibatalkan';
+    } else {
+      // mode === 'current_filter'
+      targetOrders = monthPool.filter((o) => filter === 'all' || o.status === filter);
+      const filterName = filter === 'pending_payment' ? 'Belum Bayar' :
+        filter === 'processing' ? 'Diproses' :
+        filter === 'shipped' ? 'Dikirim' :
+        filter === 'delivered' ? 'Sampai' :
+        filter === 'cancelled' ? 'Dibatalkan' : 'Semua';
+      reportDocTitle = `LAPORAN PESANAN (${filterName.toUpperCase()})`;
+      kpi1Label = `Total nilai ${filterName.toLowerCase()}`;
+      kpi2Label = `Pesanan ${filterName.toLowerCase()}`;
+      kpi3Label = 'Rata-rata order';
+      kpi4Label = 'Total produk';
+      tfootLabel = `Total Nilai (${filterName})`;
+    }
+
+    const totalRevenue = targetOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
+    const avgOrderValue = targetOrders.length > 0 ? Math.round(totalRevenue / targetOrders.length) : 0;
+
+    const totalGarments = targetOrders.reduce((sum, o) => {
       try {
         const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || [];
         return sum + items.reduce((s: number, i: { qty?: number }) => s + (i.qty || 1), 0);
@@ -861,82 +1047,80 @@ export function OrdersTab({
       }
     }, 0);
 
-    const printDate = new Date().toLocaleDateString('id-ID', {
+    const now = new Date();
+    const datePart = now.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+    });
+    const timePart = now.toLocaleTimeString('id-ID', {
       hour: '2-digit',
       minute: '2-digit',
-    });
+      hour12: false,
+    }).replace(':', '.');
+    const printDate = `${datePart}, ${timePart}`;
 
-    const rowsHtml = reportOrders.map((o, idx) => {
-      const dateStr = o.created_at
-        ? new Date(o.created_at).toLocaleDateString('id-ID', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : '-';
-
-      let statusBadgeColor = '#1A1A1A';
-      let statusBgColor = '#F3F4F6';
-      let statusBorder = '#E5E7EB';
-      let statusText = o.status;
-      if (o.status === 'processing') {
-        statusBadgeColor = '#8C4725';
-        statusBgColor = '#FAF4EE';
-        statusBorder = '#EED4C5';
-        statusText = 'Diproses';
-      } else if (o.status === 'shipped') {
-        statusBadgeColor = '#186068';
-        statusBgColor = '#EDF7F8';
-        statusBorder = '#C4E3E6';
-        statusText = 'Dikirim';
-      } else if (o.status === 'delivered') {
-        statusBadgeColor = '#1E6037';
-        statusBgColor = '#EDF7EE';
-        statusBorder = '#C3E2C6';
-        statusText = 'Sampai';
-      } else if (o.status === 'cancelled') {
-        statusBadgeColor = '#A12B35';
-        statusBgColor = '#FDF2F2';
-        statusBorder = '#EFC8CB';
-        statusText = 'Dibatalkan';
-      } else if (o.status === 'pending_payment') {
-        statusBadgeColor = '#8C5D23';
-        statusBgColor = '#FEF8ED';
-        statusBorder = '#EEDBBF';
-        statusText = 'Belum Bayar';
+    const rowsHtml = targetOrders.map((o, idx) => {
+      let dateStr = '-';
+      if (o.created_at) {
+        const d = new Date(o.created_at);
+        const dDate = d.toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+        const dTime = d.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).replace(':', '.');
+        dateStr = `${dDate}, ${dTime}`;
       }
+
+      let parsedItems: { productTitle?: string; title?: string; color?: string; size?: string; qty?: number; name?: string }[] = [];
+      try {
+        parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || [];
+      } catch {
+        parsedItems = [];
+      }
+
+      const itemsHtml = parsedItems.length > 0
+        ? parsedItems.map((i) => `
+            <div>
+              ${i.productTitle || i.title || i.name || 'Produk'}
+              <span class="sub">${i.color || i.size ? `${i.color || i.size} &bull; ` : ''}${i.qty || 1} pcs</span>
+            </div>
+          `).join('')
+        : 'Item pesanan';
+
+      let statusText = 'Diproses';
+      if (o.status === 'shipped') statusText = 'Dikirim';
+      else if (o.status === 'delivered') statusText = 'Sampai';
+      else if (o.status === 'cancelled') statusText = 'Dibatalkan';
+      else if (o.status === 'pending_payment') statusText = 'Belum Bayar';
+      else if (o.status === 'paid') statusText = 'Sudah Bayar';
 
       return `
         <tr>
-          <td style="text-align: center; color: #8C857E; font-weight: 500;">${idx + 1}</td>
-          <td>
-            <span class="order-code">${o.order_number}</span><br/>
-            <span class="text-muted">${dateStr}</span>
+          <td class="num">${idx + 1}</td>
+          <td class="c-order">
+            <span class="order-id">#${o.order_number}</span>
+            <span class="sub">${dateStr}</span>
           </td>
-          <td>
-            <strong style="color: #1A1A1A; font-weight: 600;">${o.customer_name}</strong><br/>
-            <span class="text-muted">${o.customer_phone || '-'}</span>
+          <td class="c-cust">
+            ${o.customer_name}
+            <span class="sub">${o.customer_phone || '-'}</span>
           </td>
-          <td style="max-width: 170px; line-height: 1.35; color: #4A4540;">
-            ${o.destination_area || o.customer_address || '-'}
+          <td class="c-region">${o.destination_area || o.customer_address || '-'}</td>
+          <td class="c-prod">
+            ${itemsHtml}
           </td>
-          <td>
-            <span style="font-weight: 600; color: #1A1A1A;">${o.courier_name || '-'}</span><br/>
-            ${o.tracking_number ? `<span class="resi-pill">${o.tracking_number}</span>` : `<span class="text-muted" style="font-style: italic;">(Belum ada resi)</span>`}
+          <td class="c-ship">
+            ${o.courier_name || '-'}
+            <span class="sub">${o.tracking_number || '(Belum ada resi)'}</span>
           </td>
-          <td>
-            <span class="status-badge" style="color: ${statusBadgeColor}; background: ${statusBgColor}; border: 1px solid ${statusBorder};">
-              ${statusText}
-            </span>
-          </td>
-          <td style="text-align: right; font-weight: 700; color: #1A1A1A; font-size: 10px;">
-            ${formatIDR(o.grand_total || 0)}
-          </td>
+          <td class="c-status">${statusText}</td>
+          <td class="c-total amount">${formatIDR(o.grand_total || 0)}</td>
         </tr>
       `;
     }).join('');
@@ -945,282 +1129,197 @@ export function OrdersTab({
       <!DOCTYPE html>
       <html lang="id">
       <head>
-        <meta charset="UTF-8">
-        <title>Laporan_Penjualan_SEVAYA_${monthLabel.replace(/\\s+/g, '_')}</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-        <style>
-          @page {
-            size: A4 landscape;
-            margin: 12mm 14mm 12mm 14mm;
-          }
-          * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #1A1C1C;
-            background: #FFFFFF;
-            margin: 0;
-            padding: 0;
-            font-size: 9.5px;
-            line-height: 1.45;
-          }
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Laporan Penjualan SEVAYA Studio</title>
+      <style>
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,700;1,400&display=swap");
 
-          /* Luxury Header */
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding-bottom: 14px;
-            border-bottom: 2px solid #1A1A1A;
-            margin-bottom: 16px;
-          }
-          .brand-logo {
-            font-family: 'Cinzel', Georgia, serif;
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 0.22em;
-            color: #1A1A1A;
-            text-transform: uppercase;
-            line-height: 1;
-          }
-          .brand-subtitle {
-            font-size: 8.5px;
-            font-weight: 700;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #8C7A6B;
-            margin-top: 6px;
-          }
-          .report-meta {
-            text-align: right;
-            font-size: 9px;
-            color: #555;
-            line-height: 1.6;
-          }
-          .period-pill {
-            display: inline-block;
-            background: #FAF9F7;
-            border: 1px solid #E2DCD3;
-            padding: 3px 9px;
-            border-radius: 6px;
-            font-weight: 700;
-            color: #1A1A1A;
-            font-size: 10px;
-            letter-spacing: 0.02em;
-            margin-bottom: 3px;
-          }
+        :root {
+          --ink: #111111;
+          --muted: #6b6b6b;
+          --line: #e3e3e3;
+          --paper: #ffffff;
+          --font: "Avenir Next", "Avenir", "DM Sans", "Helvetica Neue", Arial, sans-serif;
+        }
 
-          /* Executive KPI Summary Cards */
-          .kpi-grid {
-            display: grid;
-            grid-template-columns: 1.25fr 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 18px;
-          }
-          .kpi-card {
-            background: #FAF9F7;
-            border: 1px solid #EAE6DE;
-            border-radius: 8px;
-            padding: 11px 14px;
-            position: relative;
-          }
-          .kpi-card.dark {
-            background: #181818;
-            border-color: #181818;
-            color: #FFFFFF;
-          }
-          .kpi-card.dark .kpi-label {
-            color: #C8B9A6;
-          }
-          .kpi-card.dark .kpi-val {
-            color: #FFFFFF;
-          }
-          .kpi-card.dark .kpi-sub {
-            color: #9E968F;
-          }
-          .kpi-label {
-            font-size: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.09em;
-            color: #7A746E;
-          }
-          .kpi-val {
-            font-size: 17px;
-            font-weight: 800;
-            color: #1A1C1C;
-            margin-top: 4px;
-            letter-spacing: -0.02em;
-          }
-          .kpi-sub {
-            font-size: 8px;
-            color: #8C857E;
-            margin-top: 2px;
-          }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-          /* Luxury Orders Table */
-          table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 9.5px;
-            border: 1px solid #EAE6DE;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 16px;
-          }
-          thead {
-            background: #181818;
-          }
-          th {
-            color: #FFFFFF;
-            padding: 8px 10px;
-            font-size: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            text-align: left;
-            border: none;
-          }
-          td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #EFECE6;
-            vertical-align: middle;
-            color: #2D2A26;
-          }
-          tr:nth-child(even) td {
-            background: #FAF9F7;
-          }
-          tr:last-child td {
-            border-bottom: none;
-          }
+        body {
+          font-family: var(--font);
+          color: var(--ink);
+          background: #f2f2f2;
+          -webkit-font-smoothing: antialiased;
+        }
 
-          /* Status Badges */
-          .status-badge {
-            display: inline-block;
-            padding: 2.5px 7px;
-            border-radius: 4px;
-            font-size: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-          }
-          .order-code {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-            font-weight: 700;
-            color: #1A1A1A;
-            font-size: 9px;
-          }
-          .resi-pill {
-            display: inline-block;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-            font-size: 8px;
-            background: #EFECE6;
-            padding: 1.5px 5px;
-            border-radius: 4px;
-            color: #333;
-            margin-top: 2px;
-            border: 1px solid #E0DAD0;
-          }
-          .text-muted {
-            color: #7A746E;
-            font-size: 8.5px;
-          }
+        .page {
+          width: 297mm;
+          min-height: 210mm;
+          margin: 12mm auto;
+          padding: 12mm 16mm 10mm;
+          background: var(--paper);
+          display: flex;
+          flex-direction: column;
+        }
 
-          /* Table Summary Footer */
-          tfoot td {
-            background: #F3EFE9 !important;
-            font-weight: 700;
-            border-top: 2px solid #E0DAD0;
-            padding: 9px 10px;
-            color: #1A1A1A;
-          }
+        /* Header */
+        .head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding-bottom: 9mm;
+          border-bottom: 1px solid var(--line);
+        }
+        .brand {
+          font-size: 28px;
+          font-weight: 400;
+          letter-spacing: 0.29em;
+          line-height: 1;
+          padding-top: 4mm;
+        }
+        .meta { text-align: right; font-size: 11px; line-height: 1.6; color: var(--muted); }
+        .meta strong { display: block; color: var(--ink); font-size: 11px; letter-spacing: 0.02em; }
 
-          /* Document Footer */
-          .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 10px;
-            border-top: 1px solid #EAE6DE;
-            font-size: 8.5px;
-            color: #8C857E;
-          }
-        </style>
+        /* Ringkasan */
+        .summary {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          margin-top: 8mm;
+        }
+        .stat .label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; }
+        .stat .value { margin-top: 4px; font-size: 21px; font-weight: 700; line-height: 1.2; }
+
+        /* Tabel */
+        table { width: 100%; border-collapse: collapse; margin-top: 11mm; }
+        th {
+          text-align: left;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.03em;
+          padding: 0 8px 9px 0;
+          border-bottom: 1.2px solid var(--ink);
+        }
+        td {
+          padding: 11px 8px 11px 0;
+          font-size: 11.5px;
+          line-height: 1.4;
+          vertical-align: middle;
+          border-bottom: 1px solid var(--line);
+        }
+        .num   { width: 6%;  text-align: center; color: var(--muted); font-size: 15px; padding-right: 0; }
+        th.num { font-size: 9px; color: var(--ink); }
+        .c-order  { width: 15%; }
+        .c-cust   { width: 13%; }
+        .c-region { width: 20%; }
+        .c-prod   { width: 14%; }
+        .c-ship   { width: 14%; }
+        .c-status { width: 8%;  text-align: center; }
+        .c-total  { width: 10%; text-align: right; padding-right: 0; }
+
+        .order-id { font-weight: 700; }
+        .sub { display: block; font-size: 10px; color: var(--muted); }
+        .amount { font-weight: 700; font-size: 14.5px; white-space: nowrap; }
+
+        /* Total */
+        .total {
+          display: flex;
+          justify-content: flex-end;
+          align-items: baseline;
+          gap: 40px;
+          margin-top: 0;
+          padding-top: 10px;
+          border-top: 1.2px solid var(--ink);
+          margin-top: -1px;
+        }
+        .total .t-label { font-size: 12.5px; font-weight: 700; }
+        .total .t-value { font-size: 17px; font-weight: 700; }
+
+        /* Footer */
+        .foot {
+          margin-top: auto;
+          padding-top: 6mm;
+          border-top: 1px solid var(--line);
+          font-size: 9.5px;
+          color: var(--muted);
+        }
+
+        /* Cetak / simpan PDF: satu halaman A4 landscape */
+        @page { size: A4 landscape; margin: 0; }
+        @media print {
+          body { background: none; }
+          .page { margin: 0; box-shadow: none; }
+        }
+
+        /* Layar kecil: tabel bisa digeser ke samping */
+        @media (max-width: 900px) {
+          .page { width: 100%; margin: 0; padding: 20px 16px; min-height: 100vh; }
+          .summary { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+          .table-wrap { overflow-x: auto; }
+          table { min-width: 860px; }
+          .head { flex-direction: column; gap: 14px; }
+          .meta { text-align: left; }
+        }
+      </style>
       </head>
       <body>
-        <div class="header">
-          <div>
-            <div class="brand-logo">SEVAYA STUDIO</div>
-            <div class="brand-subtitle">Modest Luxury Atelier &bull; Laporan Eksekutif Penjualan &bull; Edisi Resmi</div>
-          </div>
-          <div class="report-meta">
-            <div><span class="period-pill">Periode: ${monthLabel}</span></div>
-            <div><strong>Waktu Cetak:</strong> ${printDate} WIB</div>
-          </div>
-        </div>
+        <main class="page">
 
-        <div class="kpi-grid">
-          <div class="kpi-card dark">
-            <div class="kpi-label">Total Pendapatan Terkonfirmasi</div>
-            <div class="kpi-val">${formatIDR(reportRevenue)}</div>
-            <div class="kpi-sub">Dari ${reportValid.length} pesanan terbayar</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Transaksi Berhasil</div>
-            <div class="kpi-val">${reportValid.length} Pesanan</div>
-            <div class="kpi-sub">Pesanan terkonfirmasi valid</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rata-rata Order (AOV)</div>
-            <div class="kpi-val">${formatIDR(reportAov)}</div>
-            <div class="kpi-sub">Rata-rata per transaksi</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Total Item Terjual</div>
-            <div class="kpi-val">${totalGarments} Produk</div>
-            <div class="kpi-sub">Total kuantitas barang dipesan</div>
-          </div>
-        </div>
+          <header class="head">
+            <div class="brand">SEVAYA</div>
+            <div class="meta">
+              <strong>${reportDocTitle}</strong>
+              Periode: ${monthLabel}<br>
+              Dicetak ${printDate} WIB
+            </div>
+          </header>
 
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 28px; text-align: center;">No</th>
-              <th style="width: 140px;">No. Order & Tanggal</th>
-              <th style="width: 155px;">Pelanggan</th>
-              <th>Wilayah Tujuan</th>
-              <th style="width: 165px;">Kurir & Resi</th>
-              <th style="width: 90px;">Status</th>
-              <th style="width: 115px; text-align: right;">Total Nilai</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml || '<tr><td colspan="7" style="text-align: center; padding: 24px; color: #888;">Tidak ada pesanan pada periode ini</td></tr>'}
-          </tbody>
-          ${reportOrders.length > 0 ? `
-            <tfoot>
-              <tr>
-                <td colspan="6" style="text-align: right; text-transform: uppercase; font-size: 8.5px; letter-spacing: 0.05em; font-weight: 800;">
-                  Total Keseluruhan (${reportOrders.length} Pesanan):
-                </td>
-                <td style="text-align: right; font-size: 11px; font-weight: 800; color: #1A1A1A;">
-                  ${formatIDR(totalOrderSum)}
-                </td>
-              </tr>
-            </tfoot>
-          ` : ''}
-        </table>
+          <section class="summary" aria-label="Ringkasan penjualan">
+            <div class="stat">
+              <div class="label">${kpi1Label}</div>
+              <div class="value">${formatIDR(totalRevenue)}</div>
+            </div>
+            <div class="stat">
+              <div class="label">${kpi2Label}</div>
+              <div class="value">${targetOrders.length} Pesanan</div>
+            </div>
+            <div class="stat">
+              <div class="label">${kpi3Label}</div>
+              <div class="value">${formatIDR(avgOrderValue)}</div>
+            </div>
+            <div class="stat">
+              <div class="label">${kpi4Label}</div>
+              <div class="value">${totalGarments} Pcs</div>
+            </div>
+          </section>
 
-        <div class="footer">
-          <div>
-            <strong>SEVAYA STUDIO</strong> &copy; ${new Date().getFullYear()} &bull; Dokumen resmi sistem operasional &amp; keuangan toko online.
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">NO</th>
+                  <th class="c-order">ORDER &amp; TANGGAL</th>
+                  <th class="c-cust">PELANGGAN</th>
+                  <th class="c-region">WILAYAH TUJUAN</th>
+                  <th class="c-prod">PRODUK</th>
+                  <th class="c-ship">KURIR &amp; RESI</th>
+                  <th class="c-status">STATUS</th>
+                  <th class="c-total">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml || '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--muted);">Tidak ada data transaksi pada periode ini</td></tr>'}
+              </tbody>
+            </table>
           </div>
-          <div>
-            Dicetak otomatis &bull; Total ${reportOrders.length} transaksi ditampilkan
+
+          <div class="total">
+            <span class="t-label">${tfootLabel}</span>
+            <span class="t-value">${formatIDR(totalRevenue)}</span>
           </div>
-        </div>
+
+          <footer class="foot">SEVAYA STUDIO &copy; ${new Date().getFullYear()} &bull; sevaya-studio.com</footer>
+
+        </main>
 
         <script>
           window.onload = function() {
@@ -1330,16 +1429,115 @@ export function OrdersTab({
               <ChevronDown className="absolute right-2.5 w-3.5 h-3.5 text-black/40 pointer-events-none" />
             </div>
 
-            {/* Export PDF Button */}
-            <button
-              type="button"
-              onClick={handleExportPDF}
-              className="h-9.5 px-3.5 flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-xl text-xs font-medium tracking-wide transition active:scale-95 cursor-pointer shadow-xs"
-              title="Download atau cetak laporan transaksi bulanan dalam bentuk PDF"
-            >
-              <FileDown className="w-3.5 h-3.5 stroke-2" />
-              <span>Export PDF</span>
-            </button>
+            {/* Export PDF Action Button with Dropdown Options */}
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="h-9.5 px-3 sm:px-3.5 flex items-center gap-1.5 bg-[#1A1A1A] hover:bg-black text-white rounded-xl text-xs font-medium tracking-wide transition active:scale-95 cursor-pointer shadow-xs"
+                title="Pilih opsi ekspor laporan PDF"
+              >
+                <FileDown className="w-3.5 h-3.5 stroke-2" />
+                <span>Export PDF</span>
+                <ChevronDown className={`w-3 h-3 text-white/70 transition-transform duration-200 ${showExportMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl border border-black/10 bg-white/95 backdrop-blur-md shadow-2xl p-2 z-50">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 text-[10px] tracking-wider uppercase text-black/45 font-mono">
+                    <span>Periode Laporan</span>
+                    <span className="font-sans font-bold text-black text-xs truncate max-w-[140px]">
+                      {selectedMonth === 'all' ? 'Semua Waktu' : formatMonthLabel(selectedMonth)}
+                    </span>
+                  </div>
+
+                  <div className="py-1 space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handleExportPDF('sales_only');
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FAF9F7] transition cursor-pointer group flex items-start justify-between gap-3"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-black tracking-tight">
+                          Laporan Penjualan Berhasil
+                        </p>
+                        <p className="text-[10px] text-black/50 mt-0.5">
+                          Hanya transaksi valid ({validMonthOrders.length} pesanan)
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-black/40 font-mono mt-0.5 group-hover:text-black">PDF ↗</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handleExportPDF('all_statuses');
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FAF9F7] transition cursor-pointer group flex items-start justify-between gap-3"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-black tracking-tight">
+                          Laporan Semua Status
+                        </p>
+                        <p className="text-[10px] text-black/50 mt-0.5">
+                          Lengkap termasuk diproses & dibatalkan ({monthOrders.length} total)
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-black/40 font-mono mt-0.5 group-hover:text-black">PDF ↗</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handleExportPDF('cancelled_only');
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FAF9F7] transition cursor-pointer group flex items-start justify-between gap-3"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-black tracking-tight">
+                          Laporan Pesanan Dibatalkan
+                        </p>
+                        <p className="text-[10px] text-black/50 mt-0.5">
+                          Khusus evaluasi pembatalan ({stats.cancelled} pesanan)
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-black/40 font-mono mt-0.5 group-hover:text-black">PDF ↗</span>
+                    </button>
+
+                    {filter !== 'all' && filter !== 'cancelled' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowExportMenu(false);
+                          handleExportPDF('current_filter');
+                        }}
+                        className="w-full text-left px-3 py-2.5 rounded-xl bg-black/[0.02] hover:bg-[#FAF9F7] transition cursor-pointer group flex items-start justify-between gap-3 border-t border-black/5"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold text-black tracking-tight">
+                            Sesuai Filter: {
+                              filter === 'pending_payment' ? 'Belum Bayar' :
+                              filter === 'processing' ? 'Diproses' :
+                              filter === 'shipped' ? 'Dikirim' :
+                              filter === 'delivered' ? 'Sampai' : filter
+                            }
+                          </p>
+                          <p className="text-[10px] text-black/50 mt-0.5">
+                            Menampilkan {stats[filter as keyof typeof stats] || 0} pesanan terpilih
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-black/40 font-mono mt-0.5 group-hover:text-black">PDF ↗</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1458,7 +1656,7 @@ export function OrdersTab({
             >
               <table className="w-full text-xs min-w-[1050px]">
                 <thead>
-                  <tr className="border-b border-black/15 bg-black/5">
+                  <tr className="border-b border-black/15 bg-[#FAF9F7]">
                     {[
                       'Order ID / Ref',
                       'Pelanggan',
@@ -1477,7 +1675,7 @@ export function OrdersTab({
                         {h}
                       </th>
                     ))}
-                    <th className="sticky right-0 z-20 whitespace-nowrap bg-black/5 px-4 py-3 text-left font-headline text-[10px] font-bold uppercase tracking-wider text-black/70 shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
+                    <th className="whitespace-nowrap px-4 py-3 text-right font-headline text-[10px] font-bold uppercase tracking-wider text-black/70">
                       Aksi
                     </th>
                   </tr>
@@ -1539,28 +1737,28 @@ export function OrdersTab({
                             <span className="text-black/50">—</span>
                           )}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3.5 text-black/70">
+                        <td className="whitespace-nowrap px-4 py-3.5 text-black/70 text-[11px]">
                           {formatDate(o.created_at)}
                         </td>
-                        <td className="sticky right-0 z-10 whitespace-nowrap bg-white group-hover:bg-white px-4 py-3.5 shadow-[-6px_0_10px_rgba(0,0,0,0.03)]">
-                          <div className="flex items-center gap-1.5">
+                        <td className="whitespace-nowrap px-4 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setSelectedOrder(o)}
-                              className="rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5"
+                              className="rounded-full border border-black/20 bg-white px-3 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 cursor-pointer"
                             >
                               Kelola
                             </button>
                             <button
                               onClick={() => setPrintOrder(o)}
                               title="Cetak Label Pengiriman (Thermal 10x15)"
-                              className="rounded-full border border-black/20 bg-white px-2.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 flex items-center gap-1"
+                              className="rounded-full border border-black/20 bg-white px-2.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 flex items-center gap-1 cursor-pointer"
                             >
                               <span>🖨️</span> Label
                             </button>
                             <button
                               onClick={() => handleDeleteOrder(o.id, o.order_number)}
                               title="Hapus Pesanan"
-                              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-600 transition hover:bg-red-100"
+                              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-600 transition hover:bg-red-100 cursor-pointer"
                             >
                               🗑
                             </button>
