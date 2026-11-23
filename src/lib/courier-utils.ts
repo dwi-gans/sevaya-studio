@@ -59,8 +59,8 @@ export function detectOrderCourier(order: {
   } else if (company === 'sicepat') {
     if (srv.includes('best') || name.includes('best')) service = 'best';
     else if (srv.includes('gokil') || name.includes('gokil') || name.includes('cargo')) service = 'gokil';
-    else service = 'siunt';
-    serviceName = service === 'siunt' ? 'REG (SIUNT)' : service.toUpperCase();
+    else service = 'reg'; // Biteship live API uses 'reg' for SiCepat Reguler (siunt is deprecated)
+    serviceName = service === 'reg' ? 'REG' : service.toUpperCase();
   } else if (company === 'anteraja') {
     if (srv.includes('next') || name.includes('next')) service = 'next';
     else if (srv.includes('same') || name.includes('same')) service = 'same';

@@ -232,16 +232,25 @@ export async function POST(req: NextRequest) {
         // For online payment (Midtrans, Transfer, etc.), courier is booked once payment is confirmed or manually via Admin.
         if (biteshipKey && paymentMethod === 'cod') {
           let courierCompany = (selectedRate?.courier_code || selectedRate?.company || 'jne').toLowerCase();
-          let rawService = (selectedRate?.type || selectedRate?.courier_service_code || selectedRate?.courier_service_name || 'reg').toLowerCase();
-          let courierService = 'reg';
-          if (rawService.includes('best') || rawService.includes('yes') || rawService.includes('ons')) {
-            courierService = 'yes';
-          } else if (rawService.includes('instant')) {
-            courierService = 'instant';
-          } else if (rawService.includes('same')) {
-            courierService = 'same_day';
-          } else if (rawService.includes('jtr') || rawService.includes('cargo') || rawService.includes('truck')) {
-            courierService = 'cargo';
+          // Use exact service code from Biteship rate response (most reliable), fallback to keyword matching
+          let courierService = (selectedRate?.courier_service_code || '').toLowerCase();
+          if (!courierService) {
+            const rawService = (selectedRate?.type || selectedRate?.courier_service_name || 'reg').toLowerCase();
+            if (rawService.includes('best')) {
+              courierService = 'best';
+            } else if (rawService.includes('yes')) {
+              courierService = 'yes';
+            } else if (rawService.includes('ons')) {
+              courierService = 'ons';
+            } else if (rawService.includes('instant')) {
+              courierService = 'instant';
+            } else if (rawService.includes('same')) {
+              courierService = 'same_day';
+            } else if (rawService.includes('jtr') || rawService.includes('cargo') || rawService.includes('truck')) {
+              courierService = 'cargo';
+            } else {
+              courierService = 'reg';
+            }
           }
 
           let safePhone = String(phone || '').replace(/\D/g, '');

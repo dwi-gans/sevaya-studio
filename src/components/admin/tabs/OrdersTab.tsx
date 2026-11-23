@@ -62,7 +62,7 @@ const INTERNAL_STATUSES = [
 
 const COURIERS = [
   { value: 'jne', label: 'JNE', services: ['reg', 'yes', 'oke'] },
-  { value: 'sicepat', label: 'SiCepat', services: ['siunt', 'best', 'gokil'] },
+  { value: 'sicepat', label: 'SiCepat', services: ['reg', 'best', 'gokil'] },
   { value: 'jnt', label: 'J&T Express', services: ['ez', 'jtreg'] },
   { value: 'anteraja', label: 'AnterAja', services: ['reg', 'next', 'same'] },
   { value: 'tiki', label: 'TIKI', services: ['reg', 'ons', 'eco'] },
