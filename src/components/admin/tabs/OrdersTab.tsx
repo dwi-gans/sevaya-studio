@@ -142,12 +142,14 @@ function OrderDetailModal({
   onStatusUpdate,
   onCreateBiteship,
   onPrintLabel,
+  onDeleteOrder,
 }: {
   order: AdminOrder;
   onClose: () => void;
   onStatusUpdate: (id: string, status: string, extra?: Partial<AdminOrder>) => Promise<void>;
   onCreateBiteship: (order: AdminOrder, courier: string, service: string) => Promise<void>;
   onPrintLabel?: (order: AdminOrder) => void;
+  onDeleteOrder?: (id: string, orderNumber: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [trackingInput, setTrackingInput] = useState(order.tracking_number || '');
@@ -337,15 +339,6 @@ function OrderDetailModal({
             <p className="text-[11px] sm:text-xs text-black/70 mt-0.5">{formatDate(order.created_at)}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onPrintLabel?.(order)}
-              className="flex items-center gap-1.5 rounded-full border border-black bg-black px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-black/85 active:scale-95 cursor-pointer shadow-xs"
-              title="Cetak Label Pengiriman (Thermal 10x15)"
-            >
-              <span>🖨️</span>
-              <span className="hidden xs:inline">Cetak Label</span>
-            </button>
             <StatusBadge status={order.status} type="internal" />
             {order.biteship_order_id && order.biteship_status && (
               <span className="hidden xs:inline-flex">
@@ -705,6 +698,27 @@ function OrderDetailModal({
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Aksi Cepat: Cetak Label & Hapus Pesanan */}
+            <section className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onPrintLabel?.(order)}
+                className="flex-1 min-h-[38px] flex items-center justify-center gap-1.5 rounded-full border border-black/20 bg-white text-xs font-semibold text-black hover:bg-black/5 active:scale-95 transition cursor-pointer"
+              >
+                <span>🖨️</span>
+                <span>Cetak Label</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onDeleteOrder?.(order.id, order.order_number)}
+                className="min-h-[38px] px-4 flex items-center justify-center gap-1.5 rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 hover:bg-red-100 active:scale-95 transition cursor-pointer shrink-0"
+                title="Hapus Pesanan"
+              >
+                <span>🗑</span>
+                <span>Hapus</span>
+              </button>
             </section>
 
             {/* Logs */}
@@ -1748,20 +1762,6 @@ export function OrdersTab({
                             >
                               Kelola
                             </button>
-                            <button
-                              onClick={() => setPrintOrder(o)}
-                              title="Cetak Label Pengiriman (Thermal 10x15)"
-                              className="rounded-full border border-black/20 bg-white px-2.5 py-1 text-xs font-medium text-black transition hover:border-black hover:bg-black/5 flex items-center gap-1 cursor-pointer"
-                            >
-                              <span>🖨️</span> Label
-                            </button>
-                            <button
-                              onClick={() => handleDeleteOrder(o.id, o.order_number)}
-                              title="Hapus Pesanan"
-                              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs text-red-600 transition hover:bg-red-100 cursor-pointer"
-                            >
-                              🗑
-                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1841,30 +1841,14 @@ export function OrdersTab({
                       )}
                     </div>
 
-                    {/* Actions: Clean touch-friendly buttons */}
-                    <div className="flex items-center gap-2 pt-1">
+                    {/* Actions */}
+                    <div className="pt-1">
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(o)}
-                        className="flex-1 min-h-[40px] flex items-center justify-center rounded-full bg-black text-white text-xs font-semibold hover:bg-black/85 active:scale-95 transition shadow-xs cursor-pointer"
+                        className="w-full min-h-[40px] flex items-center justify-center rounded-full bg-black text-white text-xs font-semibold hover:bg-black/85 active:scale-95 transition shadow-xs cursor-pointer"
                       >
                         Kelola Pesanan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPrintOrder(o)}
-                        title="Cetak Label Pengiriman"
-                        className="min-h-[40px] px-3.5 flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white text-xs font-semibold text-black hover:bg-black/5 active:scale-95 transition cursor-pointer shrink-0"
-                      >
-                        <span>🖨️</span> Label
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteOrder(o.id, o.order_number)}
-                        title="Hapus Pesanan"
-                        className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 hover:bg-red-100 active:scale-95 transition cursor-pointer shrink-0"
-                      >
-                        🗑
                       </button>
                     </div>
                   </div>
@@ -1883,6 +1867,10 @@ export function OrdersTab({
           onStatusUpdate={handleStatusUpdate}
           onCreateBiteship={handleCreateBiteship}
           onPrintLabel={(ord) => setPrintOrder(ord)}
+          onDeleteOrder={(id, orderNumber) => {
+            handleDeleteOrder(id, orderNumber);
+            setSelectedOrder(null);
+          }}
         />
       )}
 
