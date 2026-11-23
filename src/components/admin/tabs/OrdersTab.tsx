@@ -1558,12 +1558,55 @@ export function OrdersTab({
         {/* 6 Minimalist & Functional Interactive Status Cards */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
           {[
-            { key: 'all', label: 'Semua', value: stats.all, dot: 'bg-black' },
-            { key: 'pending_payment', label: 'Belum Bayar', value: stats.pending_payment, dot: 'bg-[#C2822B]' },
-            { key: 'processing', label: 'Diproses', value: stats.processing, dot: 'bg-[#BF6338]' },
-            { key: 'shipped', label: 'Dikirim', value: stats.shipped, dot: 'bg-[#22848F]' },
-            { key: 'delivered', label: 'Sampai', value: stats.delivered, dot: 'bg-[#2B864E]' },
-            { key: 'cancelled', label: 'Dibatalkan', value: stats.cancelled, dot: 'bg-[#C7404B]' },
+            {
+              key: 'all', label: 'Semua', value: stats.all,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+              ),
+            },
+            {
+              key: 'pending_payment', label: 'Belum Bayar', value: stats.pending_payment,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+                </svg>
+              ),
+            },
+            {
+              key: 'processing', label: 'Diproses', value: stats.processing,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+              ),
+            },
+            {
+              key: 'shipped', label: 'Dikirim', value: stats.shipped,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              ),
+            },
+            {
+              key: 'delivered', label: 'Sampai', value: stats.delivered,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              ),
+            },
+            {
+              key: 'cancelled', label: 'Dibatalkan', value: stats.cancelled,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>
+                </svg>
+              ),
+            },
           ].map((s) => {
             const isActive = filter === s.key;
             return (
@@ -1571,30 +1614,30 @@ export function OrdersTab({
                 key={s.key}
                 type="button"
                 onClick={() => setFilter(isActive && s.key !== 'all' ? 'all' : s.key)}
-                className={`flex flex-col justify-between text-left rounded-xl p-2.5 sm:p-3.5 transition-all duration-150 cursor-pointer ${
+                className={`flex flex-col text-left rounded-xl p-2.5 sm:p-3.5 transition-all duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-[#1A1A1A] text-white shadow-sm ring-1 ring-[#1A1A1A]'
                     : 'bg-black/[0.02] border border-black/10 hover:bg-black/[0.04] hover:border-black/25 text-black'
                 }`}
                 title={`Filter: ${s.label}`}
               >
+                {/* Row 1: angka kiri, logo kanan */}
                 <div className="flex items-center justify-between gap-1 w-full">
-                  <span className={`text-[10px] sm:text-xs font-medium tracking-wide truncate ${
-                    isActive ? 'text-white/80' : 'text-black/60'
-                  }`}>
-                    {s.label}
-                  </span>
-                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                    isActive ? 'bg-white' : s.dot
-                  }`} />
-                </div>
-                <div className="mt-2 sm:mt-2.5">
                   <span className={`text-lg sm:text-2xl font-bold font-headline tracking-tight ${
                     isActive ? 'text-white' : 'text-black'
                   }`}>
                     {s.value}
                   </span>
+                  <span className={isActive ? 'text-white/50' : 'text-black/30'}>
+                    {s.icon}
+                  </span>
                 </div>
+                {/* Row 2: label */}
+                <span className={`text-[9px] sm:text-[10px] font-medium tracking-wide truncate block mt-1 ${
+                  isActive ? 'text-white/60' : 'text-black/50'
+                }`}>
+                  {s.label}
+                </span>
               </button>
             );
           })}
