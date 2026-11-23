@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PanelLeft, RefreshCw, Store } from 'lucide-react';
+import { PanelLeft, RefreshCw, Store, FileDown, Calendar, ChevronDown } from 'lucide-react';
 import { detectOrderCourier } from '@/lib/courier-utils';
 import { ShippingLabelModal } from '../ShippingLabelModal';
 import { InventoryTableSkeleton } from '../shared/AdminSkeleton';
@@ -622,6 +622,26 @@ function OrderDetailModal({
   );
 }
 
+// ─── Helpers: Periode Bulanan & Format ───────────────────────────────────────
+
+const getOrderMonthKey = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+};
+
+const formatMonthLabel = (key: string) => {
+  if (!key || key === 'all') return 'Semua Waktu';
+  const parts = key.split('-').map(Number);
+  const y = parts[0] || new Date().getFullYear();
+  const m = parts[1] || 1;
+  const date = new Date(y, m - 1, 1);
+  return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+};
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 interface OrdersTabProps {
@@ -642,7 +662,7 @@ export function OrdersTab({
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [courierFilter, setCourierFilter] = useState<string>('all');
-  const [resiFilter, setResiFilter] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
@@ -774,39 +794,454 @@ export function OrdersTab({
     }
   };
 
-  // Stats & Executive Metrics
-  const validOrders = orders.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
-  const totalRevenue = validOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
-  const avgOrderValue = validOrders.length > 0 ? Math.round(totalRevenue / validOrders.length) : 0;
+  // ─── Monthly & Executive Metrics ───────────────────────────────────────────
+  const currentCalendarMonth = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
 
-  const ordersWithResi = orders.filter((o) => Boolean(o.tracking_number?.trim()));
-  const ordersWithoutResi = orders.filter((o) => o.status === 'processing' && !o.tracking_number?.trim());
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    set.add(currentCalendarMonth);
+    orders.forEach((o) => {
+      const k = getOrderMonthKey(o.created_at);
+      if (k) set.add(k);
+    });
+    return Array.from(set).sort().reverse();
+  }, [orders, currentCalendarMonth]);
 
-  const jneOrders = orders.filter((o) => o.courier_name?.toLowerCase().includes('jne'));
-  const sicepatOrders = orders.filter((o) => o.courier_name?.toLowerCase().includes('sicepat'));
+  // Orders filtered by the selected month
+  const monthOrders = useMemo(() => {
+    if (selectedMonth === 'all') return orders;
+    return orders.filter((o) => getOrderMonthKey(o.created_at) === selectedMonth);
+  }, [orders, selectedMonth]);
 
-  const stats = {
-    all: orders.length,
-    pending_payment: orders.filter((o) => o.status === 'pending_payment').length,
-    processing: orders.filter((o) => o.status === 'processing').length,
-    shipped: orders.filter((o) => o.status === 'shipped').length,
-    delivered: orders.filter((o) => o.status === 'delivered').length,
-    cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    with_resi: ordersWithResi.length,
-    need_resi: ordersWithoutResi.length,
-    jne: jneOrders.length,
-    sicepat: sicepatOrders.length,
+  // Valid orders (confirmed paid) for selected month
+  const validMonthOrders = useMemo(() => {
+    return monthOrders.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
+  }, [monthOrders]);
+
+  const monthRevenue = useMemo(() => {
+    return validMonthOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
+  }, [validMonthOrders]);
+
+  const stats = useMemo(() => ({
+    all: monthOrders.length,
+    pending_payment: monthOrders.filter((o) => o.status === 'pending_payment').length,
+    processing: monthOrders.filter((o) => o.status === 'processing').length,
+    shipped: monthOrders.filter((o) => o.status === 'shipped').length,
+    delivered: monthOrders.filter((o) => o.status === 'delivered').length,
+    cancelled: monthOrders.filter((o) => o.status === 'cancelled').length,
+  }), [monthOrders]);
+
+  // Export PDF Handler (Membuka jendela cetak format dokumen PDF resmi SEVAYA)
+  const handleExportPDF = () => {
+    const monthLabel = selectedMonth === 'all' ? 'Semua Waktu' : formatMonthLabel(selectedMonth);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up window diblokir oleh browser. Harap izinkan pop-up untuk mengunduh laporan PDF.');
+      return;
+    }
+
+    const reportOrders = selectedMonth === 'all'
+      ? orders
+      : orders.filter((o) => getOrderMonthKey(o.created_at) === selectedMonth);
+
+    const reportValid = reportOrders.filter((o) => o.status !== 'cancelled' && o.status !== 'pending_payment');
+    const reportRevenue = reportValid.reduce((s, o) => s + (o.grand_total || 0), 0);
+    const reportAov = reportValid.length > 0 ? Math.round(reportRevenue / reportValid.length) : 0;
+    const totalOrderSum = reportOrders.reduce((s, o) => s + (o.grand_total || 0), 0);
+
+    const totalGarments = reportOrders.reduce((sum, o) => {
+      try {
+        const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || [];
+        return sum + items.reduce((s: number, i: { qty?: number }) => s + (i.qty || 1), 0);
+      } catch {
+        return sum + 1;
+      }
+    }, 0);
+
+    const printDate = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const rowsHtml = reportOrders.map((o, idx) => {
+      const dateStr = o.created_at
+        ? new Date(o.created_at).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '-';
+
+      let statusBadgeColor = '#1A1A1A';
+      let statusBgColor = '#F3F4F6';
+      let statusBorder = '#E5E7EB';
+      let statusText = o.status;
+      if (o.status === 'processing') {
+        statusBadgeColor = '#8C4725';
+        statusBgColor = '#FAF4EE';
+        statusBorder = '#EED4C5';
+        statusText = 'Diproses';
+      } else if (o.status === 'shipped') {
+        statusBadgeColor = '#186068';
+        statusBgColor = '#EDF7F8';
+        statusBorder = '#C4E3E6';
+        statusText = 'Dikirim';
+      } else if (o.status === 'delivered') {
+        statusBadgeColor = '#1E6037';
+        statusBgColor = '#EDF7EE';
+        statusBorder = '#C3E2C6';
+        statusText = 'Sampai';
+      } else if (o.status === 'cancelled') {
+        statusBadgeColor = '#A12B35';
+        statusBgColor = '#FDF2F2';
+        statusBorder = '#EFC8CB';
+        statusText = 'Dibatalkan';
+      } else if (o.status === 'pending_payment') {
+        statusBadgeColor = '#8C5D23';
+        statusBgColor = '#FEF8ED';
+        statusBorder = '#EEDBBF';
+        statusText = 'Belum Bayar';
+      }
+
+      return `
+        <tr>
+          <td style="text-align: center; color: #8C857E; font-weight: 500;">${idx + 1}</td>
+          <td>
+            <span class="order-code">${o.order_number}</span><br/>
+            <span class="text-muted">${dateStr}</span>
+          </td>
+          <td>
+            <strong style="color: #1A1A1A; font-weight: 600;">${o.customer_name}</strong><br/>
+            <span class="text-muted">${o.customer_phone || '-'}</span>
+          </td>
+          <td style="max-width: 170px; line-height: 1.35; color: #4A4540;">
+            ${o.destination_area || o.customer_address || '-'}
+          </td>
+          <td>
+            <span style="font-weight: 600; color: #1A1A1A;">${o.courier_name || '-'}</span><br/>
+            ${o.tracking_number ? `<span class="resi-pill">${o.tracking_number}</span>` : `<span class="text-muted" style="font-style: italic;">(Belum ada resi)</span>`}
+          </td>
+          <td>
+            <span class="status-badge" style="color: ${statusBadgeColor}; background: ${statusBgColor}; border: 1px solid ${statusBorder};">
+              ${statusText}
+            </span>
+          </td>
+          <td style="text-align: right; font-weight: 700; color: #1A1A1A; font-size: 10px;">
+            ${formatIDR(o.grand_total || 0)}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="UTF-8">
+        <title>Laporan_Penjualan_SEVAYA_${monthLabel.replace(/\\s+/g, '_')}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 12mm 14mm 12mm 14mm;
+          }
+          * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1A1C1C;
+            background: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            font-size: 9.5px;
+            line-height: 1.45;
+          }
+
+          /* Luxury Header */
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #1A1A1A;
+            margin-bottom: 16px;
+          }
+          .brand-logo {
+            font-family: 'Cinzel', Georgia, serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            color: #1A1A1A;
+            text-transform: uppercase;
+            line-height: 1;
+          }
+          .brand-subtitle {
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #8C7A6B;
+            margin-top: 6px;
+          }
+          .report-meta {
+            text-align: right;
+            font-size: 9px;
+            color: #555;
+            line-height: 1.6;
+          }
+          .period-pill {
+            display: inline-block;
+            background: #FAF9F7;
+            border: 1px solid #E2DCD3;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #1A1A1A;
+            font-size: 10px;
+            letter-spacing: 0.02em;
+            margin-bottom: 3px;
+          }
+
+          /* Executive KPI Summary Cards */
+          .kpi-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+          }
+          .kpi-card {
+            background: #FAF9F7;
+            border: 1px solid #EAE6DE;
+            border-radius: 8px;
+            padding: 11px 14px;
+            position: relative;
+          }
+          .kpi-card.dark {
+            background: #181818;
+            border-color: #181818;
+            color: #FFFFFF;
+          }
+          .kpi-card.dark .kpi-label {
+            color: #C8B9A6;
+          }
+          .kpi-card.dark .kpi-val {
+            color: #FFFFFF;
+          }
+          .kpi-card.dark .kpi-sub {
+            color: #9E968F;
+          }
+          .kpi-label {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: #7A746E;
+          }
+          .kpi-val {
+            font-size: 17px;
+            font-weight: 800;
+            color: #1A1C1C;
+            margin-top: 4px;
+            letter-spacing: -0.02em;
+          }
+          .kpi-sub {
+            font-size: 8px;
+            color: #8C857E;
+            margin-top: 2px;
+          }
+
+          /* Luxury Orders Table */
+          table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 9.5px;
+            border: 1px solid #EAE6DE;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+          }
+          thead {
+            background: #181818;
+          }
+          th {
+            color: #FFFFFF;
+            padding: 8px 10px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: left;
+            border: none;
+          }
+          td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #EFECE6;
+            vertical-align: middle;
+            color: #2D2A26;
+          }
+          tr:nth-child(even) td {
+            background: #FAF9F7;
+          }
+          tr:last-child td {
+            border-bottom: none;
+          }
+
+          /* Status Badges */
+          .status-badge {
+            display: inline-block;
+            padding: 2.5px 7px;
+            border-radius: 4px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+          }
+          .order-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            font-weight: 700;
+            color: #1A1A1A;
+            font-size: 9px;
+          }
+          .resi-pill {
+            display: inline-block;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            font-size: 8px;
+            background: #EFECE6;
+            padding: 1.5px 5px;
+            border-radius: 4px;
+            color: #333;
+            margin-top: 2px;
+            border: 1px solid #E0DAD0;
+          }
+          .text-muted {
+            color: #7A746E;
+            font-size: 8.5px;
+          }
+
+          /* Table Summary Footer */
+          tfoot td {
+            background: #F3EFE9 !important;
+            font-weight: 700;
+            border-top: 2px solid #E0DAD0;
+            padding: 9px 10px;
+            color: #1A1A1A;
+          }
+
+          /* Document Footer */
+          .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #EAE6DE;
+            font-size: 8.5px;
+            color: #8C857E;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="brand-logo">SEVAYA STUDIO</div>
+            <div class="brand-subtitle">Modest Luxury Atelier &bull; Laporan Eksekutif Penjualan &bull; Edisi Resmi</div>
+          </div>
+          <div class="report-meta">
+            <div><span class="period-pill">Periode: ${monthLabel}</span></div>
+            <div><strong>Waktu Cetak:</strong> ${printDate} WIB</div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card dark">
+            <div class="kpi-label">Total Pendapatan Terkonfirmasi</div>
+            <div class="kpi-val">${formatIDR(reportRevenue)}</div>
+            <div class="kpi-sub">Dari ${reportValid.length} pesanan terbayar</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Transaksi Berhasil</div>
+            <div class="kpi-val">${reportValid.length} Pesanan</div>
+            <div class="kpi-sub">Pesanan terkonfirmasi valid</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Rata-rata Order (AOV)</div>
+            <div class="kpi-val">${formatIDR(reportAov)}</div>
+            <div class="kpi-sub">Rata-rata per transaksi</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Item Terjual</div>
+            <div class="kpi-val">${totalGarments} Produk</div>
+            <div class="kpi-sub">Total kuantitas barang dipesan</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 28px; text-align: center;">No</th>
+              <th style="width: 140px;">No. Order & Tanggal</th>
+              <th style="width: 155px;">Pelanggan</th>
+              <th>Wilayah Tujuan</th>
+              <th style="width: 165px;">Kurir & Resi</th>
+              <th style="width: 90px;">Status</th>
+              <th style="width: 115px; text-align: right;">Total Nilai</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml || '<tr><td colspan="7" style="text-align: center; padding: 24px; color: #888;">Tidak ada pesanan pada periode ini</td></tr>'}
+          </tbody>
+          ${reportOrders.length > 0 ? `
+            <tfoot>
+              <tr>
+                <td colspan="6" style="text-align: right; text-transform: uppercase; font-size: 8.5px; letter-spacing: 0.05em; font-weight: 800;">
+                  Total Keseluruhan (${reportOrders.length} Pesanan):
+                </td>
+                <td style="text-align: right; font-size: 11px; font-weight: 800; color: #1A1A1A;">
+                  ${formatIDR(totalOrderSum)}
+                </td>
+              </tr>
+            </tfoot>
+          ` : ''}
+        </table>
+
+        <div class="footer">
+          <div>
+            <strong>SEVAYA STUDIO</strong> &copy; ${new Date().getFullYear()} &bull; Dokumen resmi sistem operasional &amp; keuangan toko online.
+          </div>
+          <div>
+            Dicetak otomatis &bull; Total ${reportOrders.length} transaksi ditampilkan
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 350);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   // Filter + search
   const filtered = orders.filter((o) => {
+    const matchMonth = selectedMonth === 'all' || Boolean(search) || getOrderMonthKey(o.created_at) === selectedMonth;
     const matchStatus = filter === 'all' || o.status === filter;
-
-    const hasResi = Boolean(o.tracking_number?.trim());
-    const matchResi =
-      resiFilter === 'all' ||
-      (resiFilter === 'has_resi' && hasResi) ||
-      (resiFilter === 'need_resi' && !hasResi && o.status === 'processing');
 
     const courierLower = (o.courier_name || '').toLowerCase();
     const matchCourier =
@@ -814,15 +1249,17 @@ export function OrdersTab({
       (courierFilter === 'jne' && courierLower.includes('jne')) ||
       (courierFilter === 'sicepat' && courierLower.includes('sicepat'));
 
+    const searchLower = search.toLowerCase();
     const matchSearch =
       !search ||
-      o.order_number?.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
+      o.order_number?.toLowerCase().includes(searchLower) ||
+      o.customer_name?.toLowerCase().includes(searchLower) ||
       o.customer_phone?.includes(search) ||
-      o.biteship_order_id?.toLowerCase().includes(search.toLowerCase()) ||
-      o.tracking_number?.toLowerCase().includes(search.toLowerCase());
+      o.biteship_order_id?.toLowerCase().includes(searchLower) ||
+      o.tracking_number?.toLowerCase().includes(searchLower) ||
+      courierLower.includes(searchLower);
 
-    return matchStatus && matchResi && matchCourier && matchSearch;
+    return matchMonth && matchStatus && matchCourier && matchSearch;
   });
 
   return (
@@ -856,29 +1293,54 @@ export function OrdersTab({
 
       {/* Unified Executive KPI Summary Card (Kartu Interaktif Minimalis & Elegan) */}
       <div className="rounded-xl sm:rounded-2xl border border-black/10 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3 sm:space-y-4">
-        {/* Total Nilai Pesanan & Reset */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-2 border-b border-black/10 pb-3">
-          <div className="flex items-baseline gap-2.5">
-            <span className="font-headline text-[9px] sm:text-[10px] font-bold tracking-widest text-black/50 uppercase">
+        {/* Total Nilai Pesanan Per Bulan & Export PDF (Layout Mewah, Rapi, & Seimbang) */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/10 pb-3.5">
+          <div>
+            <span className="font-headline text-[9px] sm:text-[10px] font-bold tracking-widest text-black/50 uppercase block">
               Total Nilai Pesanan Masuk
             </span>
-            <span className="font-headline text-lg sm:text-2xl font-bold text-black tracking-tight">
-              {formatIDR(totalRevenue)}
-            </span>
-            <span className="text-xs text-black/40 hidden sm:inline">
-              ({validOrders.length} transaksi)
-            </span>
+            <div className="flex items-baseline gap-2.5 mt-1">
+              <span className="font-headline text-xl sm:text-3xl font-bold text-black tracking-tight">
+                {formatIDR(monthRevenue)}
+              </span>
+              <span className="text-xs text-black/50">
+                ({validMonthOrders.length} transaksi terkonfirmasi)
+              </span>
+            </div>
           </div>
 
-          {filter !== 'all' && (
+          {/* Action Toolbar: Custom Month Picker & Export PDF */}
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            {/* Elegant Custom Month Picker Dropdown */}
+            <div className="relative inline-flex items-center">
+              <Calendar className="absolute left-3 w-3.5 h-3.5 text-black/45 pointer-events-none" />
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="h-9.5 pl-8.5 pr-8 bg-[#FAF9F7] hover:bg-[#F3EFE8] border border-black/15 rounded-xl text-xs font-medium text-black focus:border-black focus:outline-none cursor-pointer transition appearance-none shadow-2xs"
+                title="Pilih periode bulan transaksi"
+              >
+                <option value="all">Semua Waktu</option>
+                {availableMonths.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonthLabel(m)}{m === currentCalendarMonth ? ' (Bulan Ini)' : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 w-3.5 h-3.5 text-black/40 pointer-events-none" />
+            </div>
+
+            {/* Export PDF Button */}
             <button
               type="button"
-              onClick={() => setFilter('all')}
-              className="text-xs font-semibold text-black underline hover:text-black/70 cursor-pointer self-start sm:self-auto"
+              onClick={handleExportPDF}
+              className="h-9.5 px-3.5 flex items-center gap-2 bg-[#1A1A1A] hover:bg-black text-white rounded-xl text-xs font-medium tracking-wide transition active:scale-95 cursor-pointer shadow-xs"
+              title="Download atau cetak laporan transaksi bulanan dalam bentuk PDF"
             >
-              Tampilkan Semua ({stats.all})
+              <FileDown className="w-3.5 h-3.5 stroke-2" />
+              <span>Export PDF</span>
             </button>
-          )}
+          </div>
         </div>
 
         {/* 6 Minimalist & Functional Interactive Status Cards */}
@@ -927,97 +1389,35 @@ export function OrdersTab({
         </div>
       </div>
 
-      {/* Search + Real Logistics Helper Filters */}
-      <div className="space-y-2.5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <div className="relative flex-1">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari nama pelanggan, no. order (#SVY-...), resi, Biteship ID..."
-              className="w-full bg-white px-3.5 py-2.5 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[40px] rounded-xl border border-black/15 shadow-xs"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-black/40 hover:text-black cursor-pointer"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Active Filter Indicator & Reset */}
-          {(filter !== 'all' || resiFilter !== 'all' || courierFilter !== 'all' || search) && (
-            <div className="flex items-center gap-2 bg-black/5 rounded-xl px-3 py-1.5 text-xs text-black/80 shrink-0">
-              <span className="text-[11px] font-medium">
-                Ditemukan <strong>{filtered.length}</strong> pesanan
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setFilter('all');
-                  setResiFilter('all');
-                  setCourierFilter('all');
-                  setSearch('');
-                }}
-                className="text-[10px] font-bold uppercase tracking-wider text-red-600 hover:text-red-800 underline ml-1 cursor-pointer"
-              >
-                Reset Semua
-              </button>
-            </div>
+      {/* Search Bar & Quick Courier Filter (Bersih, Efisien, Tanpa Konflik) */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari nama pelanggan, no. order (#SVY-...), resi, kurir, Biteship ID..."
+            className="w-full bg-white px-3.5 py-2.5 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[40px] rounded-xl border border-black/15 shadow-xs"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-black/40 hover:text-black cursor-pointer"
+            >
+              ✕
+            </button>
           )}
         </div>
 
-        {/* Actionable Logistics Filters: Resi & Courier (Bukan Pengulangan Status) */}
-        <div className="no-scrollbar flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 touch-pan-x text-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-black/40 shrink-0 mr-1">
-            Logistik:
-          </span>
-
-          {/* Resi filters */}
-          {[
-            { key: 'all', label: 'Semua Resi' },
-            { key: 'need_resi', label: `⚠️ Perlu Resi (${stats.need_resi})` },
-            { key: 'has_resi', label: `✅ Sudah Ada Resi (${stats.with_resi})` },
-          ].map((rf) => (
-            <button
-              key={rf.key}
-              type="button"
-              onClick={() => setResiFilter(rf.key)}
-              className={`shrink-0 min-h-[30px] flex items-center rounded-full border px-3 py-0.5 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
-                resiFilter === rf.key
-                  ? 'border-black bg-black text-white shadow-xs font-semibold'
-                  : 'border-black/15 bg-white text-black/70 hover:border-black hover:bg-black/5'
-              }`}
-            >
-              {rf.label}
-            </button>
-          ))}
-
-          <span className="text-black/20 shrink-0">|</span>
-
-          {/* Courier filters */}
-          {[
-            { key: 'all', label: 'Semua Kurir' },
-            { key: 'jne', label: `JNE (${stats.jne})` },
-            { key: 'sicepat', label: `SiCepat (${stats.sicepat})` },
-          ].map((cf) => (
-            <button
-              key={cf.key}
-              type="button"
-              onClick={() => setCourierFilter(cf.key)}
-              className={`shrink-0 min-h-[30px] flex items-center rounded-full border px-3 py-0.5 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
-                courierFilter === cf.key
-                  ? 'border-black bg-black text-white shadow-xs font-semibold'
-                  : 'border-black/15 bg-white text-black/70 hover:border-black hover:bg-black/5'
-              }`}
-            >
-              {cf.label}
-            </button>
-          ))}
-        </div>
+        <select
+          value={courierFilter}
+          onChange={(e) => setCourierFilter(e.target.value)}
+          className="h-10 px-3 bg-white border border-black/15 rounded-xl text-xs font-medium text-black/80 focus:border-black focus:outline-none cursor-pointer shrink-0 shadow-xs"
+        >
+          <option value="all">Semua Kurir</option>
+          <option value="jne">Kurir: JNE</option>
+          <option value="sicepat">Kurir: SiCepat</option>
+        </select>
       </div>
 
       {/* Error */}
