@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PanelLeft, RefreshCw, Store } from 'lucide-react';
@@ -117,7 +118,12 @@ function OrderDetailModal({
   const [loading, setLoading] = useState(false);
   const [trackingInput, setTrackingInput] = useState(order.tracking_number || '');
   const [logs, setLogs] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Kunci scroll halaman luar agar tidak ikut naik-turun saat modal rincian terbuka
   useEffect(() => {
@@ -221,14 +227,16 @@ function OrderDetailModal({
     }
   };
 
-  return (
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4 backdrop-blur-xs overscroll-contain"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-xs overscroll-contain"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       onWheel={(e) => e.stopPropagation()}
     >
       <div 
-        className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-2xl border border-black/15 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
+        className="w-full max-w-3xl max-h-[88vh] rounded-2xl border border-black/15 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -574,7 +582,8 @@ function OrderDetailModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface ShippingLabelOrder {
   id: string;
@@ -133,6 +134,11 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
   });
   const [isEditingShipper, setIsEditingShipper] = useState(false);
   const [savingShipper, setSavingShipper] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/shipping-settings')
@@ -180,7 +186,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
     }
   };
 
-  if (!isOpen || !order) return null;
+  if (!isOpen || !order || !mounted || typeof document === 'undefined') return null;
 
   // Parse items safely
   let itemsList: {
@@ -224,7 +230,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
       })
     : new Date().toLocaleDateString('id-ID');
 
-  return (
+  return createPortal(
     <>
       {/* ─── Global Print Styles: 100% 1 Lembar Penuh A4/Standar ─────────────── */}
       <style jsx global>{`
@@ -282,7 +288,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
       `}</style>
 
       {/* ─── Screen Modal Overlay ────────────────────────────────────────── */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-3 sm:p-4 backdrop-blur-xs print:p-0 print:bg-white print:fixed">
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/65 p-3 sm:p-4 backdrop-blur-xs print:p-0 print:bg-white print:fixed">
         <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl border border-black/15 overflow-hidden print:max-h-none print:w-auto print:max-w-none print:rounded-none print:border-none print:shadow-none">
           {/* Modal Top Bar (Screen Only) */}
           <div className="flex items-center justify-between border-b border-black/15 bg-white px-5 py-3.5 print:hidden">
@@ -562,6 +568,7 @@ export function ShippingLabelModal({ order, isOpen, onClose }: ShippingLabelModa
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
