@@ -45,21 +45,13 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
     });
   }, []);
 
-  const eyebrow = data.eyebrow || 'A CLOSER LOOK AT';
-  const title = data.title || 'VOL 1: SEVILLA ABAYA';
-  const paragraph1 =
-    data.paragraph1 ||
-    'In Indonesia, particularly between June and August, temperatures range from 24°C to 32°C, bringing moments that feel lighter, calmer, and more balanced. In this atmosphere, life moves in its own rhythm; like a Rhapsody: free-flowing, expressive, and quietly harmonious.';
-  const paragraph2 =
-    data.paragraph2 ||
-    'Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That much like nature, we each unfold in our own time and beauty reveals itself when we learn to move with our own rhythm.';
-  const image = data.image || '/images/lookbook_figma_0.png';
-  const rawLinkText = data.linkText || 'Discover Vol 1';
-  const linkText =
-    rawLinkText === 'Read More' || rawLinkText === 'Read more'
-      ? 'Discover Vol 1'
-      : rawLinkText;
-  const linkUrl = data.linkUrl || '/lookbook';
+  const eyebrow  = data.eyebrow   || DEFAULT_CLOSER_LOOK.eyebrow  || 'A CLOSER LOOK AT';
+  const title    = data.title     || DEFAULT_CLOSER_LOOK.title    || 'VOL 2: ALMA';
+  const paragraph1 = data.paragraph1 || DEFAULT_CLOSER_LOOK.paragraph1 || '';
+  const paragraph2 = data.paragraph2 || DEFAULT_CLOSER_LOOK.paragraph2 || '';
+  const image    = data.image     || DEFAULT_CLOSER_LOOK.image    || '/images/lookbook_figma_0.png';
+  const linkText = data.linkText  || DEFAULT_CLOSER_LOOK.linkText || 'Discover';
+  const linkUrl  = data.linkUrl   || DEFAULT_CLOSER_LOOK.linkUrl  || '/lookbook/vol-2';
 
   return (
     <section className="w-full bg-white py-6 sm:py-10 lg:py-16 text-black section--light">
@@ -93,33 +85,14 @@ export function CloserLookSection({ initialData }: CloserLookSectionProps = {}) 
                 {title}
               </h2>
 
-              {/* Story Paragraph 1 */}
-              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5 max-w-[500px]">
-                {paragraph1 === DEFAULT_CLOSER_LOOK.paragraph1 ? (
-                  <>
-                    In Indonesia, particularly{' '}
-                    <strong className="font-medium text-black">between June and August</strong>
-                    , temperatures range from 24°C to 32°C, bringing moments that feel lighter,
-                    calmer, and more balanced. In this atmosphere, life moves in its own rhythm;
-                    like a Rhapsody: free-flowing, expressive, and quietly harmonious.
-                  </>
-                ) : (
-                  paragraph1
-                )}
+              {/* Story Paragraph 1 — rendered directly from data, no hardcoded override */}
+              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-3 sm:mb-3.5 lg:mb-4.5 max-w-[500px] whitespace-pre-line">
+                {paragraph1}
               </p>
 
               {/* Story Paragraph 2 */}
-              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6 max-w-[500px]">
-                {paragraph2 === DEFAULT_CLOSER_LOOK.paragraph2 ? (
-                  <>
-                    Through Vol. 1: Sevilla Abaya, SEVAYA reflects on gentle, mindful growth. That{' '}
-                    <em className="italic font-medium text-black">much like nature</em>, we each
-                    unfold in our own time and beauty reveals itself when we learn to move with
-                    our own rhythm.
-                  </>
-                ) : (
-                  paragraph2
-                )}
+              <p className="text-[11.5px] sm:text-xs md:text-[13px] lg:text-sm text-black/75 leading-[1.75] sm:leading-[1.85] font-light mb-4 sm:mb-5 lg:mb-6 max-w-[500px] whitespace-pre-line">
+                {paragraph2}
               </p>
 
               {/* Read More Link */}
