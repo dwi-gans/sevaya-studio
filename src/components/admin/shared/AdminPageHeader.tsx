@@ -25,23 +25,18 @@ export function AdminPageHeader({
 }: AdminPageHeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-[#faf9f7] border-b border-[#e6e2dc] min-h-[72px] sm:min-h-[76px] px-4 sm:px-8 lg:px-10 py-3.5 sm:py-4 flex items-center flex-wrap gap-3 sm:gap-4 transition-colors">
-      {/* Tombol hide / show sidebar (PanelLeft) */}
+      {/* Tombol menu samping (Khusus Mobile - di desktop digantikan toggle chevron > di samping) */}
       <button
         type="button"
         onClick={() => {
-          if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            setIsMobileMenuOpen?.(true);
-          } else {
-            toggleSidebar?.();
-          }
+          setIsMobileMenuOpen?.(true);
         }}
-        className="w-10 h-10 flex items-center justify-center bg-white border border-[#d6d1c9] rounded-[2px] text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 shrink-0 cursor-pointer"
+        className="md:hidden w-10 h-10 flex items-center justify-center bg-white border border-[#d6d1c9] rounded-[2px] text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 shrink-0 cursor-pointer"
         aria-controls="sidebar"
-        aria-expanded={isSidebarOpen}
-        title="Tampilkan / sembunyikan menu"
+        title="Buka menu navigasi"
       >
         <PanelLeft className="w-[18px] h-[18px] stroke-[1.6]" />
-        <span className="sr-only">Tampilkan atau sembunyikan menu samping</span>
+        <span className="sr-only">Buka menu navigasi</span>
       </button>
 
       {/* Judul & Subtitle — font heading proporsional, mewah, dan elegan */}

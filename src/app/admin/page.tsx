@@ -1643,6 +1643,7 @@ export default function AdminPage() {
       {/* Navigation Sidebar & Drawer */}
       <AdminSidebar
         isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         activeTab={activeTab}

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { AdminTab, ADMIN_NAV_GROUPS } from '../adminTypes';
 
 interface AdminSidebarProps {
   isSidebarOpen: boolean;
+  toggleSidebar?: () => void;
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
   activeTab: AdminTab;
@@ -19,6 +21,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({
   isSidebarOpen,
+  toggleSidebar,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
   activeTab,
@@ -190,6 +193,25 @@ export function AdminSidebar({
           </div>
         </div>
       </aside>
+
+      {/* Floating Chevron Sidebar Toggle Button (Desktop) */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className={`hidden md:flex fixed top-[42%] -translate-y-1/2 items-center justify-center bg-white border border-[#d6d1c9] shadow-[0_2px_12px_rgba(0,0,0,0.08)] text-[#1a1a1a] hover:bg-[#FAF9F7] active:scale-95 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer z-50 group ${
+          isSidebarOpen
+            ? 'left-[246px] h-7 w-7 rounded-full'
+            : 'left-0 h-12 w-6 rounded-r-lg border-l-0 hover:w-7'
+        }`}
+        title={isSidebarOpen ? 'Sembunyikan Menu Samping' : 'Tampilkan Menu Samping'}
+        aria-label={isSidebarOpen ? 'Sembunyikan Menu Samping' : 'Tampilkan Menu Samping'}
+      >
+        {isSidebarOpen ? (
+          <ChevronLeft className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />
+        ) : (
+          <ChevronRight className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />
+        )}
+      </button>
 
       {/* Mobile Drawer Backdrop */}
       {isMobileMenuOpen && (
