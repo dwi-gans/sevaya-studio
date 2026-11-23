@@ -279,53 +279,64 @@ export function MyOrdersView({ onOrderCountChange }: MyOrdersViewProps) {
                 {/* Items Preview */}
                 <div className="py-4">
                   {firstItem ? (
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-18 w-14 shrink-0 overflow-hidden bg-white border border-black/15">
-                        <Image
-                          src={firstItem.image || '/images/catalog/catalog-01.jpg'}
-                          alt={firstItem.title || firstItem.name || 'Produk'}
-                          fill
-                          quality={90}
-                          sizes="112px"
-                          className="object-cover"
-                          unoptimized={Boolean(firstItem.image && firstItem.image.startsWith('http'))}
-                        />
-                      </div>
+                    <>
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-18 w-14 shrink-0 overflow-hidden bg-white border border-black/15">
+                          <Image
+                            src={firstItem.image || '/images/catalog/catalog-01.jpg'}
+                            alt={firstItem.title || firstItem.name || 'Produk'}
+                            fill
+                            quality={90}
+                            sizes="112px"
+                            className="object-cover"
+                            unoptimized={Boolean(firstItem.image && firstItem.image.startsWith('http'))}
+                          />
+                        </div>
 
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-sans text-xs font-semibold tracking-wider text-black/85 uppercase truncate">
-                          {firstItem.title || firstItem.name || 'Koleksi Sevaya'}
-                        </h4>
-                        <p className="mt-0.5 text-[11px] text-black/70">
-                          {[firstItem.color, firstItem.size]
-                            .filter(Boolean)
-                            .join(' / ') || 'Standar'}{' '}
-                          &bull; {firstItem.quantity || 1} barang
-                        </p>
-                        {extraItemCount > 0 && (
-                          <p className="mt-1 text-[11px] text-black/50">
-                            +{extraItemCount} produk lainnya dalam pesanan ini
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-sans text-xs font-semibold tracking-wider text-black/85 uppercase truncate">
+                            {firstItem.title || firstItem.name || 'Koleksi Sevaya'}
+                          </h4>
+                          <p className="mt-0.5 text-[11px] text-black/70">
+                            {[firstItem.color, firstItem.size]
+                              .filter(Boolean)
+                              .join(' / ') || 'Standar'}{' '}
+                            &bull; {firstItem.quantity || 1} barang
                           </p>
-                        )}
-                      </div>
-
-                      {/* Courier & Waybill */}
-                      {ord.courier_name && (
-                        <div className="hidden sm:flex flex-col text-right text-xs">
-                          <span className="text-[10px] tracking-wider text-black/50 uppercase">
-                            Kurir
-                          </span>
-                          <span className="font-medium text-black">
-                            {ord.courier_name}
-                          </span>
-                          {ord.tracking_number && (
-                            <span className="font-mono text-[10px] text-emerald-700">
-                              Resi: {ord.tracking_number}
-                            </span>
+                          {extraItemCount > 0 && (
+                            <p className="mt-1 text-[11px] text-black/50">
+                              +{extraItemCount} produk lainnya dalam pesanan ini
+                            </p>
                           )}
                         </div>
+
+                        {/* Courier & Waybill */}
+                        {(ord.courier_name || ord.tracking_number) && (
+                          <div className="hidden sm:flex flex-col text-right text-xs shrink-0">
+                            <span className="text-[10px] tracking-wider text-black/50 uppercase">
+                              Kurir
+                            </span>
+                            <span className="font-medium text-black">
+                              {ord.courier_name || 'Kurir Reguler'}
+                            </span>
+                            {ord.tracking_number && (
+                              <span className="font-mono text-[11px] text-emerald-800 font-bold">
+                                Resi: {ord.tracking_number}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {/* Mobile Courier & Resi Bar */}
+                      {ord.tracking_number && (
+                        <div className="mt-3 flex sm:hidden items-center justify-between bg-black/5 px-3 py-2 text-xs">
+                          <span className="text-black/70">{ord.courier_name || 'Kurir'}</span>
+                          <span className="font-mono font-bold text-emerald-800">
+                            Resi: {ord.tracking_number}
+                          </span>
+                        </div>
                       )}
-                    </div>
+                    </>
                   ) : (
                     <p className="text-xs text-black/50">Informasi produk tidak tersedia</p>
                   )}

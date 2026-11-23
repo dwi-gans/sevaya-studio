@@ -39,26 +39,58 @@ interface AdminOrder {
   updated_at?: string;
 }
 
-// Biteship status → label & color
+// Biteship status → label & color (Koleksi warna tenang, jelas, & elegan)
 const BITESHIP_STATUSES = [
-  { value: 'confirmed', label: 'Confirmed', emoji: '📋', color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { value: 'allocated', label: 'Allocated', emoji: '🏢', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-  { value: 'picking_up', label: 'Picking Up', emoji: '🚶', color: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
-  { value: 'picked', label: 'Picked', emoji: '📦', color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  { value: 'dropping_off', label: 'Dropping Off', emoji: '🚚', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { value: 'delivered', label: 'Delivered', emoji: '✅', color: 'text-green-700 bg-green-50 border-green-200' },
-  { value: 'cancelled', label: 'Cancelled', emoji: '🚫', color: 'text-red-600 bg-red-50 border-red-200' },
-  { value: 'returned', label: 'Returned', emoji: '↩️', color: 'text-gray-600 bg-gray-50 border-gray-200' },
-  { value: 'on_hold', label: 'On Hold', emoji: '⏸️', color: 'text-gray-500 bg-gray-50 border-gray-200' },
+  { value: 'confirmed', label: 'Confirmed', emoji: '📋', color: 'text-[#1E4D7A] bg-[#F1F5FA] border-[#C8D8EA]' },
+  { value: 'allocated', label: 'Allocated', emoji: '🏢', color: 'text-[#3E3882] bg-[#F4F3FB] border-[#D6D2EE]' },
+  { value: 'picking_up', label: 'Picking Up', emoji: '🚶', color: 'text-[#8C5D23] bg-[#FFF9EE] border-[#EAD5BE]' },
+  { value: 'picked', label: 'Picked', emoji: '📦', color: 'text-[#8C4725] bg-[#FAF4EE] border-[#EECDBC]' },
+  { value: 'dropping_off', label: 'Dropping Off', emoji: '🚚', color: 'text-[#583375] bg-[#F8F2FA] border-[#E1CFE8]' },
+  { value: 'delivered', label: 'Delivered', emoji: '✅', color: 'text-[#1E6037] bg-[#F0F6F2] border-[#C4DFC9]' },
+  { value: 'cancelled', label: 'Cancelled', emoji: '🚫', color: 'text-[#A12B35] bg-[#FDF2F2] border-[#ECC6C9]' },
+  { value: 'returned', label: 'Returned', emoji: '↩️', color: 'text-[#5C5C5C] bg-[#F5F5F5] border-[#DCDCDC]' },
+  { value: 'on_hold', label: 'On Hold', emoji: '⏸️', color: 'text-[#6B5A4E] bg-[#F9F7F5] border-[#E3DDD7]' },
 ];
 
+// Status Internal Toko SEVAYA:
+// Didesain beda warna untuk tiap status, bernuansa earthy luxury/editorial yang tenang & berkelas
 const INTERNAL_STATUSES = [
-  { value: 'pending_payment', label: 'Belum Bayar', color: 'text-[#8A6335] bg-black/5 border-black/15' },
-  { value: 'paid', label: 'Sudah Bayar', color: 'text-black bg-white border-black/30' },
-  { value: 'processing', label: 'Diproses', color: 'text-[#5B4A42] bg-black/5 border-black/15' },
-  { value: 'shipped', label: 'Di Perjalanan', color: 'text-[#874A2C] bg-black/5 border-black/15' },
-  { value: 'delivered', label: 'Sampai', color: 'text-[#2D5A3C] bg-black/5 border-[#2D5A3C]/20' },
-  { value: 'cancelled', label: 'Dibatalkan', color: 'text-[#8C3A3A] bg-black/5 border-[#8C3A3A]/20' },
+  {
+    value: 'pending_payment',
+    label: 'Belum Bayar',
+    color: 'text-[#8C5D23] bg-[#FFF9EE] border-[#EAD5BE]',
+    dot: 'bg-[#C2822B]',
+  },
+  {
+    value: 'paid',
+    label: 'Sudah Bayar',
+    color: 'text-[#1E4D7A] bg-[#F1F5FA] border-[#C8D8EA]',
+    dot: 'bg-[#2B6EA9]',
+  },
+  {
+    value: 'processing',
+    label: 'Diproses',
+    color: 'text-[#8C4725] bg-[#FAF4EE] border-[#EECDBC]',
+    dot: 'bg-[#BF6338]',
+  },
+  {
+    value: 'shipped',
+    label: 'Di Perjalanan',
+    color: 'text-[#186068] bg-[#EFF7F7] border-[#C5E3E6]',
+    dot: 'bg-[#22848F]',
+  },
+  {
+    value: 'delivered',
+    label: 'Sampai',
+    color: 'text-[#1E6037] bg-[#F0F6F2] border-[#C4DFC9]',
+    dot: 'bg-[#2B864E]',
+  },
+  {
+    value: 'cancelled',
+    label: 'Dibatalkan',
+    color: 'text-[#A12B35] bg-[#FDF2F2] border-[#ECC6C9]',
+    dot: 'bg-[#C7404B]',
+  },
 ];
 
 const COURIERS = [
@@ -92,10 +124,12 @@ function StatusBadge({ status, type = 'internal' }: { status: string; type?: 'in
   if (!found) return <span className="text-xs text-black/70">{status || '—'}</span>;
 
   const emoji = ('emoji' in found ? found.emoji : '') as string;
+  const dotColor = ('dot' in found ? found.dot : '') as string;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${found.color}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${found.color}`}
     >
+      {dotColor && <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotColor} shrink-0`} />}
       {emoji ? <span>{emoji}</span> : null}
       {found.label}
     </span>
@@ -433,13 +467,14 @@ function OrderDetailModal({
                       key={s.value}
                       disabled={loading || order.status === s.value}
                       onClick={() => handleInternalStatusChange(s.value)}
-                      className={`min-h-[38px] rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95
+                      className={`min-h-[38px] rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95 flex items-center justify-center gap-1.5
                         ${order.status === s.value
-                          ? s.color + ' opacity-100 ring-2 ring-[#000000]/30'
-                          : 'border-black/20 bg-white text-black/70 hover:bg-black/5 disabled:opacity-40'
+                          ? `${s.color} ring-2 ring-black/15 shadow-xs font-extrabold`
+                          : 'border-black/15 bg-white text-black/60 hover:bg-black/5 hover:text-black disabled:opacity-40'
                         }`}
                     >
-                      {order.status === s.value ? '▶ ' : ''}{s.label}
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${s.dot} shrink-0`} />
+                      {order.status === s.value ? '✓ ' : ''}{s.label}
                     </button>
                   ))}
                 </div>
@@ -822,11 +857,11 @@ export function OrdersTab({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             { label: 'Total Order', value: stats.all, color: 'text-black' },
-            { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8A6335]' },
-            { label: 'Diproses', value: stats.processing, color: 'text-[#5B4A42]' },
-            { label: 'Dikirim', value: stats.shipped, color: 'text-[#874A2C]' },
-            { label: 'Sampai', value: stats.delivered, color: 'text-[#2D5A3C]' },
-            { label: 'Biteship Aktif', value: stats.with_biteship, color: 'text-blue-600' },
+            { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8C5D23]' },
+            { label: 'Diproses', value: stats.processing, color: 'text-[#8C4725]' },
+            { label: 'Dikirim', value: stats.shipped, color: 'text-[#186068]' },
+            { label: 'Sampai', value: stats.delivered, color: 'text-[#1E6037]' },
+            { label: 'Dibatalkan', value: stats.cancelled, color: 'text-[#A12B35]' },
           ].map((s) => (
             <div
               key={s.label}
