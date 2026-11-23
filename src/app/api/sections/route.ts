@@ -13,6 +13,7 @@ import {
   SiteSectionsConfig,
   deepCleanMojibake,
   normalizeAndMergeSiteSections,
+  invalidateSiteSectionsCache,
 } from '@/integrations/supabase/sections';
 
 export const runtime = 'nodejs';
@@ -234,9 +235,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Instantly update memory cache
+    // Instantly update memory cache (route.ts cache)
     cachedSections = merged;
     cacheTimestamp = Date.now();
+
+    // Also bust the SSR module-level cache in sections.ts so getSiteSections()
+    // reads fresh data from disk on the very next homepage render
+    invalidateSiteSectionsCache();
 
     // Bust ISR cache for all pages that render section data
     try {

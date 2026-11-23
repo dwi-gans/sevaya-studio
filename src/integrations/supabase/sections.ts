@@ -653,6 +653,13 @@ let _cachedSectionsTime = 0;
 let _isServerFetched = false;
 const SECTIONS_CACHE_TTL = 30 * 1000; // 30-second in-memory cache
 
+/** Called by /api/sections POST handler to bust SSR cache immediately after admin saves */
+export function invalidateSiteSectionsCache() {
+  _cachedSiteSections = null;
+  _cachedSectionsTime = 0;
+  _isServerFetched = false;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // getCachedSiteSections — synchronous, 0 network delay
 // ─────────────────────────────────────────────────────────────────────────────

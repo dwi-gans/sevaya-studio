@@ -28,6 +28,7 @@ export {
   getSiteSections,
   getCachedSiteSections,
   saveSiteSections,
+  invalidateSiteSectionsCache,
   cleanMojibake,
   deepCleanMojibake,
   DEFAULT_SITE_SECTIONS,
