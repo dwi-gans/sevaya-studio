@@ -819,7 +819,7 @@ export function OrdersTab({
         toggleSidebar={toggleSidebar}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       >
-        <span className="flex items-center gap-2 text-xs text-[#6b655e] whitespace-nowrap before:content-[''] before:w-1.5 before:h-1.5 before:rounded-full before:bg-[#1f7a4d]">
+        <span className="hidden sm:flex items-center gap-2 text-xs text-[#6b655e] whitespace-nowrap before:content-[''] before:w-1.5 before:h-1.5 before:rounded-full before:bg-[#1f7a4d]">
           Diperbarui <time className="font-mono">{lastRefresh ? lastRefresh.toLocaleTimeString('id-ID') : '12.23.49'}</time>
         </span>
 
@@ -827,34 +827,34 @@ export function OrdersTab({
           type="button"
           onClick={() => fetchOrders(true, true)}
           disabled={refreshing}
-          className="h-10 px-4.5 flex items-center gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="h-9 sm:h-10 px-3 sm:px-4.5 flex items-center gap-1.5 sm:gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[11px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
           title="Sinkronkan data pesanan"
         >
           <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>{refreshing ? 'Menyinkronkan...' : 'Sinkron'}</span>
+          <span>{refreshing ? 'Sinkron...' : 'Sinkron'}</span>
         </button>
       </AdminPageHeader>
 
       {/* Konten Halaman */}
-      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-6">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-4 sm:space-y-6">
 
       {/* Unified KPI Summary Card */}
-      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3.5 sm:space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-black/15/70 pb-4">
+      <div className="rounded-xl sm:rounded-2xl border border-black/10 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-3 sm:space-y-5">
+        <div className="flex items-center justify-between gap-2 border-b border-black/10 pb-3 sm:pb-4">
           <div>
-            <span className="font-headline text-[10px] font-bold tracking-widest text-black/50 uppercase block">
+            <span className="font-headline text-[9px] sm:text-[10px] font-bold tracking-widest text-black/50 uppercase block">
               Total Pendapatan Terkonfirmasi
             </span>
-            <p className="font-headline text-xl sm:text-3xl font-bold text-black mt-0.5 sm:mt-1">
+            <p className="font-headline text-lg sm:text-3xl font-bold text-black mt-0.5 sm:mt-1">
               {formatIDR(totalRevenue)}
             </p>
           </div>
-          <p className="text-xs text-black/70">
+          <p className="hidden sm:block text-xs text-black/60">
             Akumulasi transaksi aktif &amp; berhasil diproses
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-3">
           {[
             { label: 'Total Order', value: stats.all, color: 'text-black' },
             { label: 'Belum Bayar', value: stats.pending_payment, color: 'text-[#8C5D23]' },
@@ -865,34 +865,34 @@ export function OrdersTab({
           ].map((s) => (
             <div
               key={s.label}
-              className="flex flex-col gap-0.5 sm:gap-1 rounded-lg sm:rounded-xl bg-black/5 p-2.5 sm:p-3 border border-black/15/50"
+              className="flex flex-col gap-0.5 rounded-lg sm:rounded-xl bg-black/[0.03] p-2 sm:p-3 border border-black/10"
             >
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-black/70">
+              <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-black/60 truncate">
                 {s.label}
               </span>
-              <span className={`text-base sm:text-xl font-bold ${s.color}`}>{s.value}</span>
+              <span className={`text-sm sm:text-xl font-bold ${s.color}`}>{s.value}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Search + Filter */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama, no. order, resi, Biteship ID..."
-          className="w-full rounded-none border border-black/20 bg-white px-3.5 py-2 text-xs sm:text-xs text-black placeholder:text-black/50 focus:border-black focus:outline-none min-h-[38px] rounded-lg border border-black/15"
+          className="w-full bg-white px-3.5 py-2 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[38px] rounded-xl border border-black/15 shadow-xs"
         />
-        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1.5 pt-0.5 touch-pan-x">
+        <div className="no-scrollbar flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 touch-pan-x">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`shrink-0 min-h-[32px] sm:min-h-[36px] flex items-center rounded-full border px-3 sm:px-4 py-1 text-[11px] sm:text-xs font-medium transition active:scale-95 ${
+              className={`shrink-0 min-h-[30px] sm:min-h-[36px] flex items-center rounded-full border px-3 sm:px-4 py-0.5 text-[11px] sm:text-xs font-semibold transition active:scale-95 ${
                 filter === tab.key
-                  ? 'border-black bg-black text-white'
-                  : 'border-black/20 bg-white text-black/70 hover:border-black hover:bg-black/5'
+                  ? 'border-black bg-black text-white shadow-xs'
+                  : 'border-black/15 bg-white text-black/70 hover:border-black hover:bg-black/5'
               }`}
             >
               {tab.label}
@@ -1055,7 +1055,7 @@ export function OrdersTab({
             </div>
 
             {/* Mobile Responsive Cards View */}
-            <div className="space-y-3 md:hidden">
+            <div className="space-y-3.5 md:hidden">
               {filtered.map((o) => {
                 let parsedItems: { qty?: number }[] = [];
                 try { parsedItems = typeof o.items === 'string' ? JSON.parse(o.items) : o.items || []; } catch { /* */ }
@@ -1064,15 +1064,15 @@ export function OrdersTab({
                 return (
                   <div
                     key={o.id}
-                    className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] space-y-2.5 sm:space-y-3"
+                    className="rounded-2xl border border-black/10 bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] space-y-3"
                   >
-                    {/* Top: Order number, date, badges */}
-                    <div className="flex items-start justify-between gap-2 border-b border-black/15/70 pb-2.5">
+                    {/* Top: Order number & Badges */}
+                    <div className="flex items-start justify-between gap-2 border-b border-black/10 pb-3">
                       <div>
-                        <p className="font-bold text-sm text-black">#{o.order_number}</p>
-                        <p className="text-[10px] text-black/50">{formatDate(o.created_at)}</p>
+                        <p className="font-headline font-bold text-sm text-black">#{o.order_number}</p>
+                        <p className="text-[11px] text-black/50 mt-0.5">{formatDate(o.created_at)}</p>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-1 shrink-0">
                         <StatusBadge status={o.status} type="internal" />
                         {o.biteship_order_id && o.biteship_status && (
                           <StatusBadge status={o.biteship_status} type="biteship" />
@@ -1080,44 +1080,56 @@ export function OrdersTab({
                       </div>
                     </div>
 
-                    {/* Customer & Destination */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Pelanggan</span>
-                        <p className="font-semibold text-black truncate">{o.customer_name}</p>
-                        <p className="text-[11px] text-black/70">{o.customer_phone}</p>
+                    {/* Customer & Location */}
+                    <div className="flex items-start justify-between gap-2 text-xs">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold text-black/40 uppercase tracking-wider block">Pelanggan</span>
+                        <p className="font-semibold text-black text-xs truncate mt-0.5">{o.customer_name}</p>
+                        <p className="text-[11px] text-black/60 font-mono mt-0.5">{o.customer_phone}</p>
                       </div>
-                      <div>
-                        <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Tujuan</span>
-                        <p className="text-black text-[11px] line-clamp-2">{o.destination_area || o.customer_address || '—'}</p>
-                      </div>
-                    </div>
-
-                    {/* Courier & Shipping / Price Breakdown */}
-                    <div className="flex items-center justify-between rounded-xl bg-black/5 px-3 py-2 text-xs">
-                      <div>
-                        <p className="font-semibold text-black">{o.courier_name || 'Kurir Reguler'}</p>
-                        {o.tracking_number ? (
-                          <p className="font-mono text-[10px] text-emerald-800 font-semibold">Resi: {o.tracking_number}</p>
-                        ) : (
-                          <p className="text-[10px] text-black/50">Belum ada resi</p>
-                        )}
-                        <p className="text-[10px] text-black/60 mt-0.5">{totalItems} Item • Produk: {formatIDR(o.subtotal || 0)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] text-emerald-800 font-medium">+ Ongkir: {formatIDR(o.shipping_cost || 0)}</p>
-                        <p className="font-bold text-xs text-black mt-0.5">
-                          Total: {formatIDR(o.grand_total || ((o.subtotal || 0) + (o.shipping_cost || 0)))}
+                      <div className="min-w-0 flex-1 text-right">
+                        <span className="text-[10px] font-bold text-black/40 uppercase tracking-wider block">Tujuan</span>
+                        <p className="text-black/80 text-[11px] line-clamp-2 mt-0.5 leading-snug">
+                          {o.destination_area || o.customer_address || '—'}
                         </p>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-black/15/50">
+                    {/* Courier & Waybill Badge + Price Breakdown */}
+                    <div className="rounded-xl bg-[#FAF9F6] border border-black/10 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-black text-xs truncate">{o.courier_name || 'Kurir Reguler'}</p>
+                          <p className="text-[10px] text-black/50 mt-0.5">{totalItems} Item • Produk {formatIDR(o.subtotal || 0)}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] text-black/50 block">+ Ongkir {formatIDR(o.shipping_cost || 0)}</span>
+                          <span className="font-headline font-bold text-sm text-black block mt-0.5">
+                            {formatIDR(o.grand_total || ((o.subtotal || 0) + (o.shipping_cost || 0)))}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Resi pill if available */}
+                      {o.tracking_number ? (
+                        <div className="flex items-center justify-between bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1 text-[11px]">
+                          <span className="text-emerald-900 font-medium">No. Resi</span>
+                          <span className="font-mono font-bold text-emerald-800">{o.tracking_number}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between bg-black/[0.03] rounded-lg px-2.5 py-1 text-[10px] text-black/50">
+                          <span>Status Resi</span>
+                          <span>Menunggu pickup kurir</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions: Clean touch-friendly buttons */}
+                    <div className="flex items-center gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(o)}
-                        className="flex-1 min-h-[38px] flex items-center justify-center rounded-full bg-black py-2 text-center text-xs font-semibold text-white transition hover:bg-black/85 active:scale-[0.99]"
+                        className="flex-1 min-h-[40px] flex items-center justify-center rounded-full bg-black text-white text-xs font-semibold hover:bg-black/85 active:scale-95 transition shadow-xs cursor-pointer"
                       >
                         Kelola Pesanan
                       </button>
@@ -1125,7 +1137,7 @@ export function OrdersTab({
                         type="button"
                         onClick={() => setPrintOrder(o)}
                         title="Cetak Label Pengiriman"
-                        className="min-h-[38px] px-3.5 flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white text-xs font-semibold text-black transition hover:bg-black/5 active:scale-95"
+                        className="min-h-[40px] px-3.5 flex items-center justify-center gap-1 rounded-full border border-black/20 bg-white text-xs font-semibold text-black hover:bg-black/5 active:scale-95 transition cursor-pointer shrink-0"
                       >
                         <span>🖨️</span> Label
                       </button>
@@ -1133,7 +1145,7 @@ export function OrdersTab({
                         type="button"
                         onClick={() => handleDeleteOrder(o.id, o.order_number)}
                         title="Hapus Pesanan"
-                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 transition hover:bg-red-100 active:scale-95"
+                        className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs text-red-600 hover:bg-red-100 active:scale-95 transition cursor-pointer shrink-0"
                       >
                         🗑
                       </button>
