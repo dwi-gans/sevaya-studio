@@ -47,7 +47,6 @@ export interface AdminNavItem {
   id: AdminTab;
   label: string;
   icon: IconName;
-  countBadge?: string | number;
 }
 
 export interface AdminNavGroup {
@@ -59,8 +58,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     groupTitle: 'Transaksi & Logistik',
     items: [
-      { id: 'orders', label: 'Pesanan & Resi', icon: 'receipt_long', countBadge: 12 },
-      { id: 'catalog', label: 'Katalog Koleksi Abaya', icon: 'checkroom', countBadge: 4 },
+      { id: 'orders', label: 'Pesanan & Resi', icon: 'receipt_long' },
+      { id: 'catalog', label: 'Katalog Koleksi Abaya', icon: 'checkroom' },
       { id: 'inventory', label: 'Inventaris & Stok Varian', icon: 'inventory_2' },
     ],
   },
@@ -68,7 +67,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     groupTitle: 'Editorial & Storefront',
     items: [
       { id: 'section-home', label: 'Beranda (Homepage)', icon: 'view_quilt' },
-      { id: 'section-news', label: 'News & Editorial (Jurnal)', icon: 'newspaper', countBadge: 6 },
+      { id: 'section-news', label: 'News & Editorial (Jurnal)', icon: 'newspaper' },
       { id: 'section-lookbook', label: 'Lookbook Studio', icon: 'photo_library' },
       { id: 'section-conscious', label: 'Tentang Toko (About)', icon: 'auto_stories' },
     ],
@@ -76,7 +75,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     groupTitle: 'Aset Digital & Sistem',
     items: [
-      { id: 'media', label: 'Galeri Cloud Media', icon: 'perm_media', countBadge: '1.4k' },
+      { id: 'media', label: 'Galeri Cloud Media', icon: 'perm_media' },
       { id: 'settings', label: 'Pengaturan Studio & CDN', icon: 'tune' },
     ],
   },

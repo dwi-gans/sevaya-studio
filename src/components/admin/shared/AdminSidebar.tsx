@@ -43,6 +43,38 @@ export function AdminSidebar({
     }
   });
 
+  // Track tabs that the admin has opened/acknowledged
+  const [openedTabs, setOpenedTabs] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set(['catalog', 'section-news', 'media']);
+    try {
+      const saved = localStorage.getItem('sevaya_admin_opened_tabs');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return new Set([...parsed, 'catalog', 'section-news', 'media']);
+        }
+      }
+      return new Set(['catalog', 'section-news', 'media']);
+    } catch {
+      return new Set(['catalog', 'section-news', 'media']);
+    }
+  });
+
+  // Whenever activeTab changes, auto-mark it as opened and clear unread badge
+  useEffect(() => {
+    setOpenedTabs((prev) => {
+      if (prev.has(activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(activeTab);
+      try {
+        localStorage.setItem('sevaya_admin_opened_tabs', JSON.stringify(Array.from(next)));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, [activeTab]);
+
   // Whenever orders count increases beyond saved read count, mark as unread
   useEffect(() => {
     try {
@@ -63,9 +95,21 @@ export function AdminSidebar({
     }
   }, [ordersCount, activeTab]);
 
-  // When clicking a tab: if user opens 'orders', clear the badge
+  // When clicking a tab: mark as opened/read and clear notification badge
   const handleTabClick = (tabId: AdminTab) => {
     setActiveTab(tabId);
+    setOpenedTabs((prev) => {
+      if (prev.has(tabId)) return prev;
+      const next = new Set(prev);
+      next.add(tabId);
+      try {
+        localStorage.setItem('sevaya_admin_opened_tabs', JSON.stringify(Array.from(next)));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+
     if (tabId === 'orders') {
       try {
         localStorage.setItem('sevaya_admin_orders_read_count', String(ordersCount));
@@ -77,28 +121,26 @@ export function AdminSidebar({
   };
 
   const getBadge = (itemId: AdminTab) => {
+    // 1. Tab yang sedang aktif dibuka TIDAK PERNAH menampilkan badge notifikasi
+    if (activeTab === itemId) {
+      return null;
+    }
+
     switch (itemId) {
       case 'orders': {
-        // 1. If ordersCount is 0, do NOT show 0 badge!
-        // 2. If tab is already open or already read by user, hide badge!
-        if (!ordersCount || ordersCount <= 0 || ordersRead || activeTab === 'orders') {
+        // Pesanan adalah notifikasi transaksi real-time
+        // Jika sudah dibuka/dibaca atau 0, sembunyikan badge
+        if (!ordersCount || ordersCount <= 0 || ordersRead) {
           return null;
         }
         return ordersCount;
       }
-      case 'catalog': {
-        // Only show if positive number and not 0
-        return productsCount > 0 ? productsCount : null;
-      }
-      case 'section-news': {
-        // Only show if positive number and not 0
-        return articlesCount > 0 ? articlesCount : null;
-      }
-      case 'media': {
-        // Only show if positive number and not 0
-        return mediaCount > 0 ? mediaCount : null;
-      }
+      case 'catalog':
+      case 'section-news':
+      case 'media':
       default:
+        // Tab lain (Katalog, Berita, Galeri Media) adalah modul CMS, bukan notifikasi belum dibaca.
+        // Setelah dibuka/dilihat oleh admin, badge tidak akan muncul agar tidak membingungkan pengguna.
         return null;
     }
   };
@@ -421,14 +463,7 @@ export function AdminSidebar({
             activeTab === 'catalog' ? 'text-black font-bold' : 'text-black/50 hover:text-black'
           }`}
         >
-          <div className="relative">
-            <Icon name="checkroom" size={17} />
-            {getBadge('catalog') !== null && (
-              <span className="absolute -top-1 -right-2 bg-black/80 text-white font-mono text-[8px] font-bold px-1 rounded-full">
-                {getBadge('catalog')}
-              </span>
-            )}
-          </div>
+          <Icon name="checkroom" size={17} />
           <span className="mt-0.5 truncate">Katalog</span>
         </button>
 
