@@ -102,8 +102,6 @@ export default function InventoryTab({
     type: MutationType;
   } | null>(null);
 
-  // Sync state
-  const [generating, setGenerating] = useState(false);
 
   const fetchInventory = useCallback(async (refresh = false) => {
     setLoading(true);
@@ -356,17 +354,6 @@ export default function InventoryTab({
     setExpandedProductIds({});
   };
 
-  // Sync / Generate variants for all products via server API
-  const handleGenerateVariants = async () => {
-    setGenerating(true);
-    try {
-      await fetchInventory(true);
-    } catch (err) {
-      console.warn('[GenerateVariants]', err);
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   const handleMutationSuccess = (updatedVariant: ProductVariant, totalProductStock?: number) => {
     setVariants((prev) =>
@@ -404,16 +391,6 @@ export default function InventoryTab({
         toggleSidebar={toggleSidebar}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       >
-        <button
-          type="button"
-          onClick={handleGenerateVariants}
-          disabled={loading || generating}
-          className="h-8 sm:h-10 px-2 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wide sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-          title="Sinkronkan varian warna & ukuran dari semua produk katalog"
-        >
-          <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${generating ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
-        </button>
 
         <button
           type="button"
@@ -807,7 +784,7 @@ export default function InventoryTab({
                         <div className="p-4 text-center text-xs text-black/50">
                           Belum ada varian ukuran/warna untuk produk ini.
                           <br />
-                          <span className="text-[11px] text-black/40">Tekan &ldquo;Sinkronkan Katalog&rdquo; untuk membuat varian otomatis.</span>
+                          <span className="text-[11px] text-black/40">Tekan &ldquo;Sinkron&rdquo; untuk memuat varian otomatis.</span>
                         </div>
                       ) : (() => {
                         // Build color-keyed map: colorName → { hex, variants by size }
