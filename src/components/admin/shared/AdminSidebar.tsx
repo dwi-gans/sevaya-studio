@@ -103,6 +103,62 @@ export function AdminSidebar({
     }
   };
 
+  // Deteksi gestur usap layar di HP (Edge Swipe):
+  // Geser dari ujung kiri layar ke kanan untuk memunculkan sidebar,
+  // dan geser ke kiri untuk menutup sidebar.
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let isTracking = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      if (!isMobileMenuOpen) {
+        // Hanya mulai melacak jika sentuhan dimulai dari ujung kiri layar (< 40px)
+        if (touch.clientX < 40) {
+          startX = touch.clientX;
+          startY = touch.clientY;
+          isTracking = true;
+        }
+      } else {
+        // Jika sidebar sedang terbuka, sentuhan di mana saja bisa menggeser ke kiri untuk menutup
+        startX = touch.clientX;
+        startY = touch.clientY;
+        isTracking = true;
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isTracking) return;
+      isTracking = false;
+
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
+
+      // Pastikan pergeseran horizontal lebih dominan daripada vertikal
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+        if (!isMobileMenuOpen && diffX > 40) {
+          // Geser ke kanan dari ujung kiri -> Buka sidebar
+          setIsMobileMenuOpen(true);
+        } else if (isMobileMenuOpen && diffX < -40) {
+          // Geser ke kiri -> Tutup sidebar
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobileMenuOpen, setIsMobileMenuOpen]);
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -207,6 +263,25 @@ export function AdminSidebar({
         aria-label={isSidebarOpen ? 'Sembunyikan Menu Samping' : 'Tampilkan Menu Samping'}
       >
         {isSidebarOpen ? (
+          <ChevronLeft className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />
+        ) : (
+          <ChevronRight className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />
+        )}
+      </button>
+
+      {/* Floating Chevron Sidebar Toggle Button (Mobile) - Samakan persis dengan di Desktop */}
+      <button
+        type="button"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className={`md:hidden fixed top-[42%] -translate-y-1/2 flex items-center justify-center bg-white border border-[#d6d1c9] shadow-[0_2px_12px_rgba(0,0,0,0.12)] text-[#1a1a1a] hover:bg-[#FAF9F7] active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer z-50 group ${
+          isMobileMenuOpen
+            ? 'left-[266px] h-7 w-7 rounded-full'
+            : 'left-0 h-12 w-6 rounded-r-lg border-l-0 hover:w-7'
+        }`}
+        title={isMobileMenuOpen ? 'Sembunyikan Menu Samping' : 'Tampilkan Menu Samping'}
+        aria-label={isMobileMenuOpen ? 'Sembunyikan Menu Samping' : 'Tampilkan Menu Samping'}
+      >
+        {isMobileMenuOpen ? (
           <ChevronLeft className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />
         ) : (
           <ChevronRight className="w-4 h-4 stroke-[2.2] text-[#514346] group-hover:text-black transition-colors" />

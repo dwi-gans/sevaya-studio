@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PanelLeft, RefreshCw, Store, FileDown, Calendar, ChevronDown } from 'lucide-react';
+import { RefreshCw, Store, FileDown, Calendar, ChevronDown } from 'lucide-react';
 import { detectOrderCourier } from '@/lib/courier-utils';
 import { ShippingLabelModal } from '../ShippingLabelModal';
 import { InventoryTableSkeleton } from '../shared/AdminSkeleton';
@@ -1393,11 +1393,11 @@ export function OrdersTab({
           type="button"
           onClick={() => fetchOrders(true, true)}
           disabled={refreshing}
-          className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
+          className="h-8 sm:h-10 px-2 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
           title="Sinkronkan data pesanan"
         >
           <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>{refreshing ? '...' : 'Sinkron'}</span>
+          <span className="hidden sm:inline">{refreshing ? 'Menyinkronkan...' : 'Sinkron'}</span>
         </button>
       </AdminPageHeader>
 

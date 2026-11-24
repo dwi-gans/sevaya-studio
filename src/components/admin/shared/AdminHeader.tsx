@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { PanelLeft, Store } from 'lucide-react';
+import { Store } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
 import { AdminTab } from '../adminTypes';
 
@@ -28,27 +28,7 @@ export function AdminHeader({
       }`}
     >
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-xl">
-        {/* Tombol Menu Mobile: PanelLeft */}
-        <button
-          type="button"
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="flex h-10 w-10 items-center justify-center bg-white border border-[#d6d1c9] rounded-[2px] text-[#1a1a1a] hover:border-[#1a1a1a] active:scale-95 transition shrink-0 md:hidden cursor-pointer"
-          aria-label="Buka Menu Admin"
-          title="Buka Menu Admin"
-        >
-          <PanelLeft className="w-[18px] h-[18px] stroke-[1.6]" />
-        </button>
 
-        {/* Tombol Toggle Sidebar Desktop: PanelLeft */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="hidden md:flex h-10 w-10 items-center justify-center bg-white border border-[#d6d1c9] rounded-[2px] text-[#1a1a1a] hover:border-[#1a1a1a] active:scale-95 transition shrink-0 cursor-pointer"
-          aria-label="Toggle Menu Sidebar"
-          title={isSidebarOpen ? 'Sembunyikan Sidebar' : 'Buka Sidebar'}
-        >
-          <PanelLeft className="w-[18px] h-[18px] stroke-[1.6]" />
-        </button>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

@@ -408,23 +408,22 @@ export default function InventoryTab({
           type="button"
           onClick={handleGenerateVariants}
           disabled={loading || generating}
-          className="h-8 sm:h-10 px-2.5 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wide sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="h-8 sm:h-10 px-2 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wide sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           title="Sinkronkan varian warna & ukuran dari semua produk katalog"
         >
           <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${generating ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
-          <span className="sm:hidden">{generating ? '...' : 'Sinkron'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => fetchInventory(true)}
           disabled={loading}
-          className="h-8 sm:h-10 px-2.5 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
-          title="Segarkan data inventaris"
+          className="h-8 sm:h-10 px-2 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
+          title="Sinkronkan data inventaris"
         >
           <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${loading ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">Segarkan</span>
+          <span className="hidden sm:inline">{loading ? 'Menyinkronkan...' : 'Sinkron'}</span>
         </button>
       </AdminPageHeader>
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { PanelLeft, Store } from 'lucide-react';
+import { Store } from 'lucide-react';
 
 export interface AdminPageHeaderProps {
   title: string;
@@ -26,22 +26,9 @@ export function AdminPageHeader({
   return (
     <header className="sticky top-0 z-30 bg-[#faf9f7] border-b border-[#e6e2dc] min-h-[52px] sm:min-h-[76px] px-3 sm:px-8 lg:px-10 py-2 sm:py-4 flex items-center justify-between gap-2 sm:gap-3 transition-colors">
       <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-        {/* Tombol menu samping (Khusus Mobile - di desktop digantikan toggle chevron > di samping) */}
-        <button
-          type="button"
-          onClick={() => {
-            setIsMobileMenuOpen?.(true);
-          }}
-          className="md:hidden w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-white border border-[#d6d1c9] rounded-[2px] text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 shrink-0 cursor-pointer shadow-xs"
-          aria-controls="sidebar"
-          title="Buka menu navigasi"
-        >
-          <PanelLeft className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[1.6]" />
-          <span className="sr-only">Buka menu navigasi</span>
-        </button>
 
         {/* Judul & Subtitle */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 pl-1.5 sm:pl-0">
           <h1 className="text-sm sm:text-2xl font-semibold leading-tight text-[#1a1a1a] tracking-tight truncate m-0">
             {title}
           </h1>

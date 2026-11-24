@@ -385,10 +385,10 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
           }}
           disabled={isRefreshingStorage}
           className="h-8 sm:h-10 px-2 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
-          title="Sinkronisasi kapasitas realtime & refresh media"
+          title="Sinkronkan kapasitas realtime & media"
         >
           <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${isRefreshingStorage ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">Segarkan</span>
+          <span className="hidden sm:inline">{isRefreshingStorage ? 'Menyinkronkan...' : 'Sinkron'}</span>
         </button>
 
         <button
