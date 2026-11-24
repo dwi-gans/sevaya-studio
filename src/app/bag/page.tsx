@@ -66,15 +66,15 @@ export default function ShoppingBagPage() {
           <div className="flex flex-1 flex-col justify-between">
             {/* Bagian Atas: Tabel & List Item Cart */}
             <div className="flex flex-col">
-              {/* Header Kolom Desktop */}
+              {/* Header Kolom — desktop only */}
               <div className="hidden border-b border-black/15 pb-3 text-[10px] tracking-[0.18em] text-black/60 uppercase sm:grid sm:grid-cols-12 sm:gap-6">
                 <div className="col-span-7">{t('bag.col_product')}</div>
                 <div className="col-span-3 text-center">{t('bag.col_qty')}</div>
-                <div className="col-span-2 text-right">{t('bag.col_total')}</div>
+                <div className="col-span-2 text-right"></div>
               </div>
 
               {/* List Item Cart */}
-              <div className="divide-y divide-[#E5E5E5] max-h-[50vh] overflow-y-auto pr-1 sm:pr-2">
+              <div className="divide-y divide-[#E5E5E5] max-h-[55vh] overflow-y-auto pr-1 sm:pr-2">
                 {items.map((item) => {
                   const itemTotal = item.price * item.quantity;
                   const variantDetails = [item.color, item.size, item.edition]
@@ -86,9 +86,10 @@ export default function ShoppingBagPage() {
                       key={`${item.id}-${item.size}-${item.color}`}
                       className="py-5 sm:py-6 sm:grid sm:grid-cols-12 sm:items-center sm:gap-6"
                     >
-                      {/* Info Produk */}
-                      <div className="flex items-start space-x-4 sm:col-span-7">
-                        <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden bg-[#F0F0F0] sm:h-32 sm:w-24">
+                      {/* ── Info Produk (col-span-7 desktop, full mobile) ── */}
+                      <div className="flex items-start gap-3.5 sm:gap-4 sm:col-span-7">
+                        {/* Gambar */}
+                        <div className="relative h-28 w-20 shrink-0 overflow-hidden bg-[#F0F0F0] sm:h-32 sm:w-24">
                           {item.image ? (
                             <Image
                               src={item.image}
@@ -105,105 +106,102 @@ export default function ShoppingBagPage() {
                           )}
                         </div>
 
-                        <div className="flex flex-col justify-start">
-                          <h2 className="text-[10px] font-medium tracking-[0.08em] text-black uppercase sm:text-xs">
+                        {/* Teks produk: Judul, Varian, Harga */}
+                        <div className="flex flex-col justify-start min-w-0 flex-1">
+                          <h2 className="text-[10px] font-medium tracking-[0.08em] text-black uppercase sm:text-xs leading-snug">
                             {item.title}
                           </h2>
-                          <p className="mt-1 text-[10px] text-black/64">
-                            {formatPrice(item.price)}
-                          </p>
                           {variantDetails && (
-                            <p className="mt-1 text-[10px] tracking-wide text-black/60 uppercase">
+                            <p className="mt-1 text-[10px] tracking-wide text-black/55 uppercase">
                               {variantDetails}
                             </p>
                           )}
+                          <p className="mt-1.5 text-[11px] sm:text-xs font-medium text-black">
+                            {formatPrice(itemTotal)}
+                          </p>
 
-                          {/* Mobile Quantity & Remove Controls */}
-                          <div className="mt-4 flex items-center justify-between sm:hidden">
-                            <div className="flex flex-col items-start space-y-1.5">
+                          {/* ── MOBILE: Stepper di kiri, Icon hapus di posisi harga lama (kanan) ── */}
+                          <div className="mt-3.5 flex items-center justify-between sm:hidden">
+                            <div className="flex flex-col gap-1">
                               <div className="inline-flex items-center border border-black/20 bg-white">
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, -1)}
-                                  className="px-2.5 py-1 text-[10px] text-black transition-colors hover:bg-white"
+                                  className="px-2.5 py-1 text-[11px] text-black hover:bg-black/5 active:bg-black/10 transition-colors"
                                   aria-label="Decrease quantity"
                                 >
-                                  &minus;
+                                  −
                                 </button>
-                                <span className="w-8 text-center text-[10px] font-medium text-black">
+                                <span className="w-7 text-center text-[10px] font-medium text-black select-none">
                                   {item.quantity}
                                 </span>
                                 <button
                                   type="button"
                                   disabled={typeof item.stock === 'number' && item.quantity >= item.stock}
                                   onClick={() => updateQuantity(item.id, 1)}
-                                  className="px-2.5 py-1 text-[10px] text-black transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                  className="px-2.5 py-1 text-[11px] text-black hover:bg-black/5 active:bg-black/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                   aria-label="Increase quantity"
                                 >
-                                  &#43;
+                                  +
                                 </button>
                               </div>
                               {typeof item.stock === 'number' && item.quantity >= item.stock && (
-                                <span className="text-[9px] text-amber-700">Maksimal stok tercapai</span>
+                                <span className="text-[9px] text-amber-700">Maks. stok</span>
                               )}
-                              <button
-                                type="button"
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-[10px] text-black/64 underline underline-offset-2 transition-colors hover:text-black"
-                              >
-                                {t('bag.remove')}
-                              </button>
                             </div>
 
-                            <div className="text-right">
-                              <p className="text-[10px] font-medium text-black">
-                                {formatPrice(itemTotal)}
-                              </p>
-                            </div>
+                            {/* Boxed Delete Button (mobile) */}
+                            <button
+                              type="button"
+                              onClick={() => removeFromCart(item.id)}
+                              className="border border-black/25 hover:border-black bg-white px-2.5 py-1 text-[9px] font-medium tracking-[0.14em] uppercase text-black/70 hover:text-black active:bg-black/5 transition-colors"
+                              aria-label={t('bag.remove')}
+                            >
+                              {t('bag.remove') || 'Delete'}
+                            </button>
                           </div>
                         </div>
                       </div>
 
-                      {/* Quantity Kolom Desktop */}
-                      <div className="hidden flex-col items-center justify-center space-y-2 sm:col-span-3 sm:flex">
+                      {/* ── DESKTOP: Quantity stepper kolom tengah ── */}
+                      <div className="hidden sm:flex flex-col items-center justify-center gap-1 sm:col-span-3">
                         <div className="inline-flex items-center border border-black/20 bg-white">
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="px-3 py-1.5 text-[10px] text-black transition-colors hover:bg-white"
+                            className="px-3 py-1.5 text-[10px] text-black hover:bg-black/5 transition-colors"
                             aria-label="Decrease quantity"
                           >
-                            &minus;
+                            −
                           </button>
-                          <span className="w-10 text-center text-[10px] font-medium text-black">
+                          <span className="w-10 text-center text-[10px] font-medium text-black select-none">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
                             disabled={typeof item.stock === 'number' && item.quantity >= item.stock}
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="px-3 py-1.5 text-[10px] text-black transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 text-[10px] text-black hover:bg-black/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             aria-label="Increase quantity"
                           >
-                            &#43;
+                            +
                           </button>
                         </div>
                         {typeof item.stock === 'number' && item.quantity >= item.stock && (
                           <span className="text-[9px] text-amber-700">Maks. {item.stock} stok</span>
                         )}
+                      </div>
 
+                      {/* ── DESKTOP: Posisi harga yang lama -> Boxed Delete Button ── */}
+                      <div className="hidden sm:flex items-center justify-end sm:col-span-2">
                         <button
                           type="button"
                           onClick={() => removeFromCart(item.id)}
-                          className="text-[10px] text-black/64 underline underline-offset-2 transition-colors hover:text-black"
+                          className="border border-black/25 hover:border-black bg-white px-3 py-1.5 text-[10px] font-medium tracking-[0.14em] uppercase text-black/70 hover:text-black transition-colors"
+                          aria-label={t('bag.remove')}
                         >
-                          {t('bag.remove')}
+                          {t('bag.remove') || 'Delete'}
                         </button>
-                      </div>
-
-                      {/* Total Kolom Desktop */}
-                      <div className="hidden text-right text-[10px] font-medium tracking-wide text-black sm:col-span-2 sm:block sm:text-xs">
-                        {formatPrice(itemTotal)}
                       </div>
                     </div>
                   );
