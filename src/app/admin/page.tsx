@@ -388,8 +388,9 @@ export default function AdminPage() {
         setAdminPassword('');
         showToast('Login Admin Berhasil. Selamat datang di Sevaya Studio.');
       } else {
-        setAuthError(data.error || 'Username atau password admin salah.');
-        showToast('Kredensial admin tidak valid.');
+        const errMsg = data.error || 'Username atau password admin salah.';
+        setAuthError(errMsg);
+        showToast(errMsg);
       }
     } catch {
       setAuthError('Gagal menghubungi server untuk autentikasi admin.');
@@ -1657,7 +1658,7 @@ export default function AdminPage() {
 
       {/* Main Tab Content */}
       <main
-        className={`relative min-h-screen bg-[#faf9f7] px-0 pt-0 pb-16 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative min-h-screen bg-[#faf9f7] px-0 pt-0 pb-20 md:pb-16 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-0'
         }`}
       >

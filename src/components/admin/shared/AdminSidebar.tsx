@@ -304,6 +304,79 @@ export function AdminSidebar({
           </button>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Akses Cepat 1-Ketukan di Layar HP) */}
+      <nav
+        aria-label="Navigasi Bawah Mobile"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-black/10 md:hidden flex items-center justify-around h-14 px-1 shadow-[0_-2px_12px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]"
+      >
+        <button
+          type="button"
+          onClick={() => handleTabClick('orders')}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-medium transition active:scale-95 cursor-pointer ${
+            activeTab === 'orders' ? 'text-black font-bold' : 'text-black/50 hover:text-black'
+          }`}
+        >
+          <div className="relative">
+            <Icon name="receipt_long" size={17} />
+            {getBadge('orders') !== null && (
+              <span className="absolute -top-1 -right-2 bg-red-600 text-white font-mono text-[8px] font-bold px-1 rounded-full">
+                {getBadge('orders')}
+              </span>
+            )}
+          </div>
+          <span className="mt-0.5 truncate">Pesanan</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabClick('inventory')}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-medium transition active:scale-95 cursor-pointer ${
+            activeTab === 'inventory' ? 'text-black font-bold' : 'text-black/50 hover:text-black'
+          }`}
+        >
+          <Icon name="inventory_2" size={17} />
+          <span className="mt-0.5 truncate">Stok</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabClick('catalog')}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-medium transition active:scale-95 cursor-pointer ${
+            activeTab === 'catalog' ? 'text-black font-bold' : 'text-black/50 hover:text-black'
+          }`}
+        >
+          <div className="relative">
+            <Icon name="checkroom" size={17} />
+            {getBadge('catalog') !== null && (
+              <span className="absolute -top-1 -right-2 bg-black/80 text-white font-mono text-[8px] font-bold px-1 rounded-full">
+                {getBadge('catalog')}
+              </span>
+            )}
+          </div>
+          <span className="mt-0.5 truncate">Katalog</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabClick('section-home')}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-medium transition active:scale-95 cursor-pointer ${
+            activeTab === 'section-home' ? 'text-black font-bold' : 'text-black/50 hover:text-black'
+          }`}
+        >
+          <Icon name="view_quilt" size={17} />
+          <span className="mt-0.5 truncate">Beranda</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-[9px] font-medium text-black/50 hover:text-black transition active:scale-95 cursor-pointer"
+        >
+          <Icon name="menu" size={17} />
+          <span className="mt-0.5 truncate">Menu</span>
+        </button>
+      </nav>
     </>
   );
 }

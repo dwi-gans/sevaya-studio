@@ -1393,11 +1393,11 @@ export function OrdersTab({
           type="button"
           onClick={() => fetchOrders(true, true)}
           disabled={refreshing}
-          className="h-9 sm:h-10 px-3 sm:px-4.5 flex items-center gap-1.5 sm:gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[11px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
+          className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2.5 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
           title="Sinkronkan data pesanan"
         >
-          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>{refreshing ? 'Sinkron...' : 'Sinkron'}</span>
+          <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? '...' : 'Sinkron'}</span>
         </button>
       </AdminPageHeader>
 
@@ -1413,24 +1413,24 @@ export function OrdersTab({
               Total Nilai Pesanan Masuk
             </span>
             <div className="flex items-baseline gap-2.5 mt-1">
-              <span className="font-headline text-xl sm:text-3xl font-bold text-black tracking-tight">
+              <span className="font-headline text-lg sm:text-3xl font-bold text-black tracking-tight">
                 {formatIDR(monthRevenue)}
               </span>
-              <span className="text-xs text-black/50">
-                ({validMonthOrders.length} transaksi terkonfirmasi)
+              <span className="text-[10px] sm:text-xs text-black/50 mt-0.5 block sm:inline">
+                ({validMonthOrders.length} transaksi)
               </span>
             </div>
           </div>
 
-          {/* Action Toolbar: Custom Month Picker & Export PDF */}
-          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {/* Action Toolbar: Custom Month Picker & Export PDF (Saling Geser Horizontal di Mobile, Tidak Menumpuk ke Bawah) */}
+          <div className="flex items-center gap-2 self-stretch sm:self-auto flex-nowrap overflow-x-auto no-scrollbar touch-pan-x py-0.5">
             {/* Elegant Custom Month Picker Dropdown */}
-            <div className="relative inline-flex items-center">
-              <Calendar className="absolute left-3 w-3.5 h-3.5 text-black/45 pointer-events-none" />
+            <div className="relative inline-flex items-center shrink-0 flex-1 sm:flex-initial min-w-[140px] sm:min-w-0">
+              <Calendar className="absolute left-2.5 sm:left-3 w-3.5 h-3.5 text-black/45 pointer-events-none" />
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="h-9.5 pl-8.5 pr-8 bg-[#FAF9F7] hover:bg-[#F3EFE8] border border-black/15 rounded-xl text-xs font-medium text-black focus:border-black focus:outline-none cursor-pointer transition appearance-none shadow-2xs"
+                className="w-full h-8.5 sm:h-9.5 pl-7.5 sm:pl-8.5 pr-7 sm:pr-8 bg-[#FAF9F7] hover:bg-[#F3EFE8] border border-black/15 rounded-xl text-[11px] sm:text-xs font-medium text-black focus:border-black focus:outline-none cursor-pointer transition appearance-none shadow-2xs truncate"
                 title="Pilih periode bulan transaksi"
               >
                 <option value="all">Semua Waktu</option>
@@ -1444,26 +1444,31 @@ export function OrdersTab({
             </div>
 
             {/* Export PDF Action Button with Dropdown Options */}
-            <div className="relative" ref={exportMenuRef}>
+            <div className="relative shrink-0" ref={exportMenuRef}>
               <button
                 type="button"
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="h-9.5 px-3 sm:px-3.5 flex items-center gap-1.5 bg-[#1A1A1A] hover:bg-black text-white rounded-xl text-xs font-medium tracking-wide transition active:scale-95 cursor-pointer shadow-xs"
+                className="h-8.5 sm:h-9.5 px-3 sm:px-3.5 flex items-center gap-1.5 bg-[#1A1A1A] hover:bg-black text-white rounded-xl text-[11px] sm:text-xs font-medium tracking-wide transition active:scale-95 cursor-pointer shadow-xs whitespace-nowrap"
                 title="Pilih opsi ekspor laporan PDF"
               >
-                <FileDown className="w-3.5 h-3.5 stroke-2" />
+                <FileDown className="w-3.5 h-3.5 stroke-2 shrink-0" />
                 <span>Export PDF</span>
-                <ChevronDown className={`w-3 h-3 text-white/70 transition-transform duration-200 ${showExportMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 text-white/70 transition-transform duration-200 shrink-0 ${showExportMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {showExportMenu && (
-                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl border border-black/10 bg-white/95 backdrop-blur-md shadow-2xl p-2 z-50">
-                  <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 text-[10px] tracking-wider uppercase text-black/45 font-mono">
-                    <span>Periode Laporan</span>
-                    <span className="font-sans font-bold text-black text-xs truncate max-w-[140px]">
-                      {selectedMonth === 'all' ? 'Semua Waktu' : formatMonthLabel(selectedMonth)}
-                    </span>
-                  </div>
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-black/40 sm:hidden"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="fixed sm:absolute inset-x-3 bottom-20 sm:bottom-auto sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-2xl border border-black/10 bg-white shadow-2xl p-2 z-50 max-h-[75vh] overflow-y-auto">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 text-[10px] tracking-wider uppercase text-black/45 font-mono">
+                      <span>Periode Laporan</span>
+                      <span className="font-sans font-bold text-black text-xs truncate max-w-[140px]">
+                        {selectedMonth === 'all' ? 'Semua Waktu' : formatMonthLabel(selectedMonth)}
+                      </span>
+                    </div>
 
                   <div className="py-1 space-y-0.5">
                     <button
@@ -1550,13 +1555,14 @@ export function OrdersTab({
                     )}
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>
         </div>
 
         {/* 6 Minimalist & Functional Interactive Status Cards */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-3">
           {[
             {
               key: 'all', label: 'Semua', value: stats.all,
@@ -1614,7 +1620,7 @@ export function OrdersTab({
                 key={s.key}
                 type="button"
                 onClick={() => setFilter(isActive && s.key !== 'all' ? 'all' : s.key)}
-                className={`flex flex-col text-left rounded-xl p-2.5 sm:p-3.5 transition-all duration-150 cursor-pointer ${
+                className={`flex flex-col text-left rounded-xl p-2 sm:p-3.5 transition-all duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-[#1A1A1A] text-white shadow-sm ring-1 ring-[#1A1A1A]'
                     : 'bg-black/[0.02] border border-black/10 hover:bg-black/[0.04] hover:border-black/25 text-black'
@@ -1623,7 +1629,7 @@ export function OrdersTab({
               >
                 {/* Row 1: angka kiri, logo kanan */}
                 <div className="flex items-center justify-between gap-1 w-full">
-                  <span className={`text-lg sm:text-2xl font-bold font-headline tracking-tight ${
+                  <span className={`text-base sm:text-2xl font-bold font-headline tracking-tight ${
                     isActive ? 'text-white' : 'text-black'
                   }`}>
                     {s.value}
@@ -1633,7 +1639,7 @@ export function OrdersTab({
                   </span>
                 </div>
                 {/* Row 2: label */}
-                <span className={`text-[9px] sm:text-[10px] font-medium tracking-wide truncate block mt-1 ${
+                <span className={`text-[8px] sm:text-[10px] font-medium tracking-wide truncate block mt-0.5 ${
                   isActive ? 'text-white/60' : 'text-black/50'
                 }`}>
                   {s.label}
@@ -1650,7 +1656,7 @@ export function OrdersTab({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama pelanggan, no. order (#SVY-...), resi, kurir, Biteship ID..."
+            placeholder="Cari nama, no. order, resi..."
             className="w-full bg-white px-3.5 py-2.5 text-xs text-black placeholder:text-black/40 focus:border-black focus:outline-none min-h-[40px] rounded-xl border border-black/15 shadow-xs"
           />
           {search && (

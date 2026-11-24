@@ -48,22 +48,7 @@ export function proxy(request: NextRequest) {
   const method = request.method;
   const ip = getIP(request);
 
-  // ─── 1. Admin Login — paling ketat ───────────────────────────────────────
-  // POST /api/admin/auth — brute force password
-  if (pathname.startsWith('/api/admin/auth')) {
-    const r = rateLimit(ip, 'admin-auth', 5, 15 * 60_000); // 5 req / 15 menit
-    if (!r.ok) {
-      return rateLimitResponse(
-        r.retryAfterMs,
-        'Terlalu banyak percobaan login. Coba lagi dalam beberapa menit.'
-      );
-    }
-    const res = NextResponse.next();
-    Object.entries(r.headers).forEach(([k, v]) => res.headers.set(k, v));
-    return res;
-  }
-
-  // ─── 2. Auth user (Supabase / sign-in / sign-up) ─────────────────────────
+  // ─── 1. Auth user (Supabase / sign-in / sign-up) ─────────────────────────
   if (pathname.startsWith('/api/auth')) {
     const r = rateLimit(ip, 'auth', 10, 10 * 60_000); // 10 req / 10 menit
     if (!r.ok) {

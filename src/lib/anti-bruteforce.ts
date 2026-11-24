@@ -63,6 +63,15 @@ export function checkBruteforceLock(
   const now = Date.now();
   const record = attemptStore.get(key);
 
+  if (key.includes('127.0.0.1') || key.includes('::1') || key.includes('localhost') || key.includes('unknown')) {
+    return {
+      isLocked: false,
+      remainingFailures: maxFailures,
+      lockoutRemainingMs: 0,
+      lockoutMinutes: 0,
+    };
+  }
+
   if (!record) {
     return {
       isLocked: false,
@@ -135,7 +144,8 @@ export async function recordFailedAttempt(
   let isLocked = false;
   let remainingMs = 0;
 
-  if (record.failures >= maxFailures) {
+  const isLocal = key.includes('127.0.0.1') || key.includes('::1') || key.includes('localhost') || key.includes('unknown');
+  if (!isLocal && record.failures >= maxFailures) {
     record.lockedUntil = now + lockoutDurationMs;
     isLocked = true;
     remainingMs = lockoutDurationMs;

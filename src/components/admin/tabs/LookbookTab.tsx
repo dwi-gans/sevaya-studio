@@ -491,34 +491,37 @@ export const LookbookTab: React.FC<LookbookTabProps> = ({
               setNewVolBadge('NEW');
               setIsAddVolumeOpen(true);
             }}
-            className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+            className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 stroke-2" />
-            <span>Tambah Volume</span>
+            <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2" />
+            <span className="hidden xs:inline">Tambah Volume</span>
+            <span className="xs:hidden">Volume</span>
           </button>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className="h-10 px-3.5 flex items-center gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 cursor-pointer"
+              className="h-8 sm:h-10 px-2 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5 stroke-2" />
-              <span>Daftar Volume</span>
+              <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2" />
+              <span className="hidden xs:inline">Daftar Volume</span>
+              <span className="xs:hidden">Daftar</span>
             </button>
             <button
               type="button"
               onClick={handleSaveAll}
-              className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+              className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
             >
-              <Save className="w-3.5 h-3.5 stroke-2" />
-              <span>Simpan Perubahan</span>
+              <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2" />
+              <span className="hidden xs:inline">Simpan Perubahan</span>
+              <span className="xs:hidden">Simpan</span>
             </button>
           </div>
         )}
       </AdminPageHeader>
 
-      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4 pb-20">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-4 pb-20">
       {/* ══ MODAL TAMBAH VOLUME BARU (Shared) ══ */}
       {isAddVolumeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">

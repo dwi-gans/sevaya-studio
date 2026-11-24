@@ -203,14 +203,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           type="button"
           onClick={handleSave}
           disabled={saving || loading}
-          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
         >
-          <Save className="w-3.5 h-3.5 stroke-2" />
-          <span>{saving ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>
+          <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2" />
+          <span className="hidden xs:inline">{saving ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>
+          <span className="xs:hidden">{saving ? '...' : 'Simpan'}</span>
         </button>
       </AdminPageHeader>
 
-      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-5">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-5">
 
       {/* Alert / Feedback Notification */}
       {feedback && (

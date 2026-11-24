@@ -384,10 +384,10 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
             measureCdnLatency();
           }}
           disabled={isRefreshingStorage}
-          className="h-10 px-3.5 flex items-center gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
+          className="h-8 sm:h-10 px-2 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
           title="Sinkronisasi kapasitas realtime & refresh media"
         >
-          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${isRefreshingStorage ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${isRefreshingStorage ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Segarkan</span>
         </button>
 
@@ -397,22 +397,23 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
             setStagedFiles([]);
             setIsUploadModalOpen(true);
           }}
-          className="h-10 px-4.5 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
+          className="h-8 sm:h-10 px-2.5 sm:px-4.5 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wider sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] cursor-pointer"
         >
-          <Upload className="w-3.5 h-3.5 stroke-2" />
-          <span>Unggah Master Foto</span>
+          <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2" />
+          <span className="hidden xs:inline">Unggah Master Foto</span>
+          <span className="xs:hidden">Unggah</span>
         </button>
       </AdminPageHeader>
 
-      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-4">
 
       {/* Telemetry Summary Card */}
-      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/50 gap-3.5 sm:gap-0">
+      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-6 shadow-[0_1px_4px_rgba(27,23,24,0.03)]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[rgba(0,0,0,0.12)]/50 gap-2.5 sm:gap-0">
           {/* Metric 1: Kapasitas Bucket (Realtime dari Supabase Storage) */}
-          <div className="flex flex-col justify-between space-y-2 pb-3.5 sm:pb-0 sm:pr-4">
+          <div className="flex flex-col justify-between space-y-1.5 pb-2.5 sm:pb-0 sm:pr-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70 flex items-center gap-1.5">
+              <span className="text-[9.5px] sm:text-[11px] font-semibold uppercase tracking-wider text-black/70 flex items-center gap-1">
                 Kapasitas Bucket
                 <button
                   type="button"
@@ -423,32 +424,32 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                   title="Klik untuk sinkronisasi kapasitas realtime"
                   className="p-0.5 rounded text-black/40 hover:text-black hover:bg-black/5 transition inline-flex items-center"
                 >
-                  <Icon name="refresh" size={13} className={isRefreshingStorage ? 'animate-spin text-black' : ''} />
+                  <Icon name="refresh" size={11} className={isRefreshingStorage ? 'animate-spin text-black' : ''} />
                 </button>
               </span>
-              <span className="font-mono text-xs font-semibold text-black">
+              <span className="font-mono text-[10px] sm:text-xs font-semibold text-black">
                 {storageStats.formattedSize} / {storageStats.maxFormatted}
               </span>
             </div>
-            <div className="w-full bg-black/5 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-black/5 h-1 sm:h-1.5 rounded-full overflow-hidden">
               <div
                 className="bg-black h-full rounded-full transition-all duration-700"
                 style={{ width: `${Math.max(1, Math.min(100, storageStats.percentUsed))}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-black/70">
+            <div className="flex items-center justify-between text-[9px] sm:text-[11px] text-black/70">
               <span>{assets.length} Foto Abaya Aktif</span>
               <span className="text-emerald-700 font-medium">{storageStats.percentUsed}% terpakai</span>
             </div>
           </div>
 
           {/* Metric 2: CDN Edge Caching (Realtime Ping & Edge TTFB) */}
-          <div className="flex flex-col justify-between space-y-1 py-3.5 sm:py-0 sm:px-4">
+          <div className="flex flex-col justify-between space-y-1 py-2.5 sm:py-0 sm:px-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
+              <span className="text-[9.5px] sm:text-[11px] font-semibold uppercase tracking-wider text-black/70">
                 Status Edge CDN
               </span>
-              <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1 text-emerald-700 text-[9px] sm:text-[11px] font-semibold">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     cdnStats.status === 'Optimal' ? 'bg-emerald-600 animate-pulse' : 'bg-amber-500'
@@ -457,33 +458,33 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
                 {cdnStats.status} ({cdnStats.reliability})
               </span>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-black">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-xl font-bold text-black tabular-nums">
                 {cdnStats.latencyMs !== null ? `${cdnStats.latencyMs} ms` : 'Mengukur...'}
               </span>
-              <span className="text-[11px] text-black/70">{cdnStats.edgeNode}</span>
+              <span className="text-[9.5px] sm:text-[11px] text-black/60 truncate">{cdnStats.edgeNode}</span>
             </div>
-            <div className="text-[11px] text-black/70">
+            <div className="text-[9px] sm:text-[11px] text-black/50">
               {cdnStats.compression}
             </div>
           </div>
 
           {/* Metric 3: Sinkronisasi Katalog (Realtime) */}
-          <div className="flex flex-col justify-between space-y-1 pt-3.5 sm:pt-0 sm:pl-4">
+          <div className="flex flex-col justify-between space-y-1 pt-2.5 sm:pt-0 sm:pl-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/70">
+              <span className="text-[9.5px] sm:text-[11px] font-semibold uppercase tracking-wider text-black/70">
                 Koneksi Storefront
               </span>
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200/60">
+              <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-[8px] sm:text-[10px] font-semibold text-emerald-800 border border-emerald-200/60">
                 100% SYNCED
               </span>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-black">{assets.length} Aktif</span>
-              <span className="text-[11px] text-black/70">PDP &amp; Lookbook Terkoneksi</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-xl font-bold text-black tabular-nums">{assets.length} Aktif</span>
+              <span className="text-[9.5px] sm:text-[11px] text-black/60 truncate">PDP &amp; Lookbook Terkoneksi</span>
             </div>
-            <div className="text-[11px] text-black/70">
-              Bucket: <code className="font-mono text-[10px] text-black">catalog / uploads</code>
+            <div className="text-[9px] sm:text-[11px] text-black/50">
+              Bucket: <code className="font-mono text-[9px] sm:text-[10px] text-black">catalog / uploads</code>
             </div>
           </div>
         </div>
@@ -502,7 +503,7 @@ export const MediaLibraryTab: React.FC<MediaLibraryTabProps> = ({
               key={tab.id}
               type="button"
               onClick={() => setMediaCategory(tab.id as 'all' | 'plum' | 'cuff' | 'outdoor')}
-              className={`min-h-[38px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
+              className={`min-h-[30px] sm:min-h-[38px] rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
                 mediaCategory === tab.id
                   ? 'bg-black text-white'
                   : 'border border-black/20 bg-white text-black/70 hover:bg-black/5 hover:text-black'

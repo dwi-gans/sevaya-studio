@@ -408,32 +408,32 @@ export default function InventoryTab({
           type="button"
           onClick={handleGenerateVariants}
           disabled={loading || generating}
-          className="h-10 px-4 flex items-center gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-xs font-semibold tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="h-8 sm:h-10 px-2.5 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-[#1a1a1a] text-white border border-[#1a1a1a] rounded-[2px] text-[10px] sm:text-xs font-semibold tracking-wide sm:tracking-[0.14em] uppercase hover:bg-black transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           title="Sinkronkan varian warna & ukuran dari semua produk katalog"
         >
-          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${generating ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${generating ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">{generating ? 'Menyinkronkan...' : 'Sinkronkan Varian'}</span>
-          <span className="sm:hidden">Sinkron</span>
+          <span className="sm:hidden">{generating ? '...' : 'Sinkron'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => fetchInventory(true)}
           disabled={loading}
-          className="h-10 px-3.5 flex items-center gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
+          className="h-8 sm:h-10 px-2.5 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 bg-white border border-[#d6d1c9] rounded-[2px] text-[10px] sm:text-xs font-medium text-[#1a1a1a] hover:border-[#1a1a1a] transition active:scale-95 disabled:opacity-50 cursor-pointer"
           title="Segarkan data inventaris"
         >
-          <RefreshCw className={`w-3.5 h-3.5 stroke-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-2 ${loading ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Segarkan</span>
         </button>
       </AdminPageHeader>
 
-      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-6 space-y-4">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1560px] px-3 sm:px-5 lg:px-6 xl:px-8 py-3.5 sm:py-6 space-y-4">
 
-      {/* Telemetry Summary Card (Swipeable on Mobile) */}
-      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-3 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden">
-        <div className="flex sm:grid sm:grid-cols-4 overflow-x-auto sm:overflow-visible no-scrollbar divide-x divide-black/10 touch-pan-x -mx-1 px-1">
-          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
+      {/* Telemetry Summary Card (Grid on Mobile) */}
+      <div className="rounded-xl sm:rounded-2xl border border-black/15 bg-white p-2.5 sm:p-5 shadow-[0_1px_4px_rgba(27,23,24,0.03)] overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 sm:divide-x sm:divide-black/10">
+          <div className="flex flex-col justify-center space-y-0.5 p-2 sm:px-4 sm:py-0 bg-black/[0.02] sm:bg-transparent rounded-lg sm:rounded-none">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Total Unit Fisik
             </span>
@@ -448,7 +448,7 @@ export default function InventoryTab({
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
+          <div className="flex flex-col justify-center space-y-0.5 p-2 sm:px-4 sm:py-0 bg-black/[0.02] sm:bg-transparent rounded-lg sm:rounded-none">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Stok Tersedia
             </span>
@@ -463,7 +463,7 @@ export default function InventoryTab({
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
+          <div className="flex flex-col justify-center space-y-0.5 p-2 sm:px-4 sm:py-0 bg-black/[0.02] sm:bg-transparent rounded-lg sm:rounded-none">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Perlu Restock
             </span>
@@ -478,7 +478,7 @@ export default function InventoryTab({
             </span>
           </div>
 
-          <div className="flex flex-col justify-center space-y-0.5 px-3 sm:px-4 py-1 sm:py-0 min-w-[130px] sm:min-w-0 shrink-0">
+          <div className="flex flex-col justify-center space-y-0.5 p-2 sm:px-4 sm:py-0 bg-black/[0.02] sm:bg-transparent rounded-lg sm:rounded-none">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/50 truncate">
               Stok Habis
             </span>
