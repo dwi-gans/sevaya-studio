@@ -52,12 +52,40 @@ export async function GET(
       });
       if (res.ok) {
         const bsOrder = await res.json();
+        const rawHistory = bsOrder?.courier?.history ?? [];
+        const history = rawHistory.map((ev: any) => {
+          const rawImages = Array.isArray(ev.images) ? ev.images : [];
+          const imageUrls: string[] = [];
+          rawImages.forEach((imgObj: any) => {
+            if (Array.isArray(imgObj?.images_urls)) {
+              imgObj.images_urls.forEach((url: string) => {
+                if (typeof url === 'string' && url.trim()) imageUrls.push(url.trim());
+              });
+            }
+          });
+          if (Array.isArray(ev.image_urls)) {
+            ev.image_urls.forEach((url: string) => typeof url === 'string' && url.trim() && imageUrls.push(url.trim()));
+          }
+          if (typeof ev.image_url === 'string' && ev.image_url.trim()) imageUrls.push(ev.image_url.trim());
+          return {
+            datetime: ev.updated_at || ev.datetime || ev.timestamp || '',
+            note: ev.note || '',
+            status: ev.status || '',
+            images: rawImages,
+            image_urls: Array.from(new Set(imageUrls)),
+          };
+        });
+
         return NextResponse.json({
           success: true,
           waybill_id: bsOrder?.courier?.waybill_id ?? bsOrder?.courier?.tracking_id ?? order.tracking_number ?? null,
           courier_name: bsOrder?.courier?.company ?? order.courier_name ?? null,
           order_status: bsOrder?.status ?? null,
-          history: bsOrder?.courier?.history ?? [],
+          driver_name: bsOrder?.courier?.driver_name ?? null,
+          driver_phone: bsOrder?.courier?.driver_phone ?? null,
+          driver_photo_url: bsOrder?.courier?.driver_photo_url ?? null,
+          tracking_link: bsOrder?.courier?.link ?? null,
+          history,
         }, { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } });
       }
     }
@@ -68,12 +96,60 @@ export async function GET(
       const res = await fetch(url, { headers: { Authorization: key }, cache: 'no-store' });
       if (res.ok) {
         const tracking = await res.json();
+        let rawHistory = tracking?.history ?? tracking?.data?.history ?? [];
+        let orderDetail: any = null;
+
+        const linkedOrderId = tracking?.order_id ?? tracking?.data?.order_id;
+        if (linkedOrderId) {
+          try {
+            const orderRes = await fetch(`${BITESHIP_BASE_URL}/v1/orders/${linkedOrderId}`, {
+              headers: { Authorization: key },
+              cache: 'no-store',
+            });
+            if (orderRes.ok) {
+              orderDetail = await orderRes.json();
+              if (Array.isArray(orderDetail?.courier?.history) && orderDetail.courier.history.length > 0) {
+                rawHistory = orderDetail.courier.history;
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        const history = rawHistory.map((ev: any) => {
+          const rawImages = Array.isArray(ev.images) ? ev.images : [];
+          const imageUrls: string[] = [];
+          rawImages.forEach((imgObj: any) => {
+            if (Array.isArray(imgObj?.images_urls)) {
+              imgObj.images_urls.forEach((url: string) => {
+                if (typeof url === 'string' && url.trim()) imageUrls.push(url.trim());
+              });
+            }
+          });
+          if (Array.isArray(ev.image_urls)) {
+            ev.image_urls.forEach((url: string) => typeof url === 'string' && url.trim() && imageUrls.push(url.trim()));
+          }
+          if (typeof ev.image_url === 'string' && ev.image_url.trim()) imageUrls.push(ev.image_url.trim());
+          return {
+            datetime: ev.updated_at || ev.datetime || ev.timestamp || '',
+            note: ev.note || '',
+            status: ev.status || '',
+            images: rawImages,
+            image_urls: Array.from(new Set(imageUrls)),
+          };
+        });
+
         return NextResponse.json({
           success: true,
           waybill_id: order.tracking_number,
-          courier_name: order.courier_name ?? null,
-          order_status: tracking?.status ?? null,
-          history: tracking?.history ?? tracking?.data?.history ?? [],
+          courier_name: tracking?.courier?.company ?? order.courier_name ?? null,
+          order_status: tracking?.status ?? orderDetail?.status ?? null,
+          driver_name: tracking?.courier?.driver_name ?? orderDetail?.courier?.driver_name ?? null,
+          driver_phone: tracking?.courier?.driver_phone ?? orderDetail?.courier?.driver_phone ?? null,
+          driver_photo_url: tracking?.courier?.driver_photo_url ?? orderDetail?.courier?.driver_photo_url ?? null,
+          tracking_link: tracking?.link ?? orderDetail?.courier?.link ?? null,
+          history,
         }, { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } });
       }
     }

@@ -104,14 +104,21 @@ export default function OrderDetailPage({
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  type TrackingEvent = { datetime: string; note: string; status?: string };
+  type TrackingEvent = {
+    datetime: string;
+    note: string;
+    status?: string;
+    image_urls?: string[];
+    images?: Array<{ type: string; images_urls: string[] }>;
+  };
   const [trackingData, setTrackingData] = useState<{
     history: TrackingEvent[];
     waybill_id: string | null;
+    tracking_link?: string | null;
     loading: boolean;
     error: string | null;
     loaded: boolean;
-  }>({ history: [], waybill_id: null, loading: false, error: null, loaded: false });
+  }>({ history: [], waybill_id: null, tracking_link: null, loading: false, error: null, loaded: false });
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated && !user) {
@@ -179,6 +186,7 @@ export default function OrderDetailPage({
         setTrackingData({
           history: json.history ?? [],
           waybill_id: json.waybill_id ?? null,
+          tracking_link: json.tracking_link ?? null,
           loading: false,
           error: null,
           loaded: true,
@@ -688,6 +696,49 @@ export default function OrderDetailPage({
                             {event.note || event.status || '—'}
                           </p>
                           <p className="mt-0.5 text-[11px] text-black/40">{eventDate}</p>
+
+                          {/* Foto Bukti Perjalanan / Pick-up / POD */}
+                          {event.image_urls && event.image_urls.length > 0 && (
+                            <div className="mt-2.5 flex flex-wrap gap-2">
+                              {event.image_urls.map((imgUrl, imgIdx) => {
+                                const imgType = event.images?.find((i) => i.images_urls?.includes(imgUrl))?.type;
+                                const typeLabel =
+                                  imgType === 'proof_of_pickup'
+                                    ? 'Bukti Pick-up'
+                                    : imgType === 'proof_of_delivery'
+                                    ? 'Bukti Tiba (POD)'
+                                    : 'Foto Paket / Resi';
+
+                                return (
+                                  <a
+                                    key={imgIdx}
+                                    href={imgUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group relative flex flex-col items-center overflow-hidden rounded-xl border border-black/15 bg-neutral-50 hover:border-black transition p-1 shadow-2xs"
+                                    title="Buka foto asli resolusi penuh"
+                                  >
+                                    <div className="relative h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-lg bg-black/5">
+                                      <img
+                                        src={imgUrl}
+                                        alt={typeLabel}
+                                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                        loading="lazy"
+                                      />
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                                        <span className="opacity-0 group-hover:opacity-100 text-white text-[8px] font-bold bg-black/80 px-1.5 py-0.5 rounded shadow">
+                                          Buka ↗
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <span className="mt-1 text-[8.5px] font-medium text-black/60 max-w-[76px] truncate text-center">
+                                      {typeLabel}
+                                    </span>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

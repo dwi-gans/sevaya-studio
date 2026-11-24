@@ -158,14 +158,21 @@ function OrderDetailModal({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Tracking timeline state
-  type TrackingEvent = { datetime: string; note: string; status?: string };
+  type TrackingEvent = {
+    datetime: string;
+    note: string;
+    status?: string;
+    image_urls?: string[];
+    images?: Array<{ type: string; images_urls: string[] }>;
+  };
   const [trackingData, setTrackingData] = useState<{
     history: TrackingEvent[];
     order_status: string | null;
     waybill_id: string | null;
+    tracking_link?: string | null;
     loading: boolean;
     error: string | null;
-  }>({ history: [], order_status: null, waybill_id: null, loading: false, error: null });
+  }>({ history: [], order_status: null, waybill_id: null, tracking_link: null, loading: false, error: null });
 
   // Status dikontrol Biteship ketika sudah ada biteship_order_id dan status bukan cancelled
   const isBiteshipControlled =
@@ -187,6 +194,7 @@ function OrderDetailModal({
           history: json.history ?? [],
           order_status: json.order_status ?? null,
           waybill_id: json.waybill_id ?? null,
+          tracking_link: json.tracking_link ?? null,
           loading: false,
           error: null,
         });
@@ -570,13 +578,25 @@ function OrderDetailModal({
                     </div>
                   ) : (
                     <div className="p-3 space-y-0 max-h-64 overflow-y-auto">
-                      {/* Waybill info row */}
-                      {trackingData.waybill_id && (
-                        <div className="flex items-center gap-2 pb-2.5 mb-2 border-b border-black/10 text-[10px] text-black/60">
-                          <span>No. Resi:</span>
-                          <span className="font-mono font-semibold text-black">{trackingData.waybill_id}</span>
-                        </div>
-                      )}
+                      {/* Waybill info & Live Tracking row */}
+                      <div className="flex items-center justify-between gap-2 pb-2.5 mb-2 border-b border-black/10 text-[10px] text-black/60">
+                        {trackingData.waybill_id ? (
+                          <div className="flex items-center gap-1.5">
+                            <span>No. Resi:</span>
+                            <span className="font-mono font-semibold text-black">{trackingData.waybill_id}</span>
+                          </div>
+                        ) : <span />}
+                        {trackingData.tracking_link && (
+                          <a
+                            href={trackingData.tracking_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-700 hover:text-sky-900 underline font-medium inline-flex items-center gap-1 shrink-0"
+                          >
+                            Live Biteship ↗
+                          </a>
+                        )}
+                      </div>
                       {/* Timeline events */}
                       {trackingData.history.map((event, idx) => {
                         const isLatest = idx === 0;
@@ -584,6 +604,7 @@ function OrderDetailModal({
                           ? new Date(event.datetime).toLocaleString('id-ID', {
                               day: '2-digit',
                               month: 'short',
+                              year: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit',
                             })
@@ -607,6 +628,49 @@ function OrderDetailModal({
                                 {event.note || event.status || '—'}
                               </p>
                               <p className="text-[10px] text-black/40 mt-0.5">{eventDate}</p>
+
+                              {/* Foto Bukti dari Kurir Biteship (Pick-up, Manifest, atau POD) */}
+                              {event.image_urls && event.image_urls.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {event.image_urls.map((imgUrl, imgIdx) => {
+                                    const imgType = event.images?.find((i) => i.images_urls?.includes(imgUrl))?.type;
+                                    const typeLabel =
+                                      imgType === 'proof_of_pickup'
+                                        ? 'Bukti Pick-up'
+                                        : imgType === 'proof_of_delivery'
+                                        ? 'Bukti Tiba (POD)'
+                                        : 'Foto Manifest / Resi';
+
+                                    return (
+                                      <a
+                                        key={imgIdx}
+                                        href={imgUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="group relative flex flex-col items-center overflow-hidden rounded-lg border border-black/15 bg-neutral-50 hover:border-black transition p-1 shadow-2xs"
+                                        title="Klik untuk membuka foto asli resolusi penuh"
+                                      >
+                                        <div className="relative h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded bg-black/5">
+                                          <img
+                                            src={imgUrl}
+                                            alt={typeLabel}
+                                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                            loading="lazy"
+                                          />
+                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                                            <span className="opacity-0 group-hover:opacity-100 text-white text-[8px] font-bold bg-black/80 px-1 py-0.5 rounded shadow">
+                                              Buka ↗
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <span className="mt-1 text-[8px] sm:text-[8.5px] font-semibold text-black/70 max-w-[76px] truncate text-center">
+                                          {typeLabel}
+                                        </span>
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );

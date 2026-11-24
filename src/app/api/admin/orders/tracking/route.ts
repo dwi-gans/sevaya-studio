@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/auth-admin';
 
 const BITESHIP_BASE_URL = process.env.BITESHIP_BASE_URL || 'https://api.biteship.com';
@@ -8,6 +8,58 @@ function getBiteshipKey(): string {
   const test = process.env.BITESHIP_TEST_API_KEY || '';
   if (live && live.startsWith('biteship_live')) return live;
   return test || live;
+}
+
+interface BiteshipHistoryEvent {
+  datetime?: string;
+  updated_at?: string;
+  timestamp?: string;
+  note?: string;
+  status?: string;
+  images?: Array<{ type: string; images_urls: string[] }>;
+  images_urls?: string[];
+  image_urls?: string[];
+  image_url?: string;
+  photo_url?: string;
+  pod_url?: string;
+}
+
+function normalizeHistoryEvents(rawHistory: BiteshipHistoryEvent[]) {
+  if (!Array.isArray(rawHistory)) return [];
+  return rawHistory.map((ev) => {
+    const rawImages = Array.isArray(ev.images) ? ev.images : [];
+    const imageUrls: string[] = [];
+
+    // Format 1: ev.images = [{ type: 'proof_of_pickup', images_urls: ['...'] }]
+    rawImages.forEach((imgObj) => {
+      if (Array.isArray(imgObj?.images_urls)) {
+        imgObj.images_urls.forEach((url: string) => {
+          if (typeof url === 'string' && url.trim()) {
+            imageUrls.push(url.trim());
+          }
+        });
+      }
+    });
+
+    // Format 2: Direct images_urls / image_urls / photo_url / pod_url
+    if (Array.isArray(ev.images_urls)) {
+      ev.images_urls.forEach((url) => typeof url === 'string' && url.trim() && imageUrls.push(url.trim()));
+    }
+    if (Array.isArray(ev.image_urls)) {
+      ev.image_urls.forEach((url) => typeof url === 'string' && url.trim() && imageUrls.push(url.trim()));
+    }
+    if (typeof ev.image_url === 'string' && ev.image_url.trim()) imageUrls.push(ev.image_url.trim());
+    if (typeof ev.photo_url === 'string' && ev.photo_url.trim()) imageUrls.push(ev.photo_url.trim());
+    if (typeof ev.pod_url === 'string' && ev.pod_url.trim()) imageUrls.push(ev.pod_url.trim());
+
+    return {
+      datetime: ev.updated_at || ev.datetime || ev.timestamp || '',
+      note: ev.note || '',
+      status: ev.status || '',
+      images: rawImages,
+      image_urls: Array.from(new Set(imageUrls)),
+    };
+  });
 }
 
 /**
@@ -47,8 +99,8 @@ export async function GET(req: NextRequest) {
         );
       }
       const order = await res.json();
-      const history: Array<{ datetime: string; note: string; status?: string }> =
-        order?.courier?.history ?? [];
+      const rawHistory = order?.courier?.history ?? [];
+      const history = normalizeHistoryEvents(rawHistory);
 
       return NextResponse.json({
         success: true,
@@ -56,6 +108,10 @@ export async function GET(req: NextRequest) {
         order_status: order.status ?? null,
         waybill_id: order?.courier?.waybill_id ?? order?.courier?.tracking_id ?? null,
         courier_name: order?.courier?.company ?? null,
+        driver_name: order?.courier?.driver_name ?? null,
+        driver_phone: order?.courier?.driver_phone ?? null,
+        driver_photo_url: order?.courier?.driver_photo_url ?? null,
+        tracking_link: order?.courier?.link ?? null,
         history,
       });
     }
@@ -74,15 +130,40 @@ export async function GET(req: NextRequest) {
         );
       }
       const tracking = await res.json();
-      const history: Array<{ datetime: string; note: string; status?: string }> =
-        tracking?.history ?? tracking?.data?.history ?? [];
+      let rawHistory = tracking?.history ?? tracking?.data?.history ?? [];
+      let orderDetail: any = null;
+
+      // Jika tracking memberikan order_id, tarik detail order untuk mendapatkan foto resolusi tinggi kurir
+      const linkedOrderId = tracking?.order_id ?? tracking?.data?.order_id;
+      if (linkedOrderId) {
+        try {
+          const orderRes = await fetch(`${BITESHIP_BASE_URL}/v1/orders/${linkedOrderId}`, {
+            headers: { Authorization: key },
+            cache: 'no-store',
+          });
+          if (orderRes.ok) {
+            orderDetail = await orderRes.json();
+            if (Array.isArray(orderDetail?.courier?.history) && orderDetail.courier.history.length > 0) {
+              rawHistory = orderDetail.courier.history;
+            }
+          }
+        } catch {
+          // ignore error, fallback to tracking
+        }
+      }
+
+      const history = normalizeHistoryEvents(rawHistory);
 
       return NextResponse.json({
         success: true,
         source: 'biteship_tracking',
-        order_status: tracking?.status ?? tracking?.data?.status ?? null,
+        order_status: tracking?.status ?? tracking?.data?.status ?? orderDetail?.status ?? null,
         waybill_id: waybillId,
         courier_name: tracking?.courier?.company ?? courierCode,
+        driver_name: tracking?.courier?.driver_name ?? orderDetail?.courier?.driver_name ?? null,
+        driver_phone: tracking?.courier?.driver_phone ?? orderDetail?.courier?.driver_phone ?? null,
+        driver_photo_url: tracking?.courier?.driver_photo_url ?? orderDetail?.courier?.driver_photo_url ?? null,
+        tracking_link: tracking?.link ?? orderDetail?.courier?.link ?? null,
         history,
       });
     }
